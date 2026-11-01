@@ -1,10 +1,10 @@
-# Agent Enhancements
+# AgentEnhancements
 
 A unified integration platform that aggregates essential AI agent skills, tools, and configurations from multiple open-source projects into a single, cohesive developer experience. This project eliminates the need to install and configure each component individually.
 
 ## Overview
 
-Agent Enhancements brings together 7 complementary projects that enhance AI coding agents (Claude Code, Cursor, Windsurf, Copilot, etc.) with:
+AgentEnhancements brings together 7 complementary projects that enhance AI coding agents (Claude Code, Cursor, Windsurf, Copilot, etc.) with:
 
 - **2788+ specialized skills/agents** for every development task
 - **Context compression & memory management** for long-running sessions

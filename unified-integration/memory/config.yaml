@@ -1,0 +1,73 @@
+# Unified Memory Configuration for AI Agents
+
+memory:
+  # Storage backend
+  backend: "sqlite"  # or "file", "redis"
+  path: "~/.agent-memory"
+
+  # Memory types
+  types:
+    - name: "project_context"
+      description: "Project-specific context, architecture decisions, conventions"
+      ttl_days: 365
+      scope: "project"
+
+    - name: "user_preferences"
+      description: "User coding style, preferences, common patterns"
+      ttl_days: 730
+      scope: "global"
+
+    - name: "code_patterns"
+      description: "Discovered code patterns, anti-patterns, best practices"
+      ttl_days: 365
+      scope: "project"
+
+    - name: "session_context"
+      description: "Current session context, active tasks, recent decisions"
+      ttl_days: 7
+      scope: "session"
+
+    - name: "skill_knowledge"
+      description: "Learned skill usage patterns, effectiveness"
+      ttl_days: 180
+      scope: "global"
+
+  # Agent-specific configurations
+  agents:
+    claude-code:
+      plugin_path: "/root/agent-enhancements/claude-mem/.claude-plugin"
+      enabled: true
+
+    codex:
+      plugin_path: "/root/agent-enhancements/claude-mem/.codex-plugin"
+      enabled: true
+
+    cursor:
+      plugin_path: "/root/agent-enhancements/claude-mem/.cursor-plugin"
+      enabled: true
+
+    opencode:
+      plugin_path: "/root/agent-enhancements/claude-mem/.opencode"
+      enabled: true
+
+    gemini-cli:
+      plugin_path: "/root/agent-enhancements/claude-mem/.gemini"
+      enabled: true
+
+    windsurf:
+      plugin_path: "/root/agent-enhancements/claude-mem/.windsurf"
+      enabled: true
+
+  # Auto-save triggers
+  auto_save:
+    - event: "task_complete"
+    - event: "decision_made"
+    - event: "pattern_discovered"
+    - event: "session_end"
+    - interval_minutes: 30
+
+  # Retrieval settings
+  retrieval:
+    max_results: 10
+    relevance_threshold: 0.7
+    include_metadata: true

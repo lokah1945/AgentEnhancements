@@ -1,0 +1,64 @@
+# Context Compression Configuration
+
+compression:
+  # Engine: headroom, native, or none
+  engine: "headroom"
+
+  # Headroom settings
+  headroom:
+    binary_path: "headroom"
+    # Compression modes
+    modes:
+      code: "smart"        # Preserve code structure, compress comments/whitespace
+      logs: "aggressive"   # High compression for logs
+      json: "schema"       # Use JSON schema for compression
+      markdown: "semantic" # Preserve semantic structure
+      generic: "balanced"  # Balanced compression
+
+    # Token budgets
+    budgets:
+      default: 8000
+      coding_task: 12000
+      code_review: 15000
+      debugging: 10000
+
+    # Thresholds
+    trigger_at_percent: 0.75  # Compress when 75% of budget used
+    target_percent: 0.5       # Target 50% after compression
+
+  # Fallback native compression (if headroom unavailable)
+  native:
+    enabled: true
+    algorithms:
+      - "deduplicate"
+      - "summarize_logs"
+      - "compress_json"
+      - "trim_whitespace"
+      - "extract_key_code"
+
+  # Agent-specific settings
+  agents:
+    claude-code:
+      enabled: true
+      budget: 200000  # Claude's large context
+    codex:
+      enabled: true
+      budget: 128000
+    cursor:
+      enabled: true
+      budget: 128000
+    opencode:
+      enabled: true
+      budget: 100000
+    gemini-cli:
+      enabled: true
+      budget: 1000000  # Gemini's huge context
+    windsurf:
+      enabled: true
+      budget: 128000
+    copilot:
+      enabled: true
+      budget: 32000
+    kiro:
+      enabled: true
+      budget: 128000

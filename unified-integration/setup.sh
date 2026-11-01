@@ -1,10 +1,11 @@
 #!/bin/bash
-# Unified AI Agent Enhancement Setup
+# Unified AI Agent Enhancement Setup - FIXED VERSION
 # Configures all agent enhancements for: Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Windsurf, Copilot, Kiro, etc.
 
 set -euo pipefail
 
-BASE_DIR="/root/agent-enhancements"
+# Allow BASE_DIR to be overridden via environment variable
+BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-/root/agent-enhancements}"
 UNIFIED_DIR="$BASE_DIR/unified-integration"
 
 # Colors for output
@@ -62,7 +63,7 @@ detect_agents() {
     fi
 
     # Check for GitHub Copilot CLI
-    if command -v gh &> /dev/null && gh extension list | grep -q copilot; then
+    if command -v gh &> /dev/null && gh extension list 2>/dev/null | grep -q copilot; then
         AGENTS+=("copilot")
         log_success "Found: GitHub Copilot"
     fi
@@ -89,40 +90,99 @@ setup_prompts() {
     for agent in "${AGENTS[@]}"; do
         case "$agent" in
             claude-code)
-                if [ -f "$PROMPTS_DIR/Anthropic/Claude Code/Prompt.txt" ]; then
-                    cp "$PROMPTS_DIR/Anthropic/Claude Code/Prompt.txt" "$UNIFIED_DIR/prompts/claude-code-system-prompt.txt"
-                    log_success "Claude Code system prompt configured"
+                # Find Claude Code prompt in the actual directory structure
+                local prompt_file=""
+                for f in "$PROMPTS_DIR/Anthropic"/**/*laude*Code*/Prompt*.txt "$PROMPTS_DIR/Anthropic"/**/*laude*Code*/*.txt; do
+                    if [ -f "$f" ]; then
+                        prompt_file="$f"
+                        break
+                    fi
+                done
+                if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
+                    cp "$prompt_file" "$UNIFIED_DIR/prompts/claude-code-system-prompt.txt"
+                    log_success "Claude Code system prompt configured from $prompt_file"
+                else
+                    log_warn "Claude Code prompt not found in $PROMPTS_DIR/Anthropic/"
                 fi
                 ;;
             codex)
-                if [ -d "$PROMPTS_DIR/OpenAI" ]; then
-                    # Find Codex prompt
-                    find "$PROMPTS_DIR/OpenAI" -name "*Codex*" -type f | head -1 | xargs -I {} cp {} "$UNIFIED_DIR/prompts/codex-system-prompt.txt" 2>/dev/null && \
-                        log_success "Codex system prompt configured"
+                # Find Codex prompt
+                local prompt_file=""
+                for f in "$PROMPTS_DIR/OpenAI"/**/*odex*/*.txt "$PROMPTS_DIR/OpenAI"/**/*odex*/*.md; do
+                    if [ -f "$f" ]; then
+                        prompt_file="$f"
+                        break
+                    fi
+                done
+                if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
+                    cp "$prompt_file" "$UNIFIED_DIR/prompts/codex-system-prompt.txt"
+                    log_success "Codex system prompt configured from $prompt_file"
+                else
+                    log_warn "Codex prompt not found in $PROMPTS_DIR/OpenAI/"
                 fi
                 ;;
             opencode)
-                if [ -d "$PROMPTS_DIR/OpenCode" ] || [ -d "$PROMPTS_DIR/opencode" ]; then
-                    find "$PROMPTS_DIR" -path "*OpenCode*" -name "*.txt" -o -path "*opencode*" -name "*.txt" | head -1 | xargs -I {} cp {} "$UNIFIED_DIR/prompts/opencode-system-prompt.txt" 2>/dev/null && \
-                        log_success "OpenCode system prompt configured"
+                # Find OpenCode prompt
+                local prompt_file=""
+                for f in "$PROMPTS_DIR"/**/[Oo]pen[Cc]ode*/*.txt "$PROMPTS_DIR"/**/[Oo]pen[Cc]ode*/*.md; do
+                    if [ -f "$f" ]; then
+                        prompt_file="$f"
+                        break
+                    fi
+                done
+                if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
+                    cp "$prompt_file" "$UNIFIED_DIR/prompts/opencode-system-prompt.txt"
+                    log_success "OpenCode system prompt configured from $prompt_file"
+                else
+                    log_warn "OpenCode prompt not found"
                 fi
                 ;;
             cursor)
-                if [ -d "$PROMPTS_DIR/Cursor Prompts" ]; then
-                    find "$PROMPTS_DIR/Cursor Prompts" -name "*.txt" | head -1 | xargs -I {} cp {} "$UNIFIED_DIR/prompts/cursor-system-prompt.txt" 2>/dev/null && \
-                        log_success "Cursor system prompt configured"
+                # Find Cursor prompt
+                local prompt_file=""
+                for f in "$PROMPTS_DIR/Cursor Prompts"/*.txt "$PROMPTS_DIR/Cursor Prompts"/*.md; do
+                    if [ -f "$f" ]; then
+                        prompt_file="$f"
+                        break
+                    fi
+                done
+                if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
+                    cp "$prompt_file" "$UNIFIED_DIR/prompts/cursor-system-prompt.txt"
+                    log_success "Cursor system prompt configured from $prompt_file"
+                else
+                    log_warn "Cursor prompt not found in $PROMPTS_DIR/Cursor Prompts/"
                 fi
                 ;;
             gemini-cli)
-                if [ -d "$PROMPTS_DIR/Google" ]; then
-                    find "$PROMPTS_DIR/Google" -name "*Gemini*" -type f | head -1 | xargs -I {} cp {} "$UNIFIED_DIR/prompts/gemini-cli-system-prompt.txt" 2>/dev/null && \
-                        log_success "Gemini CLI system prompt configured"
+                # Find Gemini prompt
+                local prompt_file=""
+                for f in "$PROMPTS_DIR/Google"/**/*emini*/*.txt "$PROMPTS_DIR/Google"/**/*emini*/*.md; do
+                    if [ -f "$f" ]; then
+                        prompt_file="$f"
+                        break
+                    fi
+                done
+                if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
+                    cp "$prompt_file" "$UNIFIED_DIR/prompts/gemini-cli-system-prompt.txt"
+                    log_success "Gemini CLI system prompt configured from $prompt_file"
+                else
+                    log_warn "Gemini CLI prompt not found in $PROMPTS_DIR/Google/"
                 fi
                 ;;
             windsurf)
-                if [ -d "$PROMPTS_DIR/Windsurf" ]; then
-                    find "$PROMPTS_DIR/Windsurf" -name "*.txt" | head -1 | xargs -I {} cp {} "$UNIFIED_DIR/prompts/windsurf-system-prompt.txt" 2>/dev/null && \
-                        log_success "Windsurf system prompt configured"
+                # Find Windsurf prompt
+                local prompt_file=""
+                for f in "$PROMPTS_DIR/Windsurf"/*.txt "$PROMPTS_DIR/Windsurf"/*.md; do
+                    if [ -f "$f" ]; then
+                        prompt_file="$f"
+                        break
+                    fi
+                done
+                if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
+                    cp "$prompt_file" "$UNIFIED_DIR/prompts/windsurf-system-prompt.txt"
+                    log_success "Windsurf system prompt configured from $prompt_file"
+                else
+                    log_warn "Windsurf prompt not found in $PROMPTS_DIR/Windsurf/"
                 fi
                 ;;
         esac
@@ -184,6 +244,99 @@ EOF
     log_success "Universal system prompt created"
 }
 
+# Parse YAML frontmatter from SKILL.md file
+parse_skill_frontmatter() {
+    local skill_file="$1"
+    local field="$2"
+
+    if [ ! -f "$skill_file" ]; then
+        echo ""
+        return
+    fi
+
+    # Extract frontmatter between --- delimiters
+    awk -v field="$field" '
+    /^---$/ { in_fm = !in_fm; next }
+    in_fm && $0 ~ "^" field ":" {
+        sub("^" field ": *", "")
+        gsub(/^["'"'"']|["'"'"']$/, "")
+        print
+        exit
+    }
+    ' "$skill_file"
+}
+
+# Get skill category from frontmatter
+get_skill_category() {
+    local skill_file="$1"
+    local category=$(parse_skill_frontmatter "$skill_file" "category")
+    if [ -z "$category" ]; then
+        category="general"
+    fi
+    echo "$category"
+}
+
+# Get skill name from frontmatter
+get_skill_name() {
+    local skill_file="$1"
+    local name=$(parse_skill_frontmatter "$skill_file" "name")
+    if [ -z "$name" ]; then
+        # Fallback to directory name
+        name=$(basename "$(dirname "$skill_file")")
+    fi
+    echo "$name"
+}
+
+# Get skill description from frontmatter
+get_skill_description() {
+    local skill_file="$1"
+    parse_skill_frontmatter "$skill_file" "description"
+}
+
+# Get skill tags from frontmatter
+get_skill_tags() {
+    local skill_file="$1"
+    local tags=$(awk '
+    /^---$/ { in_fm = !in_fm; next }
+    in_fm && /^tags:/ { in_tags = 1; next }
+    in_fm && in_tags && /^[[:space:]]*-/ {
+        sub(/^[[:space:]]*-[[:space:]]*/, "")
+        gsub(/^["'"'"']|["'"'"']$/, "")
+        print
+        next
+    }
+    in_fm && in_tags && !/^[[:space:]]*-/ { in_tags = 0 }
+    ' "$skill_file")
+    echo "$tags"
+}
+
+# Get skill tools (compatible agents) from frontmatter
+get_skill_tools() {
+    local skill_file="$1"
+    local tools=$(awk '
+    /^---$/ { in_fm = !in_fm; next }
+    in_fm && /^tools:/ { in_tools = 1; next }
+    in_fm && in_tools && /^[[:space:]]*-/ {
+        sub(/^[[:space:]]*-[[:space:]]*/, "")
+        gsub(/^["'"'"']|["'"'"']$/, "")
+        print
+        next
+    }
+    in_fm && in_tools && !/^[[:space:]]*-/ { in_tools = 0 }
+    ' "$skill_file")
+    echo "$tools"
+}
+
+# Get skill risk from frontmatter
+get_skill_risk() {
+    local skill_file="$1"
+    local risk=$(parse_skill_frontmatter "$skill_file" "risk")
+    if [ -z "$risk" ]; then
+        risk="safe"
+    fi
+    echo "$risk"
+}
+
 # Aggregate skills from all sources
 aggregate_skills() {
     log_info "Aggregating skills from all sources..."
@@ -225,7 +378,7 @@ skills/
 │   ├── copilot/
 │   ├── windsurf/
 │   └── kiro/
-└── all-skills.json
+└─�� all-skills.json
 ```
 
 ## Usage
@@ -240,7 +393,7 @@ To use a skill, the agent should:
 EOF
 
     # Create category directories
-    CATEGORIES=("security" "architecture" "testing" "refactoring" "code-review" "documentation" "devops" "ai-ml" "productivity")
+    CATEGORIES=("security" "architecture" "testing" "refactoring" "code-review" "documentation" "devops" "ai-ml" "productivity" "general")
     for cat in "${CATEGORIES[@]}"; do
         mkdir -p "$SKILLS_DIR/by-category/$cat"
     done
@@ -251,135 +404,162 @@ EOF
         mkdir -p "$SKILLS_DIR/by-agent/$agent"
     done
 
-    # Aggregate from agentic-awesome-skills (primary)
-    log_info "Processing agentic-awesome-skills..."
-    if [ -f "$BASE_DIR/agentic-awesome-skills/skills_index.json" ]; then
-        cp "$BASE_DIR/agentic-awesome-skills/skills_index.json" "$SKILLS_DIR/agentic-awesome-skills-index.json"
+    # Initialize array to hold all skills for unified index
+    ALL_SKILLS_JSON="$SKILLS_DIR/all-skills.json.tmp"
+    echo '{"skills": []}' > "$ALL_SKILLS_JSON"
 
-        # Parse and categorize skills (simplified - using tags)
-        # In production, this would use the actual skills_index.json structure
-        log_success "agentic-awesome-skills index copied"
-    fi
+    # Process skills from a source directory
+    process_skills_source() {
+        local source_name="$1"
+        local source_dir="$2"
+        local skills_count=0
 
-    # Copy skills from ECC
-    if [ -d "$BASE_DIR/ECC/skills" ]; then
-        log_info "Processing ECC skills..."
-        # Use mapfile to avoid pipe issues with set -o pipefail
-        mapfile -d '' -n 20 skill_files < <(find "$BASE_DIR/ECC/skills" -type f \( -name "SKILL.md" -o -name "*.md" \) -print0 2>/dev/null)
-        for skill_file in "${skill_files[@]}"; do
-            skill_name=$(basename "$(dirname "$skill_file")")
-            cp "$skill_file" "$SKILLS_DIR/by-category/general/${skill_name}.md" 2>/dev/null || true
-        done
-        log_success "ECC skills processed"
-    fi
+        if [ ! -d "$source_dir" ]; then
+            log_warn "Source directory not found: $source_dir"
+            return
+        fi
 
-    # Copy skills from Ponytail
-    if [ -d "$BASE_DIR/ponytail/skills" ]; then
-        log_info "Processing Ponytail skills..."
-        mapfile -d '' -n 20 skill_files < <(find "$BASE_DIR/ponytail/skills" -type f \( -name "SKILL.md" -o -name "*.md" \) -print0 2>/dev/null)
-        for skill_file in "${skill_files[@]}"; do
-            skill_name=$(basename "$(dirname "$skill_file")")
-            cp "$skill_file" "$SKILLS_DIR/by-category/general/${skill_name}.md" 2>/dev/null || true
-        done
-        log_success "Ponytail skills processed"
-    fi
+        log_info "Processing $source_name skills from $source_dir..."
 
-    # Copy skills from Superpowers
-    if [ -d "$BASE_DIR/superpowers/skills" ]; then
-        log_info "Processing Superpowers skills..."
-        mapfile -d '' -n 20 skill_files < <(find "$BASE_DIR/superpowers/skills" -type f \( -name "SKILL.md" -o -name "*.md" \) -print0 2>/dev/null)
-        for skill_file in "${skill_files[@]}"; do
-            skill_name=$(basename "$(dirname "$skill_file")")
-            cp "$skill_file" "$SKILLS_DIR/by-category/general/${skill_name}.md" 2>/dev/null || true
-        done
-        log_success "Superpowers skills processed"
-    fi
+        # Find all skill directories (directories containing SKILL.md)
+        while IFS= read -r -d '' skill_dir; do
+            if [ -f "$skill_dir/SKILL.md" ]; then
+                skill_name=$(get_skill_name "$skill_dir/SKILL.md")
+                skill_category=$(get_skill_category "$skill_dir/SKILL.md")
+                skill_description=$(get_skill_description "$skill_dir/SKILL.md")
+                skill_risk=$(get_skill_risk "$skill_dir/SKILL.md")
+                skill_tags=$(get_skill_tags "$skill_dir/SKILL.md")
+                skill_tools=$(get_skill_tools "$skill_dir/SKILL.md")
 
-    # Create a unified skills index
-    log_info "Creating unified skills index..."
+                # Normalize category
+                case "$skill_category" in
+                    security|architecture|testing|refactoring|code-review|documentation|devops|ai-ml|productivity)
+                        ;;
+                    *)
+                        skill_category="general"
+                        ;;
+                esac
 
-    # Start with agentic-awesome-skills index
-    if [ -f "$BASE_DIR/agentic-awesome-skills/skills_index.json" ]; then
-        # Copy and enhance with additional metadata
-        python3 -c "
+                # Copy entire skill directory to by-category/
+                target_dir="$SKILLS_DIR/by-category/$skill_category/$skill_name"
+                mkdir -p "$(dirname "$target_dir")"
+                cp -r "$skill_dir" "$target_dir" 2>/dev/null || true
+
+                # Also copy to by-agent/ for each compatible tool
+                while IFS= read -r tool; do
+                    if [ -n "$tool" ]; then
+                        agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
+                        mkdir -p "$(dirname "$agent_target_dir")"
+                        cp -r "$skill_dir" "$agent_target_dir" 2>/dev/null || true
+                    fi
+                done <<< "$skill_tools"
+
+                # Add to unified index using Python
+                python3 -c "
 import json
 import sys
 
-# Load agentic-awesome-skills index
-with open('$BASE_DIR/agentic-awesome-skills/skills_index.json') as f:
-    skills = json.load(f)
+skill_name = '''$skill_name'''
+skill_category = '''$skill_category'''
+skill_description = '''$skill_description'''
+skill_risk = '''$skill_risk'''
+skill_source = '''$source_name'''
+skill_tags = '''$skill_tags'''
+skill_tools = '''$skill_tools'''
 
-# Add tools field for agent compatibility
-for skill in skills:
-    targets = skill.get('plugin', {}).get('targets', {})
-    skill['tools'] = [k for k, v in targets.items() if v == 'supported']
+# Parse tags and tools
+tags_list = [t.strip() for t in skill_tags.split('\n') if t.strip()]
+tools_list = [t.strip() for t in skill_tools.split('\n') if t.strip()]
 
-    # Add when_to_use field from description
-    skill['when_to_use'] = skill.get('description', '')
+# Load current index
+with open('''$ALL_SKILLS_JSON''') as f:
+    index = json.load(f)
 
-    # Ensure tags exist
-    if 'tags' not in skill:
-        skill['tags'] = []
+# Add new skill
+new_skill = {
+    'name': skill_name,
+    'category': skill_category,
+    'description': skill_description,
+    'risk': skill_risk,
+    'source': skill_source,
+    'tags': tags_list,
+    'tools': tools_list,
+    'when_to_use': skill_description
+}
 
-# Save unified index
+index['skills'].append(new_skill)
+
+# Write back
+with open('''$ALL_SKILLS_JSON''', 'w') as f:
+    json.dump(index, f, indent=2)
+"
+                ((skills_count++))
+            fi
+        done < <(find "$source_dir" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+
+        log_success "$source_name: processed $skills_count skills"
+    }
+
+    # Aggregate from agentic-awesome-skills (primary)
+    if [ -d "$BASE_DIR/agentic-awesome-skills/skills" ]; then
+        process_skills_source "agentic-awesome-skills" "$BASE_DIR/agentic-awesome-skills/skills"
+    fi
+
+    # Process skills from ECC
+    if [ -d "$BASE_DIR/ECC/skills" ]; then
+        process_skills_source "ECC" "$BASE_DIR/ECC/skills"
+    fi
+
+    # Process skills from Ponytail
+    if [ -d "$BASE_DIR/ponytail/skills" ]; then
+        process_skills_source "Ponytail" "$BASE_DIR/ponytail/skills"
+    fi
+
+    # Process skills from Superpowers
+    if [ -d "$BASE_DIR/superpowers/skills" ]; then
+        process_skills_source "Superpowers" "$BASE_DIR/superpowers/skills"
+    fi
+
+    # Create final unified skills index with metadata
+    log_info "Creating unified skills index..."
+    python3 -c "
+import json
+from datetime import datetime
+
+with open('''$ALL_SKILLS_JSON''') as f:
+    index = json.load(f)
+
+# Count categories
+categories = {}
+for skill in index['skills']:
+    cat = skill.get('category', 'general')
+    categories[cat] = categories.get(cat, 0) + 1
+
+# Count agents
+agent_counts = {}
+for skill in index['skills']:
+    for tool in skill.get('tools', []):
+        agent_counts[tool] = agent_counts.get(tool, 0) + 1
+
+# Create final unified index
 unified = {
     'version': '1.0',
     'sources': ['agentic-awesome-skills', 'ECC', 'Ponytail', 'Superpowers'],
-    'skills': skills,
-    'total_skills': len(skills),
-    'categories': {},
+    'skills': index['skills'],
+    'total_skills': len(index['skills']),
+    'categories': categories,
     'agents_supported': ['claude-code', 'codex', 'cursor', 'gemini-cli', 'opencode', 'copilot', 'windsurf', 'kiro'],
-    'last_updated': '$(date -Iseconds)'
+    'agent_skill_counts': agent_counts,
+    'last_updated': datetime.utcnow().isoformat() + 'Z'
 }
 
-# Count categories
-for skill in skills:
-    cat = skill.get('category', 'general')
-    unified['categories'][cat] = unified['categories'].get(cat, 0) + 1
-
-with open('$SKILLS_DIR/all-skills.json', 'w') as f:
+with open('''$SKILLS_DIR/all-skills.json''', 'w') as f:
     json.dump(unified, f, indent=2)
-"
-        log_success "Unified skills index created with $(python3 -c "import json; print(len(json.load(open('$SKILLS_DIR/all-skills.json'))['skills']))") skills"
-    else
-        # Fallback to summary only
-        cat > "$SKILLS_DIR/all-skills.json" << EOF
-{
-  "version": "1.0",
-  "sources": [
-    "agentic-awesome-skills",
-    "ECC",
-    "Ponytail",
-    "Superpowers"
-  ],
-  "skills": [],
-  "total_skills": 2884,
-  "categories": {
-    "security": 150,
-    "architecture": 200,
-    "testing": 180,
-    "refactoring": 120,
-    "code-review": 90,
-    "documentation": 80,
-    "devops": 160,
-    "ai-ml": 200,
-    "productivity": 300,
-    "general": 1404
-  },
-  "agents_supported": [
-    "claude-code",
-    "codex",
-    "cursor",
-    "gemini-cli",
-    "opencode",
-    "copilot",
-    "windsurf",
-    "kiro"
-  ],
-  "last_updated": "$(date -Iseconds)"
-}
-EOF
-    fi
+
+print(f'Unified skills index created with {len(index[\"skills\"])} skills')"
+
+    # Clean up temp file
+    rm -f "$ALL_SKILLS_JSON"
 
     log_success "Skills aggregation complete"
 }
@@ -389,7 +569,7 @@ setup_memory() {
     log_info "Setting up persistent memory (claude-mem)..."
 
     MEMORY_DIR="$UNIFIED_DIR/memory"
-    mkdir -p "$MEMORY_DIR"
+    mkdir -p "$MEMORY_DIR/hooks"
 
     # Create memory configuration
     cat > "$MEMORY_DIR/config.yaml" << 'EOF'
@@ -504,63 +684,213 @@ echo "Memory system initialized at $MEMORY_ROOT"
 EOF
     chmod +x "$MEMORY_DIR/init-memory.sh"
 
-    # Create agent-specific memory hook scripts
+    # Create agent-specific memory hook scripts using Python for safe SQL
     for agent in "${AGENTS[@]}"; do
-        cat > "$MEMORY_DIR/hooks/${agent}-memory-hook.sh" << 'HOOKEOF'
+        cat > "$MEMORY_DIR/hooks/${agent}-memory-hook.py" << 'PYEOF'
+#!/usr/bin/env python3
+"""
+Memory hook for AGENT_PLACEHOLDER
+This script is called by the agent to save/load memory
+Uses parameterized queries to prevent SQL injection
+"""
+
+import sqlite3
+import sys
+import os
+import json
+from datetime import datetime
+
+AGENT = "AGENT_PLACEHOLDER"
+MEMORY_ROOT = os.environ.get("AGENT_MEMORY_ROOT", os.path.expanduser("~/.agent-memory"))
+DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
+
+def init_db():
+    os.makedirs(MEMORY_ROOT, exist_ok=True)
+    os.makedirs(os.path.join(MEMORY_ROOT, "projects"), exist_ok=True)
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS memories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                agent TEXT NOT NULL,
+                project TEXT,
+                memory_type TEXT NOT NULL,
+                key TEXT NOT NULL,
+                value TEXT NOT NULL,
+                metadata TEXT,
+                embedding BLOB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP,
+                UNIQUE(agent, project, memory_type, key)
+            )
+        """)
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_project ON memories(agent, project)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_type ON memories(memory_type)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_expires ON memories(expires_at)")
+
+def save_memory(key, value, memory_type="session_context", project=None, metadata=None, ttl_days=None):
+    if project is None:
+        project = os.path.basename(os.getcwd())
+
+    expires_at = None
+    if ttl_days:
+        from datetime import timedelta
+        expires_at = (datetime.now() + timedelta(days=ttl_days)).isoformat()
+
+    meta_json = json.dumps(metadata) if metadata else None
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            INSERT OR REPLACE INTO memories
+            (agent, project, memory_type, key, value, metadata, updated_at, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?)
+        """, (AGENT, project, memory_type, key, value, meta_json, expires_at))
+
+def load_memory(key, memory_type="session_context", project=None):
+    if project is None:
+        project = os.path.basename(os.getcwd())
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.execute("""
+            SELECT value FROM memories
+            WHERE agent=? AND project=? AND memory_type=? AND key=?
+            ORDER BY updated_at DESC LIMIT 1
+        """, (AGENT, project, memory_type, key))
+        row = cursor.fetchone()
+        return row[0] if row else None
+
+def list_memories(memory_type=None, project=None, limit=20):
+    if project is None:
+        project = os.path.basename(os.getcwd())
+
+    with sqlite3.connect(DB_PATH) as conn:
+        if memory_type:
+            cursor = conn.execute("""
+                SELECT memory_type, key, value, metadata, updated_at
+                FROM memories
+                WHERE agent=? AND project=? AND memory_type=?
+                ORDER BY updated_at DESC LIMIT ?
+            """, (AGENT, project, memory_type, limit))
+        else:
+            cursor = conn.execute("""
+                SELECT memory_type, key, value, metadata, updated_at
+                FROM memories
+                WHERE agent=? AND project=?
+                ORDER BY updated_at DESC LIMIT ?
+            """, (AGENT, project, limit))
+
+        return [
+            {
+                "type": row[0],
+                "key": row[1],
+                "value": row[2][:200] + "..." if len(row[2]) > 200 else row[2],
+                "metadata": json.loads(row[3]) if row[3] else {},
+                "updated": row[4]
+            }
+            for row in cursor.fetchall()
+        ]
+
+def delete_memory(key, memory_type="session_context", project=None):
+    if project is None:
+        project = os.path.basename(os.getcwd())
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.execute("""
+            DELETE FROM memories
+            WHERE agent=? AND project=? AND memory_type=? AND key=?
+        """, (AGENT, project, memory_type, key))
+        return cursor.rowcount > 0
+
+def cleanup_expired():
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.execute("""
+            DELETE FROM memories
+            WHERE expires_at IS NOT NULL AND expires_at < datetime('now')
+        """)
+        return cursor.rowcount
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: memory-hook.py <command> [args...]")
+        print("Commands: save <key> <value> [type] [project] [ttl_days]")
+        print("          load <key> [type] [project]")
+        print("          list [type] [project] [limit]")
+        print("          delete <key> [type] [project]")
+        print("          cleanup")
+        sys.exit(1)
+
+    init_db()
+    command = sys.argv[1]
+
+    if command == "save":
+        if len(sys.argv) < 4:
+            print("Usage: memory-hook.py save <key> <value> [type] [project] [ttl_days]")
+            sys.exit(1)
+        key = sys.argv[2]
+        value = sys.argv[3]
+        mem_type = sys.argv[4] if len(sys.argv) > 4 else "session_context"
+        project = sys.argv[5] if len(sys.argv) > 5 else None
+        ttl = int(sys.argv[6]) if len(sys.argv) > 6 else None
+        save_memory(key, value, mem_type, project, ttl_days=ttl)
+        print(f"Saved: {key} ({mem_type})")
+
+    elif command == "load":
+        if len(sys.argv) < 3:
+            print("Usage: memory-hook.py load <key> [type] [project]")
+            sys.exit(1)
+        key = sys.argv[2]
+        mem_type = sys.argv[3] if len(sys.argv) > 3 else "session_context"
+        project = sys.argv[4] if len(sys.argv) > 4 else None
+        value = load_memory(key, mem_type, project)
+        if value:
+            print(value)
+        else:
+            print(f"Memory not found: {key}", file=sys.stderr)
+            sys.exit(1)
+
+    elif command == "list":
+        mem_type = sys.argv[2] if len(sys.argv) > 2 else None
+        project = sys.argv[3] if len(sys.argv) > 3 else None
+        limit = int(sys.argv[4]) if len(sys.argv) > 4 else 20
+        memories = list_memories(mem_type, project, limit)
+        for m in memories:
+            print(f"[{m['type']}] {m['key']}: {m['value']} (updated: {m['updated']})")
+
+    elif command == "delete":
+        if len(sys.argv) < 3:
+            print("Usage: memory-hook.py delete <key> [type] [project]")
+            sys.exit(1)
+        key = sys.argv[2]
+        mem_type = sys.argv[3] if len(sys.argv) > 3 else "session_context"
+        project = sys.argv[4] if len(sys.argv) > 4 else None
+        if delete_memory(key, mem_type, project):
+            print(f"Deleted: {key}")
+        else:
+            print(f"Not found: {key}")
+            sys.exit(1)
+
+    elif command == "cleanup":
+        count = cleanup_expired()
+        print(f"Cleaned up {count} expired memories")
+
+    else:
+        print(f"Unknown command: {command}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+PYEOF
+        sed -i "s/AGENT_PLACEHOLDER/$agent/g" "$MEMORY_DIR/hooks/${agent}-memory-hook.py"
+        chmod +x "$MEMORY_DIR/hooks/${agent}-memory-hook.py"
+
+        # Also create a bash wrapper for backward compatibility
+        cat > "$MEMORY_DIR/hooks/${agent}-memory-hook.sh" << 'SHEOF'
 #!/bin/bash
-# Memory hook for AGENT_PLACEHOLDER
-# This script is called by the agent to save/load memory
-
+# Bash wrapper for memory hook - delegates to Python script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT="AGENT_PLACEHOLDER"
-MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}"
-
-case "$1" in
-    save)
-        # Save memory: $2=key, $3=value, $4=type, $5=project
-        key="$2"
-        value="$3"
-        type="${4:-session_context}"
-        project="${5:-$(basename "$PWD")}"
-
-        if command -v sqlite3 &> /dev/null; then
-            sqlite3 "$MEMORY_ROOT/memory.db" \
-                "INSERT OR REPLACE INTO memories (agent, project, memory_type, key, value, updated_at) VALUES ('$AGENT', '$project', '$type', '$key', '$value', datetime('now'));"
-        else
-            # Fallback to file-based
-            mkdir -p "$MEMORY_ROOT/projects/$project"
-            echo "$value" > "$MEMORY_ROOT/projects/$project/${type}_${key}.md"
-        fi
-        ;;
-    load)
-        # Load memory: $2=key, $3=type, $4=project
-        key="$2"
-        type="${3:-session_context}"
-        project="${4:-$(basename "$PWD")}"
-
-        if command -v sqlite3 &> /dev/null; then
-            sqlite3 "$MEMORY_ROOT/memory.db" \
-                "SELECT value FROM memories WHERE agent='$AGENT' AND project='$project' AND memory_type='$type' AND key='$key' ORDER BY updated_at DESC LIMIT 1;"
-        else
-            cat "$MEMORY_ROOT/projects/$project/${type}_${key}.md" 2>/dev/null || echo ""
-        fi
-        ;;
-    list)
-        # List memories for project
-        project="${2:-$(basename "$PWD")}"
-
-        if command -v sqlite3 &> /dev/null; then
-            sqlite3 "$MEMORY_ROOT/memory.db" \
-                "SELECT memory_type, key, substr(value, 1, 100), updated_at FROM memories WHERE agent='$AGENT' AND project='$project' ORDER BY updated_at DESC;"
-        else
-            ls -la "$MEMORY_ROOT/projects/$project/" 2>/dev/null || echo "No memories found"
-        fi
-        ;;
-    *)
-        echo "Usage: $0 {save|load|list} [args...]"
-        exit 1
-        ;;
-esac
-HOOKEOF
+exec python3 "$SCRIPT_DIR/${AGENT}-memory-hook.py" "$@"
+SHEOF
         sed -i "s/AGENT_PLACEHOLDER/$agent/g" "$MEMORY_DIR/hooks/${agent}-memory-hook.sh"
         chmod +x "$MEMORY_DIR/hooks/${agent}-memory-hook.sh"
     done
@@ -576,10 +906,14 @@ setup_compression() {
     mkdir -p "$COMPRESSION_DIR"
 
     # Check if headroom is built/installed
-    if [ -f "$BASE_DIR/headroom/target/release/headroom" ] || command -v headroom &> /dev/null; then
-        log_success "headroom binary found"
+    HEADROOM_CMD=""
+    if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
+        log_success "headroom binary found at $BASE_DIR/headroom/target/release/headroom"
+        HEADROOM_CMD="$BASE_DIR/headroom/target/release/headroom"
+    elif command -v headroom &> /dev/null; then
+        log_success "headroom binary found in PATH"
         HEADROOM_CMD="headroom"
-    elif [ -f "$BASE_DIR/headroom/cargo.toml" ]; then
+    elif [ -f "$BASE_DIR/headroom/Cargo.toml" ]; then
         log_info "Building headroom from source..."
         cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -20
         if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
@@ -595,7 +929,7 @@ setup_compression() {
     fi
 
     # Create compression configuration
-    cat > "$COMPRESSION_DIR/config.yaml" << 'EOF'
+    cat > "$COMPRESSION_DIR/config.yaml" << EOF
 # Context Compression Configuration
 
 compression:
@@ -604,7 +938,7 @@ compression:
 
   # Headroom settings
   headroom:
-    binary_path: "HEADROOM_CMD_PLACEHOLDER"
+    binary_path: "${HEADROOM_CMD:-headroom}"
     # Compression modes
     modes:
       code: "smart"        # Preserve code structure, compress comments/whitespace
@@ -662,8 +996,6 @@ compression:
       budget: 128000
 EOF
 
-    sed -i "s|HEADROOM_CMD_PLACEHOLDER|${HEADROOM_CMD:-headroom}|g" "$COMPRESSION_DIR/config.yaml"
-
     # Create compression wrapper script
     cat > "$COMPRESSION_DIR/compress.sh" << 'EOF'
 #!/bin/bash
@@ -674,36 +1006,41 @@ INPUT="${1:-/dev/stdin}"
 MODE="${2:-auto}"
 AGENT="${3:-claude-code}"
 
-# Try headroom first
-if command -v headroom &> /dev/null || [ -f "/root/agent-enhancements/headroom/target/release/headroom" ]; then
-    HEADROOM_BIN="${HEADROOM_BIN:-headroom}"
-    if [ ! -f "$HEADROOM_BIN" ]; then
-        HEADROOM_BIN="/root/agent-enhancements/headroom/target/release/headroom"
-    fi
+# Find headroom binary
+HEADROOM_BIN=""
+if [ -f "/root/agent-enhancements/headroom/target/release/headroom" ]; then
+    HEADROOM_BIN="/root/agent-enhancements/headroom/target/release/headroom"
+elif command -v headroom &> /dev/null; then
+    HEADROOM_BIN="headroom"
+fi
 
+if [ -n "$HEADROOM_BIN" ]; then
     case "$MODE" in
         code|logs|json|markdown|generic)
             "$HEADROOM_BIN" compress --mode "$MODE" < "$INPUT"
             ;;
         auto)
             # Detect content type
-            if head -100 "$INPUT" | grep -q '^{' && head -100 "$INPUT" | grep -q '}'; then
+            # Read first 100 lines for detection
+            head -100 "$INPUT" > /tmp/compress_input_$$
+            if grep -q '^{' /tmp/compress_input_$$ && grep -q '}' /tmp/compress_input_$$; then
                 "$HEADROOM_BIN" compress --mode json < "$INPUT"
-            elif head -100 "$INPUT" | grep -q '^```'; then
+            elif grep -q '^```' /tmp/compress_input_$$; then
                 "$HEADROOM_BIN" compress --mode code < "$INPUT"
-            elif head -100 "$INPUT" | grep -qE '(ERROR|WARN|INFO|DEBUG).*\['; then
+            elif grep -qE '(ERROR|WARN|INFO|DEBUG).*\[' /tmp/compress_input_$$; then
                 "$HEADROOM_BIN" compress --mode logs < "$INPUT"
             else
                 "$HEADROOM_BIN" compress --mode generic < "$INPUT"
             fi
+            rm -f /tmp/compress_input_$$
             ;;
     esac
 else
     # Fallback: basic compression
     cat "$INPUT" | \
-        # Remove excessive whitespace
+        # Remove trailing whitespace
         sed 's/[[:space:]]\+$//' | \
-        # Compress repeated lines
+        # Compress repeated lines (keep first occurrence)
         awk '!seen[$0]++' | \
         # Limit output
         head -5000
@@ -714,9 +1051,9 @@ EOF
     log_success "Context compression configured"
 }
 
-# Create agent-specific configurations
+# Create agent-specific configurations (non-destructive merge)
 create_agent_configs() {
-    log_info "Creating agent-specific configurations..."
+    log_info "Creating agent-specific configurations (preserving existing)..."
 
     for agent in "${AGENTS[@]}"; do
         case "$agent" in
@@ -747,28 +1084,119 @@ create_agent_configs() {
         esac
     done
 
-    log_success "Agent configurations created"
+    log_success "Agent configurations merged"
+}
+
+# Merge JSON configs using Python - replace hooks, preserve other keys
+merge_json_config() {
+    local target_file="$1"
+    local enhancement_json="$2"
+    local backup_file="${target_file}.backup.$(date +%s)"
+
+    if [ ! -f "$target_file" ]; then
+        # No existing config - write enhancement directly
+        echo "$enhancement_json" > "$target_file"
+        log_info "Created new config: $target_file"
+        return
+    fi
+
+    # Backup original
+    cp "$target_file" "$backup_file"
+    log_info "Backed up existing config to $backup_file"
+
+    # Merge using Python - replace hooks key, preserve other keys
+    python3 -c "
+import json
+import sys
+
+with open('$target_file', 'r') as f:
+    existing = json.load(f)
+
+enhancement = json.loads('$enhancement_json')
+
+# For hooks, replace entirely. For other keys, deep merge.
+def merge_configs(base, update):
+    for key, value in update.items():
+        if key == 'hooks':
+            # Replace hooks entirely (don't merge lists)
+            base[key] = value
+        elif key in base and isinstance(base[key], dict) and isinstance(value, dict):
+            merge_configs(base[key], value)
+        else:
+            # New key or non-dict - add/update
+            base[key] = value
+
+merge_configs(existing, enhancement)
+
+with open('$target_file', 'w') as f:
+    json.dump(existing, f, indent=2)
+"
+    log_success "Merged enhancement into $target_file (hooks replaced, other keys preserved)"
+}
+
+# Merge YAML configs using Python - replace hooks, preserve other keys
+merge_yaml_config() {
+    local target_file="$1"
+    local enhancement_yaml="$2"
+    local backup_file="${target_file}.backup.$(date +%s)"
+
+    if [ ! -f "$target_file" ]; then
+        echo "$enhancement_yaml" > "$target_file"
+        log_info "Created new config: $target_file"
+        return
+    fi
+
+    cp "$target_file" "$backup_file"
+    log_info "Backed up existing config to $backup_file"
+
+    python3 -c "
+import yaml
+import sys
+
+with open('$target_file', 'r') as f:
+    existing = yaml.safe_load(f) or {}
+
+enhancement = yaml.safe_load('$enhancement_yaml')
+
+# For hooks, replace entirely. For other keys, deep merge.
+def merge_configs(base, update):
+    for key, value in update.items():
+        if key == 'hooks':
+            # Replace hooks entirely (don't merge lists)
+            base[key] = value
+        elif key in base and isinstance(base[key], dict) and isinstance(value, dict):
+            merge_configs(base[key], value)
+        else:
+            # New key or non-dict - add/update
+            base[key] = value
+
+merge_configs(existing, enhancement)
+
+with open('$target_file', 'w') as f:
+    yaml.dump(existing, f, default_flow_style=False, sort_keys=False)
+"
+    log_success "Merged enhancement into $target_file (hooks replaced, other keys preserved)"
 }
 
 create_claude_code_config() {
     CLAUDE_DIR="$HOME/.claude"
     mkdir -p "$CLAUDE_DIR"
 
-    # Create CLAUDE.md with all enhancements
-    cat > "$CLAUDE_DIR/CLAUDE.md" << 'EOF'
+    # Always update CLAUDE.md (it's documentation, not credentials)
+    cat > "$CLAUDE_DIR/CLAUDE.md" << EOF
 # Claude Code Enhanced Configuration
 
 ## System Prompt
-@/root/agent-enhancements/unified-integration/prompts/claude-code-system-prompt.txt
+@$UNIFIED_DIR/prompts/claude-code-system-prompt.txt
 
 ## Skills
-- Source: /root/agent-enhancements/unified-integration/skills
+- Source: $UNIFIED_DIR/skills
 - Auto-load: true
 - Categories: all
 
 ## Memory (claude-mem)
 - Enabled: true
-- Plugin: /root/agent-enhancements/claude-mem/.claude-plugin
+- Plugin: $BASE_DIR/claude-mem/.claude-plugin
 - Auto-save: task_complete, decision_made, session_end
 
 ## Context Compression (headroom)
@@ -785,9 +1213,8 @@ create_claude_code_config() {
 # Note: headroom is a proxy server, not an MCP server. Skills are loaded via the skills loader utility.
 EOF
 
-    # Create settings.json
-    cat > "$CLAUDE_DIR/settings.json" << 'EOF'
-{
+    # Merge hooks into existing settings.json (preserves env, credentials, etc.)
+    ENHANCEMENT_JSON='{
   "hooks": {
     "PreToolUse": [
       {
@@ -795,7 +1222,7 @@ EOF
         "hooks": [
           {
             "type": "command",
-            "command": "/root/agent-enhancements/unified-integration/memory/hooks/claude-code-memory-hook.sh save pre_tool_use \"${TOOL_NAME}\" \"${TOOL_INPUT}\""
+            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save pre_tool_use \"\${TOOL_NAME}\" \"\${TOOL_INPUT}\""
           }
         ]
       }
@@ -806,7 +1233,7 @@ EOF
         "hooks": [
           {
             "type": "command",
-            "command": "/root/agent-enhancements/unified-integration/memory/hooks/claude-code-memory-hook.sh save post_tool_use \"${TOOL_NAME}\" \"${TOOL_RESULT}\""
+            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save post_tool_use \"\${TOOL_NAME}\" \"\${TOOL_RESULT}\""
           }
         ]
       }
@@ -816,33 +1243,31 @@ EOF
         "hooks": [
           {
             "type": "command",
-            "command": "/root/agent-enhancements/unified-integration/memory/hooks/claude-code-memory-hook.sh save session_end \"summary\" \"${SESSION_SUMMARY}\""
+            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save session_end \"summary\" \"\${SESSION_SUMMARY}\""
           }
         ]
       }
     ]
   }
-}
-EOF
-    log_success "Claude Code configuration created"
+}'
+    merge_json_config "$CLAUDE_DIR/settings.json" "$ENHANCEMENT_JSON"
+    log_success "Claude Code configuration merged (credentials preserved)"
 }
 
 create_codex_config() {
     CODEX_DIR="$HOME/.codex"
     mkdir -p "$CODEX_DIR"
 
-    cat > "$CODEX_DIR/config.yaml" << 'EOF'
-# Codex Enhanced Configuration
-
-system_prompt: "@/root/agent-enhancements/unified-integration/prompts/codex-system-prompt.txt"
+    ENHANCEMENT_YAML='
+system_prompt: "@'"$UNIFIED_DIR"'/prompts/codex-system-prompt.txt"
 
 skills:
-  directory: "/root/agent-enhancements/unified-integration/skills"
+  directory: "'"$UNIFIED_DIR"'/skills"
   auto_load: true
 
 memory:
   enabled: true
-  plugin: "/root/agent-enhancements/claude-mem/.codex-plugin"
+  plugin: "'"$BASE_DIR"'/claude-mem/.codex-plugin"
 
 compression:
   enabled: true
@@ -850,27 +1275,27 @@ compression:
   budget: 128000
 
 hooks:
-  pre_tool: "/root/agent-enhancements/unified-integration/memory/hooks/codex-memory-hook.sh save"
-  post_tool: "/root/agent-enhancements/unified-integration/memory/hooks/codex-memory-hook.sh save"
-  stop: "/root/agent-enhancements/unified-integration/memory/hooks/codex-memory-hook.sh save session_end"
-EOF
-    log_success "Codex configuration created"
+  pre_tool: "'"$UNIFIED_DIR"'/memory/hooks/codex-memory-hook.py save"
+  post_tool: "'"$UNIFIED_DIR"'/memory/hooks/codex-memory-hook.py save"
+  stop: "'"$UNIFIED_DIR"'/memory/hooks/codex-memory-hook.py save session_end"
+'
+    merge_yaml_config "$CODEX_DIR/config.yaml" "$ENHANCEMENT_YAML"
+    log_success "Codex configuration merged"
 }
 
 create_opencode_config() {
     OPENCODE_DIR="$HOME/.config/opencode"
     mkdir -p "$OPENCODE_DIR"
 
-    cat > "$OPENCODE_DIR/config.json" << 'EOF'
-{
-  "systemPrompt": "@/root/agent-enhancements/unified-integration/prompts/opencode-system-prompt.txt",
+    ENHANCEMENT_JSON='{
+  "systemPrompt": "@'"$UNIFIED_DIR"'/prompts/opencode-system-prompt.txt",
   "skills": {
-    "directory": "/root/agent-enhancements/unified-integration/skills",
+    "directory": "'"$UNIFIED_DIR"'/skills",
     "autoLoad": true
   },
   "memory": {
     "enabled": true,
-    "plugin": "/root/agent-enhancements/claude-mem/.opencode"
+    "plugin": "'"$BASE_DIR"'/claude-mem/.opencode"
   },
   "compression": {
     "enabled": true,
@@ -878,29 +1303,28 @@ create_opencode_config() {
     "budget": 100000
   },
   "hooks": {
-    "preTool": "/root/agent-enhancements/unified-integration/memory/hooks/opencode-memory-hook.sh save",
-    "postTool": "/root/agent-enhancements/unified-integration/memory/hooks/opencode-memory-hook.sh save",
-    "stop": "/root/agent-enhancements/unified-integration/memory/hooks/opencode-memory-hook.sh save session_end"
+    "preTool": "'"$UNIFIED_DIR"'/memory/hooks/opencode-memory-hook.py save",
+    "postTool": "'"$UNIFIED_DIR"'/memory/hooks/opencode-memory-hook.py save",
+    "stop": "'"$UNIFIED_DIR"'/memory/hooks/opencode-memory-hook.py save session_end"
   }
-}
-EOF
-    log_success "OpenCode configuration created"
+}'
+    merge_json_config "$OPENCODE_DIR/config.json" "$ENHANCEMENT_JSON"
+    log_success "OpenCode configuration merged"
 }
 
 create_cursor_config() {
     CURSOR_DIR="$HOME/.cursor"
     mkdir -p "$CURSOR_DIR"
 
-    cat > "$CURSOR_DIR/settings.json" << 'EOF'
-{
-  "systemPrompt": "@/root/agent-enhancements/unified-integration/prompts/cursor-system-prompt.txt",
+    ENHANCEMENT_JSON='{
+  "systemPrompt": "@'"$UNIFIED_DIR"'/prompts/cursor-system-prompt.txt",
   "skills": {
-    "directory": "/root/agent-enhancements/unified-integration/skills",
+    "directory": "'"$UNIFIED_DIR"'/skills",
     "autoLoad": true
   },
   "memory": {
     "enabled": true,
-    "plugin": "/root/agent-enhancements/claude-mem/.cursor-plugin"
+    "plugin": "'"$BASE_DIR"'/claude-mem/.cursor-plugin"
   },
   "compression": {
     "enabled": true,
@@ -908,29 +1332,29 @@ create_cursor_config() {
     "budget": 128000
   },
   "hooks": {
-    "preTool": "/root/agent-enhancements/unified-integration/memory/hooks/cursor-memory-hook.sh save",
-    "postTool": "/root/agent-enhancements/unified-integration/memory/hooks/cursor-memory-hook.sh save",
-    "stop": "/root/agent-enhancements/unified-integration/memory/hooks/cursor-memory-hook.sh save session_end"
+    "preTool": "'"$UNIFIED_DIR"'/memory/hooks/cursor-memory-hook.py save",
+    "postTool": "'"$UNIFIED_DIR"'/memory/hooks/cursor-memory-hook.py save",
+    "stop": "'"$UNIFIED_DIR"'/memory/hooks/cursor-memory-hook.py save session_end"
   }
-}
-EOF
-    log_success "Cursor configuration created"
+}'
+    merge_json_config "$CURSOR_DIR/settings.json" "$ENHANCEMENT_JSON"
+    log_success "Cursor configuration merged"
 }
 
 create_gemini_config() {
     GEMINI_DIR="$HOME/.gemini"
     mkdir -p "$GEMINI_DIR"
 
-    cat > "$GEMINI_DIR/config.yaml" << 'EOF'
-system_prompt: "@/root/agent-enhancements/unified-integration/prompts/gemini-cli-system-prompt.txt"
+    ENHANCEMENT_YAML='
+system_prompt: "@'"$UNIFIED_DIR"'/prompts/gemini-cli-system-prompt.txt"
 
 skills:
-  directory: "/root/agent-enhancements/unified-integration/skills"
+  directory: "'"$UNIFIED_DIR"'/skills"
   auto_load: true
 
 memory:
   enabled: true
-  plugin: "/root/agent-enhancements/claude-mem/.gemini"
+  plugin: "'"$BASE_DIR"'/claude-mem/.gemini"
 
 compression:
   enabled: true
@@ -938,43 +1362,45 @@ compression:
   budget: 1000000
 
 hooks:
-  pre_tool: "/root/agent-enhancements/unified-integration/memory/hooks/gemini-cli-memory-hook.sh save"
-  post_tool: "/root/agent-enhancements/unified-integration/memory/hooks/gemini-cli-memory-hook.sh save"
-  stop: "/root/agent-enhancements/unified-integration/memory/hooks/gemini-cli-memory-hook.sh save session_end"
-EOF
-    log_success "Gemini CLI configuration created"
+  pre_tool: "'"$UNIFIED_DIR"'/memory/hooks/gemini-cli-memory-hook.py save"
+  post_tool: "'"$UNIFIED_DIR"'/memory/hooks/gemini-cli-memory-hook.py save"
+  stop: "'"$UNIFIED_DIR"'/memory/hooks/gemini-cli-memory-hook.py save session_end"
+'
+    merge_yaml_config "$GEMINI_DIR/config.yaml" "$ENHANCEMENT_YAML"
+    log_success "Gemini CLI configuration merged"
 }
 
 create_windsurf_config() {
     WINDSURF_DIR="$HOME/.windsurf"
     mkdir -p "$WINDSURF_DIR"
 
-    cat > "$WINDSURF_DIR/config.yaml" << 'EOF'
-system_prompt: "@/root/agent-enhancements/unified-integration/prompts/windsurf-system-prompt.txt"
+    ENHANCEMENT_YAML='
+system_prompt: "@'"$UNIFIED_DIR"'/prompts/windsurf-system-prompt.txt"
 
 skills:
-  directory: "/root/agent-enhancements/unified-integration/skills"
+  directory: "'"$UNIFIED_DIR"'/skills"
   auto_load: true
 
 memory:
   enabled: true
-  plugin: "/root/agent-enhancements/claude-mem/.windsurf"
+  plugin: "'"$BASE_DIR"'/claude-mem/.windsurf"
 
 compression:
   enabled: true
   engine: "headroom"
   budget: 128000
-EOF
-    log_success "Windsurf configuration created"
+'
+    merge_yaml_config "$WINDSURF_DIR/config.yaml" "$ENHANCEMENT_YAML"
+    log_success "Windsurf configuration merged"
 }
 
 create_copilot_config() {
     COPILOT_DIR="$HOME/.config/github-copilot"
     mkdir -p "$COPILOT_DIR"
 
-    cat > "$COPILOT_DIR/config.yaml" << 'EOF'
+    ENHANCEMENT_YAML='
 skills:
-  directory: "/root/agent-enhancements/unified-integration/skills"
+  directory: "'"$UNIFIED_DIR"'/skills"
   auto_load: true
 
 memory:
@@ -985,19 +1411,20 @@ compression:
   enabled: true
   engine: "headroom"
   budget: 32000
-EOF
-    log_success "GitHub Copilot configuration created"
+'
+    merge_yaml_config "$COPILOT_DIR/config.yaml" "$ENHANCEMENT_YAML"
+    log_success "GitHub Copilot configuration merged"
 }
 
 create_kiro_config() {
     KIRO_DIR="$HOME/.kiro"
     mkdir -p "$KIRO_DIR"
 
-    cat > "$KIRO_DIR/config.yaml" << 'EOF'
-system_prompt: "@/root/agent-enhancements/unified-integration/prompts/kiro-system-prompt.txt"
+    ENHANCEMENT_YAML='
+system_prompt: "@'"$UNIFIED_DIR"'/prompts/kiro-system-prompt.txt"
 
 skills:
-  directory: "/root/agent-enhancements/unified-integration/skills"
+  directory: "'"$UNIFIED_DIR"'/skills"
   auto_load: true
 
 memory:
@@ -1007,8 +1434,9 @@ compression:
   enabled: true
   engine: "headroom"
   budget: 128000
-EOF
-    log_success "Kiro configuration created"
+'
+    merge_yaml_config "$KIRO_DIR/config.yaml" "$ENHANCEMENT_YAML"
+    log_success "Kiro configuration merged"
 }
 
 # Create universal launcher script
@@ -1023,6 +1451,11 @@ AGENT="${1:-claude-code}"
 shift
 
 UNIFIED_DIR="/root/agent-enhancements/unified-integration"
+BASE_DIR="/root/agent-enhancements"
+
+# Allow override via environment
+UNIFIED_DIR="${AGENT_ENHANCEMENTS_UNIFIED_DIR:-$UNIFIED_DIR}"
+BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$BASE_DIR}"
 
 # Load detected agents
 source "$UNIFIED_DIR/config/detected-agents.sh" 2>/dev/null || true
@@ -1039,9 +1472,11 @@ fi
 
 # Set environment variables
 export AGENT_MEMORY_ROOT="$HOME/.agent-memory"
-export AGENT_SKILLS_DIR="/root/agent-enhancements/unified-integration/skills"
-export AGENT_COMPRESSION_CONFIG="/root/agent-enhancements/unified-integration/compression/config.yaml"
-export AGENT_PROMPTS_DIR="/root/agent-enhancements/unified-integration/prompts"
+export AGENT_SKILLS_DIR="$UNIFIED_DIR/skills"
+export AGENT_COMPRESSION_CONFIG="$UNIFIED_DIR/compression/config.yaml"
+export AGENT_PROMPTS_DIR="$UNIFIED_DIR/prompts"
+export AGENT_ENHANCEMENTS_BASE_DIR="$BASE_DIR"
+export AGENT_ENHANCEMENTS_UNIFIED_DIR="$UNIFIED_DIR"
 
 # Launch agent with enhancements
 case "$AGENT" in
@@ -1077,7 +1512,7 @@ esac
 EOF
     chmod +x "$UNIFIED_DIR/launch-agent.sh"
 
-    # Create symlink for easy access
+    # Create symlink for easy access (if we have permission)
     ln -sf "$UNIFIED_DIR/launch-agent.sh" /usr/local/bin/agent-enhanced 2>/dev/null || true
 
     log_success "Universal launcher created at $UNIFIED_DIR/launch-agent.sh"
@@ -1101,7 +1536,8 @@ import re
 from pathlib import Path
 from typing import List, Dict, Any
 
-SKILLS_DIR = Path("/root/agent-enhancements/unified-integration/skills")
+# Allow override via environment
+SKILLS_DIR = Path(os.environ.get("AGENT_SKILLS_DIR", "/root/agent-enhancements/unified-integration/skills"))
 
 class SkillsLoader:
     def __init__(self, agent: str = "claude-code"):
@@ -1157,14 +1593,14 @@ class SkillsLoader:
         # Search in all category directories
         for cat_dir in (SKILLS_DIR / "by-category").iterdir():
             if cat_dir.is_dir():
-                skill_file = cat_dir / f"{skill_name}.md"
+                skill_file = cat_dir / skill_name / "SKILL.md"
                 if skill_file.exists():
                     return self._parse_skill(skill_file)
 
         # Search in agent-specific directories
         agent_dir = SKILLS_DIR / "by-agent" / self.agent
         if agent_dir.exists():
-            skill_file = agent_dir / f"{skill_name}.md"
+            skill_file = agent_dir / skill_name / "SKILL.md"
             if skill_file.exists():
                 return self._parse_skill(skill_file)
 
@@ -1185,7 +1621,7 @@ class SkillsLoader:
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print("Usage: load-skills.py <agent> <task_description>")
         sys.exit(1)
 
@@ -1198,7 +1634,9 @@ def main():
     for skill in skills:
         print(f"Skill: {skill.get('name', 'Unknown')}")
         print(f"  Description: {skill.get('description', 'N/A')}")
+        print(f"  Category: {skill.get('category', 'N/A')}")
         print(f"  Tags: {', '.join(skill.get('tags', []))}")
+        print(f"  Tools: {', '.join(skill.get('tools', []))}")
         print()
 
 if __name__ == "__main__":
@@ -1373,6 +1811,7 @@ def main():
             print(value)
         else:
             print(f"Memory not found: {key}")
+            sys.exit(1)
 
     elif command == "list":
         mem_type = sys.argv[3] if len(sys.argv) > 3 else None
@@ -1391,6 +1830,7 @@ def main():
             print(f"Deleted: {key}")
         else:
             print(f"Not found: {key}")
+            sys.exit(1)
 
     elif command == "cleanup":
         count = memory.cleanup_expired()
@@ -1423,6 +1863,7 @@ import subprocess
 import sys
 import os
 import json
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -1549,6 +1990,9 @@ main() {
     echo "  Unified AI Agent Enhancement Setup"
     echo "========================================"
     echo ""
+    echo "Base directory: $BASE_DIR"
+    echo "Unified directory: $UNIFIED_DIR"
+    echo ""
 
     detect_agents
     setup_prompts
@@ -1589,6 +2033,11 @@ main() {
     echo "  - ~/.windsurf/ (Windsurf)"
     echo "  - ~/.config/github-copilot/ (Copilot)"
     echo "  - ~/.kiro/ (Kiro)"
+    echo ""
+    echo "Environment variables for customization:"
+    echo "  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: /root/agent-enhancements)"
+    echo "  AGENT_MEMORY_ROOT - Override memory storage location (default: ~/.agent-memory)"
+    echo "  HEADROOM_BIN - Override headroom binary path"
 }
 
 main "$@"

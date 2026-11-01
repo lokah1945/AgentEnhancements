@@ -1,0 +1,13 @@
+[package]
+name = "headroom-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Headroom CLI for context compression"
+
+[dependencies]
+headroom-core = { path = "../headroom-core" }
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+anyhow = "1"
+serde = { workspace = true }
+serde_json = { workspace = true }

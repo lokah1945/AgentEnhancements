@@ -39,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/lokah1945/agent-enhancements/main/u
 
 ```bash
 # Clone the repository
-git clone https://github.com/lokah1945/agent-enhancements.git
+git clone https://github.com/lokah1945/AgentEnhancements.git
 cd agent-enhancements
 
 # Run the unified setup
@@ -278,8 +278,8 @@ This aggregation is released under **MIT License**. Individual projects retain t
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/lokah1945/agent-enhancements/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/lokah1945/agent-enhancements/discussions)
+- **Issues**: [GitHub Issues](https://github.com/lokah1945/AgentEnhancements/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/lokah1945/AgentEnhancements/discussions)
 - **Documentation**: See `docs/` folder and individual project READMEs
 
 ---

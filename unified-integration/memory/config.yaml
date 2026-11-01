@@ -35,27 +35,27 @@ memory:
   # Agent-specific configurations
   agents:
     claude-code:
-      plugin_path: "/root/agent-enhancements/claude-mem/.claude-plugin"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.claude-plugin"
       enabled: true
 
     codex:
-      plugin_path: "/root/agent-enhancements/claude-mem/.codex-plugin"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.codex-plugin"
       enabled: true
 
     cursor:
-      plugin_path: "/root/agent-enhancements/claude-mem/.cursor-plugin"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.cursor-plugin"
       enabled: true
 
     opencode:
-      plugin_path: "/root/agent-enhancements/claude-mem/.opencode"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.opencode"
       enabled: true
 
     gemini-cli:
-      plugin_path: "/root/agent-enhancements/claude-mem/.gemini"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.gemini"
       enabled: true
 
     windsurf:
-      plugin_path: "/root/agent-enhancements/claude-mem/.windsurf"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.windsurf"
       enabled: true
 
   # Auto-save triggers

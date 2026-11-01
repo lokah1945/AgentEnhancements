@@ -1,0 +1,22 @@
+# Agent-specific local settings (machine-specific, never commit)
+.claude/settings.local.json
+.claude/*.tmp.*
+.claude/settings.local.json.tmp.*
+
+# Editor / OS junk
+*.bak
+*.tmp
+*.tmp.*
+*.swp
+.DS_Store
+
+# Aggregation temp files (unified-integration/skills)
+unified-integration/skills/.skills-meta.tmp
+unified-integration/skills/all-skills.json.tmp
+
+# Config backups created by setup.sh merges
+*.backup.*
+
+# Python bytecode
+__pycache__/
+*.pyc

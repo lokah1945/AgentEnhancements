@@ -46,7 +46,10 @@ def save_memory(key, value, memory_type="session_context", project=None, metadat
     expires_at = None
     if ttl_days:
         from datetime import timedelta
-        expires_at = (datetime.now() + timedelta(days=ttl_days)).isoformat()
+        # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
+        # against datetime('now') work: the ISO "T" separator sorts
+        # after a space and broke timely expiry cleanup.
+        expires_at = (datetime.now() + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
 
     meta_json = json.dumps(metadata) if metadata else None
 

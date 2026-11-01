@@ -4,9 +4,17 @@
 
 set -euo pipefail
 
-# Allow BASE_DIR to be overridden via environment variable
-BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-/root/agent-enhancements}"
+# Enable recursive globbing (needed for prompt discovery) and make
+# non-matching globs expand to nothing instead of the literal pattern.
+shopt -s globstar nullglob
+
+# Allow BASE_DIR to be overridden via environment variable.
+# Default: the repository root that contains this script (works from any
+# checkout location, not only /root/agent-enhancements).
+SCRIPT_SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(cd "$SCRIPT_SOURCE_DIR/.." && pwd)}"
 UNIFIED_DIR="$BASE_DIR/unified-integration"
+mkdir -p "$UNIFIED_DIR/config"
 
 # Colors for output
 RED='\033[0;31m'
@@ -78,7 +86,13 @@ detect_agents() {
         log_warn "No AI coding agents detected in PATH. Setup will still configure files for manual use."
     fi
 
-    echo "AGENTS=(${AGENTS[@]})" > "$UNIFIED_DIR/config/detected-agents.sh"
+    # Write detected agents in a way that is safe for empty arrays
+    # (older bash such as macOS 3.2 errors on "${AGENTS[@]}" when empty).
+    if [ ${#AGENTS[@]} -eq 0 ]; then
+        echo "AGENTS=()" > "$UNIFIED_DIR/config/detected-agents.sh"
+    else
+        printf 'AGENTS=(%s)\n' "${AGENTS[*]}" > "$UNIFIED_DIR/config/detected-agents.sh"
+    fi
 }
 
 # Setup system prompts for each agent
@@ -183,6 +197,22 @@ setup_prompts() {
                     log_success "Windsurf system prompt configured from $prompt_file"
                 else
                     log_warn "Windsurf prompt not found in $PROMPTS_DIR/Windsurf/"
+                fi
+                ;;
+            kiro)
+                # Find Kiro prompt (source dir ships flat .txt prompt files)
+                local prompt_file=""
+                for f in "$PROMPTS_DIR/Kiro"/*.txt "$PROMPTS_DIR/Kiro"/*.md; do
+                    if [ -f "$f" ]; then
+                        prompt_file="$f"
+                        break
+                    fi
+                done
+                if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
+                    cp "$prompt_file" "$UNIFIED_DIR/prompts/kiro-system-prompt.txt"
+                    log_success "Kiro system prompt configured from $prompt_file"
+                else
+                    log_warn "Kiro prompt not found in $PROMPTS_DIR/Kiro/"
                 fi
                 ;;
         esac
@@ -378,7 +408,7 @@ skills/
 │   ├── copilot/
 │   ├── windsurf/
 │   └── kiro/
-└─�� all-skills.json
+└── all-skills.json
 ```
 
 ## Usage
@@ -404,9 +434,13 @@ EOF
         mkdir -p "$SKILLS_DIR/by-agent/$agent"
     done
 
-    # Initialize array to hold all skills for unified index
-    ALL_SKILLS_JSON="$SKILLS_DIR/all-skills.json.tmp"
-    echo '{"skills": []}' > "$ALL_SKILLS_JSON"
+    # Accumulate skill metadata into a record file (fields separated by
+    # ASCII unit separator \x1f, records by record separator \x1e).
+    # Metadata is NEVER interpolated into code - the index builder reads
+    # this file, which eliminates the code-injection vector that existed
+    # when frontmatter values were spliced into "python3 -c" source.
+    SKILLS_META="$SKILLS_DIR/.skills-meta.tmp"
+    : > "$SKILLS_META"
 
     # Process skills from a source directory
     process_skills_source() {
@@ -440,60 +474,49 @@ EOF
                         ;;
                 esac
 
-                # Copy entire skill directory to by-category/
+                # Sanitize skill name: it is used as a directory name, so it
+                # must not contain path separators (prevents escaping the
+                # target directory on copy).
+                skill_name="${skill_name//\//-}"
+
+                # Copy entire skill directory to by-category/.
+                # Remove any previous copy first: "cp -r src dst" nests the
+                # source inside dst when dst already exists, so without this
+                # re-running setup duplicated skill trees on every run.
                 target_dir="$SKILLS_DIR/by-category/$skill_category/$skill_name"
                 mkdir -p "$(dirname "$target_dir")"
+                rm -rf "$target_dir"
                 cp -r "$skill_dir" "$target_dir" 2>/dev/null || true
 
-                # Also copy to by-agent/ for each compatible tool
+                # Also copy to by-agent/ for each compatible tool.
+                # Only the canonical agent directories are populated.
                 while IFS= read -r tool; do
                     if [ -n "$tool" ]; then
-                        agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
-                        mkdir -p "$(dirname "$agent_target_dir")"
-                        cp -r "$skill_dir" "$agent_target_dir" 2>/dev/null || true
+                        case "$tool" in
+                            claude-code|codex|cursor|gemini-cli|opencode|copilot|windsurf|kiro)
+                                agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
+                                mkdir -p "$(dirname "$agent_target_dir")"
+                                rm -rf "$agent_target_dir"
+                                cp -r "$skill_dir" "$agent_target_dir" 2>/dev/null || true
+                                ;;
+                            *)
+                                # Unknown tool name: keep it in the index but
+                                # do not create arbitrary directories from it.
+                                ;;
+                        esac
                     fi
                 done <<< "$skill_tools"
 
-                # Add to unified index using Python
-                python3 -c "
-import json
-import sys
-
-skill_name = '''$skill_name'''
-skill_category = '''$skill_category'''
-skill_description = '''$skill_description'''
-skill_risk = '''$skill_risk'''
-skill_source = '''$source_name'''
-skill_tags = '''$skill_tags'''
-skill_tools = '''$skill_tools'''
-
-# Parse tags and tools
-tags_list = [t.strip() for t in skill_tags.split('\n') if t.strip()]
-tools_list = [t.strip() for t in skill_tools.split('\n') if t.strip()]
-
-# Load current index
-with open('''$ALL_SKILLS_JSON''') as f:
-    index = json.load(f)
-
-# Add new skill
-new_skill = {
-    'name': skill_name,
-    'category': skill_category,
-    'description': skill_description,
-    'risk': skill_risk,
-    'source': skill_source,
-    'tags': tags_list,
-    'tools': tools_list,
-    'when_to_use': skill_description
-}
-
-index['skills'].append(new_skill)
-
-# Write back
-with open('''$ALL_SKILLS_JSON''', 'w') as f:
-    json.dump(index, f, indent=2)
-"
-                ((skills_count++))
+                # Append metadata record for the index builder
+                printf '%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1e' \
+                    "$skill_name" "$skill_category" "$skill_description" \
+                    "$skill_risk" "$source_name" "$skill_tags" "$skill_tools" \
+                    >> "$SKILLS_META"
+                # NB: use arithmetic expansion, not bash arithmetic
+                # post-increment: post-increment from zero evaluates to
+                # zero, which returns exit status 1 and aborts the
+                # script under "set -e".
+                skills_count=$((skills_count + 1))
             fi
         done < <(find "$source_dir" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
 
@@ -520,24 +543,50 @@ with open('''$ALL_SKILLS_JSON''', 'w') as f:
         process_skills_source "Superpowers" "$BASE_DIR/superpowers/skills"
     fi
 
-    # Create final unified skills index with metadata
+    # Create final unified skills index with metadata.
+    # All paths are passed via environment variables; no shell values are
+    # interpolated into the Python source.
     log_info "Creating unified skills index..."
+    SKILLS_META_FILE="$SKILLS_META" SKILLS_INDEX_OUT="$SKILLS_DIR/all-skills.json" \
     python3 -c "
 import json
+import os
 from datetime import datetime
 
-with open('''$ALL_SKILLS_JSON''') as f:
-    index = json.load(f)
+meta_path = os.environ['SKILLS_META_FILE']
+out_path = os.environ['SKILLS_INDEX_OUT']
+
+skills = []
+with open(meta_path, 'r', encoding='utf-8', errors='replace') as f:
+    content = f.read()
+
+for record in content.split('\x1e'):
+    if not record.strip():
+        continue
+    fields = record.split('\x1f')
+    while len(fields) < 7:
+        fields.append('')
+    name, category, description, risk, source, tags, tools = fields[:7]
+    skills.append({
+        'name': name,
+        'category': category,
+        'description': description,
+        'risk': risk,
+        'source': source,
+        'tags': [t.strip() for t in tags.split('\n') if t.strip()],
+        'tools': [t.strip() for t in tools.split('\n') if t.strip()],
+        'when_to_use': description
+    })
 
 # Count categories
 categories = {}
-for skill in index['skills']:
+for skill in skills:
     cat = skill.get('category', 'general')
     categories[cat] = categories.get(cat, 0) + 1
 
 # Count agents
 agent_counts = {}
-for skill in index['skills']:
+for skill in skills:
     for tool in skill.get('tools', []):
         agent_counts[tool] = agent_counts.get(tool, 0) + 1
 
@@ -545,21 +594,22 @@ for skill in index['skills']:
 unified = {
     'version': '1.0',
     'sources': ['agentic-awesome-skills', 'ECC', 'Ponytail', 'Superpowers'],
-    'skills': index['skills'],
-    'total_skills': len(index['skills']),
+    'skills': skills,
+    'total_skills': len(skills),
     'categories': categories,
     'agents_supported': ['claude-code', 'codex', 'cursor', 'gemini-cli', 'opencode', 'copilot', 'windsurf', 'kiro'],
     'agent_skill_counts': agent_counts,
     'last_updated': datetime.utcnow().isoformat() + 'Z'
 }
 
-with open('''$SKILLS_DIR/all-skills.json''', 'w') as f:
+with open(out_path, 'w', encoding='utf-8') as f:
     json.dump(unified, f, indent=2)
 
-print(f'Unified skills index created with {len(index[\"skills\"])} skills')"
+print(f'Unified skills index created with {len(skills)} skills')
+"
 
     # Clean up temp file
-    rm -f "$ALL_SKILLS_JSON"
+    rm -f "$SKILLS_META"
 
     log_success "Skills aggregation complete"
 }
@@ -610,27 +660,27 @@ memory:
   # Agent-specific configurations
   agents:
     claude-code:
-      plugin_path: "/root/agent-enhancements/claude-mem/.claude-plugin"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.claude-plugin"
       enabled: true
 
     codex:
-      plugin_path: "/root/agent-enhancements/claude-mem/.codex-plugin"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.codex-plugin"
       enabled: true
 
     cursor:
-      plugin_path: "/root/agent-enhancements/claude-mem/.cursor-plugin"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.cursor-plugin"
       enabled: true
 
     opencode:
-      plugin_path: "/root/agent-enhancements/claude-mem/.opencode"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.opencode"
       enabled: true
 
     gemini-cli:
-      plugin_path: "/root/agent-enhancements/claude-mem/.gemini"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.gemini"
       enabled: true
 
     windsurf:
-      plugin_path: "/root/agent-enhancements/claude-mem/.windsurf"
+      plugin_path: "${AGENT_ENHANCEMENTS_BASE_DIR}/claude-mem/.windsurf"
       enabled: true
 
   # Auto-save triggers
@@ -735,7 +785,10 @@ def save_memory(key, value, memory_type="session_context", project=None, metadat
     expires_at = None
     if ttl_days:
         from datetime import timedelta
-        expires_at = (datetime.now() + timedelta(days=ttl_days)).isoformat()
+        # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
+        # against datetime('now') work: the ISO "T" separator sorts
+        # after a space and broke timely expiry cleanup.
+        expires_at = (datetime.now() + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
 
     meta_json = json.dumps(metadata) if metadata else None
 
@@ -914,13 +967,22 @@ setup_compression() {
         log_success "headroom binary found in PATH"
         HEADROOM_CMD="headroom"
     elif [ -f "$BASE_DIR/headroom/Cargo.toml" ]; then
-        log_info "Building headroom from source..."
-        cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -20
-        if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
-            HEADROOM_CMD="$BASE_DIR/headroom/target/release/headroom"
-            log_success "headroom built successfully"
+        if command -v cargo &> /dev/null; then
+            log_info "Building headroom from source..."
+            if (cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -20); then
+                if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
+                    HEADROOM_CMD="$BASE_DIR/headroom/target/release/headroom"
+                    log_success "headroom built successfully"
+                else
+                    log_warn "headroom build did not produce a binary, will use fallback compression"
+                    HEADROOM_CMD=""
+                fi
+            else
+                log_warn "headroom build failed, will use fallback compression"
+                HEADROOM_CMD=""
+            fi
         else
-            log_warn "headroom build failed, will use fallback compression"
+            log_warn "cargo not found, will use fallback compression"
             HEADROOM_CMD=""
         fi
     else
@@ -1001,17 +1063,37 @@ EOF
 #!/bin/bash
 # Universal context compression wrapper
 
-CONFIG_FILE="/root/agent-enhancements/unified-integration/compression/config.yaml"
+set -euo pipefail
+
+# Resolve the installation root from this script's location; the
+# AGENT_ENHANCEMENTS_BASE_DIR environment variable overrides it.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UNIFIED_DIR="$(dirname "$SCRIPT_DIR")"
+BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(dirname "$UNIFIED_DIR")}"
+CONFIG_FILE="$UNIFIED_DIR/compression/config.yaml"
+
 INPUT="${1:-/dev/stdin}"
 MODE="${2:-auto}"
 AGENT="${3:-claude-code}"
 
-# Find headroom binary
-HEADROOM_BIN=""
-if [ -f "/root/agent-enhancements/headroom/target/release/headroom" ]; then
-    HEADROOM_BIN="/root/agent-enhancements/headroom/target/release/headroom"
-elif command -v headroom &> /dev/null; then
-    HEADROOM_BIN="headroom"
+# Find headroom binary: env override first, then repo build, then PATH
+HEADROOM_BIN="${HEADROOM_BIN:-}"
+if [ -z "$HEADROOM_BIN" ]; then
+    if [ -x "$BASE_DIR/headroom/target/release/headroom" ]; then
+        HEADROOM_BIN="$BASE_DIR/headroom/target/release/headroom"
+    elif command -v headroom &> /dev/null; then
+        HEADROOM_BIN="headroom"
+    fi
+fi
+
+# Read stdin once into a temp file so content detection and compression
+# both see the full stream. Previously the detection pass consumed stdin
+# and the compression pass received nothing.
+TMP_INPUT="$(mktemp "${TMPDIR:-/tmp}/compress-input.XXXXXX")"
+trap 'rm -f "$TMP_INPUT"' EXIT
+if [ "$INPUT" = "-" ] || [ "$INPUT" = "/dev/stdin" ]; then
+    cat > "$TMP_INPUT"
+    INPUT="$TMP_INPUT"
 fi
 
 if [ -n "$HEADROOM_BIN" ]; then
@@ -1020,30 +1102,34 @@ if [ -n "$HEADROOM_BIN" ]; then
             "$HEADROOM_BIN" compress --mode "$MODE" < "$INPUT"
             ;;
         auto)
-            # Detect content type
-            # Read first 100 lines for detection
-            head -100 "$INPUT" > /tmp/compress_input_$$
-            if grep -q '^{' /tmp/compress_input_$$ && grep -q '}' /tmp/compress_input_$$; then
+            # Detect content type from the first 100 lines
+            if head -100 "$INPUT" | grep -q '^{' && head -100 "$INPUT" | grep -q '}'; then
                 "$HEADROOM_BIN" compress --mode json < "$INPUT"
-            elif grep -q '^```' /tmp/compress_input_$$; then
+            elif head -100 "$INPUT" | grep -q '^```'; then
                 "$HEADROOM_BIN" compress --mode code < "$INPUT"
-            elif grep -qE '(ERROR|WARN|INFO|DEBUG).*\[' /tmp/compress_input_$$; then
+            elif head -100 "$INPUT" | grep -qE '(ERROR|WARN|INFO|DEBUG).*\['; then
                 "$HEADROOM_BIN" compress --mode logs < "$INPUT"
             else
                 "$HEADROOM_BIN" compress --mode generic < "$INPUT"
             fi
-            rm -f /tmp/compress_input_$$
+            ;;
+        *)
+            echo "Unknown mode: $MODE (use auto, code, logs, json, markdown or generic)" >&2
+            exit 1
             ;;
     esac
 else
-    # Fallback: basic compression
+    # Fallback: basic compression without headroom.
+    # "|| true" because head closing the pipe early (truncation at 5000
+    # lines) raises SIGPIPE for upstream stages under "set -o pipefail",
+    # which is expected behaviour here, not an error.
     cat "$INPUT" | \
         # Remove trailing whitespace
         sed 's/[[:space:]]\+$//' | \
         # Compress repeated lines (keep first occurrence)
         awk '!seen[$0]++' | \
         # Limit output
-        head -5000
+        head -5000 || true
 fi
 EOF
     chmod +x "$COMPRESSION_DIR/compress.sh"
@@ -1104,15 +1190,23 @@ merge_json_config() {
     cp "$target_file" "$backup_file"
     log_info "Backed up existing config to $backup_file"
 
-    # Merge using Python - replace hooks key, preserve other keys
+    # Merge using Python - replace hooks key, preserve other keys.
+    # Paths and payload are passed via environment variables so that
+    # JSON escape sequences (\") survive intact: routing them through a
+    # Python string literal stripped the backslashes and produced invalid
+    # JSON. It also removes any injection risk from file paths.
+    TARGET_FILE="$target_file" ENHANCEMENT_JSON="$enhancement_json" \
     python3 -c "
 import json
+import os
 import sys
 
-with open('$target_file', 'r') as f:
+target = os.environ['TARGET_FILE']
+
+with open(target, 'r') as f:
     existing = json.load(f)
 
-enhancement = json.loads('$enhancement_json')
+enhancement = json.loads(os.environ['ENHANCEMENT_JSON'])
 
 # For hooks, replace entirely. For other keys, deep merge.
 def merge_configs(base, update):
@@ -1128,7 +1222,7 @@ def merge_configs(base, update):
 
 merge_configs(existing, enhancement)
 
-with open('$target_file', 'w') as f:
+with open(target, 'w') as f:
     json.dump(existing, f, indent=2)
 "
     log_success "Merged enhancement into $target_file (hooks replaced, other keys preserved)"
@@ -1149,14 +1243,23 @@ merge_yaml_config() {
     cp "$target_file" "$backup_file"
     log_info "Backed up existing config to $backup_file"
 
+    TARGET_FILE="$target_file" ENHANCEMENT_YAML="$enhancement_yaml" \
     python3 -c "
-import yaml
+import os
 import sys
 
-with open('$target_file', 'r') as f:
+try:
+    import yaml
+except ImportError:
+    print('PyYAML is required for YAML config merging (pip install pyyaml)', file=sys.stderr)
+    sys.exit(1)
+
+target = os.environ['TARGET_FILE']
+
+with open(target, 'r') as f:
     existing = yaml.safe_load(f) or {}
 
-enhancement = yaml.safe_load('$enhancement_yaml')
+enhancement = yaml.safe_load(os.environ['ENHANCEMENT_YAML'])
 
 # For hooks, replace entirely. For other keys, deep merge.
 def merge_configs(base, update):
@@ -1172,7 +1275,7 @@ def merge_configs(base, update):
 
 merge_configs(existing, enhancement)
 
-with open('$target_file', 'w') as f:
+with open(target, 'w') as f:
     yaml.dump(existing, f, default_flow_style=False, sort_keys=False)
 "
     log_success "Merged enhancement into $target_file (hooks replaced, other keys preserved)"
@@ -1222,7 +1325,7 @@ EOF
         "hooks": [
           {
             "type": "command",
-            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save pre_tool_use \"\${TOOL_NAME}\" \"\${TOOL_INPUT}\""
+            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save \"pre_tool_use:${TOOL_NAME}\" \"${TOOL_INPUT}\" session_context"
           }
         ]
       }
@@ -1233,7 +1336,7 @@ EOF
         "hooks": [
           {
             "type": "command",
-            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save post_tool_use \"\${TOOL_NAME}\" \"\${TOOL_RESULT}\""
+            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save \"post_tool_use:${TOOL_NAME}\" \"${TOOL_RESULT}\" session_context"
           }
         ]
       }
@@ -1243,7 +1346,7 @@ EOF
         "hooks": [
           {
             "type": "command",
-            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save session_end \"summary\" \"\${SESSION_SUMMARY}\""
+            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save \"session_summary\" \"${SESSION_SUMMARY}\" session_context"
           }
         ]
       }
@@ -1447,31 +1550,41 @@ create_launcher() {
 #!/bin/bash
 # Universal AI Agent Launcher with Enhancements
 
+set -euo pipefail
+
 AGENT="${1:-claude-code}"
-shift
+if [ $# -gt 0 ]; then
+    shift
+fi
 
-UNIFIED_DIR="/root/agent-enhancements/unified-integration"
-BASE_DIR="/root/agent-enhancements"
+# Resolve installation paths from this script's location; environment
+# variables take precedence.
+UNIFIED_DIR="${AGENT_ENHANCEMENTS_UNIFIED_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(dirname "$UNIFIED_DIR")}"
 
-# Allow override via environment
-UNIFIED_DIR="${AGENT_ENHANCEMENTS_UNIFIED_DIR:-$UNIFIED_DIR}"
-BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$BASE_DIR}"
-
-# Load detected agents
+# Detected agents (written by setup.sh); pre-declared so the script also
+# works when the file is missing.
+AGENTS=()
+# shellcheck source=/dev/null
 source "$UNIFIED_DIR/config/detected-agents.sh" 2>/dev/null || true
 
 # Validate agent
-if [[ ! " ${AGENTS[@]} " =~ " ${AGENT} " ]]; then
-    echo "Agent '$AGENT' not detected. Available: ${AGENTS[@]}"
+if [[ ! " ${AGENTS[*]:-} " =~ " ${AGENT} " ]]; then
+    echo "Agent '$AGENT' not detected. Available: ${AGENTS[*]:-none}"
+    echo "Run $UNIFIED_DIR/setup.sh to (re)detect installed agents."
     echo "Usage: $0 <agent> [args...]"
     exit 1
 fi
 
 # Initialize memory
-"$UNIFIED_DIR/memory/init-memory.sh"
+if [ -x "$UNIFIED_DIR/memory/init-memory.sh" ]; then
+    "$UNIFIED_DIR/memory/init-memory.sh"
+else
+    echo "Warning: memory initializer not found at $UNIFIED_DIR/memory/init-memory.sh" >&2
+fi
 
 # Set environment variables
-export AGENT_MEMORY_ROOT="$HOME/.agent-memory"
+export AGENT_MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}"
 export AGENT_SKILLS_DIR="$UNIFIED_DIR/skills"
 export AGENT_COMPRESSION_CONFIG="$UNIFIED_DIR/compression/config.yaml"
 export AGENT_PROMPTS_DIR="$UNIFIED_DIR/prompts"
@@ -1480,30 +1593,14 @@ export AGENT_ENHANCEMENTS_UNIFIED_DIR="$UNIFIED_DIR"
 
 # Launch agent with enhancements
 case "$AGENT" in
-    claude-code)
-        exec claude "$@"
-        ;;
-    codex)
-        exec codex "$@"
-        ;;
-    opencode)
-        exec opencode "$@"
-        ;;
-    cursor)
-        exec cursor "$@"
-        ;;
-    gemini-cli)
-        exec gemini "$@"
-        ;;
-    windsurf)
-        exec windsurf "$@"
-        ;;
-    copilot)
-        exec gh copilot "$@"
-        ;;
-    kiro)
-        exec kiro "$@"
-        ;;
+    claude-code) exec claude "$@" ;;
+    codex)       exec codex "$@" ;;
+    opencode)    exec opencode "$@" ;;
+    cursor)      exec cursor "$@" ;;
+    gemini-cli)  exec gemini "$@" ;;
+    windsurf)    exec windsurf "$@" ;;
+    copilot)     exec gh copilot "$@" ;;
+    kiro)        exec kiro "$@" ;;
     *)
         echo "Unknown agent: $AGENT"
         exit 1
@@ -1536,8 +1633,10 @@ import re
 from pathlib import Path
 from typing import List, Dict, Any
 
-# Allow override via environment
-SKILLS_DIR = Path(os.environ.get("AGENT_SKILLS_DIR", "/root/agent-enhancements/unified-integration/skills"))
+SKILLS_DIR = Path(os.environ.get(
+    "AGENT_SKILLS_DIR",
+    str(Path(__file__).resolve().parent.parent / "skills"),
+))
 
 class SkillsLoader:
     def __init__(self, agent: str = "claude-code"):
@@ -1589,20 +1688,31 @@ class SkillsLoader:
         return [skill for _, skill in matches[:max_results]]
 
     def load_skill(self, skill_name: str) -> Dict:
-        """Load a specific skill by name"""
+        """Load a specific skill by name.
+
+        Supports both on-disk layouts produced by this project:
+        - directory skills: by-category/<category>/<name>/SKILL.md
+        - flat skills:      by-category/<category>/<name>.md
+        """
         # Search in all category directories
         for cat_dir in (SKILLS_DIR / "by-category").iterdir():
             if cat_dir.is_dir():
-                skill_file = cat_dir / skill_name / "SKILL.md"
-                if skill_file.exists():
-                    return self._parse_skill(skill_file)
+                for candidate in (
+                    cat_dir / skill_name / "SKILL.md",
+                    cat_dir / f"{skill_name}.md",
+                ):
+                    if candidate.exists():
+                        return self._parse_skill(candidate)
 
         # Search in agent-specific directories
         agent_dir = SKILLS_DIR / "by-agent" / self.agent
         if agent_dir.exists():
-            skill_file = agent_dir / skill_name / "SKILL.md"
-            if skill_file.exists():
-                return self._parse_skill(skill_file)
+            for candidate in (
+                agent_dir / skill_name / "SKILL.md",
+                agent_dir / f"{skill_name}.md",
+            ):
+                if candidate.exists():
+                    return self._parse_skill(candidate)
 
         return {}
 
@@ -1613,15 +1723,22 @@ class SkillsLoader:
         if content.startswith("---"):
             parts = content.split("---", 2)
             if len(parts) >= 3:
-                import yaml
-                frontmatter = yaml.safe_load(parts[1])
+                try:
+                    import yaml
+                    frontmatter = yaml.safe_load(parts[1])
+                except ImportError:
+                    print(
+                        "Warning: PyYAML is not installed; returning raw skill content",
+                        file=sys.stderr,
+                    )
+                    return {"raw": content, "file": str(skill_file)}
                 body = parts[2].strip()
                 return {"frontmatter": frontmatter, "body": body, "file": str(skill_file)}
         return {"raw": content, "file": str(skill_file)}
 
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 3 or not sys.argv[2:]:
         print("Usage: load-skills.py <agent> <task_description>")
         sys.exit(1)
 
@@ -1634,9 +1751,7 @@ def main():
     for skill in skills:
         print(f"Skill: {skill.get('name', 'Unknown')}")
         print(f"  Description: {skill.get('description', 'N/A')}")
-        print(f"  Category: {skill.get('category', 'N/A')}")
         print(f"  Tags: {', '.join(skill.get('tags', []))}")
-        print(f"  Tools: {', '.join(skill.get('tools', []))}")
         print()
 
 if __name__ == "__main__":
@@ -1704,7 +1819,10 @@ class AgentMemory:
         expires_at = None
         if ttl_days:
             from datetime import timedelta
-            expires_at = (datetime.now() + timedelta(days=ttl_days)).isoformat()
+            # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
+            # against datetime('now') work: the ISO "T" separator sorts
+            # after a space and broke timely expiry cleanup.
+            expires_at = (datetime.now() + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
 
         meta_json = json.dumps(metadata) if metadata else None
 
@@ -1830,7 +1948,6 @@ def main():
             print(f"Deleted: {key}")
         else:
             print(f"Not found: {key}")
-            sys.exit(1)
 
     elif command == "cleanup":
         count = memory.cleanup_expired()
@@ -1868,7 +1985,18 @@ from pathlib import Path
 from typing import Optional
 
 HEADROOM_BIN = os.environ.get("HEADROOM_BIN", "headroom")
-FALLBACK_BIN = "/root/agent-enhancements/headroom/target/release/headroom"
+
+
+def _default_fallback_bin() -> str:
+    """Locate the repo-built headroom binary without hardcoding paths."""
+    base = os.environ.get("AGENT_ENHANCEMENTS_BASE_DIR")
+    if base:
+        return os.path.join(base, "headroom", "target", "release", "headroom")
+    # Repo layout: <base>/unified-integration/scripts/compress.py
+    return str(Path(__file__).resolve().parent.parent.parent / "headroom" / "target" / "release" / "headroom")
+
+
+FALLBACK_BIN = _default_fallback_bin()
 
 def get_headroom_bin() -> Optional[str]:
     """Find headroom binary"""
@@ -2010,7 +2138,7 @@ main() {
     echo "  Setup Complete!"
     echo "========================================"
     echo ""
-    echo "Configured agents: ${AGENTS[@]}"
+    echo "Configured agents: ${AGENTS[*]:-none}"
     echo ""
     echo "Next steps:"
     echo "  1. Run: $UNIFIED_DIR/memory/init-memory.sh"
@@ -2035,7 +2163,7 @@ main() {
     echo "  - ~/.kiro/ (Kiro)"
     echo ""
     echo "Environment variables for customization:"
-    echo "  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: /root/agent-enhancements)"
+    echo "  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: repository root detected from setup.sh location)"
     echo "  AGENT_MEMORY_ROOT - Override memory storage location (default: ~/.agent-memory)"
     echo "  HEADROOM_BIN - Override headroom binary path"
 }

@@ -98,13 +98,20 @@ jobs:
   ecc-tests:
     name: ECC test suite (CONTRACT §5.1)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - name: Install ECC dependencies
+        run: npm install --no-audit --no-fund
+        working-directory: ECC
+      - name: Build opencode artifacts
+        run: npm run build:opencode
+        working-directory: ECC
       - name: Run ECC tests
-        run: node tests/run-all.js
+        run: ECC_TEST_JOBS=8 node tests/run-all.js
         working-directory: ECC
 
   markdownlint:

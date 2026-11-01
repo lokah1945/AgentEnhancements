@@ -123,7 +123,7 @@ markdownlint on owned docs.
 | R2 | `curl \| bash` installer executes remote code by design | Medium | Caution note added; SHA-pinning or a release artifact is a maintainer decision |
 | R3 | Skills aggregated from third parties are copied to disk and their SKILL.md bodies are trusted content (only metadata handling was hardened) | Medium | Inherent to the project's purpose; recommend an upstream review policy |
 | R4 | `\x1e`/`\x1f` record separators could theoretically appear in a malicious description, garbling one index entry (no code execution) | Low | Record parser pads/ignores malformed fields; acceptable trade-off |
-| R5 | CI not yet executed on real GitHub runners | Low | Workflow is standard actions usage; validate on first push |
+| R5 | CI workflow pushed but GitHub Actions could not start runner jobs on the account (all jobs fail in ~1s, zero steps, no runner, empty logs; YAML valid, local fresh-clone simulation passes) | Low | Maintainer should check the repo's Actions tab for an account-level banner (verification/restriction) and re-run; evidence documented in TEST_RESULTS §6.3 |
 | R6 | headroom compression path validated via fallback only (no Rust toolchain in the audit sandbox) | Low | Binary detection logic covered by unit tests; build path is optional by design |
 | R7 | `~/.claude/CLAUDE.md` is still overwritten by setup (pre-existing behaviour; labelled in docs/AGENTS.md) | Low | Changing merge semantics for a free-form doc is a product decision |
 

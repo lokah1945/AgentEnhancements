@@ -108,7 +108,16 @@ being `Cannot find module` errors - `npm install` plus
 1. headroom's Rust build was not exercised (no toolchain in the sandbox);
    the fallback compression path and binary detection were tested instead.
 2. Agent detection used stub binaries; real agent CLIs were unavailable.
-3. The GitHub Actions workflow has not run on real GitHub runners yet.
+3. **GitHub Actions could not start runner jobs on the target account**:
+   both CI runs (push + pull_request events, plus a re-run) completed as
+   failures within 1-2 seconds with **zero steps executed, no runner
+   assigned and empty log archives** - the signature of an account-level
+   Actions restriction (e.g. account verification), not of a workflow
+   problem. The workflow YAML validates, and every job was reproduced
+   successfully against a fresh local clone of the pushed SHA (the
+   integration suite passes; the ECC job was additionally corrected to
+   install dependencies and build artifacts first). The maintainer should
+   check the repository's Actions tab for an account banner.
 4. The full aggregation was validated on a copy of the repository's real
    sources (3,116 skills); the committed `by-category/` tree intentionally
    remains minimal until the maintainer runs `setup.sh` on a machine (or

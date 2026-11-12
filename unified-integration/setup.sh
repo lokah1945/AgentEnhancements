@@ -520,6 +520,12 @@ with open('''$ALL_SKILLS_JSON''', 'w') as f:
         process_skills_source "Superpowers" "$BASE_DIR/superpowers/skills"
     fi
 
+    # Process skills from replica-skill (app cloning pipeline, 11 sub-skills)
+    # Source layout: skill dirs live at the repository root (replica-recon/ etc.)
+    if [ -d "$BASE_DIR/replica-skill" ]; then
+        process_skills_source "replica-skill" "$BASE_DIR/replica-skill"
+    fi
+
     # Create final unified skills index with metadata
     log_info "Creating unified skills index..."
     python3 -c "
@@ -544,7 +550,7 @@ for skill in index['skills']:
 # Create final unified index
 unified = {
     'version': '1.0',
-    'sources': ['agentic-awesome-skills', 'ECC', 'Ponytail', 'Superpowers'],
+    'sources': ['agentic-awesome-skills', 'ECC', 'Ponytail', 'Superpowers', 'replica-skill'],
     'skills': index['skills'],
     'total_skills': len(index['skills']),
     'categories': categories,

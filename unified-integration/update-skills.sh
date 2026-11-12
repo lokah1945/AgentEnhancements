@@ -71,6 +71,13 @@ main() {
     update_repo "$BASE_DIR/claude-mem" "claude-mem"
     update_repo "$BASE_DIR/headroom" "headroom"
 
+    # replica-skill is vendored (not a git checkout). Update manually by
+    # re-vendoring from https://github.com/Jakeschincariol/replica-skill
+    # (remove .git after cloning, keep LICENSE).
+    if [ -d "$BASE_DIR/replica-skill" ] && [ ! -d "$BASE_DIR/replica-skill/.git" ]; then
+        log_warn "replica-skill: vendored copy (no .git) - update manually via re-vendor"
+    fi
+
     # Re-run skills aggregation
     log_info "Re-aggregating skills..."
     "$UNIFIED_DIR/setup.sh" 2>&1 | grep -E "Aggregate|process|complete|skill" | head -20

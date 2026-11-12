@@ -6,6 +6,9 @@ This directory contains aggregated skills from multiple sources:
 2. **ECC** - Additional skills and commands
 3. **Ponytail** - Additional skills and hooks
 4. **Superpowers** - Additional skills
+5. **replica-skill** - 11 app-cloning sub-skills
+6. **anthropic-skills** - 19 official Anthropic skills (docx, pdf, pptx,
+   xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
 
 ## Structure
 

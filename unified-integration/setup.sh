@@ -384,6 +384,9 @@ This directory contains aggregated skills from multiple sources:
 2. **ECC** - Additional skills and commands
 3. **Ponytail** - Additional skills and hooks
 4. **Superpowers** - Additional skills
+5. **replica-skill** - 11 app-cloning sub-skills
+6. **anthropic-skills** - 19 official Anthropic skills (docx, pdf, pptx,
+   xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
 
 ## Structure
 
@@ -552,6 +555,15 @@ EOF
     # Source layout: skill dirs live at the repository root (replica-recon/ etc.)
     if [ -d "$BASE_DIR/replica-skill" ]; then
         process_skills_source "replica-skill" "$BASE_DIR/replica-skill"
+    fi
+
+    # Process skills from anthropics/skills (official Anthropic skills:
+    # docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing,
+    # claude-api, design skills and more - 19 in total). Processed LAST on
+    # purpose: 13 of these names also exist as third-party copies inside
+    # agentic-awesome-skills, and the official vendored version must win.
+    if [ -d "$BASE_DIR/anthropic-skills/skills" ]; then
+        process_skills_source "anthropic-skills" "$BASE_DIR/anthropic-skills/skills"
     fi
 
     # Create final unified skills index with metadata.

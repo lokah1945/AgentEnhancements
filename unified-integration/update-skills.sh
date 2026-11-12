@@ -96,6 +96,13 @@ main() {
         log_warn "replica-skill: vendored copy (no .git) - update manually via re-vendor"
     fi
 
+    # anthropic-skills is vendored (not a git checkout). Update manually by
+    # re-vendoring from https://github.com/anthropics/skills (remove .git
+    # after cloning; each skill carries its own Apache-2.0 LICENSE.txt).
+    if [ -d "$BASE_DIR/anthropic-skills" ] && [ ! -d "$BASE_DIR/anthropic-skills/.git" ]; then
+        log_warn "anthropic-skills: vendored copy (no .git) - update manually via re-vendor"
+    fi
+
     # Re-run skills aggregation
     log_info "Re-aggregating skills..."
     "$UNIFIED_DIR/setup.sh" 2>&1 | grep -E "Aggregate|process|complete|skill" | head -20 || true

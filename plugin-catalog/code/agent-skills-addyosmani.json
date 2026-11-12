@@ -1,0 +1,51 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "code-agent-skills-addyosmani",
+  "name": "Agent Skills (Addy Osmani)",
+  "slug": "agent-skills-addyosmani",
+  "category": "code",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/addyosmani/",
+    "license": "Apache-2.0 (verify on upstream)"
+  },
+  "description": "Koleksi skill engineering dari Addy Osmani: web performance, debugging, progressive enhancement, accessibility, dan patterns modern frontend. Mengandung agent playbook untuk refactor performa tinggi.",
+  "capabilities": [
+    "performance audit",
+    "lighthouse-driven refactor",
+    "core web vitals fixes",
+    "accessibility (a11y) remediation"
+  ],
+  "tools_required": [
+    "bash (lighthouse, pa11y)",
+    "browser",
+    "read_file",
+    "edit_file"
+  ],
+  "mcp_servers_suggested": [
+    "browser-tools-mcp",
+    "lighthouse-mcp",
+    "pa11y-mcp"
+  ],
+  "trigger_keywords": [
+    "performance",
+    "a11y",
+    "lighthouse",
+    "core web vitals",
+    "frontend"
+  ],
+  "best_for": [
+    "production web apps",
+    "e-commerce",
+    "high-traffic frontend"
+  ],
+  "integration_notes": "Integrasikan dengan skill UI UX Pro Max agar audit & refactor berjalan dalam satu pipeline.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/code/agent-skills-addyosmani/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

@@ -1,0 +1,691 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/mcp-servers.v1.json",
+  "version": "1.0.0",
+  "description": "Roadmap MCP server yang perlu dibangun/dipasang untuk mengaktifkan 20 plugin v2 AgentEnhancements. Prioritas: P0 wajib sebelum Phase 1, P1 untuk Phase 2, P2 nice-to-have.",
+  "servers": [
+    {
+      "id": "brave-search-mcp",
+      "priority": "P0",
+      "category": "search",
+      "for_plugins": [
+        "agent-reach",
+        "last-30-days",
+        "rea",
+        "understand-anything"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "env_required": [
+        "BRAVE_API_KEY"
+      ],
+      "purpose": "Web search primer untuk skill research.",
+      "status": "to-install"
+    },
+    {
+      "id": "tavily-mcp",
+      "priority": "P0",
+      "category": "search",
+      "for_plugins": [
+        "agent-reach",
+        "rea"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "tavily-mcp"
+      ],
+      "env_required": [
+        "TAVILY_API_KEY"
+      ],
+      "purpose": "AI-optimized search; alternatif / cadangan Brave.",
+      "status": "to-install"
+    },
+    {
+      "id": "exa-mcp",
+      "priority": "P1",
+      "category": "search",
+      "for_plugins": [
+        "agent-reach",
+        "last-30-days"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "exa-mcp-server"
+      ],
+      "env_required": [
+        "EXA_API_KEY"
+      ],
+      "purpose": "Semantic + neural search untuk deep research.",
+      "status": "to-install"
+    },
+    {
+      "id": "firecrawl-mcp",
+      "priority": "P1",
+      "category": "search",
+      "for_plugins": [
+        "agent-reach",
+        "graphify"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "env_required": [
+        "FIRECRAWL_API_KEY"
+      ],
+      "purpose": "Scrape + crawl untuk ingestion dokumen besar.",
+      "status": "to-install"
+    },
+    {
+      "id": "neo4j-mcp",
+      "priority": "P1",
+      "category": "graph",
+      "for_plugins": [
+        "graphify"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "neo4j-mcp-server"
+      ],
+      "env_required": [
+        "NEO4J_URI",
+        "NEO4J_USER",
+        "NEO4J_PASSWORD"
+      ],
+      "purpose": "Persist knowledge graph dari Graphify.",
+      "status": "to-install"
+    },
+    {
+      "id": "graphrag-mcp",
+      "priority": "P2",
+      "category": "graph",
+      "for_plugins": [
+        "graphify",
+        "agent-reach"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "graphrag_mcp"
+      ],
+      "env_required": [
+        "OPENAI_API_KEY"
+      ],
+      "purpose": "Graph-based retrieval (G-RAG) untuk dokumen besar.",
+      "status": "to-build"
+    },
+    {
+      "id": "embeddings-mcp",
+      "priority": "P1",
+      "category": "ml",
+      "for_plugins": [
+        "graphify",
+        "understand-anything",
+        "agent-reach"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "embeddings_mcp"
+      ],
+      "env_required": [
+        "OPENAI_API_KEY"
+      ],
+      "purpose": "Embedding service seragam untuk semua skill yang butuh vektor.",
+      "status": "to-build"
+    },
+    {
+      "id": "browser-tools-mcp",
+      "priority": "P0",
+      "category": "browser",
+      "for_plugins": [
+        "agent-skills-addyosmani",
+        "impeccable",
+        "ui-ux-pro-max",
+        "replica-skill"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "@agent-infra/browser-tools-mcp"
+      ],
+      "env_required": [],
+      "purpose": "Kontrol browser headless untuk audit UI, screenshot, dan perf.",
+      "status": "to-install"
+    },
+    {
+      "id": "lighthouse-mcp",
+      "priority": "P1",
+      "category": "browser",
+      "for_plugins": [
+        "agent-skills-addyosmani"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "lighthouse-mcp"
+      ],
+      "env_required": [],
+      "purpose": "Lighthouse audit automation untuk Core Web Vitals.",
+      "status": "to-install"
+    },
+    {
+      "id": "pa11y-mcp",
+      "priority": "P1",
+      "category": "browser",
+      "for_plugins": [
+        "agent-skills-addyosmani",
+        "ui-ux-pro-max"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "pa11y-mcp"
+      ],
+      "env_required": [],
+      "purpose": "Audit accessibility otomatis.",
+      "status": "to-install"
+    },
+    {
+      "id": "figma-mcp",
+      "priority": "P1",
+      "category": "design",
+      "for_plugins": [
+        "ui-ux-pro-max",
+        "impeccable"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "figma-mcp-server"
+      ],
+      "env_required": [
+        "FIGMA_TOKEN"
+      ],
+      "purpose": "Pull design tokens dan layout dari Figma.",
+      "status": "to-install"
+    },
+    {
+      "id": "storybook-mcp",
+      "priority": "P2",
+      "category": "design",
+      "for_plugins": [
+        "ui-ux-pro-max",
+        "impeccable"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "storybook-mcp"
+      ],
+      "env_required": [],
+      "purpose": "Inspeksi component story untuk QA visual.",
+      "status": "to-install"
+    },
+    {
+      "id": "mermaid-mcp",
+      "priority": "P1",
+      "category": "diagram",
+      "for_plugins": [
+        "diagram-design"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "mermaid-mcp"
+      ],
+      "env_required": [],
+      "purpose": "Render diagram Mermaid ke SVG/PNG.",
+      "status": "to-install"
+    },
+    {
+      "id": "excalidraw-mcp",
+      "priority": "P2",
+      "category": "diagram",
+      "for_plugins": [
+        "diagram-design"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "excalidraw-mcp"
+      ],
+      "env_required": [],
+      "purpose": "Sketcky diagrams untuk whiteboard-style.",
+      "status": "to-install"
+    },
+    {
+      "id": "google-slides-mcp",
+      "priority": "P1",
+      "category": "office",
+      "for_plugins": [
+        "ppt-master"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "google-slides-mcp"
+      ],
+      "env_required": [
+        "GOOGLE_OAUTH_CLIENT_ID",
+        "GOOGLE_OAUTH_CLIENT_SECRET"
+      ],
+      "purpose": "Generate / edit Google Slides.",
+      "status": "to-install"
+    },
+    {
+      "id": "office-mcp",
+      "priority": "P1",
+      "category": "office",
+      "for_plugins": [
+        "ppt-master"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "office-mcp"
+      ],
+      "env_required": [
+        "MICROSOFT_CLIENT_ID",
+        "MICROSOFT_CLIENT_SECRET"
+      ],
+      "purpose": "PowerPoint automation via Graph API.",
+      "status": "to-install"
+    },
+    {
+      "id": "image-search-mcp",
+      "priority": "P1",
+      "category": "media",
+      "for_plugins": [
+        "ppt-master",
+        "diagram-design"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "image-search-mcp"
+      ],
+      "env_required": [
+        "BING_IMAGE_API_KEY"
+      ],
+      "purpose": "Cari gambar untuk slide / diagram.",
+      "status": "to-install"
+    },
+    {
+      "id": "ffmpeg-mcp",
+      "priority": "P1",
+      "category": "media",
+      "for_plugins": [
+        "openmontage"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "ffmpeg_mcp"
+      ],
+      "env_required": [],
+      "purpose": "Editing video non-linear via ffmpeg.",
+      "status": "to-build"
+    },
+    {
+      "id": "video-mcp",
+      "priority": "P2",
+      "category": "media",
+      "for_plugins": [
+        "openmontage",
+        "hyperframes"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "video_mcp"
+      ],
+      "env_required": [],
+      "purpose": "Wrapper shot list, timeline, transcode.",
+      "status": "to-build"
+    },
+    {
+      "id": "heygen-mcp",
+      "priority": "P1",
+      "category": "media",
+      "for_plugins": [
+        "hyperframes"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "heygen-mcp"
+      ],
+      "env_required": [
+        "HEYGEN_API_KEY"
+      ],
+      "purpose": "Personalized talking-head video. WAJIB consent gate.",
+      "status": "to-install"
+    },
+    {
+      "id": "elevenlabs-mcp",
+      "priority": "P1",
+      "category": "media",
+      "for_plugins": [
+        "hyperframes",
+        "openmontage"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "elevenlabs-mcp"
+      ],
+      "env_required": [
+        "ELEVENLABS_API_KEY"
+      ],
+      "purpose": "Voice synthesis / cloning. WAJIB consent gate sebelum clone.",
+      "status": "to-install"
+    },
+    {
+      "id": "typescript-language-server-mcp",
+      "priority": "P1",
+      "category": "code",
+      "for_plugins": [
+        "mattpocock-skills",
+        "agent-skills-addyosmani"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "typescript-language-server-mcp"
+      ],
+      "env_required": [],
+      "purpose": "LSP-based code navigation untuk TS.",
+      "status": "to-install"
+    },
+    {
+      "id": "eslint-mcp",
+      "priority": "P1",
+      "category": "code",
+      "for_plugins": [
+        "mattpocock-skills",
+        "agent-skills-addyosmani"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "eslint-mcp"
+      ],
+      "env_required": [],
+      "purpose": "Lint + autofix via MCP.",
+      "status": "to-install"
+    },
+    {
+      "id": "jupyter-mcp",
+      "priority": "P1",
+      "category": "data",
+      "for_plugins": [
+        "karpathy-skills"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "jupyter_mcp"
+      ],
+      "env_required": [],
+      "purpose": "Eksekusi notebook untuk ML prototype.",
+      "status": "to-install"
+    },
+    {
+      "id": "python-repl-mcp",
+      "priority": "P1",
+      "category": "data",
+      "for_plugins": [
+        "karpathy-skills"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "python_repl_mcp"
+      ],
+      "env_required": [],
+      "purpose": "REPL untuk derivasi numerik / eksperimen cepat.",
+      "status": "to-install"
+    },
+    {
+      "id": "memory-mcp",
+      "priority": "P0",
+      "category": "memory",
+      "for_plugins": [
+        "bmad-method",
+        "gsd",
+        "rea",
+        "anthropic-skills"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env_required": [],
+      "purpose": "Shared memory layer lintas orchestrator.",
+      "status": "to-install"
+    },
+    {
+      "id": "task-router-mcp",
+      "priority": "P1",
+      "category": "task",
+      "for_plugins": [
+        "gsd",
+        "bmad-method",
+        "rea"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "task_router_mcp"
+      ],
+      "env_required": [],
+      "purpose": "Dispatch sub-agent + track progress.",
+      "status": "to-build"
+    },
+    {
+      "id": "github-issues-mcp",
+      "priority": "P1",
+      "category": "task",
+      "for_plugins": [
+        "bmad-method",
+        "gsd"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "github-issues-mcp"
+      ],
+      "env_required": [
+        "GITHUB_TOKEN"
+      ],
+      "purpose": "Buat / update issue dari persona BMAD output.",
+      "status": "to-install"
+    },
+    {
+      "id": "linear-mcp",
+      "priority": "P2",
+      "category": "task",
+      "for_plugins": [
+        "bmad-method"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "linear-mcp"
+      ],
+      "env_required": [
+        "LINEAR_API_KEY"
+      ],
+      "purpose": "Linear integration untuk PM persona.",
+      "status": "to-install"
+    },
+    {
+      "id": "wikipedia-mcp",
+      "priority": "P2",
+      "category": "reference",
+      "for_plugins": [
+        "understand-anything"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "wikipedia-mcp"
+      ],
+      "env_required": [],
+      "purpose": "Baseline knowledge retrieval.",
+      "status": "to-install"
+    },
+    {
+      "id": "arxiv-mcp",
+      "priority": "P2",
+      "category": "reference",
+      "for_plugins": [
+        "understand-anything",
+        "agent-reach"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "arxiv_mcp"
+      ],
+      "env_required": [],
+      "purpose": "Fetch paper abstracts + full text untuk research.",
+      "status": "to-build"
+    },
+    {
+      "id": "newsapi-mcp",
+      "priority": "P2",
+      "category": "news",
+      "for_plugins": [
+        "last-30-days"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "newsapi-mcp"
+      ],
+      "env_required": [
+        "NEWSAPI_KEY"
+      ],
+      "purpose": "News feed untuk trend monitoring.",
+      "status": "to-install"
+    },
+    {
+      "id": "google-news-mcp",
+      "priority": "P2",
+      "category": "news",
+      "for_plugins": [
+        "last-30-days"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "google_news_mcp"
+      ],
+      "env_required": [],
+      "purpose": "RSS Google News fallback bila NewsAPI unavailable.",
+      "status": "to-build"
+    },
+    {
+      "id": "filesystem-mcp",
+      "priority": "P0",
+      "category": "core",
+      "for_plugins": [
+        "anthropic-skills",
+        "all"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem"
+      ],
+      "env_required": [],
+      "purpose": "Filesystem access standar untuk semua skill.",
+      "status": "to-install"
+    },
+    {
+      "id": "pdf-mcp",
+      "priority": "P1",
+      "category": "core",
+      "for_plugins": [
+        "anthropic-skills",
+        "ppt-master"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "pdf-mcp"
+      ],
+      "env_required": [],
+      "purpose": "Ekstrak / generate PDF.",
+      "status": "to-install"
+    },
+    {
+      "id": "vision-mcp",
+      "priority": "P1",
+      "category": "core",
+      "for_plugins": [
+        "anthropic-skills",
+        "impeccable",
+        "replica-skill"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "vision_mcp"
+      ],
+      "env_required": [
+        "OPENAI_API_KEY"
+      ],
+      "purpose": "Multimodal image understanding.",
+      "status": "to-build"
+    },
+    {
+      "id": "style-mcp",
+      "priority": "P2",
+      "category": "writing",
+      "for_plugins": [
+        "humanizer"
+      ],
+      "command": "python",
+      "args": [
+        "-m",
+        "style_mcp"
+      ],
+      "env_required": [],
+      "purpose": "Deteksi AI-ism + style scoring.",
+      "status": "to-build"
+    },
+    {
+      "id": "grammar-mcp",
+      "priority": "P2",
+      "category": "writing",
+      "for_plugins": [
+        "humanizer"
+      ],
+      "command": "npx",
+      "args": [
+        "-y",
+        "grammar-mcp"
+      ],
+      "env_required": [
+        "LANGUAGE_TOOL_URL"
+      ],
+      "purpose": "Grammar / spell check sebagai post-processor.",
+      "status": "to-install"
+    }
+  ],
+  "legend": {
+    "P0": "Wajib sebelum Phase 1 (skills basic tidak jalan tanpa ini)",
+    "P1": "Phase 2 (mengaktifkan plugin utuh)",
+    "P2": "Nice-to-have (Phase 3+ / cadangan)"
+  }
+}

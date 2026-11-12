@@ -1,0 +1,545 @@
+{
+  "version": "1.0",
+  "description": "Index katalog plugin eksternal AgentEnhancements. Ini BUKAN pengganti unified-integration/skills/all-skills.json (yang di-regenerasi oleh pipeline agregasi setup.sh). catalog.json hanya mengindeks plugin sources yang terdokumentasi di plugin-catalog/.",
+  "total_plugins": 21,
+  "categories": [
+    "code",
+    "research",
+    "tokens-optimization",
+    "design",
+    "multimedia-writing"
+  ],
+  "skills": [
+    {
+      "id": "code-agent-skills-addyosmani",
+      "slug": "agent-skills-addyosmani",
+      "name": "Agent Skills (Addy Osmani)",
+      "category": "code",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/code/agent-skills-addyosmani.json",
+      "guide_path": "plugin-catalog/code/agent-skills-addyosmani/SKILL.md",
+      "trigger_keywords": [
+        "performance",
+        "a11y",
+        "lighthouse",
+        "core web vitals",
+        "frontend"
+      ],
+      "mcp_servers": [
+        "browser-tools-mcp",
+        "lighthouse-mcp",
+        "pa11y-mcp"
+      ],
+      "source_url": "https://github.com/addyosmani/",
+      "source_license": "Apache-2.0 (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "code-karpathy-skills",
+      "slug": "karpathy-skills",
+      "name": "Andrej Karpathy Skills",
+      "category": "code",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/code/karpathy-skills.json",
+      "guide_path": "plugin-catalog/code/karpathy-skills/SKILL.md",
+      "trigger_keywords": [
+        "karpathy",
+        "minimal",
+        "first-principles",
+        "numpy",
+        "torch"
+      ],
+      "mcp_servers": [
+        "jupyter-mcp",
+        "python-repl-mcp"
+      ],
+      "source_url": "https://github.com/multica-ai/andrej-karpathy-skills",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "code-mattpocock-skills",
+      "slug": "mattpocock-skills",
+      "name": "Matt Pocock Skills",
+      "category": "code",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/code/mattpocock-skills.json",
+      "guide_path": "plugin-catalog/code/mattpocock-skills/SKILL.md",
+      "trigger_keywords": [
+        "typescript",
+        "refactor",
+        "types",
+        "zod",
+        "generics"
+      ],
+      "mcp_servers": [
+        "typescript-language-server",
+        "eslint-mcp"
+      ],
+      "source_url": "https://github.com/mattpocock/",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "code-replica-skill",
+      "slug": "replica-skill",
+      "name": "Replica Skill (11 sub-skills)",
+      "category": "code",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/code/replica-skill.json",
+      "guide_path": "plugin-catalog/code/replica-skill/SKILL.md",
+      "trigger_keywords": [
+        "clone app",
+        "replica",
+        "reverse engineer",
+        "clone this app",
+        "build my own version",
+        "rebuild app",
+        "app competitor analysis"
+      ],
+      "mcp_servers": [
+        "browser-tools-mcp",
+        "vision-mcp"
+      ],
+      "source_url": "https://github.com/Jakeschincariol/replica-skill",
+      "source_license": "MIT",
+      "vendored": true,
+      "sub_skills_count": 11
+    },
+    {
+      "id": "research-agent-reach",
+      "slug": "agent-reach",
+      "name": "Agent-Reach",
+      "category": "research",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/research/agent-reach.json",
+      "guide_path": "plugin-catalog/research/agent-reach/SKILL.md",
+      "trigger_keywords": [
+        "deep research",
+        "literature",
+        "sources",
+        "citation"
+      ],
+      "mcp_servers": [
+        "brave-search-mcp",
+        "tavily-mcp",
+        "exa-mcp",
+        "firecrawl-mcp"
+      ],
+      "source_url": "https://github.com/Panniantong/Agent-Reach",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "research-graphify",
+      "slug": "graphify",
+      "name": "Graphify",
+      "category": "research",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/research/graphify.json",
+      "guide_path": "plugin-catalog/research/graphify/SKILL.md",
+      "trigger_keywords": [
+        "knowledge graph",
+        "graph",
+        "extract",
+        "entity",
+        "relation"
+      ],
+      "mcp_servers": [
+        "neo4j-mcp",
+        "graphrag-mcp",
+        "embeddings-mcp"
+      ],
+      "source_url": "https://github.com/Graphify-Labs/",
+      "source_license": "Apache-2.0 (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "research-last-30-days",
+      "slug": "last-30-days",
+      "name": "Last 30 Days",
+      "category": "research",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/research/last-30-days.json",
+      "guide_path": "plugin-catalog/research/last-30-days/SKILL.md",
+      "trigger_keywords": [
+        "recent",
+        "last 30 days",
+        "news",
+        "trends",
+        "fresh"
+      ],
+      "mcp_servers": [
+        "brave-search-mcp",
+        "newsapi-mcp",
+        "google-news-mcp"
+      ],
+      "source_url": "https://github.com/mvanhorn/",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "research-rea",
+      "slug": "rea",
+      "name": "REA (Reasoning + Acting)",
+      "category": "research",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/research/rea.json",
+      "guide_path": "plugin-catalog/research/rea/SKILL.md",
+      "trigger_keywords": [
+        "rea",
+        "reasoning",
+        "reflection",
+        "multi-step"
+      ],
+      "mcp_servers": [
+        "task-router-mcp",
+        "memory-mcp"
+      ],
+      "source_url": "https://github.com/marloto/REA",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "research-understand-anything",
+      "slug": "understand-anything",
+      "name": "Understand Anything",
+      "category": "research",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/research/understand-anything.json",
+      "guide_path": "plugin-catalog/research/understand-anything/SKILL.md",
+      "trigger_keywords": [
+        "explain",
+        "understand",
+        "concept",
+        "Feynman",
+        "onboarding"
+      ],
+      "mcp_servers": [
+        "wikipedia-mcp",
+        "arxiv-mcp",
+        "embeddings-mcp"
+      ],
+      "source_url": "https://github.com/Egomex-AI/",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "tokens-bmad-method",
+      "slug": "bmad-method",
+      "name": "BMAD Method",
+      "category": "tokens-optimization",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/tokens-optimization/bmad-method.json",
+      "guide_path": "plugin-catalog/tokens-optimization/bmad-method/SKILL.md",
+      "trigger_keywords": [
+        "bmad",
+        "persona",
+        "agile",
+        "story",
+        "scrum"
+      ],
+      "mcp_servers": [
+        "linear-mcp",
+        "github-issues-mcp",
+        "memory-mcp"
+      ],
+      "source_url": "https://github.com/bmad-code-org/",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "tokens-caveman",
+      "slug": "caveman",
+      "name": "Caveman",
+      "category": "tokens-optimization",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/tokens-optimization/caveman.json",
+      "guide_path": "plugin-catalog/tokens-optimization/caveman/SKILL.md",
+      "trigger_keywords": [
+        "caveman",
+        "minimize",
+        "shorthand",
+        "compression"
+      ],
+      "mcp_servers": [
+        "tokenizer-mcp"
+      ],
+      "source_url": "https://github.com/JuliusBrussee/Caveman",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "tokens-gsd",
+      "slug": "gsd",
+      "name": "Get Shit Done (GSD)",
+      "category": "tokens-optimization",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/tokens-optimization/gsd.json",
+      "guide_path": "plugin-catalog/tokens-optimization/gsd/SKILL.md",
+      "trigger_keywords": [
+        "gsd",
+        "get shit done",
+        "atomic",
+        "parallel",
+        "checklist"
+      ],
+      "mcp_servers": [
+        "task-router-mcp",
+        "memory-mcp"
+      ],
+      "source_url": "https://github.com/gsd-build/get-shit-done",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "tokens-gstack",
+      "slug": "gstack",
+      "name": "GStack",
+      "category": "tokens-optimization",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/tokens-optimization/gstack.json",
+      "guide_path": "plugin-catalog/tokens-optimization/gstack/SKILL.md",
+      "trigger_keywords": [
+        "token",
+        "compress",
+        "budget",
+        "cache",
+        "context"
+      ],
+      "mcp_servers": [
+        "llm-cache-mcp",
+        "tokenizer-mcp"
+      ],
+      "source_url": "https://github.com/garrytan/gstack",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "design-diagram-design",
+      "slug": "diagram-design",
+      "name": "Diagram Design",
+      "category": "design",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/design/diagram-design.json",
+      "guide_path": "plugin-catalog/design/diagram-design/SKILL.md",
+      "trigger_keywords": [
+        "diagram",
+        "mermaid",
+        "d2",
+        "flowchart",
+        "erd"
+      ],
+      "mcp_servers": [
+        "mermaid-mcp",
+        "excalidraw-mcp"
+      ],
+      "source_url": "https://github.com/cathrynlavery/",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "design-impeccable",
+      "slug": "impeccable",
+      "name": "Impeccable",
+      "category": "design",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/design/impeccable.json",
+      "guide_path": "plugin-catalog/design/impeccable/SKILL.md",
+      "trigger_keywords": [
+        "polish",
+        "impeccable",
+        "alignment",
+        "contrast",
+        "hierarchy"
+      ],
+      "mcp_servers": [
+        "browser-tools-mcp",
+        "figma-mcp"
+      ],
+      "source_url": "https://github.com/pbakaus/",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "design-ppt-master",
+      "slug": "ppt-master",
+      "name": "PPT Master",
+      "category": "design",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/design/ppt-master.json",
+      "guide_path": "plugin-catalog/design/ppt-master/SKILL.md",
+      "trigger_keywords": [
+        "ppt",
+        "slides",
+        "presentation",
+        "keynote",
+        "narrative"
+      ],
+      "mcp_servers": [
+        "google-slides-mcp",
+        "office-mcp",
+        "image-search-mcp"
+      ],
+      "source_url": "https://github.com/hugohe3/ppt-master",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "design-ui-ux-pro-max",
+      "slug": "ui-ux-pro-max",
+      "name": "UI UX Pro Max",
+      "category": "design",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/design/ui-ux-pro-max.json",
+      "guide_path": "plugin-catalog/design/ui-ux-pro-max/SKILL.md",
+      "trigger_keywords": [
+        "ui",
+        "ux",
+        "design tokens",
+        "color",
+        "spacing"
+      ],
+      "mcp_servers": [
+        "figma-mcp",
+        "browser-tools-mcp",
+        "storybook-mcp"
+      ],
+      "source_url": "https://github.com/nextlevelbuilder/",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "multimedia-anthropic-skills",
+      "slug": "anthropic-skills",
+      "name": "Anthropic Skills",
+      "category": "multimedia-writing",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/multimedia-writing/anthropic-skills.json",
+      "guide_path": "plugin-catalog/multimedia-writing/anthropic-skills/SKILL.md",
+      "trigger_keywords": [
+        "anthropic",
+        "structured",
+        "tool use",
+        "multimodal",
+        "safety"
+      ],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "pdf-mcp",
+        "vision-mcp"
+      ],
+      "source_url": "https://github.com/anthropics/",
+      "source_license": "Apache-2.0 (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "multimedia-humanizer",
+      "slug": "humanizer",
+      "name": "Humanizer",
+      "category": "multimedia-writing",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/multimedia-writing/humanizer.json",
+      "guide_path": "plugin-catalog/multimedia-writing/humanizer/SKILL.md",
+      "trigger_keywords": [
+        "humanize",
+        "natural",
+        "ai-ism",
+        "tone",
+        "rewrite"
+      ],
+      "mcp_servers": [
+        "style-mcp",
+        "grammar-mcp"
+      ],
+      "source_url": "https://github.com/blader/humanizer",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "multimedia-hyperframes",
+      "slug": "hyperframes",
+      "name": "Hyperframes",
+      "category": "multimedia-writing",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/multimedia-writing/hyperframes.json",
+      "guide_path": "plugin-catalog/multimedia-writing/hyperframes/SKILL.md",
+      "trigger_keywords": [
+        "avatar",
+        "hyperframes",
+        "talking head",
+        "personalized video"
+      ],
+      "mcp_servers": [
+        "heygen-mcp",
+        "elevenlabs-mcp",
+        "voice-clone-mcp"
+      ],
+      "source_url": "https://github.com/heygen-con/",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    },
+    {
+      "id": "multimedia-openmontage",
+      "slug": "openmontage",
+      "name": "OpenMontage",
+      "category": "multimedia-writing",
+      "version": "1.0.0",
+      "status": "integrated-ready",
+      "manifest_path": "plugin-catalog/multimedia-writing/openmontage.json",
+      "guide_path": "plugin-catalog/multimedia-writing/openmontage/SKILL.md",
+      "trigger_keywords": [
+        "video",
+        "montage",
+        "edit",
+        "ffmpeg",
+        "shorts"
+      ],
+      "mcp_servers": [
+        "ffmpeg-mcp",
+        "video-mcp"
+      ],
+      "source_url": "https://github.com/OpenMontageInc/",
+      "source_license": "MIT (verify on upstream)",
+      "vendored": false
+    }
+  ],
+  "orchestrators": [
+    {
+      "slug": "bmad-method",
+      "role": "build",
+      "for_mode": "greenfield, multi-persona"
+    },
+    {
+      "slug": "gsd",
+      "role": "execute",
+      "for_mode": "atomic checklist, parallel"
+    },
+    {
+      "slug": "rea",
+      "role": "research",
+      "for_mode": "hipotesis-driven, multi-step"
+    }
+  ],
+  "last_updated": "2026-11-12T19:56:04.707215+00:00"
+}

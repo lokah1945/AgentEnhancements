@@ -1,0 +1,49 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "research-rea",
+  "name": "REA (Reasoning + Acting)",
+  "slug": "rea",
+  "category": "research",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/marloto/REA",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Reason-Explain-Act loop untuk riset multi-step: tiap iterasi menyusun rencana, menjelaskan alasan, lalu memilih tool. Mendukung reflection dan backtracking ketika hasil divergen.",
+  "capabilities": [
+    "plan-reason-act loop",
+    "self-reflection",
+    "backtracking",
+    "tool selection policy"
+  ],
+  "tools_required": [
+    "web_search",
+    "bash",
+    "read_file",
+    "write_file"
+  ],
+  "mcp_servers_suggested": [
+    "task-router-mcp",
+    "memory-mcp"
+  ],
+  "trigger_keywords": [
+    "rea",
+    "reasoning",
+    "reflection",
+    "multi-step"
+  ],
+  "best_for": [
+    "complex investigations",
+    "hypothesis testing",
+    "A/B research"
+  ],
+  "integration_notes": "Pakai sebagai orchestrator lapis atas; REA boleh memanggil skill research lain.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/research/rea/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "design-diagram-design",
+  "name": "Diagram Design",
+  "slug": "diagram-design",
+  "category": "design",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/cathrynlavery/",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Skill diagram: mermaid, d2, plantuml, excalidraw. Pemilihan tool berbasis intent (sequence vs flowchart vs ERD), dengan template dan palette konsisten.",
+  "capabilities": [
+    "intent-based diagram tool selection",
+    "diagram authoring (mermaid/d2/plantuml/excalidraw)",
+    "diagram refactoring & simplification",
+    "diagram-to-text round-trip"
+  ],
+  "tools_required": [
+    "bash (mmdc, d2)",
+    "read_file",
+    "write_file"
+  ],
+  "mcp_servers_suggested": [
+    "mermaid-mcp",
+    "excalidraw-mcp"
+  ],
+  "trigger_keywords": [
+    "diagram",
+    "mermaid",
+    "d2",
+    "flowchart",
+    "erd"
+  ],
+  "best_for": [
+    "architecture docs",
+    "RFC visuals",
+    "onboarding diagrams"
+  ],
+  "integration_notes": "Output diagram disimpan di docs/diagrams agar bisa di-embed di README utama.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/design/diagram-design/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

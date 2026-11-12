@@ -1,0 +1,49 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "multimedia-humanizer",
+  "name": "Humanizer",
+  "slug": "humanizer",
+  "category": "multimedia-writing",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/blader/humanizer",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Skill humanisasi teks AI: deteksi pola AI-ism ('delve', 'tapestry', 'in conclusion'), ganti dengan diksi natural, jaga tone, dan hindari over-explanation.",
+  "capabilities": [
+    "AI-ism detection",
+    "natural voice rewriting",
+    "tone preservation",
+    "verbosity reduction"
+  ],
+  "tools_required": [
+    "bash",
+    "read_file",
+    "write_file"
+  ],
+  "mcp_servers_suggested": [
+    "style-mcp",
+    "grammar-mcp"
+  ],
+  "trigger_keywords": [
+    "humanize",
+    "natural",
+    "ai-ism",
+    "tone",
+    "rewrite"
+  ],
+  "best_for": [
+    "blog polishing",
+    "email drafts",
+    "marketing copy"
+  ],
+  "integration_notes": "Jalankan sebagai post-processor setelah skill BMAD/PPT Master selesai menulis.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/multimedia-writing/humanizer/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

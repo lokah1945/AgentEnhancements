@@ -4,9 +4,10 @@ A unified integration platform that aggregates essential AI agent skills, tools,
 
 ## Overview
 
-AgentEnhancements brings together 7 complementary projects that enhance AI coding agents (Claude Code, Cursor, Windsurf, Copilot, etc.) with:
+AgentEnhancements brings together 7 complementary projects (plus a plugin catalog and the vendored **replica-skill**) that enhance AI coding agents (Claude Code, Cursor, Windsurf, Copilot, etc.) with:
 
-- **2788+ specialized skills/agents** for every development task
+- **2900+ specialized skills/agents** for every development task (2884 aggregated + 11 replica sub-skills)
+- **Plugin catalog** with 21 curated external plugin sources (code, research, tokens, design, multimedia)
 - **Context compression & memory management** for long-running sessions
 - **System prompts** optimized for each AI tool
 - **Unified configuration** that works across all major AI coding assistants
@@ -24,6 +25,21 @@ AgentEnhancements brings together 7 complementary projects that enhance AI codin
 | **[ponytail](./ponytail)** | Skills framework & plugin system | Cross-platform skills, hook integration, multiple AI tool support |
 | **[superpowers](./superpowers)** | Developer productivity skills collection | 17 skill categories, automated workflows, team sharing |
 | **[system-prompts-and-models-of-ai-tools](./system-prompts-and-models-of-ai-tools)** | Reference system prompts from 25+ AI tools | Anthropic, Cursor, Windsurf, Copilot, Devin, and more |
+| **[replica-skill](./replica-skill)** | 11 Claude skills that clone any app (clean-room) | recon, architect, design, build, backend, test, diff, entrepreneur, brand, launch, deploy |
+
+### Plugin Catalog (21 external sources)
+
+The `plugin-catalog/` directory documents 21 curated external plugin sources with manifests, integration guides (SKILL.md), and an MCP server roadmap. See `docs/QUICKSTART.md` for a 5-minute tour.
+
+| Category | Plugins |
+|----------|---------|
+| **code** (4) | Matt Pocock Skills, Karpathy Skills, Agent Skills (Addy Osmani), Replica Skill |
+| **research** (5) | Graphify, Agent-Reach, Understand Anything, Last 30 Days, REA |
+| **tokens-optimization** (4) | GStack, Caveman, GSD (Get Shit Done), BMAD Method |
+| **design** (4) | UI UX Pro Max, Impeccable, PPT Master, Diagram Design |
+| **multimedia-writing** (4) | Anthropic Skills, OpenMontage, Hyperframes, Humanizer |
+
+Catalog tooling: `catalog-validate.py` (validate), `catalog-wire.sh` (wire to registry), `catalog-test.sh` (smoke test), `dispatch.sh` (orchestrator routing), `mcp-test.sh` (MCP checks), `consent-gate.sh` + `audit-trail.sh` (safety). All in `unified-integration/scripts/`.
 
 ---
 

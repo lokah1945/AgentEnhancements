@@ -1,0 +1,53 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "research-agent-reach",
+  "name": "Agent-Reach",
+  "slug": "agent-reach",
+  "category": "research",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/Panniantong/Agent-Reach",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Framework deep-research multi-step: query expansion, source triage, claim cross-check, citation graph, dan synthesized report. Mendukung parallel sub-agents dan budget token per sub-task.",
+  "capabilities": [
+    "deep research orchestration",
+    "query expansion",
+    "source triage & ranking",
+    "claim cross-check",
+    "citation-aware synthesis"
+  ],
+  "tools_required": [
+    "web_search",
+    "web_fetch",
+    "read_file",
+    "write_file",
+    "bash (python)"
+  ],
+  "mcp_servers_suggested": [
+    "brave-search-mcp",
+    "tavily-mcp",
+    "exa-mcp",
+    "firecrawl-mcp"
+  ],
+  "trigger_keywords": [
+    "deep research",
+    "literature",
+    "sources",
+    "citation"
+  ],
+  "best_for": [
+    "market research",
+    "academic survey",
+    "competitive analysis"
+  ],
+  "integration_notes": "Kombinasikan dengan Last 30 Days untuk window temporal dan dengan Graphify untuk visualisasi sitasi.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/research/agent-reach/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

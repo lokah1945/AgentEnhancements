@@ -1,0 +1,48 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "multimedia-hyperframes",
+  "name": "Hyperframes",
+  "slug": "hyperframes",
+  "category": "multimedia-writing",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/heygen-con/",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Skill avatar/video personalized: generate hyper-personalized talking-head clips dengan template variables, voice cloning safety guardrails, dan multi-lingual lip-sync.",
+  "capabilities": [
+    "talking-head video generation",
+    "variable personalization",
+    "voice-clone safety gates",
+    "multi-lingual lip-sync"
+  ],
+  "tools_required": [
+    "bash",
+    "web_fetch"
+  ],
+  "mcp_servers_suggested": [
+    "heygen-mcp",
+    "elevenlabs-mcp",
+    "voice-clone-mcp"
+  ],
+  "trigger_keywords": [
+    "avatar",
+    "hyperframes",
+    "talking head",
+    "personalized video"
+  ],
+  "best_for": [
+    "outbound sales",
+    "training videos",
+    "onboarding"
+  ],
+  "integration_notes": "WAJIB jalankan consent gate sebelum voice cloning; log setiap generate ke audit trail.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/multimedia-writing/hyperframes/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

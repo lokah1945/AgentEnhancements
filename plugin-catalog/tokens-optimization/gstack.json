@@ -1,0 +1,49 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "tokens-gstack",
+  "name": "GStack",
+  "slug": "gstack",
+  "category": "tokens-optimization",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/garrytan/gstack",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Token-budget stack: prompt compressor, response cache, dan chain-of-density summarizer untuk memaksimalkan throughput LLM dalam context window kecil.",
+  "capabilities": [
+    "prompt compression",
+    "response caching",
+    "chain-of-density summarization",
+    "token usage telemetry"
+  ],
+  "tools_required": [
+    "bash (node)",
+    "read_file",
+    "write_file"
+  ],
+  "mcp_servers_suggested": [
+    "llm-cache-mcp",
+    "tokenizer-mcp"
+  ],
+  "trigger_keywords": [
+    "token",
+    "compress",
+    "budget",
+    "cache",
+    "context"
+  ],
+  "best_for": [
+    "long-running agents",
+    "high-volume pipelines",
+    "cost-sensitive apps"
+  ],
+  "integration_notes": "Jadikan layer default di unified-integration/compression. Berinteraksi dengan headroom (sudah ada di repo).",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/tokens-optimization/gstack/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

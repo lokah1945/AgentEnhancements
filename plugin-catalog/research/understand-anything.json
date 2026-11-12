@@ -1,0 +1,51 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "research-understand-anything",
+  "name": "Understand Anything",
+  "slug": "understand-anything",
+  "category": "research",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/Egomex-AI/",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Skill 'explain any concept' dengan pendekatan Feynman + layered depth: ringkasan 1 kalimat, 1 paragraf, 1 halaman, lalu deep dive. Cocok untuk onboarding topik baru.",
+  "capabilities": [
+    "concept explanation at multiple depths",
+    "Feynman-style analogy",
+    "prerequisite graph",
+    "knowledge-gap detection"
+  ],
+  "tools_required": [
+    "web_search",
+    "web_fetch",
+    "read_file",
+    "write_file"
+  ],
+  "mcp_servers_suggested": [
+    "wikipedia-mcp",
+    "arxiv-mcp",
+    "embeddings-mcp"
+  ],
+  "trigger_keywords": [
+    "explain",
+    "understand",
+    "concept",
+    "Feynman",
+    "onboarding"
+  ],
+  "best_for": [
+    "self-learning",
+    "onboarding",
+    "documentation"
+  ],
+  "integration_notes": "Dapat dipakai sebagai fallback ketika skill lain gagal menjelaskan konsep.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/research/understand-anything/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

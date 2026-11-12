@@ -31,7 +31,7 @@
         "lighthouse-mcp",
         "pa11y-mcp"
       ],
-      "source_url": "https://github.com/addyosmani/",
+      "source_url": "https://github.com/addyosmani/agent-skills",
       "source_license": "Apache-2.0 (verify on upstream)",
       "vendored": false
     },
@@ -79,7 +79,7 @@
         "typescript-language-server",
         "eslint-mcp"
       ],
-      "source_url": "https://github.com/mattpocock/",
+      "source_url": "https://github.com/mattpocock/skills",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
     },
@@ -156,7 +156,7 @@
         "graphrag-mcp",
         "embeddings-mcp"
       ],
-      "source_url": "https://github.com/Graphify-Labs/",
+      "source_url": "https://github.com/Graphify-Labs/graphify",
       "source_license": "Apache-2.0 (verify on upstream)",
       "vendored": false
     },
@@ -181,7 +181,7 @@
         "newsapi-mcp",
         "google-news-mcp"
       ],
-      "source_url": "https://github.com/mvanhorn/",
+      "source_url": "https://github.com/mvanhorn/last30days-skill",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
     },
@@ -204,7 +204,7 @@
         "task-router-mcp",
         "memory-mcp"
       ],
-      "source_url": "https://github.com/marloto/REA",
+      "source_url": "https://github.com/morluto/rea",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
     },
@@ -229,7 +229,7 @@
         "arxiv-mcp",
         "embeddings-mcp"
       ],
-      "source_url": "https://github.com/Egomex-AI/",
+      "source_url": "https://github.com/Egonex-AI/Understand-Anything",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
     },
@@ -254,7 +254,7 @@
         "github-issues-mcp",
         "memory-mcp"
       ],
-      "source_url": "https://github.com/bmad-code-org/",
+      "source_url": "https://github.com/bmad-code-org/BMAD-METHOD",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
     },
@@ -348,7 +348,7 @@
         "mermaid-mcp",
         "excalidraw-mcp"
       ],
-      "source_url": "https://github.com/cathrynlavery/",
+      "source_url": "https://github.com/cathrynlavery/diagram-design",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
     },
@@ -372,7 +372,7 @@
         "browser-tools-mcp",
         "figma-mcp"
       ],
-      "source_url": "https://github.com/pbakaus/",
+      "source_url": "https://github.com/pbakaus/impeccable",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
     },
@@ -422,7 +422,7 @@
         "browser-tools-mcp",
         "storybook-mcp"
       ],
-      "source_url": "https://github.com/nextlevelbuilder/",
+      "source_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
     },
@@ -447,7 +447,7 @@
         "pdf-mcp",
         "vision-mcp"
       ],
-      "source_url": "https://github.com/anthropics/",
+      "source_url": "https://github.com/anthropics/skills",
       "source_license": "Apache-2.0 (verify on upstream)",
       "vendored": false
     },
@@ -495,7 +495,7 @@
         "elevenlabs-mcp",
         "voice-clone-mcp"
       ],
-      "source_url": "https://github.com/heygen-con/",
+      "source_url": "https://github.com/heygen-com/hyperframes",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
     },
@@ -519,7 +519,7 @@
         "ffmpeg-mcp",
         "video-mcp"
       ],
-      "source_url": "https://github.com/OpenMontageInc/",
+      "source_url": "https://github.com/calesthio/OpenMontage",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
     }

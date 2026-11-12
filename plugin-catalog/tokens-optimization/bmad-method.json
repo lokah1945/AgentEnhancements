@@ -8,7 +8,7 @@
   "status": "integrated-ready",
   "source": {
     "type": "github",
-    "url": "https://github.com/bmad-code-org/",
+    "url": "https://github.com/bmad-code-org/BMAD-METHOD",
     "license": "MIT (verify on upstream)"
   },
   "description": "Breakthrough Method of Agile AI-Driven Developers: alur persona-driven (Analyst/Architect/PM/SM/Dev/QA) untuk membawa ide dari brief sampai kode siap-ship. Mengandrol token budget per persona.",

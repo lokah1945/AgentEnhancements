@@ -8,7 +8,7 @@
   "status": "integrated-ready",
   "source": {
     "type": "github",
-    "url": "https://github.com/heygen-con/",
+    "url": "https://github.com/heygen-com/hyperframes",
     "license": "MIT (verify on upstream)"
   },
   "description": "Skill avatar/video personalized: generate hyper-personalized talking-head clips dengan template variables, voice cloning safety guardrails, dan multi-lingual lip-sync.",

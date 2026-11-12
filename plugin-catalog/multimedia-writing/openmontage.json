@@ -8,7 +8,7 @@
   "status": "integrated-ready",
   "source": {
     "type": "github",
-    "url": "https://github.com/OpenMontageInc/",
+    "url": "https://github.com/calesthio/OpenMontage",
     "license": "MIT (verify on upstream)"
   },
   "description": "Skill video editing & montage: shot list, transition map, beat-synced cut, dan export presets untuk short-form (Reels/TikTok/Shorts). Mendukung storyboard ke timeline.",

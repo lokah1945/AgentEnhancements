@@ -8,7 +8,7 @@
   "status": "integrated-ready",
   "source": {
     "type": "github",
-    "url": "https://github.com/nextlevelbuilder/",
+    "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
     "license": "MIT (verify on upstream)"
   },
   "description": "Skill desain UI/UX holistik: design tokens, spacing rhythm, color theory, micro-interactions, dan accessibility. Menghasilkan spesifikasi siap pakai untuk React/Vue/Svelte.",

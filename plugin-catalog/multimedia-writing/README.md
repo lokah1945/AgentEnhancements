@@ -5,8 +5,8 @@ Skill untuk output multimodal dan humanisasi teks. Total **4 plugin sources**.
 | Plugin | Source | Fokus utama |
 |--------|--------|-------------|
 | Anthropic Skills | github.com/anthropics/ | Structured output, tool use, safety |
-| OpenMontage | github.com/OpenMontageInc/ | Video editing + montage pipeline |
-| Hyperframes | github.com/heygen-con/ | Personalized talking-head video |
+| OpenMontage | github.com/calesthio/OpenMontage | Video editing + montage pipeline |
+| Hyperframes | github.com/heygen-com/hyperframes | Personalized talking-head video |
 | Humanizer | github.com/blader/humanizer | AI-ism detection + natural voice rewrite |
 
 Aturan keamanan (wajib):

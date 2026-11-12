@@ -24,12 +24,12 @@ append_entry() {
     log_info "logged to $log_file"
 }
 
-type="${1:-}"
+entry_type="${1:-}"
 shift || true
 
 ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-case "$type" in
+case "$entry_type" in
     mcp-call)
         [ $# -ge 4 ] || { echo "Usage: $0 mcp-call <server> <tool> <args_hash> <result_summary>"; exit 2; }
         entry=$(jq -c -n --arg ts "$ts" --arg s "$1" --arg t "$2" --arg ah "$3" --arg rs "$4" \

@@ -8,7 +8,7 @@
   "status": "integrated-ready",
   "source": {
     "type": "github",
-    "url": "https://github.com/Graphify-Labs/",
+    "url": "https://github.com/Graphify-Labs/graphify",
     "license": "Apache-2.0 (verify on upstream)"
   },
   "description": "Ubah dokumen teks / paper / transcript menjadi knowledge graph (nodes-edges) yang bisa di-query. Mendukung entity extraction, relation mining, dan graph export ke JSON-LD / Neo4j.",

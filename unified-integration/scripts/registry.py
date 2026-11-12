@@ -430,6 +430,8 @@ def _format_entry(entry: Dict[str, Any], score: Optional[int] = None) -> str:
         lines.append(f"    {desc[:160]}{'...' if len(desc) > 160 else ''}")
     if entry.get("path"):
         lines.append(f"    path: {entry['path']}")
+    if entry.get("source_path"):
+        lines.append(f"    source: {entry['source_path']}")
     if entry.get("usage"):
         lines.append(f"    usage: {entry['usage']}")
     if entry.get("command"):

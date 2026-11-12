@@ -1,135 +1,73 @@
 ---
 slug: anthropic-skills
 category: multimedia-writing
-version: 1.0.0
-status: integrated-ready
+version: 1.1.0
+status: integrated
 mcp_servers: [filesystem-mcp, pdf-mcp, vision-mcp]
-trigger_keywords: [anthropic, structured, tool use, multimodal, safety]
+trigger_keywords: [anthropic, docx, word document, pdf, pptx, powerpoint, xlsx, excel, spreadsheet, mcp server, skill creator, webapp testing, claude api]
 ---
 
-# Anthropic Skills
+# Anthropic Skills (19 official skills, vendored)
 
-Skill referensi dari Anthropic: structured outputs, tool use best practices, document QA, dan multimodal handling. Membentuk baseline 'responsible agent' untuk repo ini.
+Skill resmi dari Anthropic (https://github.com/anthropics/skills), di-vendor penuh di `anthropic-skills/` dan **sudah aktif otomatis** setelah satu kali install: ter-agregasi ke unified index, ter-link native ke `~/.claude/skills/` dan `~/.agents/skills/`, dan bisa dipetakan lewat `registry.py`.
+
+## Isi (19 skill)
+
+| Kelompok | Skill |
+|----------|-------|
+| **Document skills** (yang menyalakan document capabilities Claude) | `docx`, `pdf`, `pptx`, `xlsx` |
+| **Skill engineering** | `skill-creator` |
+| **MCP** | `mcp-builder` |
+| **Testing** | `webapp-testing` (Playwright) |
+| **API/SDK** | `claude-api` |
+| **Desain & kreatif** | `frontend-design`, `brand-guidelines`, `canvas-design`, `theme-factory`, `algorithmic-art` |
+| **Komunikasi & konten** | `internal-comms`, `doc-coauthoring`, `slack-gif-creator` |
+| **Lainnya** | `web-artifacts-builder`, `academy-guide`, `discernment-nudge` |
 
 ## Kapan dipakai
 
-- Skill lain butuh baseline pattern untuk structured output / tool use
-- Operasi multimodal (image / PDF) perlu safe handling
-- Mode "safety-critical" diaktifkan user
-- Compliance: butuh audit trail setiap tool call
+- User menyebut file `.docx/.dotx`, `.pdf`, `.pptx/.potx`, `.xlsx/.xlsm/.csv/.tsv` — pakai skill format terkait (paling spesifik).
+- Membuat/memperbaiki/evaluasi skill — `skill-creator`.
+- Membangun MCP server — `mcp-builder`.
+- Test web app lokal + screenshot + log browser — `webapp-testing`.
+- Integrasi Claude API/SDK — `claude-api`.
 
 ## Prasyarat
 
-- MCP: `filesystem-mcp`, `pdf-mcp`, `vision-mcp`
-- Tools: `bash`, `read_file`, `write_file`, `web_search`
-- Wajib jadi dependency default semua skill lain
+- Sudah otomatis terpenuhi oleh `setup.sh` (skill ter-link native; lihat `link-skills.sh --status`).
+- `webapp-testing` butuh Playwright ter-install di environment.
+- Document skills memakai Python library (python-docx, openpyxl, pdfplumber, dll.) yang di-install on-demand oleh script skill.
 
-## Capabilities
+## Aktivasi
 
-1. Structured output enforcement — JSON schema, validate before emit.
-2. Safe tool-use patterns — preview before apply, consent gate for destructive.
-3. Document QA — PDF/image → structured extraction.
-4. Multimodal (image/PDF) handling — analyze, caption, OCR.
+```bash
+# Semua sudah otomatis setelah setup.sh. Manual (bila perlu):
+bash unified-integration/scripts/link-skills.sh --set anthropic-skills
 
-## Workflow
+# Pemetaan task -> skill/plugin/MCP:
+python3 unified-integration/scripts/registry.py map "create a word document"
 
-1. **Pattern enforcement**: sebelum skill lain balas data, validasi struktur output sesuai schema.
-2. **Tool-use safety**:
-   - Preview destructive action (file write, MCP call) sebelum eksekusi.
-   - Log setiap tool call ke `audit/mcp-calls.jsonl`.
-3. **Document QA**:
-   - Buka PDF via `pdf-mcp` → extract text per page.
-   - Bila image, kirim ke `vision-mcp` → structured response.
-4. **Multimodal handling**:
-   - Image di-prompt: caption + structured description.
-   - PDF: text + layout + reference number.
-
-## Inputs
-
-- Tugas dari skill lain (untuk baseline pattern)
-- Opsional: dokumen (PDF/image) untuk QA mode
-- Opsional: JSON schema untuk validasi output
-
-## Outputs
-
-- Validated JSON output (kalau dipanggil untuk enforcement)
-- Structured extraction (kalau mode QA)
-- Audit entry di `unified-integration/memory/audit/`
-
-## Contoh
-
-### Contoh 1 — Enforce structured output
-
-Skill lain ingin balas: `{status, data, error}`.
-
-```
-enforce schema:
-  status: enum [ok, error]
-  data: object
-  error: string?
-
-validate output skill lain:
-  {status: "ok", data: {...}, error: null} -> PASS
-  {status: "ok"} -> FAIL (data missing) -> reject
-  {status: "ok", data: ..., extra: ...} -> WARN (extra field)
+# Routing natural-language:
+bash unified-integration/scripts/dispatch.sh --dry-run "extract pdf form fields"
 ```
 
-### Contoh 2 — Document QA: invoice
+Claude Code juga bisa memakai marketplace upstream: `/plugin marketplace add anthropics/skills`.
 
-Prompt: "Ekstrak data dari `invoice-001.pdf`."
+## Workflow (contoh)
 
-```
-mode: QA
-pdf-mcp extract: 3 page
-page 1: header "INVOICE", nomor INV-2026-001
-page 2: line items
-page 3: total + signature
-
-structured output:
-{
-  "invoice_number": "INV-2026-001",
-  "date": "2026-11-01",
-  "issuer": {"name": "...", "address": "..."},
-  "items": [
-    {"desc": "Server 16 core", "qty": 1, "price": 200},
-    ...
-  ],
-  "total": 1200,
-  "currency": "USD"
-}
-audit log: audit/mcp-calls.jsonl +1 entry
-```
-
-### Contoh 3 — Multimodal image analysis
-
-Prompt: "Tolong caption gambar `screenshot.png`."
-
-```
-vision-mcp call:
-  image: screenshot.png (base64)
-  prompt: "Caption this screenshot. Extract visible UI elements."
-
-response (structured):
-{
-  "caption": "Dashboard with sidebar navigation and main content area",
-  "elements": [
-    {"type": "sidebar", "items": ["Home", "Settings", "Logout"]},
-    {"type": "card", "title": "Revenue", "value": "$42K"}
-  ],
-  "text_extracted": ["Revenue", "$42K", "+12% MoM"]
-}
-```
+1. **Dokumen**: deteksi format dari prompt → load `anthropic-skills/skills/<format>/SKILL.md` → ikuti instruksinya (script helper tersedia di folder skill).
+2. **Skill baru**: `skill-creator` menuntun struktur SKILL.md, frontmatter, evaluasi, dan optimasi deskripsi.
+3. **MCP server**: `mcp-builder` memberi pola FastMCP/MCP SDK untuk tools yang berkualitas.
 
 ## Batasan & Keamanan
 
-- Tidak mengakses file di luar workspace user.
-- Tidak expose data PII ke log; mask sebelum audit.
-- Untuk dokumen sensitif (medis, legal), jalankan dengan explicit user consent + retention policy.
-- Tidak auto-share ke third-party; vision/PDF call via approved MCP only.
+- Document skills menjalankan script Python yang menulis file - jalankan di workspace user saja.
+- `webapp-testing` menyalakan browser lokal; jangan arahkan ke situs produksi.
+- Skill edukasi/demo dari upstream: selalu uji di environment sendiri sebelum dipakai kritikal (disclaimer upstream).
 
 ## Catatan integrasi
 
-- Skill ini **wajib jadi baseline** semua skill lain (lihat `.cursorrules`).
-- Untuk compliance enterprise, aktifkan `audit-mode: strict` (log full args, hash output).
-- Untuk data sensitif, prefer local model (OCR via tesseract, vision via lokal VLM).
-- Bersama `humanizer`: Anthropic jaga struktur, Humanizer jaga tone — output campuran.
+- Vendored verbatim (Apache-2.0, `LICENSE.txt` per skill; `THIRD_PARTY_NOTICES.md` di root vendor).
+- Diagregasi **terakhir** sehingga menang name collision atas salinan pihak ketiga di agentic-awesome-skills.
+- Diindeks di `all-skills.json` (source `anthropic-skills`) + `agent-registry.json`.
+- Update: re-vendor dari upstream (lihat `docs/UPDATING.md`).

@@ -83,7 +83,11 @@ def validate_catalog_index(root: Path, errors: List[str]) -> int:
     if not index_path.is_file():
         errors.append("catalog.json hilang: plugin-catalog/catalog.json")
         return 0
-    data = json.loads(index_path.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(index_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        errors.append(f"catalog.json tidak valid: {exc}")
+        return 0
     total = 0
     for entry in data.get("skills", []):
         total += 1

@@ -51,7 +51,13 @@ echo "  - Voice cloning / personalized video generation"
 echo "  - Data diproses oleh third-party (HeyGen / ElevenLabs)"
 echo "  - Audit trail disimpan (UU PDP pasal 22-23, GDPR Art 9)"
 echo ""
-read -r -p "Setujui? (y/n): " confirm
+# EOF (non-interactive / CI) is treated as a refusal, not a crash,
+# so the decision still lands in the audit log.
+if ! read -r -p "Setujui? (y/n): " confirm; then
+    confirm=""
+    echo ""
+    log_info "Input tidak tersedia (non-interactive) - dianggap refused."
+fi
 
 if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
     decision="approved"

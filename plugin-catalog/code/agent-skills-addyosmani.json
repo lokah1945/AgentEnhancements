@@ -8,7 +8,7 @@
   "status": "integrated-ready",
   "source": {
     "type": "github",
-    "url": "https://github.com/addyosmani/",
+    "url": "https://github.com/addyosmani/agent-skills",
     "license": "Apache-2.0 (verify on upstream)"
   },
   "description": "Koleksi skill engineering dari Addy Osmani: web performance, debugging, progressive enhancement, accessibility, dan patterns modern frontend. Mengandung agent playbook untuk refactor performa tinggi.",

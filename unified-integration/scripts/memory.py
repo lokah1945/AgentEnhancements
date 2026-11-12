@@ -50,7 +50,10 @@ class AgentMemory:
         expires_at = None
         if ttl_days:
             from datetime import timedelta
-            expires_at = (datetime.now() + timedelta(days=ttl_days)).isoformat()
+            # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
+            # against datetime('now') work: the ISO "T" separator sorts
+            # after a space and broke timely expiry cleanup.
+            expires_at = (datetime.now() + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
 
         meta_json = json.dumps(metadata) if metadata else None
 
@@ -157,6 +160,7 @@ def main():
             print(value)
         else:
             print(f"Memory not found: {key}")
+            sys.exit(1)
 
     elif command == "list":
         mem_type = sys.argv[3] if len(sys.argv) > 3 else None

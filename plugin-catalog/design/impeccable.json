@@ -8,7 +8,7 @@
   "status": "integrated-ready",
   "source": {
     "type": "github",
-    "url": "https://github.com/pbakaus/",
+    "url": "https://github.com/pbakaus/impeccable",
     "license": "MIT (verify on upstream)"
   },
   "description": "Skill polish UI: perbaikan micro-visual (alignment, contrast, hierarchy, motion timing) yang membedakan 'OK' dari 'impeccable'. Berbasis checklist Polaris/Material/Carbon.",

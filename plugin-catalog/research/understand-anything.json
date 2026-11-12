@@ -8,7 +8,7 @@
   "status": "integrated-ready",
   "source": {
     "type": "github",
-    "url": "https://github.com/Egomex-AI/",
+    "url": "https://github.com/Egonex-AI/Understand-Anything",
     "license": "MIT (verify on upstream)"
   },
   "description": "Skill 'explain any concept' dengan pendekatan Feynman + layered depth: ringkasan 1 kalimat, 1 paragraf, 1 halaman, lalu deep dive. Cocok untuk onboarding topik baru.",

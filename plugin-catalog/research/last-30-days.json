@@ -8,7 +8,7 @@
   "status": "integrated-ready",
   "source": {
     "type": "github",
-    "url": "https://github.com/mvanhorn/",
+    "url": "https://github.com/mvanhorn/last30days-skill",
     "license": "MIT (verify on upstream)"
   },
   "description": "Window temporal research: ambil hanya sumber 30 hari terakhir untuk topik tertentu. Cocok untuk trend tracking, news monitoring, dan competitive intel time-sensitive.",

@@ -28,7 +28,7 @@ classify() {
     if echo "$lc" | grep -qE '(clone app|clone aplikasi|clone .* app|klon|replica|reverse engineer|rebuild app|build my own version|versi sendiri)'; then echo "replica-skill"; return; fi
     if echo "$lc" | grep -qE '(typescript|refactor ts|zod|generic)'; then echo "mattpocock-skills"; return; fi
     if echo "$lc" | grep -qE '(prototype|sketch|numpy|torch|first principle)'; then echo "karpathy-skills"; return; fi
-    if echo "$lc" | grep -qE '(perf|lighthouse|core web vitals|a11y|accessibility)'; then echo "agent-skills-addyosmani"; return; fi
+    if echo "$lc" | grep -qE '(\bperf\b|performance|lighthouse|core web vitals|a11y|accessibility)'; then echo "agent-skills-addyosmani"; return; fi
     if echo "$lc" | grep -qE '(knowledge graph|entity relation|graphify)'; then echo "graphify"; return; fi
     if echo "$lc" | grep -qE '(deep research|literature|citation)'; then echo "agent-reach"; return; fi
     if echo "$lc" | grep -qE '(explain|understand|jelaskan|apa itu|feynman)'; then echo "understand-anything"; return; fi

@@ -36,8 +36,19 @@ wire_catalog() {
             local slug
             slug="$(basename "$plugin_dir")"
             local target="$REGISTRY_DIR/$category/$slug"
-            if [ -L "$target" ] || [ -d "$target" ]; then
-                rm -rf "$target"
+            if [ -e "$target" ] || [ -L "$target" ]; then
+                if [ -L "$target" ]; then
+                    # Refresh an existing catalog symlink
+                    rm -f "$target"
+                elif [ -d "$target" ]; then
+                    # Real directory: belongs to the aggregation pipeline.
+                    # Never delete aggregated skills - skip with a warning.
+                    log_warn "skip: $category/$slug sudah ada sebagai direktori hasil agregasi (bukan symlink)"
+                    continue
+                else
+                    log_warn "skip: $category/$slug adalah file biasa, tidak ditimpa"
+                    continue
+                fi
             fi
             ln -s "$plugin_dir" "$target"
             count=$((count + 1))

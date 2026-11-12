@@ -20,9 +20,9 @@ terverifikasi MIT dan di-vendor.
 | 4 | agent-skills-addyosmani | github.com/addyosmani/ | Apache-2.0 (assumed) | TODO verify | Cek LICENSE |
 | 5 | graphify | github.com/Graphify-Labs/ | Apache-2.0 (assumed) | TODO verify | Cek LICENSE |
 | 6 | agent-reach | github.com/Panniantong/Agent-Reach | MIT (assumed) | TODO verify | Cek LICENSE |
-| 7 | understand-anything | github.com/Egomex-AI/ | MIT (assumed) | TODO verify | Cek LICENSE |
+| 7 | understand-anything | github.com/Egonex-AI/Understand-Anything | MIT (assumed) | TODO verify | Cek LICENSE |
 | 8 | last-30-days | github.com/mvanhorn/ | MIT (assumed) | TODO verify | Cek LICENSE |
-| 9 | rea | github.com/marloto/REA | MIT (assumed) | TODO verify | Cek LICENSE |
+| 9 | rea | github.com/morluto/rea | MIT (assumed) | TODO verify | Cek LICENSE |
 | 10 | gstack | github.com/garrytan/gstack | MIT (assumed) | TODO verify | Cek LICENSE |
 | 11 | caveman | github.com/JuliusBrussee/Caveman | MIT (assumed) | TODO verify | Cek LICENSE |
 | 12 | gsd | github.com/gsd-build/get-shit-done | MIT (assumed) | TODO verify | Cek LICENSE |
@@ -32,8 +32,8 @@ terverifikasi MIT dan di-vendor.
 | 16 | ppt-master | github.com/hugohe3/ppt-master | MIT (assumed) | TODO verify | Cek LICENSE |
 | 17 | diagram-design | github.com/cathrynlavery/ | MIT (assumed) | TODO verify | Cek LICENSE |
 | 18 | anthropic-skills | github.com/anthropics/ | Apache-2.0 (Anthropic default) | TODO verify | Cek LICENSE per repo |
-| 19 | openmontage | github.com/OpenMontageInc/ | MIT (assumed) | TODO verify | Cek LICENSE |
-| 20 | hyperframes | github.com/heygen-con/ | MIT (assumed) | TODO verify | Cek LICENSE + TOS HeyGen |
+| 19 | openmontage | github.com/calesthio/OpenMontage | MIT (assumed) | TODO verify | Cek LICENSE |
+| 20 | hyperframes | github.com/heygen-com/hyperframes | MIT (assumed) | TODO verify | Cek LICENSE + TOS HeyGen |
 | 21 | humanizer | github.com/blader/humanizer | MIT (assumed) | TODO verify | Cek LICENSE |
 
 ## Cara verifikasi

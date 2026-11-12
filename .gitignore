@@ -14,6 +14,15 @@
 unified-integration/skills/.skills-meta.tmp
 unified-integration/skills/all-skills.json.tmp
 
+# Generated skill registry trees: populated by setup.sh at install time
+# (see docs/audit/AUDIT_REPORT.md F-28). The committed flat samples in
+# by-category/general/ stay tracked; everything generated is ignored.
+unified-integration/skills/by-agent/
+unified-integration/skills/by-category/*
+!unified-integration/skills/by-category/general/
+unified-integration/skills/by-category/general/*
+!unified-integration/skills/by-category/general/*.md
+
 # Config backups created by setup.sh merges
 *.backup.*
 

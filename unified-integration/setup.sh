@@ -2451,6 +2451,18 @@ EOF
     log_success "Compression utility created"
 }
 
+# Build the unified capability registry (skills + plugins + MCP mapping)
+# from the freshly aggregated index. Non-fatal: the committed
+# agent-registry.json remains a usable fallback.
+build_registry() {
+    log_info "Building capability registry (skills + plugins + MCP)..."
+    if python3 "$UNIFIED_DIR/scripts/registry.py" build --quiet; then
+        log_success "Capability registry built ($UNIFIED_DIR/skills/agent-registry.json)"
+    else
+        log_warn "Registry build failed - run scripts/registry.py build manually"
+    fi
+}
+
 # Link curated skills into the native skill directories that agents read
 # automatically at runtime (Claude Code: ~/.claude/skills, Agent Skills
 # standard: ~/.agents/skills). Failure is non-fatal: the full catalog
@@ -2477,6 +2489,7 @@ main() {
     detect_agents
     setup_prompts
     aggregate_skills
+    build_registry
     setup_memory
     setup_compression
     create_agent_configs

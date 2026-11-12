@@ -1,0 +1,49 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "multimedia-openmontage",
+  "name": "OpenMontage",
+  "slug": "openmontage",
+  "category": "multimedia-writing",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/OpenMontageInc/",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Skill video editing & montage: shot list, transition map, beat-synced cut, dan export presets untuk short-form (Reels/TikTok/Shorts). Mendukung storyboard ke timeline.",
+  "capabilities": [
+    "shot list generation",
+    "transition planning",
+    "beat-synced cutting",
+    "export preset selection"
+  ],
+  "tools_required": [
+    "bash (ffmpeg, mlflow)",
+    "read_file",
+    "write_file"
+  ],
+  "mcp_servers_suggested": [
+    "ffmpeg-mcp",
+    "video-mcp"
+  ],
+  "trigger_keywords": [
+    "video",
+    "montage",
+    "edit",
+    "ffmpeg",
+    "shorts"
+  ],
+  "best_for": [
+    "social video production",
+    "course trailers",
+    "demo reels"
+  ],
+  "integration_notes": "Output disimpan di /downloads; minta budget durasi eksplisit sebelum editing.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/multimedia-writing/openmontage/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

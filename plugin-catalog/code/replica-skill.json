@@ -1,0 +1,84 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "code-replica-skill",
+  "name": "Replica Skill (11 sub-skills)",
+  "slug": "replica-skill",
+  "category": "code",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/Jakeschincariol/replica-skill",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "replica-skill/"
+  },
+  "description": "Sebelas skill Claude yang meng-clone aplikasi apa pun secara clean-room: reverse-engineer (recon), rebuild (architect/design/build/backend), test, parity-diff, analisis keluhan user (entrepreneur), rebrand, launch, dan deploy. Membangun ulang fungsi dan alur, tidak pernah menyalin kode, logo, copy, atau aset proprietary.",
+  "capabilities": [
+    "app reverse-engineering (recon: screens, flows, components, data model)",
+    "stack + database + API planning (architect)",
+    "design system rebuild as tokens (design)",
+    "screen-by-screen rebuild (build)",
+    "auth + payments + integrations (backend)",
+    "flow testing + bug reporting (test)",
+    "parity scoring vs original (diff)",
+    "user-complaint mining from reviews (entrepreneur)",
+    "naming + rebrand + codebase sweep (brand)",
+    "landing page + pricing + store listing (launch)",
+    "preflight + production deploy (deploy)"
+  ],
+  "tools_required": [
+    "bash (python3 stdlib)",
+    "read_file",
+    "write_file",
+    "edit_file",
+    "browser (opsional untuk recon)"
+  ],
+  "mcp_servers_suggested": [
+    "browser-tools-mcp",
+    "vision-mcp"
+  ],
+  "trigger_keywords": [
+    "clone app",
+    "replica",
+    "reverse engineer",
+    "clone this app",
+    "build my own version",
+    "rebuild app",
+    "app competitor analysis"
+  ],
+  "best_for": [
+    "indie hacker membangun alternatif SaaS",
+    "analisis kompetitor berbasis fitur",
+    "rebuild MVP dari aplikasi existing"
+  ],
+  "integration_notes": "Di-vendor penuh di replica-skill/ (MIT). Terdaftar di pipeline agregasi setup.sh sehingga 11 sub-skill masuk unified index secara otomatis. Jalur pipeline: recon -> architect -> design -> build -> backend -> test -> diff -> entrepreneur -> brand -> launch -> deploy. Enforce clean-room: tidak menyalin kode/asets; sweep.py memblokir deploy selama masih ada nama/domain/warna original.",
+  "sub_skills": [
+    {"slug": "replica-recon", "role": "reverse-engineer app jadi recon map"},
+    {"slug": "replica-architect", "role": "plan stack, schema, API"},
+    {"slug": "replica-design", "role": "rebuild design system sebagai tokens"},
+    {"slug": "replica-build", "role": "rebuild app screen-by-screen"},
+    {"slug": "replica-backend", "role": "auth, database, payments"},
+    {"slug": "replica-test", "role": "test semua flow, laporkan bug"},
+    {"slug": "replica-diff", "role": "parity score vs original"},
+    {"slug": "replica-entrepreneur", "role": "mine keluhan user dari review"},
+    {"slug": "replica-brand", "role": "naming, rebrand, sweep"},
+    {"slug": "replica-launch", "role": "landing page, pricing, listing"},
+    {"slug": "replica-deploy", "role": "preflight + production deploy"}
+  ],
+  "skill_files": [
+    {"path": "plugin-catalog/code/replica-skill/SKILL.md", "type": "integration-guide"},
+    {"path": "replica-skill/replica-recon/SKILL.md", "type": "upstream-skill"},
+    {"path": "replica-skill/replica-architect/SKILL.md", "type": "upstream-skill"},
+    {"path": "replica-skill/replica-design/SKILL.md", "type": "upstream-skill"},
+    {"path": "replica-skill/replica-build/SKILL.md", "type": "upstream-skill"},
+    {"path": "replica-skill/replica-backend/SKILL.md", "type": "upstream-skill"},
+    {"path": "replica-skill/replica-test/SKILL.md", "type": "upstream-skill"},
+    {"path": "replica-skill/replica-diff/SKILL.md", "type": "upstream-skill"},
+    {"path": "replica-skill/replica-entrepreneur/SKILL.md", "type": "upstream-skill"},
+    {"path": "replica-skill/replica-brand/SKILL.md", "type": "upstream-skill"},
+    {"path": "replica-skill/replica-launch/SKILL.md", "type": "upstream-skill"},
+    {"path": "replica-skill/replica-deploy/SKILL.md", "type": "upstream-skill"}
+  ]
+}

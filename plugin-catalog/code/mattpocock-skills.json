@@ -1,0 +1,50 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "code-mattpocock-skills",
+  "name": "Matt Pocock Skills",
+  "slug": "mattpocock-skills",
+  "category": "code",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/mattpocock/",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Koleksi skill TypeScript/JavaScript dari Matt Pocock: type narrowing, generics mastery, error handling, dan refactoring patterns berbasis tipe. Fokus pada Type-level programming dan DX.",
+  "capabilities": [
+    "type-driven refactoring",
+    "generics simplification",
+    "Zod schema authoring",
+    "ts-toolbelt / type-fest patterns"
+  ],
+  "tools_required": [
+    "bash (tsc, eslint)",
+    "read_file",
+    "edit_file",
+    "ripgrep"
+  ],
+  "mcp_servers_suggested": [
+    "typescript-language-server",
+    "eslint-mcp"
+  ],
+  "trigger_keywords": [
+    "typescript",
+    "refactor",
+    "types",
+    "zod",
+    "generics"
+  ],
+  "best_for": [
+    "strict TS codebases",
+    "library authoring",
+    "schema-first APIs"
+  ],
+  "integration_notes": "Bungkus sebagai skill yang memuat aturan tipe di setiap modifikasi .ts/.tsx. Tambahkan test-runner MCP opsional.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/code/mattpocock-skills/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

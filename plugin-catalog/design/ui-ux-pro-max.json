@@ -1,0 +1,51 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "design-ui-ux-pro-max",
+  "name": "UI UX Pro Max",
+  "slug": "ui-ux-pro-max",
+  "category": "design",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/nextlevelbuilder/",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Skill desain UI/UX holistik: design tokens, spacing rhythm, color theory, micro-interactions, dan accessibility. Menghasilkan spesifikasi siap pakai untuk React/Vue/Svelte.",
+  "capabilities": [
+    "design-token generation",
+    "component spec authoring",
+    "micro-interaction scripting",
+    "a11y-aware palette"
+  ],
+  "tools_required": [
+    "bash",
+    "read_file",
+    "write_file",
+    "browser"
+  ],
+  "mcp_servers_suggested": [
+    "figma-mcp",
+    "browser-tools-mcp",
+    "storybook-mcp"
+  ],
+  "trigger_keywords": [
+    "ui",
+    "ux",
+    "design tokens",
+    "color",
+    "spacing"
+  ],
+  "best_for": [
+    "design system buildout",
+    "component library",
+    "redesign sprint"
+  ],
+  "integration_notes": "Output tokens wajib konsisten dengan PPT Master & Diagram Design agar presentasi tidak divergen.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/design/ui-ux-pro-max/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

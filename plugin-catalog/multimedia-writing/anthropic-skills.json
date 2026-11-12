@@ -1,0 +1,51 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "multimedia-anthropic-skills",
+  "name": "Anthropic Skills",
+  "slug": "anthropic-skills",
+  "category": "multimedia-writing",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/anthropics/",
+    "license": "Apache-2.0 (verify on upstream)"
+  },
+  "description": "Skill referensi dari Anthropic: structured outputs, tool use best practices, document QA, dan multimodal handling. Membentuk baseline 'responsible agent' untuk repo ini.",
+  "capabilities": [
+    "structured output enforcement",
+    "safe tool-use patterns",
+    "document QA",
+    "multimodal (image/PDF) handling"
+  ],
+  "tools_required": [
+    "bash",
+    "read_file",
+    "write_file",
+    "web_search"
+  ],
+  "mcp_servers_suggested": [
+    "filesystem-mcp",
+    "pdf-mcp",
+    "vision-mcp"
+  ],
+  "trigger_keywords": [
+    "anthropic",
+    "structured",
+    "tool use",
+    "multimodal",
+    "safety"
+  ],
+  "best_for": [
+    "baseline agent behavior",
+    "safety-critical tasks",
+    "enterprise deployments"
+  ],
+  "integration_notes": "Inti filosofi .cursorrules global mengambil dari sini. Wajib jadi dependency default semua skill lain.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/multimedia-writing/anthropic-skills/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

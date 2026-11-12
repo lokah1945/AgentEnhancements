@@ -1,0 +1,50 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "tokens-gsd",
+  "name": "Get Shit Done (GSD)",
+  "slug": "gsd",
+  "category": "tokens-optimization",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/gsd-build/get-shit-done",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Eksekusi cepat: pecah tugas besar menjadi checklist atomic, jalankan tiap item dengan sub-agent, lalu laporkan. Mengoptimalkan untuk throughput, bukan elaborasi.",
+  "capabilities": [
+    "task decomposition",
+    "parallel sub-agent dispatch",
+    "atomic checklist generation",
+    "progress telemetry"
+  ],
+  "tools_required": [
+    "bash",
+    "read_file",
+    "write_file",
+    "task tool"
+  ],
+  "mcp_servers_suggested": [
+    "task-router-mcp",
+    "memory-mcp"
+  ],
+  "trigger_keywords": [
+    "gsd",
+    "get shit done",
+    "atomic",
+    "parallel",
+    "checklist"
+  ],
+  "best_for": [
+    "backlog clearing",
+    "migration tasks",
+    "batch refactor"
+  ],
+  "integration_notes": "Pasang sebagai orchestrator default ketika user meminta 'kerjakan semua'. Hindari pakai untuk tugas kreatif.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/tokens-optimization/gsd/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

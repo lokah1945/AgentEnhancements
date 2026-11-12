@@ -1,0 +1,49 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "research-last-30-days",
+  "name": "Last 30 Days",
+  "slug": "last-30-days",
+  "category": "research",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/mvanhorn/",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Window temporal research: ambil hanya sumber 30 hari terakhir untuk topik tertentu. Cocok untuk trend tracking, news monitoring, dan competitive intel time-sensitive.",
+  "capabilities": [
+    "date-windowed search",
+    "freshness scoring",
+    "delta detection vs prior window",
+    "trend digest generation"
+  ],
+  "tools_required": [
+    "web_search",
+    "web_fetch"
+  ],
+  "mcp_servers_suggested": [
+    "brave-search-mcp",
+    "newsapi-mcp",
+    "google-news-mcp"
+  ],
+  "trigger_keywords": [
+    "recent",
+    "last 30 days",
+    "news",
+    "trends",
+    "fresh"
+  ],
+  "best_for": [
+    "weekly digests",
+    "PR monitoring",
+    "release tracking"
+  ],
+  "integration_notes": "Pasang sebagai hook harian via cron job untuk auto-update memory.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/research/last-30-days/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

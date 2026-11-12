@@ -1,0 +1,50 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "design-ppt-master",
+  "name": "PPT Master",
+  "slug": "ppt-master",
+  "category": "design",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/hugohe3/ppt-master",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Skill presentasi profesional: struktur naratif, slide design tokens, chart palette, dan speaker notes. Output ke PPTX/Google Slides/PDF.",
+  "capabilities": [
+    "narrative arc generation",
+    "slide-layout authoring",
+    "chart palette mapping",
+    "speaker notes drafting"
+  ],
+  "tools_required": [
+    "bash (python-pptx / marp)",
+    "read_file",
+    "write_file"
+  ],
+  "mcp_servers_suggested": [
+    "google-slides-mcp",
+    "office-mcp",
+    "image-search-mcp"
+  ],
+  "trigger_keywords": [
+    "ppt",
+    "slides",
+    "presentation",
+    "keynote",
+    "narrative"
+  ],
+  "best_for": [
+    "pitch decks",
+    "internal reviews",
+    "lecture material"
+  ],
+  "integration_notes": "Konsisten dengan skill pptx bawaan AgentEnhancements; gunakan ini untuk modus storytelling.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/design/ppt-master/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "tokens-caveman",
+  "name": "Caveman",
+  "slug": "caveman",
+  "category": "tokens-optimization",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/JuliusBrussee/Caveman",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Radical prompt compression: ringkas instruksi sampai ke core action verbs. Mengubah 'Please kindly write a function that...' menjadi 'fn(input)->output; test it;'. Buat hemat token hingga 70%.",
+  "capabilities": [
+    "extreme prompt minimization",
+    "intent-preserving rewrite",
+    "syntax-heavy shorthand"
+  ],
+  "tools_required": [
+    "bash",
+    "read_file",
+    "write_file"
+  ],
+  "mcp_servers_suggested": [
+    "tokenizer-mcp"
+  ],
+  "trigger_keywords": [
+    "caveman",
+    "minimize",
+    "shorthand",
+    "compression"
+  ],
+  "best_for": [
+    "ultra-low budget agents",
+    "edge deployments"
+  ],
+  "integration_notes": "Berikan flag opsional di .cursorrules: 'caveman_mode: true' untuk konteks produksi sempit.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/tokens-optimization/caveman/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "tokens-bmad-method",
+  "name": "BMAD Method",
+  "slug": "bmad-method",
+  "category": "tokens-optimization",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/bmad-code-org/",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Breakthrough Method of Agile AI-Driven Developers: alur persona-driven (Analyst/Architect/PM/SM/Dev/QA) untuk membawa ide dari brief sampai kode siap-ship. Mengandrol token budget per persona.",
+  "capabilities": [
+    "persona orchestration",
+    "story generation",
+    "architecture-to-task mapping",
+    "qa gate enforcement"
+  ],
+  "tools_required": [
+    "bash",
+    "read_file",
+    "write_file"
+  ],
+  "mcp_servers_suggested": [
+    "linear-mcp",
+    "github-issues-mcp",
+    "memory-mcp"
+  ],
+  "trigger_keywords": [
+    "bmad",
+    "persona",
+    "agile",
+    "story",
+    "scrum"
+  ],
+  "best_for": [
+    "greenfield product builds",
+    "epic decomposition",
+    "PM-Dev handoff"
+  ],
+  "integration_notes": "Persona berbagi memory yang sama di unified-integration/memory. Wajib log decision BMAD ke CONTRACT.md.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/tokens-optimization/bmad-method/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

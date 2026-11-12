@@ -1,0 +1,50 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "code-karpathy-skills",
+  "name": "Andrej Karpathy Skills",
+  "slug": "karpathy-skills",
+  "category": "code",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/multica-ai/andrej-karpathy-skills",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Skill pen-code-an dari filosofi Karpathy: minimal, first-principles, derivasi eksplisit, kode kecil yang readable, no over-engineering. Cocok untuk ML/numerik dan prototype cepat.",
+  "capabilities": [
+    "first-principles derivation",
+    "minimal Python implementation",
+    "numpy/torch codegen",
+    "no-bullshit code review"
+  ],
+  "tools_required": [
+    "bash (python)",
+    "read_file",
+    "write_file",
+    "edit_file"
+  ],
+  "mcp_servers_suggested": [
+    "jupyter-mcp",
+    "python-repl-mcp"
+  ],
+  "trigger_keywords": [
+    "karpathy",
+    "minimal",
+    "first-principles",
+    "numpy",
+    "torch"
+  ],
+  "best_for": [
+    "ML prototypes",
+    "algorithm sketches",
+    "educational notebooks"
+  ],
+  "integration_notes": "Inti dari .cursorrules global mengambil filosofi ini. Setiap skill lain wajib hormati prinsip minimal.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/code/karpathy-skills/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

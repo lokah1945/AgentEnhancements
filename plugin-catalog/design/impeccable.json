@@ -1,0 +1,49 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "design-impeccable",
+  "name": "Impeccable",
+  "slug": "impeccable",
+  "category": "design",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/pbakaus/",
+    "license": "MIT (verify on upstream)"
+  },
+  "description": "Skill polish UI: perbaikan micro-visual (alignment, contrast, hierarchy, motion timing) yang membedakan 'OK' dari 'impeccable'. Berbasis checklist Polaris/Material/Carbon.",
+  "capabilities": [
+    "visual polish audit",
+    "alignment grid check",
+    "contrast & motion timing",
+    "spec diff against design system"
+  ],
+  "tools_required": [
+    "browser",
+    "read_file",
+    "edit_file"
+  ],
+  "mcp_servers_suggested": [
+    "browser-tools-mcp",
+    "figma-mcp"
+  ],
+  "trigger_keywords": [
+    "polish",
+    "impeccable",
+    "alignment",
+    "contrast",
+    "hierarchy"
+  ],
+  "best_for": [
+    "pre-ship QA",
+    "design review",
+    "Pixel-perfect pass"
+  ],
+  "integration_notes": "Jalankan setelah UI UX Pro Max menghasilkan spec; output berupa diff patch.",
+  "skill_files": [
+    {
+      "path": "plugin-catalog/design/impeccable/SKILL.md",
+      "type": "skill-definition"
+    }
+  ]
+}

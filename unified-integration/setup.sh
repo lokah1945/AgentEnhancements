@@ -662,7 +662,7 @@ def parse_frontmatter_file(path):
     return mini_frontmatter_parse(fm_lines)
 
 
-skills = []
+skills_by_name = {}
 with open(meta_path, 'r', encoding='utf-8', errors='replace') as f:
     content = f.read()
 
@@ -707,7 +707,7 @@ for record in content.split('\x1e'):
         except ValueError:
             source_path = skill_file
 
-    skills.append({
+    skills_by_name[name] = {
         'name': name,
         'category': category,
         'description': description,
@@ -718,7 +718,13 @@ for record in content.split('\x1e'):
         'when_to_use': description,
         'path': rel_agg,
         'source_path': source_path
-    })
+    }
+
+# Later sources win name collisions, mirroring the by-directory overwrite
+# semantics in process_skills_source (aggregation order: agentic, ECC,
+# Ponytail, Superpowers, replica-skill, anthropic-skills - so the official
+# Anthropic version replaces third-party copies of the same skill name).
+skills = list(skills_by_name.values())
 
 # Count categories
 categories = {}

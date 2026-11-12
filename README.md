@@ -4,9 +4,11 @@ A unified integration platform that aggregates essential AI agent skills, tools,
 
 ## Overview
 
-AgentEnhancements brings together 7 complementary projects (plus a plugin catalog and the vendored **replica-skill**) that enhance AI coding agents (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Copilot, Windsurf, Kiro) with:
+AgentEnhancements brings together 8 complementary projects (plus a plugin catalog and two vendored skill suites) that enhance AI coding agents (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Copilot, Windsurf, Kiro) with:
 
-- **3,127 specialized skills/agents** in the unified index (see `unified-integration/skills/all-skills.json` for the live count)
+- **3,094 specialized skills/agents** in the unified index (see `unified-integration/skills/all-skills.json` for the live count), including the **19 official Anthropic skills** (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
+- **Capability registry** mapping every skill, catalog plugin and MCP server in one queryable index (`registry.py map "<task>"`)
+- **Native runtime activation**: one install links a curated skill set into `~/.claude/skills/` and `~/.agents/skills/`, so Agent Skills compatible harnesses discover them automatically
 - **Plugin catalog** with 21 curated external plugin sources (code, research, tokens, design, multimedia)
 - **Context compression & memory management** for long-running sessions
 - **System prompts** sourced from the vendored `system-prompts-and-models-of-ai-tools` collection
@@ -19,6 +21,7 @@ AgentEnhancements brings together 7 complementary projects (plus a plugin catalo
 | Project | Description | Key Features |
 |---------|-------------|--------------|
 | **[agentic-awesome-skills](./agentic-awesome-skills)** | Massive curated collection of AI agent skills | 2,781 skills, categorized by domain, auto-installable plugins |
+| **[anthropic-skills](./anthropic-skills)** | Official Anthropic skills (vendored, Apache-2.0) | 19 skills: docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, design & comms |
 | **[claude-mem](./claude-mem)** | Persistent memory layer for AI agents | Cross-session memory, automatic summarization, multi-agent support |
 | **[ECC](./ECC)** | Enhanced Claude Code configuration | 314 skills, custom commands, hooks, MCP servers, dashboards |
 | **[headroom](./headroom)** | Context compression & token budget management | Rust-based, 75% trigger, 200k budget, proxy server |
@@ -66,11 +69,13 @@ cd AgentEnhancements
 
 The setup script will:
 1. Detect your installed AI coding assistants (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Windsurf, Copilot, Kiro)
-2. Aggregate skills from all sources into the unified registry (3,127 skills) and regenerate `all-skills.json`
-3. Configure system prompts for each detected tool from the vendored prompt collection
-4. Set up memory persistence (parameterized-SQL Python hooks)
-5. Enable context compression (headroom binary if available, pure-Python fallback otherwise)
-6. Configure Claude Code hooks for automatic memory save, and write activation files for every other agent
+2. Aggregate skills from all sources into the unified registry (3,094 skills from 6 sources, official Anthropic copies winning name collisions) and regenerate `all-skills.json`
+3. Build the capability registry (`agent-registry.json`: skills + 21 plugins + 38 MCP servers + built-ins)
+4. Configure system prompts for each detected tool from the vendored prompt collection
+5. Set up memory persistence (parameterized-SQL Python hooks)
+6. Enable context compression (headroom binary if available, pure-Python fallback otherwise)
+7. Configure Claude Code hooks for automatic memory save, and write activation files for every other agent
+8. Link the curated skill set (anthropic-skills + replica-skill) into `~/.claude/skills/` and `~/.agents/skills/` for native runtime auto-discovery
 
 Re-run `setup.sh` any time; it is idempotent (non-destructive config merges, marker-guarded instruction files).
 
@@ -82,7 +87,7 @@ What gets configured per agent when `setup.sh` detects it:
 
 | Agent | Activation file(s) written by setup | What activates |
 |-------|--------------------------------------|----------------|
-| **Claude Code** | `~/.claude/settings.json` (merged, credentials preserved) + `~/.claude/CLAUDE.md` | Hooks fire automatically on every tool use / session stop; skills and utilities referenced from CLAUDE.md |
+| **Claude Code** | `~/.claude/settings.json` (merged, credentials preserved) + `~/.claude/CLAUDE.md` + links in `~/.claude/skills/` | Hooks fire automatically on every tool use / session stop; curated skills natively auto-discovered |
 | **Codex** | `~/.codex/AGENTS.md` | Global instructions: skills catalog usage, memory and compression commands. Codex reads AGENTS.md at session start |
 | **OpenCode** | `~/.config/opencode/opencode.json` (schema-valid) + `~/.config/opencode/AGENTS.md` | Native skills discovery via the `skills` array (points at the aggregated registry) + instruction files via `instructions` |
 | **Cursor** | `~/.cursor/rules/agent-enhancements.mdc` | Global rule (frontmatter-scoped) with catalog, memory and compression usage |
@@ -90,11 +95,12 @@ What gets configured per agent when `setup.sh` detects it:
 | **Windsurf** | `~/.codeium/windsurf/rules/agent-enhancements.md` | Global rule with catalog, memory and compression usage |
 | **GitHub Copilot** | `~/.config/github-copilot/config.yaml` (reference) | Reference configuration; use via the launcher |
 | **Kiro** | `~/.kiro/config.yaml` (reference) | Reference configuration; use via the launcher |
+| **All Agent Skills harnesses** | links in `~/.agents/skills/` (cross-agent standard) | Curated set (anthropic-skills 19 + replica-skill 11) auto-discovered at runtime |
 
 Notes:
 - Marker-guarded files (`<!-- agent-enhancements:begin/end -->`) preserve your personal instructions across re-runs.
 - Claude Code is the only agent with an automatic hook system; for all others, the written instructions tell the agent how to invoke memory/compression explicitly.
-- To make individual skills natively auto-discoverable in any Agent Skills-compatible harness, symlink the skill folder into `~/.agents/skills/`.
+- Extend the natively linked set any time: `bash unified-integration/scripts/link-skills.sh --set superpowers`, `link-skills.sh <skill-name>`, or `--set all` for the entire catalog (`--status` / `--unlink` to inspect or remove; user-owned entries are never touched).
 
 ### Launching an enhanced agent
 
@@ -121,13 +127,16 @@ AgentEnhancements/
 │   ├── skills/                    # Aggregated skills registry
 │   │   ├── by-category/           # Skills organized by domain (generated at setup)
 │   │   ├── by-agent/              # Skills organized by agent type (generated at setup)
-│   │   └── all-skills.json        # Complete skills catalog (committed index)
+│   │   ├── all-skills.json        # Complete skills catalog (committed index)
+│   │   └── agent-registry.json    # Capability registry: skills + plugins + MCP + built-ins
 │   ├── memory/                    # Memory integration (parameterized-SQL hooks)
 │   ├── compression/               # Context compression (headroom + fallback)
-│   ├── scripts/                   # Utility scripts (loader, memory, catalog tooling)
-│   └── tests/                     # Regression test suite (49 tests)
+│   ├── scripts/                   # Utility scripts (loader, memory, registry.py,
+│   │                              # link-skills.sh, dispatch, catalog tooling)
+│   └── tests/                     # Regression test suite (77 tests)
 │
 ├── plugin-catalog/                # 21 curated external plugin sources
+├── anthropic-skills/              # 19 official Anthropic skills (vendored, Apache-2.0)
 ├── replica-skill/                 # 11 vendored app-cloning sub-skills
 ├── agentic-awesome-skills/        # 2,781 vendored skills
 ├── claude-mem/                    # Memory persistence layer (vendored)
@@ -142,23 +151,44 @@ AgentEnhancements/
 
 ## Skills Catalog
 
-The unified index (`unified-integration/skills/all-skills.json`) currently contains **3,127 skills** aggregated from 5 sources:
+The unified index (`unified-integration/skills/all-skills.json`) currently contains **3,094 unique skills** aggregated from 6 sources (the index is keyed by name; the official anthropic-skills version wins collisions with third-party copies):
 
 | Source | Skills |
 |--------|--------|
-| agentic-awesome-skills | 2,781 |
+| agentic-awesome-skills | 2,729 |
 | ECC | 314 |
 | Superpowers | 15 |
-| Ponytail | 6 |
 | replica-skill | 11 |
+| anthropic-skills (official) | 19 |
+| Ponytail | 6 |
 
 The on-disk registry (`skills/by-category/`, `skills/by-agent/`) is generated when you run `setup.sh`.
+
+### Capability Registry (all-in-one mapping)
+
+`unified-integration/scripts/registry.py` maps ANY task to everything the project ships - skills, catalog plugins, MCP servers and built-in capabilities - in one query:
+
+```bash
+# Activation plan for a task: matching skills (with paths), plugins,
+# MCP servers, always-available capabilities and usage hints
+python3 unified-integration/scripts/registry.py map "clean this excel spreadsheet"
+
+# Focused search / details / stats
+python3 unified-integration/scripts/registry.py search "pdf" --type skill
+python3 unified-integration/scripts/registry.py show docx
+python3 unified-integration/scripts/registry.py stats
+```
+
+Scoring understands format families ("word" -> docx, "excel" -> xlsx, "powerpoint" -> pptx) and stop words in English and Indonesian, so `map "buat dokumen word laporan keuangan"` returns the official `docx` skill first. The registry (`skills/agent-registry.json`) is rebuilt by `setup.sh` and covers 3,094 skills + 21 plugins + 38 MCP servers + 7 built-in capabilities.
 
 ### Using Skills
 
 Find and load skills on demand (works from any agent):
 
 ```bash
+# Map a task to skills + plugins + MCP servers (recommended first step)
+python3 unified-integration/scripts/registry.py map "security audit"
+
 # Find skills matching a task
 python3 unified-integration/scripts/load-skills.py claude-code "security audit"
 
@@ -281,7 +311,7 @@ bash unified-integration/scripts/mcp-test.sh --priority P0
 ## Testing & Validation
 
 ```bash
-# Integration-layer regression suite (49 tests)
+# Integration-layer regression suite (77 tests)
 python3 unified-integration/tests/run-tests.py
 
 # Plugin catalog validation (21 manifests)
@@ -310,6 +340,7 @@ All agents working on this repository must follow `CONTRACT.md` (conventional co
 | Project | Repository | License |
 |---------|------------|---------|
 | agentic-awesome-skills | [Original Repo](https://github.com/agentic-awesome/agentic-awesome-skills) | MIT |
+| anthropic-skills | [Original Repo](https://github.com/anthropics/skills) | Apache-2.0 (per-skill LICENSE.txt) |
 | claude-mem | [Original Repo](https://github.com/claude-mem/claude-mem) | MIT |
 | ECC | [Original Repo](https://github.com/ecc-project/ecc) | MIT |
 | headroom | [Original Repo](https://github.com/headroom/headroom) | MIT/Apache-2.0 |

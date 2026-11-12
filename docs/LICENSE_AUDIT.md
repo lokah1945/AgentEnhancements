@@ -7,8 +7,8 @@ audience: maintainers
 
 # License Audit — 21 Plugin Upstream
 
-Wajib sebelum redistribute ulang (CONTRACT + ADR). replica-skill sudah
-terverifikasi MIT dan di-vendor.
+Wajib sebelum redistribute ulang (CONTRACT + ADR). replica-skill (MIT) dan
+anthropic-skills (Apache-2.0) sudah terverifikasi dan di-vendor.
 
 ## Tabel audit
 
@@ -31,7 +31,7 @@ terverifikasi MIT dan di-vendor.
 | 15 | impeccable | github.com/pbakaus/ | MIT (assumed) | TODO verify | Cek LICENSE |
 | 16 | ppt-master | github.com/hugohe3/ppt-master | MIT (assumed) | TODO verify | Cek LICENSE |
 | 17 | diagram-design | github.com/cathrynlavery/ | MIT (assumed) | TODO verify | Cek LICENSE |
-| 18 | anthropic-skills | github.com/anthropics/ | Apache-2.0 (Anthropic default) | TODO verify | Cek LICENSE per repo |
+| 18 | anthropic-skills | github.com/anthropics/skills | Apache-2.0 | **VERIFIED** (vendored: 18 skill bawa LICENSE.txt Apache-2.0 + THIRD_PARTY_NOTICES.md) | OK — vendored; `doc-coauthoring` tidak membawa LICENSE.txt eksplisit (perlakukan sebagai Apache-2.0 repo-wide, catat pengecualian) |
 | 19 | openmontage | github.com/calesthio/OpenMontage | MIT (assumed) | TODO verify | Cek LICENSE |
 | 20 | hyperframes | github.com/heygen-com/hyperframes | MIT (assumed) | TODO verify | Cek LICENSE + TOS HeyGen |
 | 21 | humanizer | github.com/blader/humanizer | MIT (assumed) | TODO verify | Cek LICENSE |
@@ -58,7 +58,12 @@ curl -s https://raw.githubusercontent.com/<org>/<repo>/master/LICENSE | head -20
 
 - **replica-skill sudah aman**: MIT terverifikasi, LICENSE asli ikut
   ter-vendor di `replica-skill/LICENSE`, sub-skill tidak dimodifikasi.
-- 20 plugin lain **belum di-vendor** — hanya manifest + panduan integrasi
+- **anthropic-skills sudah aman**: Apache-2.0 terverifikasi per skill
+  (`anthropic-skills/skills/*/LICENSE.txt`, 18 dari 19; `doc-coauthoring`
+  tanpa LICENSE.txt — repo-wide Apache-2.0, pengecualian dicatat),
+  `THIRD_PARTY_NOTICES.md` ikut ter-vendor. Marketplace manifest
+  (`.claude-plugin/marketplace.json`) milik upstream tetap utuh.
+- 19 plugin lain **belum di-vendor** — hanya manifest + panduan integrasi
   (teks original kami), sehingga belum ada redistribusi kode upstream.
   License audit menjadi wajib SAAT vendor/wiring kode upstream dimulai.
 - Manifest katalog menyimpan `source.license` sebagai referensi cepat.

@@ -8,11 +8,23 @@ import subprocess
 import sys
 import os
 import json
+import re
 from pathlib import Path
 from typing import Optional
 
 HEADROOM_BIN = os.environ.get("HEADROOM_BIN", "headroom")
-FALLBACK_BIN = "/root/agent-enhancements/headroom/target/release/headroom"
+
+
+def _default_fallback_bin() -> str:
+    """Locate the repo-built headroom binary without hardcoding paths."""
+    base = os.environ.get("AGENT_ENHANCEMENTS_BASE_DIR")
+    if base:
+        return os.path.join(base, "headroom", "target", "release", "headroom")
+    # Repo layout: <base>/unified-integration/scripts/compress.py
+    return str(Path(__file__).resolve().parent.parent.parent / "headroom" / "target" / "release" / "headroom")
+
+
+FALLBACK_BIN = _default_fallback_bin()
 
 def get_headroom_bin() -> Optional[str]:
     """Find headroom binary"""

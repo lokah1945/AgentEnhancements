@@ -4,7 +4,10 @@
 
 set -euo pipefail
 
-BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-/root/agent-enhancements}"
+# Allow BASE_DIR to be overridden via environment variable.
+# Default: the repository root that contains this script.
+SCRIPT_SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(cd "$SCRIPT_SOURCE_DIR/.." && pwd)}"
 UNIFIED_DIR="$BASE_DIR/unified-integration"
 
 # Colors for output
@@ -25,34 +28,41 @@ update_repo() {
     local repo_name="$2"
 
     if [ ! -d "$repo_dir/.git" ]; then
-        log_warn "$repo_name: Not a git repository, skipping"
-        return
+        log_warn "$repo_name: Not a git repository (vendored copy), skipping"
+        return 0
     fi
 
     log_info "Updating $repo_name..."
-    cd "$repo_dir"
 
-    # Fetch latest changes
-    if git fetch origin 2>/dev/null; then
-        # Check if there are updates
-        local behind=$(git rev-list --count HEAD..origin/HEAD 2>/dev/null || echo "0")
+    # Run in a subshell so the working directory of this script is not changed
+    (
+        cd "$repo_dir"
+
+        # Fetch latest changes
+        if ! git fetch origin 2>/dev/null; then
+            log_warn "$repo_name: Fetch failed (no remote or network issue)"
+            exit 0
+        fi
+
+        # Compare against FETCH_HEAD: "origin/HEAD" is usually unset in
+        # plain clones, which previously made every repo report
+        # "Already up to date" even when updates existed.
+        local behind
+        behind=$(git rev-list --count HEAD..FETCH_HEAD 2>/dev/null || echo "0")
         if [ "$behind" -gt 0 ]; then
             log_info "$repo_name: $behind commits behind, pulling..."
-            if git pull origin HEAD 2>/dev/null; then
+            if git pull --ff-only origin HEAD 2>/dev/null; then
                 log_success "$repo_name: Updated successfully"
-                return 0
             else
                 log_error "$repo_name: Pull failed"
-                return 1
+                exit 1
             fi
         else
             log_info "$repo_name: Already up to date"
-            return 0
         fi
-    else
-        log_warn "$repo_name: Fetch failed (no remote or network issue)"
-        return 1
-    fi
+    ) || return 1
+
+    return 0
 }
 
 # Main update flow
@@ -62,14 +72,22 @@ main() {
     echo "========================================"
     echo ""
 
-    # Update all skill sources
-    update_repo "$BASE_DIR/agentic-awesome-skills" "agentic-awesome-skills"
-    update_repo "$BASE_DIR/ECC" "ECC"
-    update_repo "$BASE_DIR/ponytail" "ponytail"
-    update_repo "$BASE_DIR/superpowers" "superpowers"
-    update_repo "$BASE_DIR/system-prompts-and-models-of-ai-tools" "system-prompts-and-models-of-ai-tools"
-    update_repo "$BASE_DIR/claude-mem" "claude-mem"
-    update_repo "$BASE_DIR/headroom" "headroom"
+    # Update all skill sources. A failure in one source must not abort the
+    # whole update, so each update is allowed to fail independently.
+    update_repo "$BASE_DIR/agentic-awesome-skills" "agentic-awesome-skills" \
+        || log_warn "agentic-awesome-skills: update failed, continuing"
+    update_repo "$BASE_DIR/ECC" "ECC" \
+        || log_warn "ECC: update failed, continuing"
+    update_repo "$BASE_DIR/ponytail" "ponytail" \
+        || log_warn "ponytail: update failed, continuing"
+    update_repo "$BASE_DIR/superpowers" "superpowers" \
+        || log_warn "superpowers: update failed, continuing"
+    update_repo "$BASE_DIR/system-prompts-and-models-of-ai-tools" "system-prompts-and-models-of-ai-tools" \
+        || log_warn "system-prompts-and-models-of-ai-tools: update failed, continuing"
+    update_repo "$BASE_DIR/claude-mem" "claude-mem" \
+        || log_warn "claude-mem: update failed, continuing"
+    update_repo "$BASE_DIR/headroom" "headroom" \
+        || log_warn "headroom: update failed, continuing"
 
     # replica-skill is vendored (not a git checkout). Update manually by
     # re-vendoring from https://github.com/Jakeschincariol/replica-skill
@@ -80,12 +98,12 @@ main() {
 
     # Re-run skills aggregation
     log_info "Re-aggregating skills..."
-    "$UNIFIED_DIR/setup.sh" 2>&1 | grep -E "Aggregate|process|complete|skill" | head -20
+    "$UNIFIED_DIR/setup.sh" 2>&1 | grep -E "Aggregate|process|complete|skill" | head -20 || true
 
     # Rebuild headroom if updated
     if [ -f "$BASE_DIR/headroom/Cargo.toml" ]; then
         log_info "Rebuilding headroom..."
-        cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -5
+        (cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -5) || log_warn "headroom: rebuild failed"
         if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
             log_success "headroom rebuilt"
         fi
@@ -94,8 +112,8 @@ main() {
     # Rebuild claude-mem if updated
     if [ -f "$BASE_DIR/claude-mem/package.json" ]; then
         log_info "Rebuilding claude-mem..."
-        cd "$BASE_DIR/claude-mem" && npm run build 2>&1 | tail -5
-        log_success "claude-mem rebuilt"
+        (cd "$BASE_DIR/claude-mem" && npm run build 2>&1 | tail -5) || log_warn "claude-mem: rebuild failed"
+        log_success "claude-mem rebuild attempted"
     fi
 
     echo ""

@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    name: Static checks (CONTRACT §9.1)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: bash -n on all integration shell scripts
+        run: |
+          status=0
+          while IFS= read -r -d '' f; do
+            if ! bash -n "$f"; then
+              echo "::error file=$f::bash syntax check failed"
+              status=1
+            fi
+          done < <(find unified-integration -name '*.sh' -print0)
+          exit $status
+
+      - name: py_compile on all integration Python scripts
+        run: |
+          status=0
+          while IFS= read -r -d '' f; do
+            if ! python3 -m py_compile "$f"; then
+              echo "::error file=$f::python compile failed"
+              status=1
+            fi
+          done < <(find unified-integration -name '*.py' -print0)
+          exit $status
+
+      - name: JSON validity of the skills index and friends
+        run: |
+          status=0
+          while IFS= read -r -d '' f; do
+            if ! python3 -m json.tool "$f" > /dev/null; then
+              echo "::error file=$f::invalid JSON"
+              status=1
+            fi
+          done < <(find unified-integration -name '*.json' -print0)
+          exit $status
+
+      - name: Filename policy (no temp/fixed/new/vN files in owned layer)
+        run: |
+          # R001 / §9.1: forbid *-fixed.*, *-new.*, *-vN.*, *.tmp.*, *.bak
+          # Scoped to the owned integration layer and docs; vendored
+          # projects keep their own upstream naming conventions.
+          status=0
+          while IFS= read -r f; do
+            case "$f" in
+              *-fixed.*|*-new.*|*-v[0-9]*.*|*.tmp.*|*.bak|*~)
+                echo "::error file=$f::filename violates R001 (temp/fixed/new/versioned suffix)"
+                status=1
+                ;;
+            esac
+          done < <(git ls-files 'unified-integration/*.sh' 'unified-integration/*.py' \
+                            'unified-integration/*.json' 'unified-integration/*.yaml' \
+                            'unified-integration/*.md' 'docs/*.md' '.github/*.yml' '.github/**/*.yml')
+          exit $status
+
+      - name: Commit message policy (advisory)
+        run: |
+          # R201/R205/R206: conventional commits with agent traceability.
+          # Advisory: human commits made directly by the maintainer do not
+          # carry agent metadata, so this check warns instead of failing.
+          range="${{ github.event.before }}..HEAD"
+          [ "$range" = "0000000000000000000000000000000000000000..HEAD" ] && range="HEAD~10..HEAD" || true
+          for sha in $(git rev-list "$range" 2>/dev/null | head -50); do
+            subject=$(git log -1 --format=%s "$sha")
+            body=$(git log -1 --format=%b "$sha")
+            if ! echo "$subject" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .+'; then
+              echo "::warning file=COMMIT_EDITMSG::non-conventional subject: $subject"
+            fi
+            if ! echo "$body" | grep -q '^Agent: '; then
+              echo "::warning file=COMMIT_EDITMSG::commit lacks 'Agent:' trailer (R206): $subject"
+            fi
+          done
+          exit 0
+
+  integration-tests:
+    name: unified-integration test suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run regression suite
+        run: python3 unified-integration/tests/run-tests.py
+
+  ecc-tests:
+    name: ECC test suite (CONTRACT §5.1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install ECC dependencies
+        run: npm install --no-audit --no-fund
+        working-directory: ECC
+      - name: Build opencode artifacts
+        run: npm run build:opencode
+        working-directory: ECC
+      - name: Run ECC tests
+        run: ECC_TEST_JOBS=8 node tests/run-all.js
+        working-directory: ECC
+
+  markdownlint:
+    name: markdownlint (advisory, owned layer)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Lint owned documentation
+        run: |
+          npx -y markdownlint-cli \
+            README.md CONTRACT.md docs/*.md unified-integration/skills/README.md || \
+            echo "::warning::markdownlint reported issues (advisory)"

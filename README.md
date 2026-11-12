@@ -6,7 +6,7 @@ A unified integration platform that aggregates essential AI agent skills, tools,
 
 AgentEnhancements brings together 7 complementary projects (plus a plugin catalog and the vendored **replica-skill**) that enhance AI coding agents (Claude Code, Cursor, Windsurf, Copilot, etc.) with:
 
-- **2900+ specialized skills/agents** for every development task (2884 aggregated + 11 replica sub-skills)
+- **2900+ specialized skills/agents** for every development task (see `unified-integration/skills/all-skills.json` for the live count)
 - **Plugin catalog** with 21 curated external plugin sources (code, research, tokens, design, multimedia)
 - **Context compression & memory management** for long-running sessions
 - **System prompts** optimized for each AI tool
@@ -18,7 +18,7 @@ AgentEnhancements brings together 7 complementary projects (plus a plugin catalo
 
 | Project | Description | Key Features |
 |---------|-------------|--------------|
-| **[agentic-awesome-skills](./agentic-awesome-skills)** | Massive curated collection of AI agent skills | 2788 skills, categorized by domain, auto-installable plugins |
+| **[agentic-awesome-skills](./agentic-awesome-skills)** | Massive curated collection of AI agent skills | 2,884 skills, categorized by domain, auto-installable plugins |
 | **[claude-mem](./claude-mem)** | Persistent memory layer for AI agents | Cross-session memory, automatic summarization, multi-agent support |
 | **[ECC](./ECC)** | Enhanced Claude Code configuration | 316 skills, custom commands, hooks, MCP servers, dashboards |
 | **[headroom](./headroom)** | Context compression & token budget management | Rust-based, 75% trigger, 200k budget, proxy server |
@@ -48,15 +48,17 @@ Catalog tooling: `catalog-validate.py` (validate), `catalog-wire.sh` (wire to re
 ### One-Line Install (Recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/lokah1945/agent-enhancements/main/unified-integration/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/lokah1945/AgentEnhancements/master/unified-integration/setup.sh | bash
 ```
+
+> **Note**: pipe-to-shell runs remote code as your user. Review the script first if that matters to you.
 
 ### Manual Installation
 
 ```bash
 # Clone the repository
 git clone https://github.com/lokah1945/AgentEnhancements.git
-cd agent-enhancements
+cd AgentEnhancements
 
 # Run the unified setup
 ./unified-integration/setup.sh
@@ -103,7 +105,7 @@ agent-enhancements/
 
 ## Skills Catalog
 
-Skills are organized into 10 categories with 2788+ total skills:
+The unified index (`unified-integration/skills/all-skills.json`) currently aggregates **3,116 skills** from the four skill sources. Skills are indexed with their upstream metadata; `setup.sh` normalizes categories into 10 canonical buckets when it populates `skills/by-category/` and `skills/by-agent/` on your machine. In a fresh checkout only the `general` category ships as flat files - run `setup.sh` to populate the full registry.
 
 | Category | Count | Examples |
 |----------|-------|----------|

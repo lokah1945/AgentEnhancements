@@ -1,6 +1,6 @@
 # AgentEnhancements — Skills Catalog v2
 
-Katalog plugin eksternal yang terintegrasi dengan repo. Berdampingan dengan `unified-integration/skills/by-category/` (registry hasil agregasi). Total **21 plugin sources** — 20 berupa manifest remote + 1 di-vendor penuh (replica-skill, 11 sub-skill).
+Katalog plugin eksternal yang terintegrasi dengan repo. Berdampingan dengan `unified-integration/skills/by-category/` (registry hasil agregasi). Total **21 plugin sources** — 19 berupa manifest remote + 2 di-vendor penuh (replica-skill 11 sub-skill; anthropic-skills 19 skill resmi, Apache-2.0).
 
 ## Struktur
 
@@ -39,5 +39,10 @@ Tiap manifest memakai schema `skill-manifest.v1.json` dengan field:
 2. Jalankan `bash unified-integration/scripts/catalog-wire.sh` untuk symlink katalog ke `unified-integration/skills/by-category/`.
 3. Daftarkan MCP server di `.claude/mcp.json` sesuai `mcp_servers_suggested`.
 4. Tandai `status: "integrated"` di manifest.
+
+Plugin yang sudah di-vendor (replica-skill, anthropic-skills) tidak perlu
+langkah di atas: skill-nya sudah ter-agregasi ke unified index dan
+ter-link native via `link-skills.sh`. Pemetaan lintas semua sumber:
+`python3 unified-integration/scripts/registry.py map "<task>"`.
 
 Lihat juga: [INTEGRATION_CHECKLIST.md](../docs/INTEGRATION_CHECKLIST.md)

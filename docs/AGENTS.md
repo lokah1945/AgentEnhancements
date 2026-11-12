@@ -28,21 +28,42 @@ preserve your personal content across re-runs.
 The result is written to `unified-integration/config/detected-agents.sh`
 (machine-local, do not commit).
 
+## Native skill activation (all agents)
+
+Regardless of which agent is detected, `setup.sh` symlinks a curated skill
+set into the directories that Agent Skills compatible harnesses read
+automatically at runtime:
+
+| Target | Read by |
+|--------|---------|
+| `~/.claude/skills/` | Claude Code (personal skills, auto-discovered) |
+| `~/.agents/skills/` | cross-agent Agent Skills standard (agentskills.io) |
+
+Default curated set: the 19 official **anthropic-skills** (docx, pdf, pptx,
+xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...) plus the
+11 **replica-skill** sub-skills. Extend or remove links with
+`unified-integration/scripts/link-skills.sh` (see [SKILLS.md](SKILLS.md)).
+
+Claude Code can additionally consume the upstream marketplace:
+`/plugin marketplace add anthropics/skills` (vendored at `anthropic-skills/`).
+
 ## Per-agent notes
 
 ### Claude Code (full automatic activation)
 Hooks are merged into `~/.claude/settings.json`:
 `PreToolUse`/`PostToolUse` save tool events, `Stop` saves the session
 summary. `~/.claude/CLAUDE.md` is (re)written by setup - keep personal
-instructions out of that file or re-add them afterwards.
+instructions out of that file or re-add them afterwards. The curated skill
+set is linked into `~/.claude/skills/` for native auto-discovery.
 
 ### Codex (instructions-based activation)
 Codex reads `~/.codex/AGENTS.md` for global instructions and
 `~/.codex/config.toml` (TOML) for settings. Setup writes a
 marker-guarded integration section into `AGENTS.md` covering the skills
-catalog, memory and compression commands. Codex has no hook system, so
-memory is invoked explicitly per the instructions. Older setup versions
-wrote `~/.codex/config.yaml`, which Codex never reads; setup removes it
+catalog, memory and compression commands, plus the native-skill and
+registry-mapping entry points. Codex has no hook system, so memory is
+invoked explicitly per the instructions. Older setup versions wrote
+`~/.codex/config.yaml`, which Codex never reads; setup removes it
 (signature-checked) when found.
 
 ### OpenCode (native config + instructions)
@@ -106,6 +127,8 @@ memory, exports the standard environment variables and execs the agent.
   [CONFIGURATION.md](CONFIGURATION.md).
 - Re-run `setup.sh` after installing a new agent CLI; only detected agents
   are configured.
-- To make individual skills natively auto-discoverable in any
-  Agent Skills-compatible harness, symlink the skill folder into
-  `~/.agents/skills/`.
+- Manage natively linked skills (auto-discovered at runtime) with
+  `unified-integration/scripts/link-skills.sh` (`--set <source>|all`,
+  specific names, `--status`, `--unlink`).
+- Map any task to skills, plugins and MCP servers with
+  `python3 unified-integration/scripts/registry.py map "<task>"`.

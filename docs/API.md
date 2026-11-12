@@ -1,11 +1,50 @@
 ---
 title: Internal APIs
-version: 1.1
-last_updated: 2026-11-01
+version: 1.2
+last_updated: 2026-11-13
 audience: maintainers, contributors
 ---
 
 # Internal APIs
+
+## Capability registry - `unified-integration/scripts/registry.py`
+
+The all-in-one mapping surface across skills, catalog plugins, MCP
+servers and built-in capabilities. Reads `all-skills.json`,
+`plugin-catalog/catalog.json` and `plugin-catalog/mcp-servers.json`.
+
+| Command | Description |
+|---------|-------------|
+| `build [--out PATH] [--quiet]` | Regenerate `skills/agent-registry.json` (skills + plugins + MCP + capabilities). Run automatically by `setup.sh` after aggregation. |
+| `map "<task>" [--limit N] [--json]` | Activation plan for a natural-language task: top skills (with paths and native-link status), matching plugins, relevant MCP servers, always-available capabilities and usage hints. |
+| `search "<query>" [--type T] [--limit N] [--json]` | Scored search across every entry type (or one type: `skill`, `plugin`, `mcp`, `capability`). |
+| `show <name-or-id> [--json]` | One entry by id (`skill:docx`) or name (`docx`), including `path`, `source_path` and `activation`. |
+| `stats [--json]` | Entry counts by type and source. |
+| `list [--type T] [--source S] [--json]` | Enumerate entries. |
+
+Scoring: stop-word filtering (EN + ID), format-family aliases (`word`->docx,
+`excel`->xlsx, `powerpoint`->pptx, ...), name-match priority (+8) and a
+zero-friction boost (+3) for natively linked skills.
+
+Importable functions: `load_skill_entries()`, `load_plugin_entries()`,
+`load_mcp_entries()`, `load_capability_entries()`, `load_all_entries()` and
+`rank_entries(entries, query, limit)`.
+
+## Native linking - `unified-integration/scripts/link-skills.sh`
+
+Symlinks registry skills into the directories agents read automatically
+at runtime (`~/.claude/skills`, `~/.agents/skills`; override with
+`AGENT_SKILLS_NATIVE_TARGETS`). Ownership-safe: only symlinks pointing into
+the unified registry are created, refreshed or removed.
+
+| Invocation | Effect |
+|-----------|--------|
+| `link-skills.sh [--quiet]` | Link the default curated set (anthropic-skills 19 + replica-skill 11) into every target. |
+| `link-skills.sh --set <source>` | Link every skill of one source. |
+| `link-skills.sh --set all` / `--all` | Link the entire catalog (heavy per-session metadata; warned). |
+| `link-skills.sh <name> [...]` | Link specific skills by name. |
+| `link-skills.sh --status` | Per-target listing with ownership counts. |
+| `link-skills.sh --unlink [names ...]` | Remove registry-owned links (all, or only the named ones). |
 
 ## Skills loader - `unified-integration/scripts/load-skills.py`
 
@@ -79,3 +118,11 @@ payload into an existing config: the `hooks` key is replaced wholesale,
 every other key is merged recursively. Payloads and paths are passed to the
 Python merger via environment variables. A timestamped backup is written
 next to the target before merging.
+
+## Dispatcher - `unified-integration/scripts/dispatch.sh`
+
+`dispatch.sh [--dry-run] "<prompt>"` classifies a natural-language prompt
+per [ROUTER_POLICY.md](ROUTER_POLICY.md) and resolves the matching guide:
+catalog plugins via `plugin-catalog/<category>/<slug>/SKILL.md`, and the
+vendored Anthropic skills via `anthropic-skills/skills/<slug>/SKILL.md`.
+An explicit `[skill:<slug>]` prefix bypasses the heuristics.

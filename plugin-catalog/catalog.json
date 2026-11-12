@@ -431,16 +431,24 @@
       "slug": "anthropic-skills",
       "name": "Anthropic Skills",
       "category": "multimedia-writing",
-      "version": "1.0.0",
-      "status": "integrated-ready",
+      "version": "1.1.0",
+      "status": "integrated",
       "manifest_path": "plugin-catalog/multimedia-writing/anthropic-skills.json",
       "guide_path": "plugin-catalog/multimedia-writing/anthropic-skills/SKILL.md",
       "trigger_keywords": [
         "anthropic",
-        "structured",
-        "tool use",
-        "multimodal",
-        "safety"
+        "docx",
+        "word document",
+        "pdf",
+        "pptx",
+        "powerpoint",
+        "xlsx",
+        "excel",
+        "spreadsheet",
+        "mcp server",
+        "skill creator",
+        "webapp testing",
+        "claude api"
       ],
       "mcp_servers": [
         "filesystem-mcp",
@@ -448,8 +456,10 @@
         "vision-mcp"
       ],
       "source_url": "https://github.com/anthropics/skills",
-      "source_license": "Apache-2.0 (verify on upstream)",
-      "vendored": false
+      "source_license": "Apache-2.0 (per-skill LICENSE.txt)",
+      "vendored": true,
+      "vendored_path": "anthropic-skills/",
+      "skill_count": 19
     },
     {
       "id": "multimedia-humanizer",

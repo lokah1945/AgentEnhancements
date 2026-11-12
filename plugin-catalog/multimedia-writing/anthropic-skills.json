@@ -4,25 +4,27 @@
   "name": "Anthropic Skills",
   "slug": "anthropic-skills",
   "category": "multimedia-writing",
-  "version": "1.0.0",
-  "status": "integrated-ready",
+  "version": "1.1.0",
+  "status": "integrated",
   "source": {
     "type": "github",
     "url": "https://github.com/anthropics/skills",
-    "license": "Apache-2.0 (verify on upstream)"
+    "license": "Apache-2.0 (per-skill LICENSE.txt)",
+    "vendored_path": "anthropic-skills/"
   },
-  "description": "Skill referensi dari Anthropic: structured outputs, tool use best practices, document QA, dan multimodal handling. Membentuk baseline 'responsible agent' untuk repo ini.",
+  "description": "19 skill resmi Anthropic yang di-vendor penuh: document skills (docx, pdf, pptx, xlsx), skill-creator, mcp-builder, webapp-testing, claude-api, plus skill desain dan komunikasi. Semua ter-agregasi ke unified index dan otomatis ter-link native ke ~/.claude/skills serta ~/.agents/skills saat setup - siap pakai tanpa instalasi terpisah.",
   "capabilities": [
-    "structured output enforcement",
-    "safe tool-use patterns",
-    "document QA",
-    "multimodal (image/PDF) handling"
+    "document creation and editing (docx, pdf, pptx, xlsx)",
+    "skill creation, evaluation and optimization (skill-creator)",
+    "MCP server authoring guide (mcp-builder)",
+    "web app testing with Playwright (webapp-testing)",
+    "Claude API / SDK patterns (claude-api)",
+    "frontend and brand design (frontend-design, brand-guidelines, canvas-design, theme-factory)"
   ],
   "tools_required": [
     "bash",
     "read_file",
-    "write_file",
-    "web_search"
+    "write_file"
   ],
   "mcp_servers_suggested": [
     "filesystem-mcp",
@@ -31,21 +33,40 @@
   ],
   "trigger_keywords": [
     "anthropic",
-    "structured",
-    "tool use",
-    "multimodal",
-    "safety"
+    "docx",
+    "word document",
+    "pdf",
+    "pptx",
+    "powerpoint",
+    "xlsx",
+    "excel",
+    "spreadsheet",
+    "mcp server",
+    "skill creator",
+    "webapp testing",
+    "claude api"
   ],
   "best_for": [
-    "baseline agent behavior",
-    "safety-critical tasks",
-    "enterprise deployments"
+    "production-grade document processing",
+    "creating new skills for any harness",
+    "building MCP servers",
+    "testing local web applications",
+    "Claude API integrations"
   ],
-  "integration_notes": "Inti filosofi .cursorrules global mengambil dari sini. Wajib jadi dependency default semua skill lain.",
+  "integration_notes": "Vendored di anthropic-skills/ (Apache-2.0, LICENSE.txt per skill). Diagregasi via setup.sh (menang name collision vs salinan pihak ketiga), ter-link native via link-skills.sh, dan bisa dipetakan lewat registry.py. Upstream juga menyediakan .claude-plugin/marketplace.json untuk /plugin marketplace add anthropics/skills.",
+  "skill_count": 19,
   "skill_files": [
     {
       "path": "plugin-catalog/multimedia-writing/anthropic-skills/SKILL.md",
       "type": "skill-definition"
+    },
+    {
+      "path": "anthropic-skills/README.md",
+      "type": "vendor-readme"
+    },
+    {
+      "path": "anthropic-skills/.claude-plugin/marketplace.json",
+      "type": "marketplace-manifest"
     }
   ]
 }

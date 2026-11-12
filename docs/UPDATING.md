@@ -83,6 +83,31 @@ done
 
 ## 3. Updating Core Dependencies
 
+### 3.0 anthropic-skills and replica-skill (vendored skill suites)
+
+Both are vendored copies (no `.git`), so `update-skills.sh` skips them with
+a warning. Refresh them by re-vendoring:
+
+```bash
+# anthropic-skills (19 official Anthropic skills, Apache-2.0)
+cd /tmp && git clone --depth 1 https://github.com/anthropics/skills.git fresh
+rm -rf "$AGENT_ENHANCEMENTS_BASE_DIR/anthropic-skills"
+mkdir -p "$AGENT_ENHANCEMENTS_BASE_DIR/anthropic-skills"
+cp -r fresh/. "$AGENT_ENHANCEMENTS_BASE_DIR/anthropic-skills/"
+rm -rf "$AGENT_ENHANCEMENTS_BASE_DIR/anthropic-skills/.git"   # keep the vendor clean
+
+# replica-skill: same procedure from https://github.com/Jakeschincariol/replica-skill
+# (keep the original LICENSE file that ships with it)
+
+# Then re-aggregate, rebuild the registry and re-link native skills:
+cd "$AGENT_ENHANCEMENTS_BASE_DIR" && ./unified-integration/setup.sh
+```
+
+Verify: `python3 unified-integration/scripts/registry.py stats` should
+report the new skill count for the `anthropic-skills` source, and
+`bash unified-integration/scripts/link-skills.sh --status` should still
+show the curated set linked.
+
 ### 3.1 headroom (Rust)
 
 ```bash

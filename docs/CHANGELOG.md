@@ -10,6 +10,55 @@ audience: all
 All notable changes to the owned integration layer of this repository.
 Vendored projects change upstream; see their own histories.
 
+## [Unreleased] — 2026-11-13 — anthropic-skills all-in-one integration
+
+### Added
+- **anthropic-skills vendored** (19 official Anthropic skills: docx, pdf,
+  pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api,
+  design & comms; Apache-2.0 per-skill LICENSE.txt). Aggregated through
+  the standard pipeline, processed last so official copies win the 13
+  name collisions with third-party versions in agentic-awesome-skills.
+- **Capability registry** (`scripts/registry.py` + committed
+  `skills/agent-registry.json`): one queryable index across skills,
+  21 catalog plugins, 38 MCP roadmap servers and 7 built-in capabilities.
+  `map "<task>"` returns an activation plan; scoring handles EN/ID stop
+  words and format-family aliases (word->docx, excel->xlsx,
+  powerpoint->pptx). Rebuilt automatically by `setup.sh`.
+- **Native runtime activation** (`scripts/link-skills.sh`): `setup.sh`
+  now symlinks the curated set (anthropic-skills 19 + replica-skill 11)
+  into `~/.claude/skills/` and `~/.agents/skills/`, so every Agent Skills
+  compatible harness discovers them automatically after ONE install.
+  Ownership-safe (`--set`/`--all`/names/`--status`/`--unlink`); user data
+  is never touched.
+- **Dispatch routing** for the official skills: mcp server, skill
+  creation, webapp testing, claude api and document formats (docx, pdf,
+  pptx, xlsx incl. Indonesian phrasings) resolve to the vendored SKILL.md.
+- 28 new tests (77 total): registry unit+CLI, native linking in an
+  isolated HOME, dispatch routing table.
+
+### Fixed
+- **Index frontmatter parsing**: YAML block scalars (`>-`) left 64 skills
+  with a literal marker as their description (and one empty). The index
+  builder now re-parses frontmatter from the file (PyYAML or built-in
+  parser): 0 placeholders, 0 empty descriptions.
+- **Index duplicates**: the index kept one entry per (source, name) - the
+  13 colliding Anthropic names appeared twice and agentic-awesome-skills
+  carried 39 internal duplicates. The index is now keyed by name (later
+  source wins, mirroring the directory overwrite): 3,146 raw records
+  collapse to 3,094 unique skills.
+- **Catalog accuracy**: the anthropic-skills manifest described an
+  abstract "structured output / tool use / multimodal" set that never
+  matched upstream; rewritten for the real content, status `integrated`,
+  `vendored: true` with `vendored_path`.
+
+### Changed
+- Index schema (additive, v1.0 -> v1.1): new `path` and `source_path`
+  fields per skill for capability mapping; `sources` list derived from
+  records instead of hardcoded.
+- `AGENT_SKILLS_NATIVE_TARGETS` env var (colon-separated link targets).
+- Agent instruction files now advertise native activation and the
+  registry mapper.
+
 ## [Unreleased] — 2026-11-13 — Production readiness
 
 ### Fixed

@@ -1,7 +1,7 @@
 ---
 title: Configuration
-version: 1.1
-last_updated: 2026-11-01
+version: 1.2
+last_updated: 2026-11-13
 audience: users, maintainers
 ---
 
@@ -18,6 +18,7 @@ audience: users, maintainers
 | `HEADROOM_BIN` | Compression binary | auto-detect: repo build, then `PATH` |
 | `AGENT_COMPRESSION_CONFIG` | Compression config path | `<UNIFIED_DIR>/compression/config.yaml` |
 | `AGENT_PROMPTS_DIR` | Prompts directory | `<UNIFIED_DIR>/prompts` |
+| `AGENT_SKILLS_NATIVE_TARGETS` | Colon-separated native skill link targets (link-skills.sh) | `~/.claude/skills:$HOME/.agents/skills` |
 
 All shipped scripts resolve their installation root from their own file
 location first and let the environment override it - nothing requires the
@@ -25,22 +26,24 @@ checkout to live at a specific path (R003).
 
 ## Files written on your machine
 
-`setup.sh` merges hooks into each **detected** agent's own config and
-creates a timestamped backup next to it:
+`setup.sh` merges hooks/instructions into each **detected** agent's own
+native config and creates a timestamped backup next to it:
 
-| Agent | File |
+| Agent | File (native format) |
 |-------|------|
-| Claude Code | `~/.claude/settings.json` (+ `~/.claude/CLAUDE.md`) |
-| Codex | `~/.codex/config.yaml` |
-| OpenCode | `~/.config/opencode/config.json` |
-| Cursor | `~/.cursor/settings.json` |
-| Gemini CLI | `~/.gemini/config.yaml` |
-| Windsurf | `~/.windsurf/config.yaml` |
-| Copilot | `~/.config/github-copilot/config.yaml` |
-| Kiro | `~/.kiro/config.yaml` |
+| Claude Code | `~/.claude/settings.json` + `~/.claude/CLAUDE.md` + links in `~/.claude/skills/` |
+| Codex | `~/.codex/AGENTS.md` (marker-guarded) |
+| OpenCode | `~/.config/opencode/opencode.json` (schema-valid) + `~/.config/opencode/AGENTS.md` |
+| Cursor | `~/.cursor/rules/agent-enhancements.mdc` |
+| Gemini CLI | `~/.gemini/GEMINI.md` + `~/.gemini/config.yaml` (reference) |
+| Windsurf | `~/.codeium/windsurf/rules/agent-enhancements.md` |
+| Copilot | `~/.config/github-copilot/config.yaml` (reference) |
+| Kiro | `~/.kiro/config.yaml` (reference) |
+| All agents | links in `~/.claude/skills/` and `~/.agents/skills/` (curated set) |
 
-The merge replaces only the `hooks` key; everything else in an existing
-config is preserved.
+The JSON merge replaces only the `hooks` key; everything else in an existing
+config is preserved. Marker-guarded markdown preserves your personal
+instructions verbatim.
 
 ## Memory configuration - `unified-integration/memory/config.yaml`
 
@@ -56,9 +59,18 @@ the 75% trigger / 50% target thresholds.
 
 ## Skills registry - `unified-integration/skills/`
 
-- `all-skills.json` - unified index (see [ARCHITECTURE.md](ARCHITECTURE.md)).
+- `all-skills.json` - unified skills index (see [ARCHITECTURE.md](ARCHITECTURE.md)).
+- `agent-registry.json` - capability registry across skills, plugins, MCP
+  servers and built-ins (see [API.md](API.md) for the query surface).
 - `by-category/<category>/<skill>/` and `by-agent/<agent>/<skill>/` are
   (re)populated by `setup.sh`; copies are idempotent.
+
+## Native skill linking
+
+`AGENT_SKILLS_NATIVE_TARGETS` (colon-separated) controls where
+`link-skills.sh` creates its symlinks. Only symlinks owned by the registry
+are managed; user data is never touched. The default curated set is
+anthropic-skills (19) + replica-skill (11).
 
 ## Machine-local state
 

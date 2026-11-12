@@ -71,6 +71,26 @@ Atau copy manual bila ingin project-local:
 cp -r replica-skill/replica-* .claude/skills/
 ```
 
+## 6b. Skill resmi Anthropic + pemetaan all-in-one (2 menit)
+
+19 skill resmi Anthropic (docx, pdf, pptx, xlsx, skill-creator,
+mcp-builder, webapp-testing, claude-api, ...) ter-vendor di
+`anthropic-skills/` dan **sudah aktif otomatis** setelah `setup.sh`:
+ter-link native ke `~/.claude/skills/` dan `~/.agents/skills/`.
+
+```bash
+# cek status link native
+bash unified-integration/scripts/link-skills.sh --status
+
+# dispatcher: intent dokumen langsung ke skill resmi
+bash unified-integration/scripts/dispatch.sh --dry-run "extract pdf form fields"
+# output: Skill match : pdf  (anthropic-skills/skills/pdf/SKILL.md)
+
+# registry: petakan task apa pun ke skill + plugin + MCP sekaligus
+python3 unified-integration/scripts/registry.py map "buat dokumen word laporan keuangan"
+# output: docx (skill resmi, natively linked) + plugin terkait + MCP + hints
+```
+
 ## 7. Operasi sensitif (voice clone / video personal)
 
 WAJIB jalankan consent gate dulu:
@@ -82,7 +102,8 @@ bash unified-integration/scripts/consent-gate.sh "sales outreach" voice.wav user
 
 ## Selesai
 
-Anda sudah: validasi 21 plugin, wire registry, test plugin, pakai dispatcher.
+Anda sudah: validasi 21 plugin, wire registry, test plugin, pakai dispatcher,
+dan memverifikasi skill resmi Anthropic + pemetaan all-in-one.
 
 **Langkah berikutnya**: `docs/COOKBOOK.md` (resep gabungan), `docs/INTEGRATION_CHECKLIST.md`
 (wiring penuh), `docs/SAFETY.md` (compliance), `docs/MCP_SERVERS.md` (roadmap MCP).

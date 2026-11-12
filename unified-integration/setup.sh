@@ -384,6 +384,9 @@ This directory contains aggregated skills from multiple sources:
 2. **ECC** - Additional skills and commands
 3. **Ponytail** - Additional skills and hooks
 4. **Superpowers** - Additional skills
+5. **replica-skill** - 11 app-cloning sub-skills
+6. **anthropic-skills** - 19 official Anthropic skills (docx, pdf, pptx,
+   xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
 
 ## Structure
 
@@ -507,10 +510,15 @@ EOF
                     fi
                 done <<< "$skill_tools"
 
-                # Append metadata record for the index builder
-                printf '%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1e' \
+                # Append metadata record for the index builder. The 8th
+                # field is the SKILL.md path: the builder re-parses the
+                # frontmatter from the file so that YAML block scalars
+                # (">-" / "|-") become real descriptions instead of the
+                # marker string the awk extraction produces.
+                printf '%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1e' \
                     "$skill_name" "$skill_category" "$skill_description" \
                     "$skill_risk" "$source_name" "$skill_tags" "$skill_tools" \
+                    "$skill_dir/SKILL.md" \
                     >> "$SKILLS_META"
                 # NB: use arithmetic expansion, not bash arithmetic
                 # post-increment: post-increment from zero evaluates to
@@ -549,11 +557,21 @@ EOF
         process_skills_source "replica-skill" "$BASE_DIR/replica-skill"
     fi
 
+    # Process skills from anthropics/skills (official Anthropic skills:
+    # docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing,
+    # claude-api, design skills and more - 19 in total). Processed LAST on
+    # purpose: 13 of these names also exist as third-party copies inside
+    # agentic-awesome-skills, and the official vendored version must win.
+    if [ -d "$BASE_DIR/anthropic-skills/skills" ]; then
+        process_skills_source "anthropic-skills" "$BASE_DIR/anthropic-skills/skills"
+    fi
+
     # Create final unified skills index with metadata.
     # All paths are passed via environment variables; no shell values are
     # interpolated into the Python source.
     log_info "Creating unified skills index..."
     SKILLS_META_FILE="$SKILLS_META" SKILLS_INDEX_OUT="$SKILLS_DIR/all-skills.json" \
+    BASE_DIR_FOR_INDEX="$BASE_DIR" \
     python3 -c "
 import json
 import os
@@ -561,8 +579,90 @@ from datetime import datetime
 
 meta_path = os.environ['SKILLS_META_FILE']
 out_path = os.environ['SKILLS_INDEX_OUT']
+base_dir = os.environ.get('BASE_DIR_FOR_INDEX', '')
 
-skills = []
+
+def mini_frontmatter_parse(fm_lines):
+    # Parse the YAML subset used by SKILL.md frontmatter: plain/quoted
+    # scalars, folded and literal block scalars (>, >-, |, |-) and dash
+    # lists. Fallback when PyYAML is unavailable. Values are data only.
+    data = {}
+    key = None
+    mode = None  # None | 'scalar' | 'block' | 'list'
+    buf = []
+
+    def flush():
+        if key is None:
+            return
+        if mode == 'list':
+            data[key] = [b for b in buf if b]
+        elif mode == 'block':
+            data[key] = ' '.join(part.strip() for part in buf).strip()
+        else:
+            data[key] = buf[0] if buf else ''
+
+    for raw in fm_lines:
+        line = raw.rstrip('\n')
+        if not line.strip():
+            continue
+        indented = line[:1] in (' ', '\t')
+        s = line.strip()
+        if mode == 'block' and indented:
+            buf.append(s)
+            continue
+        if mode == 'list' and indented:
+            if s.startswith('-'):
+                buf.append(s[1:].strip().strip('\"\''))
+            continue
+        if indented or s.startswith('#') or ':' not in s:
+            continue
+        flush()
+        k, _, v = s.partition(':')
+        key = k.strip()
+        v = v.strip()
+        if v in ('>', '>-', '>+', '|', '|-', '|+'):
+            mode = 'block'
+            buf = []
+        elif v == '':
+            mode = 'list'
+            buf = []
+        else:
+            mode = 'scalar'
+            buf = [v.strip('\"\'')]
+            flush()
+    flush()
+    return data
+
+
+def parse_frontmatter_file(path):
+    # Return the frontmatter dict of a SKILL.md file (best effort).
+    try:
+        with open(path, 'r', encoding='utf-8', errors='replace') as f:
+            lines = f.read().split('\n')
+    except OSError:
+        return {}
+    if not lines or lines[0].strip() != '---':
+        return {}
+    fm_lines = []
+    closed = False
+    for line in lines[1:]:
+        if line.strip() == '---':
+            closed = True
+            break
+        fm_lines.append(line)
+    if not closed:
+        return {}
+    try:
+        import yaml
+        data = yaml.safe_load('\n'.join(fm_lines))
+        if isinstance(data, dict):
+            return data
+    except Exception:
+        pass
+    return mini_frontmatter_parse(fm_lines)
+
+
+skills_by_name = {}
 with open(meta_path, 'r', encoding='utf-8', errors='replace') as f:
     content = f.read()
 
@@ -570,19 +670,61 @@ for record in content.split('\x1e'):
     if not record.strip():
         continue
     fields = record.split('\x1f')
-    while len(fields) < 7:
+    while len(fields) < 8:
         fields.append('')
-    name, category, description, risk, source, tags, tools = fields[:7]
-    skills.append({
+    name, category, description, risk, source, tags, tools, skill_file = fields[:8]
+
+    # Re-parse the frontmatter from the source file so that multi-line
+    # YAML values (block scalars such as '>-') become real descriptions
+    # in the index. The awk-extracted fields above remain the fallback.
+    fm = parse_frontmatter_file(skill_file) if skill_file else {}
+
+    fm_desc = fm.get('description')
+    if isinstance(fm_desc, str) and fm_desc.strip():
+        description = fm_desc.strip()
+
+    fm_tags = fm.get('tags') if isinstance(fm.get('tags'), list) else []
+    tag_list = [str(t).strip() for t in fm_tags if str(t).strip()]
+    if not tag_list:
+        tag_list = [t.strip() for t in tags.split('\n') if t.strip()]
+
+    fm_tools = fm.get('tools') if isinstance(fm.get('tools'), list) else []
+    tool_list = [str(t).strip() for t in fm_tools if str(t).strip()]
+    if not tool_list:
+        tool_list = [t.strip() for t in tools.split('\n') if t.strip()]
+
+    skills_dir_root = os.path.dirname(out_path)
+    agg_path = os.path.join(skills_dir_root, 'by-category', category, name, 'SKILL.md')
+    try:
+        rel_agg = os.path.relpath(agg_path, base_dir) if base_dir else agg_path
+    except ValueError:
+        rel_agg = agg_path
+
+    source_path = ''
+    if skill_file and base_dir:
+        try:
+            source_path = os.path.relpath(skill_file, base_dir)
+        except ValueError:
+            source_path = skill_file
+
+    skills_by_name[name] = {
         'name': name,
         'category': category,
         'description': description,
         'risk': risk,
         'source': source,
-        'tags': [t.strip() for t in tags.split('\n') if t.strip()],
-        'tools': [t.strip() for t in tools.split('\n') if t.strip()],
-        'when_to_use': description
-    })
+        'tags': tag_list,
+        'tools': tool_list,
+        'when_to_use': description,
+        'path': rel_agg,
+        'source_path': source_path
+    }
+
+# Later sources win name collisions, mirroring the by-directory overwrite
+# semantics in process_skills_source (aggregation order: agentic, ECC,
+# Ponytail, Superpowers, replica-skill, anthropic-skills - so the official
+# Anthropic version replaces third-party copies of the same skill name).
+skills = list(skills_by_name.values())
 
 # Count categories
 categories = {}
@@ -596,10 +738,13 @@ for skill in skills:
     for tool in skill.get('tools', []):
         agent_counts[tool] = agent_counts.get(tool, 0) + 1
 
+# Sources in first-seen order (avoids a hardcoded list drifting out of sync)
+sources_seen = list(dict.fromkeys(s['source'] for s in skills))
+
 # Create final unified index
 unified = {
-    'version': '1.0',
-    'sources': ['agentic-awesome-skills', 'ECC', 'Ponytail', 'Superpowers', 'replica-skill'],
+    'version': '1.1',
+    'sources': sources_seen,
     'skills': skills,
     'total_skills': len(skills),
     'categories': categories,
@@ -616,6 +761,23 @@ print(f'Unified skills index created with {len(skills)} skills')
 
     # Clean up temp file
     rm -f "$SKILLS_META"
+
+    # Frontmatter parsing quality gate: block-scalar markers that
+    # survived into descriptions indicate a parsing gap.
+    BAD_DESC=$(SKILLS_INDEX_OUT="$SKILLS_DIR/all-skills.json" python3 -c "
+import json, os
+with open(os.environ['SKILLS_INDEX_OUT'], encoding='utf-8') as f:
+    data = json.load(f)
+bad = sum(1 for s in data['skills']
+          if (s.get('description') or '').strip() in ('>', '>-', '>+', '|', '|-', '|+'))
+print(bad)
+") || BAD_DESC="?"
+    BAD_DESC="${BAD_DESC:-?}"
+    if [ "$BAD_DESC" = "0" ]; then
+        log_success "All skill descriptions parsed (no block-scalar placeholders)"
+    else
+        log_warn "Index still contains ${BAD_DESC} block-scalar placeholder descriptions"
+    fi
 
     log_success "Skills aggregation complete"
 }
@@ -1343,6 +1505,10 @@ create_claude_code_config() {
 - Source: $UNIFIED_DIR/skills
 - Auto-load: true
 - Categories: all
+- Native activation: curated set (anthropic-skills + replica-skill) is
+  symlinked into ~/.claude/skills/ and ~/.agents/skills/ at setup time;
+  add more with: bash $UNIFIED_DIR/scripts/link-skills.sh --set all
+- Task-to-capability mapping: python3 $UNIFIED_DIR/scripts/registry.py map "<task>"
 
 ## Memory (claude-mem)
 - Enabled: true
@@ -1437,9 +1603,15 @@ $UNIFIED_DIR/compression/compress.sh <input-file> <auto|code|logs|json|markdown|
 ### Reference system prompt
 $UNIFIED_DIR/prompts/codex-system-prompt.txt
 
-### Optional: native skill discovery
-To make individual skills auto-discoverable, symlink their folders into
-~/.agents/skills/ (the cross-agent Agent Skills standard location).
+### Native skills (auto-discovered)
+A curated set (anthropic-skills 19 + replica-skill 11) is symlinked into
+~/.claude/skills/ and ~/.agents/skills/ by setup.sh, so Agent Skills
+compatible harnesses pick it up automatically. Add more:
+bash $UNIFIED_DIR/scripts/link-skills.sh --set superpowers|<skill-name>|--all
+
+### Task-to-capability mapping
+python3 $UNIFIED_DIR/scripts/registry.py map "<task description>"
+(covers skills, catalog plugins and MCP servers in one query)
 EOF
     merge_agents_md "$CODEX_DIR/AGENTS.md" "$AGENTS_SECTION_FILE"
     rm -f "$AGENTS_SECTION_FILE"
@@ -1482,6 +1654,9 @@ create_opencode_config() {
 - Native discovery: the skills array in opencode.json points at
   $UNIFIED_DIR/skills/by-category (narrow it to specific categories
   to reduce per-session skill metadata).
+- Native activation: a curated set (anthropic-skills + replica-skill) is
+  also symlinked into ~/.agents/skills/ by setup.sh; add more with
+  bash $UNIFIED_DIR/scripts/link-skills.sh --set all
 
 ### Persistent memory (cross-session)
 Invoke memory explicitly (no automatic hooks):
@@ -1528,6 +1703,10 @@ alwaysApply: false
 - Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py cursor "<task description>"
 - Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
 - Full index: $UNIFIED_DIR/skills/all-skills.json
+- Task-to-capability mapping (skills + plugins + MCP):
+  python3 $UNIFIED_DIR/scripts/registry.py map "<task description>"
+- Native activation: curated set symlinked into ~/.agents/skills/ by
+  setup.sh; add more: bash $UNIFIED_DIR/scripts/link-skills.sh --set all
 
 ### Persistent memory (cross-session)
 Invoke memory explicitly:
@@ -1574,6 +1753,10 @@ create_gemini_config() {
 - Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py gemini-cli "<task description>"
 - Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
 - Full index: $UNIFIED_DIR/skills/all-skills.json
+- Task-to-capability mapping (skills + plugins + MCP):
+  python3 $UNIFIED_DIR/scripts/registry.py map "<task description>"
+- Native activation: curated set symlinked into ~/.agents/skills/ by
+  setup.sh; add more: bash $UNIFIED_DIR/scripts/link-skills.sh --set all
 
 ### Persistent memory (cross-session)
 Invoke memory explicitly:
@@ -1626,6 +1809,10 @@ create_windsurf_config() {
 - Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py windsurf "<task description>"
 - Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
 - Full index: $UNIFIED_DIR/skills/all-skills.json
+- Task-to-capability mapping (skills + plugins + MCP):
+  python3 $UNIFIED_DIR/scripts/registry.py map "<task description>"
+- Native activation: curated set symlinked into ~/.agents/skills/ by
+  setup.sh; add more: bash $UNIFIED_DIR/scripts/link-skills.sh --set all
 
 ### Persistent memory (cross-session)
 Invoke memory explicitly:
@@ -2264,6 +2451,31 @@ EOF
     log_success "Compression utility created"
 }
 
+# Build the unified capability registry (skills + plugins + MCP mapping)
+# from the freshly aggregated index. Non-fatal: the committed
+# agent-registry.json remains a usable fallback.
+build_registry() {
+    log_info "Building capability registry (skills + plugins + MCP)..."
+    if python3 "$UNIFIED_DIR/scripts/registry.py" build --quiet; then
+        log_success "Capability registry built ($UNIFIED_DIR/skills/agent-registry.json)"
+    else
+        log_warn "Registry build failed - run scripts/registry.py build manually"
+    fi
+}
+
+# Link curated skills into the native skill directories that agents read
+# automatically at runtime (Claude Code: ~/.claude/skills, Agent Skills
+# standard: ~/.agents/skills). Failure is non-fatal: the full catalog
+# stays reachable through the loader utilities.
+link_native_skills() {
+    log_info "Linking curated skills into native agent skill directories..."
+    if bash "$UNIFIED_DIR/scripts/link-skills.sh" --quiet; then
+        log_success "Native skill activation complete (~/.claude/skills, ~/.agents/skills)"
+    else
+        log_warn "Native skill linking failed - agents still reach the full catalog via the loader"
+    fi
+}
+
 # Main setup flow
 main() {
     echo "========================================"
@@ -2277,9 +2489,11 @@ main() {
     detect_agents
     setup_prompts
     aggregate_skills
+    build_registry
     setup_memory
     setup_compression
     create_agent_configs
+    link_native_skills
     create_launcher
     create_skills_loader
     create_memory_util
@@ -2296,6 +2510,8 @@ main() {
     echo "  1. Run: $UNIFIED_DIR/memory/init-memory.sh"
     echo "  2. Launch enhanced agent: $UNIFIED_DIR/launch-agent.sh <agent>"
     echo "  3. Or use: agent-enhanced <agent> (if symlink created)"
+    echo "  4. Link more skills natively: $UNIFIED_DIR/scripts/link-skills.sh --set all"
+    echo "  5. Map capabilities for a task: python3 $UNIFIED_DIR/scripts/registry.py map \"<task>\""
     echo ""
     echo "Config files created in:"
     echo "  - $UNIFIED_DIR/config/"
@@ -2313,6 +2529,10 @@ main() {
     echo "  - ~/.codeium/windsurf/rules/agent-enhancements.md (Windsurf: global rule)"
     echo "  - ~/.config/github-copilot/config.yaml          (Copilot: reference config)"
     echo "  - ~/.kiro/config.yaml                           (Kiro: reference config)"
+    echo ""
+    echo "Native skill activation (all Agent Skills compatible harnesses):"
+    echo "  - ~/.claude/skills/   curated set linked (Claude Code auto-discovery)"
+    echo "  - ~/.agents/skills/   curated set linked (cross-agent standard)"
     echo ""
     echo "Environment variables for customization:"
     echo "  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: repository root detected from setup.sh location)"

@@ -1499,6 +1499,10 @@ create_claude_code_config() {
 - Source: $UNIFIED_DIR/skills
 - Auto-load: true
 - Categories: all
+- Native activation: curated set (anthropic-skills + replica-skill) is
+  symlinked into ~/.claude/skills/ and ~/.agents/skills/ at setup time;
+  add more with: bash $UNIFIED_DIR/scripts/link-skills.sh --set all
+- Task-to-capability mapping: python3 $UNIFIED_DIR/scripts/registry.py map "<task>"
 
 ## Memory (claude-mem)
 - Enabled: true
@@ -1593,9 +1597,15 @@ $UNIFIED_DIR/compression/compress.sh <input-file> <auto|code|logs|json|markdown|
 ### Reference system prompt
 $UNIFIED_DIR/prompts/codex-system-prompt.txt
 
-### Optional: native skill discovery
-To make individual skills auto-discoverable, symlink their folders into
-~/.agents/skills/ (the cross-agent Agent Skills standard location).
+### Native skills (auto-discovered)
+A curated set (anthropic-skills 19 + replica-skill 11) is symlinked into
+~/.claude/skills/ and ~/.agents/skills/ by setup.sh, so Agent Skills
+compatible harnesses pick it up automatically. Add more:
+bash $UNIFIED_DIR/scripts/link-skills.sh --set superpowers|<skill-name>|--all
+
+### Task-to-capability mapping
+python3 $UNIFIED_DIR/scripts/registry.py map "<task description>"
+(covers skills, catalog plugins and MCP servers in one query)
 EOF
     merge_agents_md "$CODEX_DIR/AGENTS.md" "$AGENTS_SECTION_FILE"
     rm -f "$AGENTS_SECTION_FILE"
@@ -1638,6 +1648,9 @@ create_opencode_config() {
 - Native discovery: the skills array in opencode.json points at
   $UNIFIED_DIR/skills/by-category (narrow it to specific categories
   to reduce per-session skill metadata).
+- Native activation: a curated set (anthropic-skills + replica-skill) is
+  also symlinked into ~/.agents/skills/ by setup.sh; add more with
+  bash $UNIFIED_DIR/scripts/link-skills.sh --set all
 
 ### Persistent memory (cross-session)
 Invoke memory explicitly (no automatic hooks):
@@ -1684,6 +1697,10 @@ alwaysApply: false
 - Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py cursor "<task description>"
 - Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
 - Full index: $UNIFIED_DIR/skills/all-skills.json
+- Task-to-capability mapping (skills + plugins + MCP):
+  python3 $UNIFIED_DIR/scripts/registry.py map "<task description>"
+- Native activation: curated set symlinked into ~/.agents/skills/ by
+  setup.sh; add more: bash $UNIFIED_DIR/scripts/link-skills.sh --set all
 
 ### Persistent memory (cross-session)
 Invoke memory explicitly:
@@ -1730,6 +1747,10 @@ create_gemini_config() {
 - Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py gemini-cli "<task description>"
 - Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
 - Full index: $UNIFIED_DIR/skills/all-skills.json
+- Task-to-capability mapping (skills + plugins + MCP):
+  python3 $UNIFIED_DIR/scripts/registry.py map "<task description>"
+- Native activation: curated set symlinked into ~/.agents/skills/ by
+  setup.sh; add more: bash $UNIFIED_DIR/scripts/link-skills.sh --set all
 
 ### Persistent memory (cross-session)
 Invoke memory explicitly:
@@ -1782,6 +1803,10 @@ create_windsurf_config() {
 - Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py windsurf "<task description>"
 - Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
 - Full index: $UNIFIED_DIR/skills/all-skills.json
+- Task-to-capability mapping (skills + plugins + MCP):
+  python3 $UNIFIED_DIR/scripts/registry.py map "<task description>"
+- Native activation: curated set symlinked into ~/.agents/skills/ by
+  setup.sh; add more: bash $UNIFIED_DIR/scripts/link-skills.sh --set all
 
 ### Persistent memory (cross-session)
 Invoke memory explicitly:
@@ -2420,6 +2445,19 @@ EOF
     log_success "Compression utility created"
 }
 
+# Link curated skills into the native skill directories that agents read
+# automatically at runtime (Claude Code: ~/.claude/skills, Agent Skills
+# standard: ~/.agents/skills). Failure is non-fatal: the full catalog
+# stays reachable through the loader utilities.
+link_native_skills() {
+    log_info "Linking curated skills into native agent skill directories..."
+    if bash "$UNIFIED_DIR/scripts/link-skills.sh" --quiet; then
+        log_success "Native skill activation complete (~/.claude/skills, ~/.agents/skills)"
+    else
+        log_warn "Native skill linking failed - agents still reach the full catalog via the loader"
+    fi
+}
+
 # Main setup flow
 main() {
     echo "========================================"
@@ -2436,6 +2474,7 @@ main() {
     setup_memory
     setup_compression
     create_agent_configs
+    link_native_skills
     create_launcher
     create_skills_loader
     create_memory_util
@@ -2452,6 +2491,8 @@ main() {
     echo "  1. Run: $UNIFIED_DIR/memory/init-memory.sh"
     echo "  2. Launch enhanced agent: $UNIFIED_DIR/launch-agent.sh <agent>"
     echo "  3. Or use: agent-enhanced <agent> (if symlink created)"
+    echo "  4. Link more skills natively: $UNIFIED_DIR/scripts/link-skills.sh --set all"
+    echo "  5. Map capabilities for a task: python3 $UNIFIED_DIR/scripts/registry.py map \"<task>\""
     echo ""
     echo "Config files created in:"
     echo "  - $UNIFIED_DIR/config/"
@@ -2469,6 +2510,10 @@ main() {
     echo "  - ~/.codeium/windsurf/rules/agent-enhancements.md (Windsurf: global rule)"
     echo "  - ~/.config/github-copilot/config.yaml          (Copilot: reference config)"
     echo "  - ~/.kiro/config.yaml                           (Kiro: reference config)"
+    echo ""
+    echo "Native skill activation (all Agent Skills compatible harnesses):"
+    echo "  - ~/.claude/skills/   curated set linked (Claude Code auto-discovery)"
+    echo "  - ~/.agents/skills/   curated set linked (cross-agent standard)"
     echo ""
     echo "Environment variables for customization:"
     echo "  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: repository root detected from setup.sh location)"

@@ -10,6 +10,49 @@ audience: all
 All notable changes to the owned integration layer of this repository.
 Vendored projects change upstream; see their own histories.
 
+## [Unreleased] — 2026-11-13 — Production readiness
+
+### Fixed
+- **Merge**: `audit/deep-review` remediation (13 commits) merged into the
+  master line; master had continued on the broken pipeline (all 21 findings
+  of the 2026-11-01 audit were still live). Conflicts resolved to keep both
+  the fixes and the plugin-catalog/replica-skill features.
+- **Codex activation was a no-op**: setup wrote `~/.codex/config.yaml`,
+  which Codex never reads. Setup now writes a marker-guarded integration
+  section into `~/.codex/AGENTS.md` (Codex's real instruction channel) and
+  removes the stale YAML (signature-checked).
+- **OpenCode activation was a no-op**: setup wrote `config.json` with
+  fictional keys; OpenCode only reads `opencode.json` per its official
+  schema. Setup now merges a schema-valid `opencode.json`
+  (`instructions` + `skills` arrays) plus a marker-guarded `AGENTS.md`.
+- **Cursor**: no longer pollutes the real `~/.cursor/settings.json` with
+  fictional keys; writes `~/.cursor/rules/agent-enhancements.mdc` instead.
+- **Windsurf**: writes `~/.codeium/windsurf/rules/agent-enhancements.md`
+  (Windsurf never read `~/.windsurf/config.yaml`).
+- **Gemini CLI**: activation now also writes `~/.gemini/GEMINI.md` (the
+  hierarchical global context file), not just the reference YAML.
+- **README install instructions**: one-liner now points at
+  `AgentEnhancements/master` (was `agent-enhancements/main` - 404).
+
+### Changed
+- **Plugin catalog URLs**: 13 manifests + `catalog.json` + category READMEs
+  updated with verified repository URLs (12 org-root-only placeholders, 3
+  typos: `heygen-con`→`heygen-com`, `Egomex-AI`→`Egonex-AI`,
+  `marloto/REA`→`morluto/rea`).
+- **Unified index regenerated**: 3,127 skills from 5 sources
+  (replica-skill now included); prompt files refreshed from the vendored
+  collection; memory-hook files synced with the generator (trailing
+  newline).
+- **`.gitignore`**: generated registry trees (`by-agent/`,
+  `by-category/*` except the committed flat samples) ignored so a setup
+  run no longer dirties `git status`.
+
+### Added
+- `docs/audit/PRODUCTION_READINESS_AUDIT.md` - end-to-end audit report
+  (19 findings: 3 critical, 5 high, 6 medium, 5 low; all fixable ones
+  remediated).
+- `merge_agents_md` helper in `setup.sh`: marker-guarded, idempotent
+  merging of instruction files (user content preserved across re-runs).
 
 ## [Unreleased] — 2026-11-13 — Plugin Catalog + Replica Skill
 

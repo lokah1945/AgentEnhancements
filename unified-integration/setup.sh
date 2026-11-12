@@ -1234,6 +1234,47 @@ with open(target, 'w') as f:
     log_success "Merged enhancement into $target_file (hooks replaced, other keys preserved)"
 }
 
+# Merge a marker-guarded markdown section into an AGENTS.md-style file
+# (used for Codex and OpenCode global instructions). Content outside the
+# markers is always preserved, so user-maintained instructions survive
+# repeated setup runs.
+merge_agents_md() {
+    local target_file="$1"
+    local section_file="$2"
+
+    AGENTS_MD_TARGET="$target_file" AGENTS_MD_SECTION_FILE="$section_file" \
+    python3 -c "
+import os
+
+target = os.environ['AGENTS_MD_TARGET']
+section_file = os.environ['AGENTS_MD_SECTION_FILE']
+BEGIN = '<!-- agent-enhancements:begin -->'
+END = '<!-- agent-enhancements:end -->'
+
+with open(section_file, 'r', encoding='utf-8') as f:
+    section = f.read().rstrip()
+
+existing = ''
+if os.path.exists(target):
+    with open(target, 'r', encoding='utf-8', errors='replace') as f:
+        existing = f.read()
+
+block = BEGIN + '\n' + section + '\n' + END
+if BEGIN in existing and END in existing:
+    pre, rest = existing.split(BEGIN, 1)
+    _, post = rest.split(END, 1)
+    merged = pre + block + post
+elif existing.strip():
+    merged = existing.rstrip() + '\n\n' + block + '\n'
+else:
+    merged = block + '\n'
+
+os.makedirs(os.path.dirname(target), exist_ok=True)
+with open(target, 'w', encoding='utf-8') as f:
+    f.write(merged)
+"
+}
+
 # Merge YAML configs using Python - replace hooks, preserve other keys
 merge_yaml_config() {
     local target_file="$1"
@@ -1367,92 +1408,183 @@ create_codex_config() {
     CODEX_DIR="$HOME/.codex"
     mkdir -p "$CODEX_DIR"
 
-    ENHANCEMENT_YAML='
-system_prompt: "@'"$UNIFIED_DIR"'/prompts/codex-system-prompt.txt"
+    # Codex CLI reads ~/.codex/AGENTS.md for global instructions and
+    # ~/.codex/config.toml (TOML) for settings. It has no native
+    # skills/memory/hooks config keys, so the integration is delivered as
+    # instructions in AGENTS.md. (Older setup versions wrote config.yaml,
+    # which Codex never reads; it is cleaned up below.)
+    AGENTS_SECTION_FILE="$(mktemp "${TMPDIR:-/tmp}/codex-agents.XXXXXX")"
+    cat > "$AGENTS_SECTION_FILE" << EOF
+## AgentEnhancements integration
 
-skills:
-  directory: "'"$UNIFIED_DIR"'/skills"
-  auto_load: true
+### Skills catalog (3,000+ skills, on-demand)
+- Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py codex "<task description>"
+- Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
+- Full index: $UNIFIED_DIR/skills/all-skills.json
 
-memory:
-  enabled: true
-  plugin: "'"$BASE_DIR"'/claude-mem/.codex-plugin"
+When a task matches a skill in the catalog, load its SKILL.md and follow it.
 
-compression:
-  enabled: true
-  engine: "headroom"
-  budget: 128000
+### Persistent memory (cross-session)
+Codex has no automatic hook system, so invoke memory explicitly:
+- Task start: python3 $UNIFIED_DIR/scripts/memory.py codex load "project_context"
+- After a decision: python3 $UNIFIED_DIR/scripts/memory.py codex save "<key>" "<value>"
+- List memories: python3 $UNIFIED_DIR/scripts/memory.py codex list
 
-hooks:
-  pre_tool: "'"$UNIFIED_DIR"'/memory/hooks/codex-memory-hook.py save"
-  post_tool: "'"$UNIFIED_DIR"'/memory/hooks/codex-memory-hook.py save"
-  stop: "'"$UNIFIED_DIR"'/memory/hooks/codex-memory-hook.py save session_end"
-'
-    merge_yaml_config "$CODEX_DIR/config.yaml" "$ENHANCEMENT_YAML"
-    log_success "Codex configuration merged"
+### Context compression
+For long transcripts:
+$UNIFIED_DIR/compression/compress.sh <input-file> <auto|code|logs|json|markdown|generic>
+
+### Reference system prompt
+$UNIFIED_DIR/prompts/codex-system-prompt.txt
+
+### Optional: native skill discovery
+To make individual skills auto-discoverable, symlink their folders into
+~/.agents/skills/ (the cross-agent Agent Skills standard location).
+EOF
+    merge_agents_md "$CODEX_DIR/AGENTS.md" "$AGENTS_SECTION_FILE"
+    rm -f "$AGENTS_SECTION_FILE"
+
+    # Remove the stale config.yaml written by older setup versions
+    # (signature-checked: only files carrying our integration keys).
+    if [ -f "$CODEX_DIR/config.yaml" ] && grep -q '^system_prompt: "@' "$CODEX_DIR/config.yaml" 2>/dev/null; then
+        rm -f "$CODEX_DIR/config.yaml"
+        log_info "Removed stale ~/.codex/config.yaml (Codex reads config.toml, never YAML)"
+    fi
+
+    log_success "Codex configuration merged (~/.codex/AGENTS.md)"
 }
 
 create_opencode_config() {
     OPENCODE_DIR="$HOME/.config/opencode"
     mkdir -p "$OPENCODE_DIR"
 
+    # OpenCode reads ~/.config/opencode/opencode.json (schema:
+    # https://opencode.ai/config.json) - NOT config.json. Valid keys used
+    # here: "instructions" (extra instruction files) and "skills" (skill
+    # directories; OpenCode scans grouping directories up to six levels,
+    # so by-category/<category>/<skill>/SKILL.md is discovered).
     ENHANCEMENT_JSON='{
-  "systemPrompt": "@'"$UNIFIED_DIR"'/prompts/opencode-system-prompt.txt",
-  "skills": {
-    "directory": "'"$UNIFIED_DIR"'/skills",
-    "autoLoad": true
-  },
-  "memory": {
-    "enabled": true,
-    "plugin": "'"$BASE_DIR"'/claude-mem/.opencode"
-  },
-  "compression": {
-    "enabled": true,
-    "engine": "headroom",
-    "budget": 100000
-  },
-  "hooks": {
-    "preTool": "'"$UNIFIED_DIR"'/memory/hooks/opencode-memory-hook.py save",
-    "postTool": "'"$UNIFIED_DIR"'/memory/hooks/opencode-memory-hook.py save",
-    "stop": "'"$UNIFIED_DIR"'/memory/hooks/opencode-memory-hook.py save session_end"
-  }
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["'"$UNIFIED_DIR"'/prompts/opencode-system-prompt.txt"],
+  "skills": ["'"$UNIFIED_DIR"'/skills/by-category"]
 }'
-    merge_json_config "$OPENCODE_DIR/config.json" "$ENHANCEMENT_JSON"
-    log_success "OpenCode configuration merged"
+    merge_json_config "$OPENCODE_DIR/opencode.json" "$ENHANCEMENT_JSON"
+
+    # Global instructions, marker-guarded (user content preserved)
+    AGENTS_SECTION_FILE="$(mktemp "${TMPDIR:-/tmp}/opencode-agents.XXXXXX")"
+    cat > "$AGENTS_SECTION_FILE" << EOF
+## AgentEnhancements integration
+
+### Skills catalog (3,000+ skills, on-demand)
+- Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py opencode "<task description>"
+- Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
+- Full index: $UNIFIED_DIR/skills/all-skills.json
+- Native discovery: the skills array in opencode.json points at
+  $UNIFIED_DIR/skills/by-category (narrow it to specific categories
+  to reduce per-session skill metadata).
+
+### Persistent memory (cross-session)
+Invoke memory explicitly (no automatic hooks):
+- python3 $UNIFIED_DIR/scripts/memory.py opencode save "<key>" "<value>"
+- python3 $UNIFIED_DIR/scripts/memory.py opencode load "<key>"
+
+### Context compression
+$UNIFIED_DIR/compression/compress.sh <input-file> <auto|code|logs|json|markdown|generic>
+
+### Reference system prompt
+$UNIFIED_DIR/prompts/opencode-system-prompt.txt
+EOF
+    merge_agents_md "$OPENCODE_DIR/AGENTS.md" "$AGENTS_SECTION_FILE"
+    rm -f "$AGENTS_SECTION_FILE"
+
+    # Remove the stale config.json written by older setup versions
+    # (signature-checked: only files carrying our fictional keys).
+    if [ -f "$OPENCODE_DIR/config.json" ] && grep -q '"systemPrompt"' "$OPENCODE_DIR/config.json" 2>/dev/null; then
+        rm -f "$OPENCODE_DIR/config.json"
+        log_info "Removed stale ~/.config/opencode/config.json (OpenCode reads opencode.json)"
+    fi
+
+    log_success "OpenCode configuration merged (~/.config/opencode/opencode.json + AGENTS.md)"
 }
 
 create_cursor_config() {
-    CURSOR_DIR="$HOME/.cursor"
-    mkdir -p "$CURSOR_DIR"
+    # Cursor reads rules from ~/.cursor/rules/*.mdc (global rules) or
+    # .cursor/rules/ per project. settings.json is Cursor's real settings
+    # file and must not carry integration keys, so the legacy fictional
+    # keys are removed from it (signature-checked) and the integration
+    # moves to a global rule.
+    CURSOR_RULES_DIR="$HOME/.cursor/rules"
+    mkdir -p "$CURSOR_RULES_DIR"
 
-    ENHANCEMENT_JSON='{
-  "systemPrompt": "@'"$UNIFIED_DIR"'/prompts/cursor-system-prompt.txt",
-  "skills": {
-    "directory": "'"$UNIFIED_DIR"'/skills",
-    "autoLoad": true
-  },
-  "memory": {
-    "enabled": true,
-    "plugin": "'"$BASE_DIR"'/claude-mem/.cursor-plugin"
-  },
-  "compression": {
-    "enabled": true,
-    "engine": "headroom",
-    "budget": 128000
-  },
-  "hooks": {
-    "preTool": "'"$UNIFIED_DIR"'/memory/hooks/cursor-memory-hook.py save",
-    "postTool": "'"$UNIFIED_DIR"'/memory/hooks/cursor-memory-hook.py save",
-    "stop": "'"$UNIFIED_DIR"'/memory/hooks/cursor-memory-hook.py save session_end"
-  }
-}'
-    merge_json_config "$CURSOR_DIR/settings.json" "$ENHANCEMENT_JSON"
-    log_success "Cursor configuration merged"
+    # .mdc rule with frontmatter; invoked based on relevance (not alwaysApply)
+    cat > "$CURSOR_RULES_DIR/agent-enhancements.mdc" << EOF
+---
+description: AgentEnhancements skills catalog, memory and context compression
+alwaysApply: false
+---
+## AgentEnhancements integration
+
+### Skills catalog (3,000+ skills, on-demand)
+- Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py cursor "<task description>"
+- Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
+- Full index: $UNIFIED_DIR/skills/all-skills.json
+
+### Persistent memory (cross-session)
+Invoke memory explicitly:
+- python3 $UNIFIED_DIR/scripts/memory.py cursor save "<key>" "<value>"
+- python3 $UNIFIED_DIR/scripts/memory.py cursor load "<key>"
+
+### Context compression
+$UNIFIED_DIR/compression/compress.sh <input-file> <auto|code|logs|json|markdown|generic>
+EOF
+
+    # Remove fictional integration keys that older setup versions merged
+    # into Cursor's real settings file (signature-checked).
+    local settings_file="$HOME/.cursor/settings.json"
+    if [ -f "$settings_file" ] && grep -q '"systemPrompt"' "$settings_file" 2>/dev/null; then
+        SETTINGS_FILE="$settings_file" python3 -c "
+import json, os
+path = os.environ['SETTINGS_FILE']
+with open(path, 'r', encoding='utf-8') as f:
+    data = json.load(f)
+for key in ('systemPrompt', 'skills', 'memory', 'compression', 'hooks'):
+    data.pop(key, None)
+with open(path, 'w', encoding='utf-8') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+"
+        log_info "Cleaned fictional integration keys from ~/.cursor/settings.json"
+    fi
+
+    log_success "Cursor configuration merged (~/.cursor/rules/agent-enhancements.mdc)"
 }
 
 create_gemini_config() {
     GEMINI_DIR="$HOME/.gemini"
     mkdir -p "$GEMINI_DIR"
+
+    # Gemini CLI reads ~/.gemini/GEMINI.md as the global context file
+    # (hierarchical memory). That is the activation channel; the YAML
+    # below remains as a reference summary of the integration settings.
+    AGENTS_SECTION_FILE="$(mktemp "${TMPDIR:-/tmp}/gemini-agents.XXXXXX")"
+    cat > "$AGENTS_SECTION_FILE" << EOF
+## AgentEnhancements integration
+
+### Skills catalog (3,000+ skills, on-demand)
+- Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py gemini-cli "<task description>"
+- Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
+- Full index: $UNIFIED_DIR/skills/all-skills.json
+
+### Persistent memory (cross-session)
+Invoke memory explicitly:
+- python3 $UNIFIED_DIR/scripts/memory.py gemini-cli save "<key>" "<value>"
+- python3 $UNIFIED_DIR/scripts/memory.py gemini-cli load "<key>"
+
+### Context compression
+$UNIFIED_DIR/compression/compress.sh <input-file> <auto|code|logs|json|markdown|generic>
+EOF
+    merge_agents_md "$GEMINI_DIR/GEMINI.md" "$AGENTS_SECTION_FILE"
+    rm -f "$AGENTS_SECTION_FILE"
 
     ENHANCEMENT_YAML='
 system_prompt: "@'"$UNIFIED_DIR"'/prompts/gemini-cli-system-prompt.txt"
@@ -1476,31 +1608,45 @@ hooks:
   stop: "'"$UNIFIED_DIR"'/memory/hooks/gemini-cli-memory-hook.py save session_end"
 '
     merge_yaml_config "$GEMINI_DIR/config.yaml" "$ENHANCEMENT_YAML"
-    log_success "Gemini CLI configuration merged"
+    log_success "Gemini CLI configuration merged (~/.gemini/GEMINI.md + reference config.yaml)"
 }
 
 create_windsurf_config() {
-    WINDSURF_DIR="$HOME/.windsurf"
-    mkdir -p "$WINDSURF_DIR"
+    # Windsurf reads global rules from ~/.codeium/windsurf/rules/.
+    # The legacy ~/.windsurf/config.yaml was never read by Windsurf and is
+    # cleaned up below (signature-checked).
+    WINDSURF_RULES_DIR="$HOME/.codeium/windsurf/rules"
+    mkdir -p "$WINDSURF_RULES_DIR"
 
-    ENHANCEMENT_YAML='
-system_prompt: "@'"$UNIFIED_DIR"'/prompts/windsurf-system-prompt.txt"
+    AGENTS_SECTION_FILE="$(mktemp "${TMPDIR:-/tmp}/windsurf-agents.XXXXXX")"
+    cat > "$AGENTS_SECTION_FILE" << EOF
+## AgentEnhancements integration
 
-skills:
-  directory: "'"$UNIFIED_DIR"'/skills"
-  auto_load: true
+### Skills catalog (3,000+ skills, on-demand)
+- Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py windsurf "<task description>"
+- Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
+- Full index: $UNIFIED_DIR/skills/all-skills.json
 
-memory:
-  enabled: true
-  plugin: "'"$BASE_DIR"'/claude-mem/.windsurf"
+### Persistent memory (cross-session)
+Invoke memory explicitly:
+- python3 $UNIFIED_DIR/scripts/memory.py windsurf save "<key>" "<value>"
+- python3 $UNIFIED_DIR/scripts/memory.py windsurf load "<key>"
 
-compression:
-  enabled: true
-  engine: "headroom"
-  budget: 128000
-'
-    merge_yaml_config "$WINDSURF_DIR/config.yaml" "$ENHANCEMENT_YAML"
-    log_success "Windsurf configuration merged"
+### Context compression
+$UNIFIED_DIR/compression/compress.sh <input-file> <auto|code|logs|json|markdown|generic>
+EOF
+    merge_agents_md "$WINDSURF_RULES_DIR/agent-enhancements.md" "$AGENTS_SECTION_FILE"
+    rm -f "$AGENTS_SECTION_FILE"
+
+    # Remove the stale config.yaml written by older setup versions
+    # (signature-checked: only files carrying our integration keys).
+    local legacy_config="$HOME/.windsurf/config.yaml"
+    if [ -f "$legacy_config" ] && grep -q '^system_prompt: "@' "$legacy_config" 2>/dev/null; then
+        rm -f "$legacy_config"
+        log_info "Removed stale ~/.windsurf/config.yaml (Windsurf reads ~/.codeium/windsurf/rules/)"
+    fi
+
+    log_success "Windsurf configuration merged (~/.codeium/windsurf/rules/agent-enhancements.md)"
 }
 
 create_copilot_config() {
@@ -2158,15 +2304,15 @@ main() {
     echo "  - $UNIFIED_DIR/memory/"
     echo "  - $UNIFIED_DIR/compression/"
     echo ""
-    echo "Agent configs also placed in:"
-    echo "  - ~/.claude/ (Claude Code)"
-    echo "  - ~/.codex/ (Codex)"
-    echo "  - ~/.config/opencode/ (OpenCode)"
-    echo "  - ~/.cursor/ (Cursor)"
-    echo "  - ~/.gemini/ (Gemini CLI)"
-    echo "  - ~/.windsurf/ (Windsurf)"
-    echo "  - ~/.config/github-copilot/ (Copilot)"
-    echo "  - ~/.kiro/ (Kiro)"
+    echo "Agent configs also placed in (per detected agent):"
+    echo "  - ~/.claude/settings.json + CLAUDE.md          (Claude Code: hooks + instructions)"
+    echo "  - ~/.codex/AGENTS.md                            (Codex: global instructions)"
+    echo "  - ~/.config/opencode/opencode.json + AGENTS.md  (OpenCode: schema-valid config + instructions)"
+    echo "  - ~/.cursor/rules/agent-enhancements.mdc        (Cursor: global rule)"
+    echo "  - ~/.gemini/GEMINI.md + config.yaml             (Gemini CLI: global context + reference)"
+    echo "  - ~/.codeium/windsurf/rules/agent-enhancements.md (Windsurf: global rule)"
+    echo "  - ~/.config/github-copilot/config.yaml          (Copilot: reference config)"
+    echo "  - ~/.kiro/config.yaml                           (Kiro: reference config)"
     echo ""
     echo "Environment variables for customization:"
     echo "  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: repository root detected from setup.sh location)"

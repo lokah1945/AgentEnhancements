@@ -7,6 +7,25 @@ audience: all
 
 # Changelog
 
+## 2026-11-14 — Native automation audit
+
+- Sync the local checkout with GitHub while preserving the original dirty
+  state in a stash and backup branch.
+- Install native Claude/Codex lifecycle hooks, an OpenCode 2 plugin, and all
+  nine built MCP servers in the configuration each CLI actually consumes.
+- Preserve user hooks/config arrays, isolate memory by canonical project
+  path, enforce expiry, and avoid persisting raw tool bodies.
+- Repair destructive compression fallback, unrelated skill ranking, updater
+  SIGPIPE, piped installation, task cancellation/timeout, and private MCP state.
+- Make Rust builds opt-in; install Python dependencies in an isolated environment.
+- Validation: 173 integration tests passed (including live network cases),
+  nine stdio MCP probes passed, and all three real CLIs passed a localhost
+  model-fixture smoke test with automatic notes. The vendored ECC suite remains
+  at 8,246 passed / 43 failed; its ten failing files were reproduced unchanged.
+- Account limitations and the local credential finding are documented in the
+  [native automation audit](audit/NATIVE_AUTOMATION_AUDIT_2026-11-14.md).
+
+
 All notable changes to the owned integration layer of this repository.
 Vendored projects change upstream; see their own histories.
 

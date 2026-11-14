@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
-version: 1.1
-last_updated: 2026-11-01
+version: 1.3
+last_updated: 2026-11-14
 audience: users
 ---
 
@@ -30,6 +30,29 @@ Optional. headroom needs a Rust toolchain to build; without it the setup
 logs `cargo not found, will use fallback compression` and continues with
 the built-in Python/shell compression.
 
+## Native activation and accounts
+
+**Codex warns that hooks need review**
+Open `/hooks` and review the AgentEnhancements commands. Once trusted, they run
+on ordinary startup. Changing hook definitions requires another review. Do not
+use a sandbox/approval bypass to solve this.
+
+**OpenCode plugin list is initially empty**
+Plugins initialize asynchronously. Wait for the location to finish warming and
+verify `agentenhancements` has `state.status: active` through `/api/plugin`.
+The adapter targets OpenCode 2.2.5; OpenCode 1 uses a different plugin API.
+
+**Model calls fail with authentication errors**
+Enhancement setup does not create provider accounts. Claude Code requires its
+own login; an expired OpenCode Console/provider key must be replaced through
+that provider's account flow. Native hooks and local MCP health can be tested
+without making paid model calls. Run `bash unified-integration/scripts/setup-mcp.sh --check`
+for the nine built servers' actual protocol tests.
+
+**Existing JSONC comments disappeared**
+Merged JSONC is serialized as JSON to preserve its values safely. The original
+file, including comments, remains in a private timestamped backup beside it.
+
 ## Memory
 
 **Memories not saved**
@@ -42,8 +65,9 @@ That is the documented behaviour for a missing key, not an error.
 
 **Expired memories linger**
 `cleanup` only removes rows whose `expires_at` is in the past. If you have
-data written by a pre-fix version with ISO `T` timestamps, run cleanup
-twice after 24h or re-save those memories.
+data written by a pre-fix version with ISO `T` timestamps, re-save it with the
+current utility. New notes use UTC SQLite timestamps; reads filter expired
+values even before cleanup. Automatic notes expire after seven days.
 
 ## Skills
 
@@ -68,8 +92,9 @@ Fixed in this revision (stdin is captured once before detection). Update
 your checkout.
 
 **headroom not used**
-Check `HEADROOM_BIN`, or build it: `cd headroom && cargo build --release`.
-The fallback compression is always available.
+Check `HEADROOM_BIN`. Building Rust is optional and disabled by default; set
+`AGENT_ENHANCEMENTS_BUILD_HEADROOM=1` during setup to opt in. Python fallback
+is always available. This utility is separate from native CLI compaction.
 
 ## Tests
 

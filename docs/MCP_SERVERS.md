@@ -1,7 +1,7 @@
 ---
 title: MCP Server Roadmap
-version: 1.0
-last_updated: 2026-11-13
+version: 1.1
+last_updated: 2026-11-14
 audience: all agents and maintainers
 ---
 
@@ -14,9 +14,9 @@ prioritas P0/P1/P2). File ini adalah dokumentasi + matriks relasi plugin ke MCP.
 
 | Prioritas | Jumlah | Arti |
 |-----------|--------|------|
-| P0 | 4 | Wajib sebelum plugin dasar jalan (filesystem, memory, brave-search, browser-tools) |
-| P1 | 20 | Mengaktifkan plugin utuh |
-| P2 | 14 | Nice-to-have / cadangan |
+| P0 | 5 | Wajib sebelum plugin dasar jalan (filesystem, memory, brave-search, browser-tools) |
+| P1 | 22 | Mengaktifkan plugin utuh |
+| P2 | 11 | Nice-to-have / cadangan |
 
 ## Matriks: Plugin ke MCP
 
@@ -65,32 +65,31 @@ prioritas P0/P1/P2). File ini adalah dokumentasi + matriks relasi plugin ke MCP.
 | heygen-mcp / elevenlabs-mcp / voice-clone-mcp | hyperframes, openmontage |
 | style-mcp / grammar-mcp | humanizer |
 
-## Install P0
+## Instalasi native
 
-```bash
-# Tambahkan ke .claude/mcp.json (root repo atau ~/.claude/mcp.json)
-{
-  "mcpServers": {
-    "filesystem": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem"] },
-    "memory": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-memory"] },
-    "brave-search": {
-      "command": "npx", "args": ["-y", "@modelcontextprotocol/server-brave-search"],
-      "env": { "BRAVE_API_KEY": "${BRAVE_API_KEY}" }
-    },
-    "browser-tools": { "command": "npx", "args": ["-y", "@agent-infra/browser-tools-mcp"] }
-  }
-}
-```
+`setup.sh` memasang sembilan MCP bawaan secara otomatis. Claude Code memakai
+`~/.claude.json` untuk user scope; Codex memakai `~/.codex/config.toml`;
+OpenCode memakai `~/.config/opencode/opencode.json(c)`. Config pribadi dan
+server pengguna dipertahankan. `.claude/mcp.json` bukan lokasi native Claude.
+
+Server P0 eksternal dan server katalog lain memerlukan paket, akun, kredensial
+serta argumen masing-masing. Gunakan ID dari `mcp-servers.json` dan batasi root
+filesystem yang boleh diakses. Panduan/plugin dalam katalog tidak otomatis
+memasang 29 server eksternal itu. Lihat [ENV_VARS](ENV_VARS.md) dan
+[MCP_INTEGRATION_CHECKLIST](MCP_INTEGRATION_CHECKLIST.md).
 
 ## Keamanan MCP
 
 1. API key via env variable, tidak hardcoded (CONTRACT R003).
 2. MCP media personal (heygen, elevenlabs) wajib consent gate.
-3. Setiap MCP call log via `scripts/audit-trail.sh mcp-call`.
+3. `scripts/audit-trail.sh mcp-call` tersedia untuk workflow katalog.
+   Seluruh panggilan SDK belum otomatis diarahkan ke utility audit tersebut;
+   hook memori hanya menyimpan nama tool, bukan payload lengkap.
 
 ## Test pasca-install
 
 ```bash
+bash unified-integration/scripts/setup-mcp.sh --check
 bash unified-integration/scripts/mcp-test.sh --priority P0
 bash unified-integration/scripts/mcp-test.sh --for-plugin replica-skill
 ```

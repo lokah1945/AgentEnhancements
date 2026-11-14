@@ -1,7 +1,7 @@
 ---
 title: Internal APIs
-version: 1.2
-last_updated: 2026-11-13
+version: 1.3
+last_updated: 2026-11-14
 audience: maintainers, contributors
 ---
 
@@ -66,7 +66,7 @@ CLI: `load-skills.py <agent> <task_description>`.
 | Method | Description |
 |--------|-------------|
 | `save(key, value, memory_type="session_context", metadata=None, ttl_days=None)` | Upsert (`INSERT OR REPLACE`). `expires_at` uses the SQLite format `YYYY-MM-DD HH:MM:SS` so expiry comparisons work. |
-| `load(key, memory_type="session_context") -> str or None` | Latest value for the key. |
+| `load(key, memory_type="session_context") -> str or None` | Latest unexpired value for the key. |
 | `list(memory_type=None, limit=20) -> list[dict]` | Recent memories, values truncated to 200 chars for display. |
 | `delete(key, memory_type="session_context") -> bool` | Delete one memory. |
 | `cleanup_expired() -> int` | Deletes rows whose `expires_at < datetime('now')`. |
@@ -80,27 +80,43 @@ missing key exits `1`.
 one agent. `<agent>-memory-hook.sh` is a thin bash wrapper that `exec`s the
 Python hook; **no SQL is executed from bash** (CONTRACT R101).
 
-Claude Code hook events map to the CLI as:
+### Automatic lifecycle runtime - `scripts/runtime.py`
 
-```text
-PreToolUse  -> save "pre_tool_use:${TOOL_NAME}"    "${TOOL_INPUT}"  session_context
-PostToolUse -> save "post_tool_use:${TOOL_NAME}"   "${TOOL_RESULT}" session_context
-Stop        -> save "session_summary"              "${SESSION_SUMMARY}" session_context
-```
+`runtime.py <claude-code|codex|opencode> [--text]` reads one native JSON event
+from stdin. It has no model, network or SDK dependency.
+
+| Event | Action |
+|-------|--------|
+| `SessionStart` | Restore recent unexpired notes for this agent and canonical project path |
+| `UserPromptSubmit` | Save a bounded task note and suggest up to three relevant local skill paths |
+| `PostToolUse` | Save only the tool name; raw inputs/outputs are never stored |
+| `Stop` | Save bounded `last_assistant_message` when provided |
+
+Claude/Codex context uses `hookSpecificOutput.additionalContext`. OpenCode's
+plugin requests plain text with `--text`. Empty `Stop` output is `{}`. Input
+is capped at 2 MB, injected context at 12,000 characters, saved task/summary
+notes at 4,000 characters. Recognizable credentials are redacted; notes expire
+after seven days. Invalid input/storage failures are advisory and never block
+the CLI. Memory lookup still enforces agent/project isolation and expiry.
+
+`native-integration.py --agent <agent|all> [--mcp-only]` installs native
+configuration. Run it using the interpreter returned by
+`bash scripts/setup-mcp.sh --prepare`. `setup.sh` invokes it automatically.
+`setup-mcp.sh --check` tests the actual stdio protocol of all nine built servers.
 
 ## Compression - `unified-integration/scripts/compress.py`
 
 `compress_content(content, mode="auto", agent="claude-code")` pipes through
 the headroom binary (`HEADROOM_BIN`, repo build fallback) and falls back to
 `fallback_compress(content, mode)` which implements log de-duplication
-(timestamp/ID normalization), JSON compaction and blank-line trimming, with
-a 50,000-character output cap.
+(timestamp/ID normalization, explicit `logs` mode), data-preserving JSON
+compaction and unchanged code content, with a 50,000-character output cap.
 
 CLI: `compress.py <mode> [agent] < input` (modes: `auto`, `code`, `logs`,
 `json`, `markdown`, `generic`).
 
-`compression/compress.sh` is the shell equivalent; it reads stdin once into
-a temp file (stream-safe) and honours `AGENT_ENHANCEMENTS_BASE_DIR`.
+`compression/compress.sh` delegates to that utility and consumes stdin once.
+A failed external headroom executable falls back to Python.
 
 ## Launcher - `unified-integration/launch-agent.sh`
 

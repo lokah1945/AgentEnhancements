@@ -25,6 +25,7 @@ for mod in [
     "test_registry",
     "test_link_skills",
     "test_dispatch_anthropic",
+    "test_hardening",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Unified AI Agent Enhancement Setup - FIXED VERSION
+# Unified AI Agent Enhancement Setup
 # Configures all agent enhancements for: Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Windsurf, Copilot, Kiro, etc.
 
 set -euo pipefail
@@ -226,8 +226,8 @@ You are an expert software engineer with access to a comprehensive toolkit of sk
 
 ## Available Enhancements
 
-### 1. Skills Library (agentic-awesome-skills + ECC + Ponytail + Superpowers)
-- 2,884+ curated skills in SKILL.md format
+### 1. Skills Library (agentic-awesome-skills + ECC + Ponytail + Superpowers + replica-skill + anthropic-skills)
+- 3,000+ curated skills in SKILL.md format
 - Categories: Security, Architecture, Testing, Refactoring, Code Review, Documentation, DevOps, AI/ML, etc.
 - Compatible with: Claude Code, Codex, Cursor, Gemini CLI, Copilot, Windsurf, Kiro, OpenCode
 
@@ -380,7 +380,7 @@ aggregate_skills() {
 
 This directory contains aggregated skills from multiple sources:
 
-1. **agentic-awesome-skills** - 2,884+ skills (primary source)
+1. **agentic-awesome-skills** - 2,781 skills (primary source)
 2. **ECC** - Additional skills and commands
 3. **Ponytail** - Additional skills and hooks
 4. **Superpowers** - Additional skills
@@ -482,6 +482,14 @@ EOF
                 # target directory on copy).
                 skill_name="${skill_name//\//-}"
 
+                # Reject path-relative names: "." and ".." resolve outside
+                # the category directory and would misplace the copy
+                # ("by-category/general/.." is the by-category tree root).
+                if [ -z "$skill_name" ] || [ "$skill_name" = "." ] || [ "$skill_name" = ".." ]; then
+                    log_warn "Skipping skill with invalid name '${skill_name}' in $skill_dir"
+                    continue
+                fi
+
                 # Copy entire skill directory to by-category/.
                 # Remove any previous copy first: "cp -r src dst" nests the
                 # source inside dst when dst already exists, so without this
@@ -575,7 +583,7 @@ EOF
     python3 -c "
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 meta_path = os.environ['SKILLS_META_FILE']
 out_path = os.environ['SKILLS_INDEX_OUT']
@@ -725,6 +733,10 @@ for record in content.split('\x1e'):
 # Ponytail, Superpowers, replica-skill, anthropic-skills - so the official
 # Anthropic version replaces third-party copies of the same skill name).
 skills = list(skills_by_name.values())
+# Deterministic output: sort by skill name so the committed index changes
+# only when content changes, not when readdir order differs between
+# machines (previously every regeneration produced a ~50k-line diff).
+skills.sort(key=lambda s: s['name'])
 
 # Count categories
 categories = {}
@@ -750,7 +762,7 @@ unified = {
     'categories': categories,
     'agents_supported': ['claude-code', 'codex', 'cursor', 'gemini-cli', 'opencode', 'copilot', 'windsurf', 'kiro'],
     'agent_skill_counts': agent_counts,
-    'last_updated': datetime.utcnow().isoformat() + 'Z'
+    'last_updated': datetime.now(timezone.utc).isoformat()
 }
 
 with open(out_path, 'w', encoding='utf-8') as f:
@@ -1363,7 +1375,10 @@ merge_json_config() {
     # JSON escape sequences (\") survive intact: routing them through a
     # Python string literal stripped the backslashes and produced invalid
     # JSON. It also removes any injection risk from file paths.
-    TARGET_FILE="$target_file" ENHANCEMENT_JSON="$enhancement_json" \
+    # A malformed pre-existing config must not abort the whole setup:
+    # on failure the backup is restored and the remaining agents are
+    # still configured.
+    if ! TARGET_FILE="$target_file" ENHANCEMENT_JSON="$enhancement_json" \
     python3 -c "
 import json
 import os
@@ -1392,7 +1407,11 @@ merge_configs(existing, enhancement)
 
 with open(target, 'w') as f:
     json.dump(existing, f, indent=2)
-"
+"; then
+        cp "$backup_file" "$target_file"
+        log_error "Merge failed for $target_file (existing file not valid JSON?) - original restored, skipping this agent"
+        return 0
+    fi
     log_success "Merged enhancement into $target_file (hooks replaced, other keys preserved)"
 }
 
@@ -1452,16 +1471,16 @@ merge_yaml_config() {
     cp "$target_file" "$backup_file"
     log_info "Backed up existing config to $backup_file"
 
-    TARGET_FILE="$target_file" ENHANCEMENT_YAML="$enhancement_yaml" \
+    if ! python3 -c "import yaml" 2>/dev/null; then
+        log_warn "PyYAML is not installed - skipping YAML merge for $target_file (pip install pyyaml)"
+        return 0
+    fi
+
+    if ! TARGET_FILE="$target_file" ENHANCEMENT_YAML="$enhancement_yaml" \
     python3 -c "
 import os
 import sys
-
-try:
-    import yaml
-except ImportError:
-    print('PyYAML is required for YAML config merging (pip install pyyaml)', file=sys.stderr)
-    sys.exit(1)
+import yaml
 
 target = os.environ['TARGET_FILE']
 
@@ -1486,7 +1505,11 @@ merge_configs(existing, enhancement)
 
 with open(target, 'w') as f:
     yaml.dump(existing, f, default_flow_style=False, sort_keys=False)
-"
+"; then
+        cp "$backup_file" "$target_file"
+        log_error "Merge failed for $target_file (existing file not valid YAML?) - original restored, skipping this agent"
+        return 0
+    fi
     log_success "Merged enhancement into $target_file (hooks replaced, other keys preserved)"
 }
 
@@ -1494,8 +1517,11 @@ create_claude_code_config() {
     CLAUDE_DIR="$HOME/.claude"
     mkdir -p "$CLAUDE_DIR"
 
-    # Always update CLAUDE.md (it's documentation, not credentials)
-    cat > "$CLAUDE_DIR/CLAUDE.md" << EOF
+    # CLAUDE.md is user-owned documentation: merge our section with
+    # markers so personal instructions survive re-runs (same guarantee
+    # as the other agent instruction files).
+    CLAUDE_MD_SECTION_FILE="$(mktemp "${TMPDIR:-/tmp}/claude-md.XXXXXX")"
+    cat > "$CLAUDE_MD_SECTION_FILE" << EOF
 # Claude Code Enhanced Configuration
 
 ## System Prompt
@@ -1528,6 +1554,8 @@ create_claude_code_config() {
 ## MCP Servers
 # Note: headroom is a proxy server, not an MCP server. Skills are loaded via the skills loader utility.
 EOF
+    merge_agents_md "$CLAUDE_DIR/CLAUDE.md" "$CLAUDE_MD_SECTION_FILE"
+    rm -f "$CLAUDE_MD_SECTION_FILE"
 
     # Merge hooks into existing settings.json (preserves env, credentials, etc.)
     ENHANCEMENT_JSON='{

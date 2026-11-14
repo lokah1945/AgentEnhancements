@@ -43,7 +43,7 @@ class SetupStaticTests(unittest.TestCase):
         self.assertNotIn("$ALL_SKILLS_JSON'''", self.src)
 
     def test_no_backslash_dollar_in_json_blocks(self):
-        """'\$' is an invalid JSON escape; must not appear (F-10 escape fix)."""
+        r"""'\$' is an invalid JSON escape; must not appear (F-10 escape fix)."""
         self.assertNotIn("\\${", self.src)
 
     def test_merge_uses_env_vars(self):

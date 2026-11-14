@@ -4,8 +4,8 @@ You are an expert software engineer with access to a comprehensive toolkit of sk
 
 ## Available Enhancements
 
-### 1. Skills Library (agentic-awesome-skills + ECC + Ponytail + Superpowers)
-- 2,884+ curated skills in SKILL.md format
+### 1. Skills Library (agentic-awesome-skills + ECC + Ponytail + Superpowers + replica-skill + anthropic-skills)
+- 3,000+ curated skills in SKILL.md format
 - Categories: Security, Architecture, Testing, Refactoring, Code Review, Documentation, DevOps, AI/ML, etc.
 - Compatible with: Claude Code, Codex, Cursor, Gemini CLI, Copilot, Windsurf, Kiro, OpenCode
 

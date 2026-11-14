@@ -1,6 +1,6 @@
 ---
 title: Architecture
-version: 1.4
+version: 1.5
 last_updated: 2026-11-15
 audience: maintainers, contributors
 ---
@@ -158,6 +158,9 @@ zero-friction boost for natively linked skills.
 ## Invariants
 
 The private root `ui.api.json` is the credential source for project MCPs.
+It is not an agent credential store: native authentication, provider settings
+and login helpers are outside its scope. The loader and gateway have no
+agent-specific authentication or process-coordination logic.
 `scripts/api_config.py` reads and validates snapshots; the gateway watches
 configuration and sends `notifications/tools/list_changed`. Calls revalidate
 the current schema and credential state, including previously cached names.

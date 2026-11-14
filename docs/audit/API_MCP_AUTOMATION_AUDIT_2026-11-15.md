@@ -1,22 +1,22 @@
 ---
 title: Audit kredensial terpusat dan MCP otomatis
-version: 1.0
+version: 1.1
 last_updated: 2026-11-15
 audience: owner, maintainers
 ---
 
 # Hasil implementasi dan audit lanjutan
 
-Agent: Codex. Session: `codex-api-config-20261114`.
-Branch: `audit/api-config-20261114`.
+Agent: Codex. Session koreksi: `codex-mcp-scope-20261115`.
+Branch koreksi: `fix/mcp-credential-boundary`.
 
 ## Keadaan yang benar-benar berjalan
 
-Credential proyek berada di satu file privat root `ui.api.json`, mode 0600,
+Credential layanan MCP berada di satu file privat root `ui.api.json`, mode 0600,
 diabaikan git. Template kosong dan schema editor dilacak di
 [config](../../unified-integration/config/ui.api.example.json). Pemetaan mencakup
-38 MCP katalog: 17 slot secret (termasuk dua credential Claude), beserta
-endpoint/client ID/model non-secret. Tidak ada key baru yang diciptakan.
+38 MCP katalog: 15 slot secret, beserta endpoint/client ID/model layanan MCP.
+Credential login/provider model milik agent tidak termasuk di dalamnya.
 
 Satu gateway native memuat sembilan backend bawaan. Dengan seluruh key MCP
 kosong, tersedia 36 tool lokal; `vision_describe` tidak ditawarkan dan
@@ -34,20 +34,22 @@ status diagnostik; catatan sesi menyamarkan nilai secret yang terkonfigurasi.
 File JSON yang hilang/rusak menonaktifkan akses cloud dan tetap menyediakan
 subset tool lokal.
 
-## Konfigurasi custom Claude
+## Batas proyek dan koreksi
 
-Konfigurasi custom ditemukan di `~/.claude/settings.json` setelah field
-provider muncul selama audit. Endpoint, model, alias model dan pengaturan
-provider dipertahankan. Dua field auth dipindahkan ke `ui.api.json`; native
-`apiKeyHelper` membaca file itu dengan TTL satu detik. Setting native tidak
-lagi menyimpan kedua nilai credential. Backup perubahan native privat tetap
-tersedia. Helper milik pengguna yang sudah ada tidak ditimpa oleh installer.
+Pemindahan credential Claude pada implementasi sebelumnya melampaui scope
+MCP dan sudah dibatalkan. Credential dikembalikan ke konfigurasi native;
+helper/TTL yang ditambahkan proyek dihapus, dengan pengaturan lain dipertahankan.
+Entri auth/endpoint/model agent dihapus dari file pusat dan template.
 
-Endpoint custom menjawab permintaan daftar model dengan **HTTP 200, 168 model**,
-menggunakan credential dari file pusat. Tidak dilakukan inferensi model
-produksi, sehingga pengujian ini bukan bukti kualitas model, biaya atau semua
-fitur endpoint. Tidak diperlukan login claude.ai untuk jalur gateway custom.
-Ketiadaan login first-party bukan kegagalan integrasi.
+Loader MCP tidak membaca atau mengimpor settings/provider/login milik
+Claude Code, Codex, OpenCode maupun agent lain. Tidak ada lagi perintah
+helper untuk mengeluarkan credential agent. Koordinasi proses Linux melalui
+file readiness juga dihapus; MCP memakai lifecycle native client.
+
+Contohnya, `TAVILY_API_KEY` adalah credential layanan MCP proyek. Sebaliknya,
+token untuk menjalankan model Claude/Codex/OpenCode tetap menjadi urusan host.
+Keduanya tidak saling mengisi otomatis, sekalipun memakai nama environment
+yang sama, seperti `OPENAI_API_KEY`.
 
 ## Bug tambahan yang diperbaiki
 
@@ -59,7 +61,7 @@ Ketiadaan login first-party bukan kegagalan integrasi.
 | Embeddings memakai cloud secara default saat menemukan key dan menerima backend sembarang | Default lokal; enum backend dinamis dan validasi pilihan |
 | Error provider dapat membawa response body berisi data sensitif | Pesan error aman dan redaksi secret terkonfigurasi |
 | Adapter OpenCode menulis format V1 yang diabaikan V2 | Migrasi ke `mcp.servers`, `disabled`, `environment`; tool gateway diekspos langsung |
-| Model dapat memulai prompt sebelum MCP siap | Hook Linux menunggu readiness CLI sendiri; OpenCode memakai status API resmi |
+| Shared runtime mengandung koordinasi proses CLI khusus Linux | Dihapus; loader/gateway MCP tidak bergantung pada jenis agent |
 | `CLAUDE_CONFIG_DIR` memakai lokasi MCP yang keliru | Gunakan `<config-dir>/.claude.json`; diverifikasi melalui CLI asli |
 | Penutupan external MCP saat request berjalan dapat meninggalkan future menunggu | Semua request tertunda diselesaikan dengan error saat disconnect/revokasi |
 | Cache GraphRAG tidak melihat pembaruan dari proses CLI lain | Snapshot atomik di disk menjadi sumber pembacaan |
@@ -69,14 +71,16 @@ Ketiadaan login first-party bukan kegagalan integrasi.
 
 ## Bukti pengujian
 
-- Suite integrasi proyek: **189 test lulus**, termasuk arXiv/Google News publik.
+- Suite setelah koreksi scope: **190 test, 188 lulus dan dua uji jaringan
+  opsional dilewati**. Termasuk regresi yang memastikan credential/helper
+  native agent tidak berubah dan tidak masuk ke file MCP.
 - Transport MCP nyata: **10/10** (sembilan backend + gateway), initialize,
   list tools dan health.
-- CLI asli dengan model tiruan localhost: Claude Code 2.1.202,
+- Pengujian CLI audit sebelumnya memakai model tiruan localhost: Claude Code 2.1.202,
   Codex 0.167.2 dan OpenCode 2.2.5. Model meminta health tool secara otomatis,
   tanpa perintah skill/memori/MCP dari pengguna. Task dan ringkasan otomatis
   tersimpan; perubahan credential terlihat oleh panggilan backend.
-- Empat hook Codex ditinjau ulang setelah perubahan source dan dipercaya
+- Pada audit sebelumnya empat hook Codex ditinjau setelah perubahan source dan dipercaya
   melalui kontrol native; tidak memakai flag bypass trust. Perubahan source
   hook pada update berikutnya dapat memerlukan review native kembali.
 - Claude/OpenCode: katalog tool berubah **false → true → false** untuk cloud
@@ -115,8 +119,8 @@ baru agar muncul. Tidak dilakukan patch/bypass pada keamanan atau client Codex.
 Eksternal memerlukan implementasi yang benar-benar terpasang dan auth valid.
 Command katalog tidak otomatis diunduh/dijalankan. Client ID/secret Google
 atau Microsoft saja bukan OAuth grant. Proxy eksternal saat ini meneruskan
-tool, bukan resource/prompt/OAuth. Semua jaminan pengujian CLI dan koordinasi
-readiness di atas berlaku untuk mesin Linux ini serta versi yang disebutkan.
+tool, bukan resource/prompt/OAuth. Hasil CLI sebelumnya berlaku untuk mesin
+Linux dan versi yang disebutkan; koordinasi readiness khusus CLI sudah dihapus.
 
 Pemilihan skill tetap menggunakan relevansi lexical dan keputusan model.
 Penemuan native/routing/memori berjalan otomatis, tetapi tidak berarti setiap
@@ -176,7 +180,8 @@ benar ke slot credential pusat yang sama.
 
 Fetch ulang mengonfirmasi `origin/master` tetap `7b868327`.
 Branch audit memuat tiga commit audit native sebelumnya, lalu perubahan sesi ini.
-Implementasi sesi ini tercatat pada commit `5652e78d`.
+Implementasi awal tercatat pada commit `5652e78d`; koreksi scope tercatat pada
+branch `fix/mcp-credential-boundary`.
 Tidak ada push atau publikasi ke GitHub. Stash dan branch backup sebelum audit
 tetap disimpan. Detail kondisi awal lokal tertinggal 52 commit tersedia pada
 [audit sebelumnya](NATIVE_AUTOMATION_AUDIT_2026-11-14.md).

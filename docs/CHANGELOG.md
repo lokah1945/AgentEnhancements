@@ -1,11 +1,22 @@
 ---
 title: Changelog
-version: 1.2
+version: 1.3
 last_updated: 2026-11-15
 audience: all
 ---
 
 # Changelog
+
+## 2026-11-15 — Keep credential centralization within MCP scope
+
+- Removed Claude auth migration, the project key helper and all agent/provider
+  credential fields from the central template. Existing native credentials,
+  provider endpoints and user helpers are preserved.
+- Scoped `ui.api.json` to MCP service requirements shared by any compatible
+  agent; missing-key tool hiding and MCP environment-reference mappings remain.
+- Removed Linux CLI process/readiness-file coordination from shared runtime.
+- Added regression coverage that native agent credentials remain unchanged
+  and never populate the MCP credential file.
 
 ## 2026-11-15 — Central credentials and automatic MCP availability
 

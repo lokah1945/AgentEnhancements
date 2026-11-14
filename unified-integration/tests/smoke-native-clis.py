@@ -16,7 +16,6 @@ counts = {}
 tools_seen = {}
 tool_catalogs = {}
 health_outputs = {}
-claude_helper_auth = []
 exercise_tools = False
 api_config_path = None
 
@@ -42,11 +41,6 @@ class Mock(BaseHTTPRequestHandler):
         except:
             doc = {}
         counts[self.path] = counts.get(self.path, 0) + 1
-        if "/messages" in self.path and "count_tokens" not in self.path:
-            claude_helper_auth.append(
-                self.headers.get("Authorization") == "Bearer fixture-local-only"
-                and self.headers.get("x-api-key") == "fixture-local-only"
-            )
         if exercise_tools:
 
             def outputs(item):
@@ -658,8 +652,6 @@ def main() -> None:
                     runenv["OPENAI_API_KEY"] = "fixture-local-only"
                 if name == "claude-code":
                     runenv["CLAUDE_CONFIG_DIR"] = str(claude_config)
-                    runenv.pop("ANTHROPIC_AUTH_TOKEN", None)
-                    runenv.pop("ANTHROPIC_API_KEY", None)
                 r = subprocess.run(
                     cmd,
                     capture_output=True,
@@ -701,14 +693,6 @@ def main() -> None:
                     ).fetchall(),
                 )
         print("Local fixture requests:", counts)
-        if selected in ("all", "claude-code"):
-            print(
-                "Claude native helper used central credentials:",
-                bool(claude_helper_auth) and all(claude_helper_auth),
-            )
-            assert claude_helper_auth and all(
-                claude_helper_auth
-            ), "Claude did not authenticate through the central helper"
         print(
             "Automatically discovered MCP tools:",
             {p: sorted(names) for p, names in tools_seen.items()},

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Private, live credential configuration shared by integrations and MCP tools.
+"""Private credential configuration for AgentEnhancements MCP services.
 
 The canonical file is <repository>/ui.api.json. Empty entries deliberately do
 not inherit credentials from the process environment. Never serialize values
@@ -14,7 +14,6 @@ import os
 from pathlib import Path
 import shutil
 import sys
-import tempfile
 from typing import Any
 
 UI = Path(__file__).resolve().parent.parent
@@ -62,38 +61,6 @@ def _unique_object(pairs: list[tuple[str, Any]]) -> dict:
             raise ValueError("duplicate configuration field")
         result[key] = value
     return result
-
-
-def write_config(config: dict) -> None:
-    """Replace canonical credentials atomically with private permissions."""
-    path = config_path()
-    descriptor, temporary = tempfile.mkstemp(dir=path.parent, prefix=".ui-api-")
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-            json.dump(config, stream, indent=2, ensure_ascii=False)
-            stream.write("\n")
-        os.replace(temporary, path)
-    finally:
-        if os.path.exists(temporary):
-            os.unlink(temporary)
-
-
-def migrate_claude_auth(env: dict) -> bool:
-    """Import existing custom auth once; empty canonical edits stay empty."""
-    names = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
-    if not any(isinstance(env.get(name), str) and env[name].strip() for name in names):
-        return False
-    initialize()
-    config, error = read_config()
-    if error:
-        raise ValueError("Cannot migrate Claude auth: ui.api.json must be valid")
-    for name in names:
-        if not value(name, config):
-            config.setdefault("api_keys", {})[name] = env.get(name, "")
-    write_config(config)
-    for name in names:
-        env.pop(name, None)
-    return True
 
 
 def read_config() -> tuple[dict, str | None]:
@@ -236,23 +203,14 @@ def status() -> dict:
 
 
 def main() -> int:
-    """Initialize configuration, print safe status, or serve Claude's key helper."""
+    """Initialize MCP configuration or print status without revealing secrets."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "action", choices=("init", "status", "claude-key"), default="status", nargs="?"
+        "action", choices=("init", "status"), default="status", nargs="?"
     )
     args = parser.parse_args()
     if args.action == "init":
         print(initialize())
-    elif args.action == "claude-key":
-        # Called directly by Claude apiKeyHelper, never by diagnostic scripts.
-        config, _ = read_config()
-        key = value("ANTHROPIC_AUTH_TOKEN", config) or value(
-            "ANTHROPIC_API_KEY", config
-        )
-        if not key:
-            return 1
-        print(key)
     else:
         print(json.dumps(status(), indent=2))
     return 0

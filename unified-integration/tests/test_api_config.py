@@ -54,10 +54,18 @@ class ConfigurationTests(unittest.TestCase):
             (UI_DIR.parent / "plugin-catalog/mcp-servers.json").read_text()
         )
         refs = set(template["api_keys"]) | set(template["connections"])
+        required = set()
         self.assertEqual(len(template["mcp"]), len(catalog["servers"]))
         for server in catalog["servers"]:
+            required.update(server.get("env_required", []))
+            required.update(server.get("env_optional", []))
             self.assertTrue(set(server.get("env_required", [])) <= refs, server["id"])
             self.assertTrue(set(server.get("env_optional", [])) <= refs, server["id"])
+        # Every default secret belongs to an MCP requirement; agent login and
+        # model-provider credentials must never be imported into this file.
+        self.assertEqual(
+            set(template["api_keys"]), required - set(template["connections"])
+        )
 
     def test_blank_overrides_inherited_key_and_status_never_leaks_values(self):
         with configuration() as path, patch.dict(

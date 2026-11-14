@@ -2,8 +2,8 @@
 """Merge enhancements into the configuration actually read by each CLI.
 
 Run with the isolated interpreter prepared by setup-mcp.sh. Provider choices,
-tool approvals, user hooks and user MCP servers are preserved. Existing custom
-Claude auth environment values move to private ui.api.json via apiKeyHelper.
+credentials, tool approvals, user hooks and user MCP servers are preserved.
+Only project-owned integration entries are managed; agent auth stays native.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import tempfile
 import json5
 import tomlkit
 
-from api_config import BUILTINS, initialize, migrate_claude_auth
+from api_config import BUILTINS, initialize
 
 UI = Path(__file__).resolve().parent.parent
 ROOT = UI.parent
@@ -112,7 +112,6 @@ def mcp_block() -> dict:
     for name in (
         "AGENT_ENHANCEMENTS_API_FILE",
         "AGENT_MEMORY_ROOT",
-        "XDG_STATE_HOME",
         "AE_FFMPEG_ALLOWED_ROOTS",
     ):
         if os.environ.get(name):
@@ -161,23 +160,6 @@ def install(agent: str, *, mcp_only: bool = False) -> None:
             path = config_dir / "settings.json"
             doc = read_json(path)
             merge_hooks(doc, agent)
-            if not doc.get("apiKeyHelper") and migrate_claude_auth(doc.get("env", {})):
-                doc["apiKeyHelper"] = shlex.join(
-                    [sys.executable, str(UI / "scripts/api_config.py"), "claude-key"]
-                )
-                if os.environ.get("AGENT_ENHANCEMENTS_API_FILE"):
-                    doc["apiKeyHelper"] = (
-                        "env "
-                        + shlex.quote(
-                            "AGENT_ENHANCEMENTS_API_FILE="
-                            + os.environ["AGENT_ENHANCEMENTS_API_FILE"]
-                        )
-                        + " "
-                        + doc["apiKeyHelper"]
-                    )
-                doc.setdefault("env", {}).setdefault(
-                    "CLAUDE_CODE_API_KEY_HELPER_TTL_MS", "1000"
-                )
             write_json(path, doc)
         # User-scope MCP is in ~/.claude.json, not ~/.claude/mcp.json.
         path = (

@@ -1,6 +1,6 @@
 ---
 title: Internal APIs
-version: 1.4
+version: 1.5
 last_updated: 2026-11-15
 audience: maintainers, contributors
 ---
@@ -42,9 +42,8 @@ Importable functions: `read_config()`, `value(name, config=None)`,
 `server_state(name, config=None)`, `cloud_available(server, key, config=None)`
 and `redact(text, config=None)`. Missing/invalid config never falls back to
 shell API credentials. `AGENT_ENHANCEMENTS_API_FILE` is an optional override.
-`write_config(config)` replaces the file privately and atomically.
-`migrate_claude_auth(env)` moves existing custom Claude credentials into it;
-the native adapter installs the helper while preserving endpoints/models.
+This API is scoped to MCP services only. It has no host-auth migration or
+credential-output command, and never reads agent settings/provider credentials.
 
 `mcp-servers/gateway.py` speaks MCP stdio and advertises `tools.listChanged`.
 Bundled tools are namespaced, for example `embeddings_embed`, `vision_compare`

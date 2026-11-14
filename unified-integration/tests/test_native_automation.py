@@ -244,7 +244,10 @@ class NativeConfigurationTests(unittest.TestCase):
         path = self.home / ".codex/config.toml"
         path.parent.mkdir()
         path.write_text(
-            '# personal comment\nmodel = "personal-model"\n[mcp_servers.personal]\ncommand = "custom"\n'
+            '# personal comment\nmodel = "personal-model"\n'
+            '[model_providers.owner]\nbase_url = "https://owner.invalid/v1"\n'
+            'experimental_bearer_token = "codex-provider-secret"\n'
+            '[mcp_servers.personal]\ncommand = "custom"\n'
         )
         self.install("codex")
         content = path.read_text()
@@ -253,46 +256,64 @@ class NativeConfigurationTests(unittest.TestCase):
         doc = tomlkit.parse(content)
         self.assertIn("# personal comment", content)
         self.assertEqual(doc["model"], "personal-model")
+        self.assertEqual(
+            doc["model_providers"]["owner"]["experimental_bearer_token"],
+            "codex-provider-secret",
+        )
+        self.assertNotIn(
+            "codex-provider-secret",
+            Path(self.env["AGENT_ENHANCEMENTS_API_FILE"]).read_text(),
+        )
         self.assertEqual(doc["mcp_servers"]["personal"]["command"], "custom")
         self.assertEqual(len(doc["mcp_servers"]), 2)
         hooks = json.loads((path.parent / "hooks.json").read_text())["hooks"]
         self.assertIn("SessionStart", hooks)
         self.assertIn("UserPromptSubmit", hooks)
 
-    def test_custom_claude_auth_moves_to_central_file_without_changing_provider(self):
+    def test_claude_credentials_and_helper_remain_native(self):
         path = self.home / ".claude/settings.json"
         path.parent.mkdir()
-        path.write_text(
-            json.dumps(
-                {
-                    "env": {
-                        "ANTHROPIC_AUTH_TOKEN": "fixture-custom-token",
-                        "ANTHROPIC_API_KEY": "fixture-custom-key",
-                        "ANTHROPIC_BASE_URL": "http://127.0.0.1:1234",
-                        "ANTHROPIC_MODEL": "custom-model",
-                    }
+        provider_env = {
+            "ANTHROPIC_AUTH_TOKEN": "fixture-custom-token",
+            "ANTHROPIC_API_KEY": "fixture-custom-key",
+            "ANTHROPIC_BASE_URL": "http://127.0.0.1:1234",
+            "ANTHROPIC_MODEL": "custom-model",
+            "OPENAI_API_KEY": "agent-owned-provider-key",
+        }
+        for helper in (None, "/owner/native-auth-helper"):
+            with self.subTest(helper=helper):
+                original = {"env": provider_env}
+                if helper:
+                    original["apiKeyHelper"] = helper
+                path.write_text(json.dumps(original))
+                self.install("claude-code")
+                self.install("claude-code")
+                doc = json.loads(path.read_text())
+                self.assertEqual(doc["env"], provider_env)
+                self.assertEqual(doc.get("apiKeyHelper"), helper)
+                api = json.loads(
+                    Path(self.env["AGENT_ENHANCEMENTS_API_FILE"]).read_text()
+                )
+                self.assertTrue(all(value == "" for value in api["api_keys"].values()))
+                self.assertNotIn("ANTHROPIC_API_KEY", api["api_keys"])
+                self.assertNotIn("ANTHROPIC_BASE_URL", api["connections"])
+
+    def test_opencode_provider_credentials_remain_native(self):
+        path = self.home / ".config/opencode/opencode.json"
+        path.parent.mkdir(parents=True)
+        providers = {
+            "owner": {
+                "settings": {
+                    "apiKey": "opencode-owner-key",
+                    "baseURL": "https://owner.invalid/v1",
                 }
-            )
-        )
-        self.install("claude-code")
-        doc = json.loads(path.read_text())
-        self.assertEqual(doc["env"]["ANTHROPIC_MODEL"], "custom-model")
-        self.assertEqual(doc["env"]["ANTHROPIC_BASE_URL"], "http://127.0.0.1:1234")
-        self.assertNotIn("ANTHROPIC_AUTH_TOKEN", doc["env"])
-        self.assertNotIn("ANTHROPIC_API_KEY", doc["env"])
-        self.assertIn("api_config.py", doc["apiKeyHelper"])
-        api_path = Path(self.env["AGENT_ENHANCEMENTS_API_FILE"])
-        api = json.loads(api_path.read_text())
-        self.assertEqual(
-            api["api_keys"]["ANTHROPIC_AUTH_TOKEN"], "fixture-custom-token"
-        )
-        api["api_keys"]["ANTHROPIC_AUTH_TOKEN"] = ""
-        api["api_keys"]["ANTHROPIC_API_KEY"] = ""
-        api_path.write_text(json.dumps(api))
-        self.install("claude-code")
-        self.assertEqual(
-            json.loads(api_path.read_text())["api_keys"]["ANTHROPIC_AUTH_TOKEN"], ""
-        )
+            }
+        }
+        path.write_text(json.dumps({"providers": providers}))
+        self.install("opencode")
+        self.assertEqual(json.loads(path.read_text())["providers"], providers)
+        api = Path(self.env["AGENT_ENHANCEMENTS_API_FILE"]).read_text()
+        self.assertNotIn("opencode-owner-key", api)
 
     def test_opencode_edits_existing_jsonc_and_preserves_user_arrays(self):
         path = self.home / ".config/opencode/opencode.jsonc"

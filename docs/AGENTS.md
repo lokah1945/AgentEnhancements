@@ -1,6 +1,6 @@
 ---
 title: Agents
-version: 1.4
+version: 1.5
 last_updated: 2026-11-15
 audience: users
 ---
@@ -57,9 +57,10 @@ from JSON on stdin, not fictional `TOOL_NAME` environment variables. Relevant
 skill paths and prior session notes are supplied automatically. User-scope MCP
 servers belong in `~/.claude.json`; the gateway loads all nine bundled backends.
 `CLAUDE.md` is marker-merged, preserving personal instructions.
-Custom gateway auth is supported without a claude.ai login. Provider settings
-are preserved; existing static credentials migrate to the central file through
-a native helper. See [central credentials](CONFIGURATION.md).
+Custom gateway authentication remains entirely in Claude's native settings.
+AgentEnhancements does not import its tokens, endpoints or helper into the
+project. The shared [MCP configuration](CONFIGURATION.md) is independent of
+the host agent's model-provider authentication.
 
 ### Codex CLI 0.167.2 (verified)
 

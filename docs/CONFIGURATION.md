@@ -1,6 +1,6 @@
 ---
 title: Configuration
-version: 1.4
+version: 1.5
 last_updated: 2026-11-15
 audience: users, maintainers
 ---
@@ -8,6 +8,12 @@ audience: users, maintainers
 # Configuration
 
 ## Central credentials — `ui.api.json`
+
+This file is exclusively for **AgentEnhancements MCP service credentials**.
+For example, `TAVILY_API_KEY` belongs here. Agent login tokens, model-provider
+credentials, custom endpoints, `apiKeyHelper` and settings files remain owned
+by Claude Code, Codex, OpenCode or any other host agent. The MCP credential
+loader never reads, imports or changes that host configuration.
 
 Setup creates **one private file at the repository root**, using
 [the empty template](../unified-integration/config/ui.api.example.json).
@@ -44,26 +50,19 @@ For optional diagnostics, `python3 unified-integration/scripts/api_config.py
 status` prints key-presence booleans and hidden reasons, never secret values.
 Agents do not need to run it. Runtime session notes redact configured secrets.
 
-Claude Code's existing custom endpoint/model configuration is preserved. A custom
-gateway authenticates using its own credentials; this integration does not
-require a claude.ai login. `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`,
-`ANTHROPIC_BASE_URL` and `ANTHROPIC_MODEL` slots are included for central
-mapping. When existing settings contain custom auth environment values and
-no user-owned helper, setup moves those values to the central file and installs
-the native `apiKeyHelper` automatically. `api_config.py claude-key` prints the
-credential directly to Claude and must not be used as a diagnostic. The helper
-refreshes at a one-second TTL; external environment credentials can still take
-precedence. Existing custom helpers are preserved. Endpoint/model fields stay
-in Claude's native settings; the integration does not guess provider choices.
+The template contains 15 MCP secret slots and mappings for the 38 catalog
+entries. `OPENAI_API_KEY` and its model/endpoint fields apply only to the
+embeddings/vision MCP implementations; they do not configure the host agent.
+The same MCP configuration works for any compatible client, independently
+of how that client authenticates to its own model provider.
 
 With an explicit `CLAUDE_CONFIG_DIR`, Claude stores user MCP configuration in
 `<CLAUDE_CONFIG_DIR>/.claude.json`; without that override it uses
 `~/.claude.json`. This distinction is verified using the installed CLI.
 
-Claude's Linux prompt hook waits for its own native MCP tools to be listed;
-coordination markers contain process IDs only in the private user state
-directory. OpenCode uses its public MCP status API. This prevents cold-start
-model requests from racing MCP initialization.
+MCP startup and discovery are handled by the host's native integration. The
+shared MCP gateway does not inspect CLI process ancestry or maintain per-CLI
+readiness files.
 
 **Codex client limitation:** versions 0.167.2 and 0.169.0 retain their tool
 catalog during a turn. The gateway still rechecks every call and immediately

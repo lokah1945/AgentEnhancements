@@ -18,7 +18,6 @@ import sys
 
 from memory import AgentMemory
 from api_config import redact as redact_configured
-from mcp_readiness import wait_for_mcp
 
 MAX_INPUT = 2_000_000
 MAX_CONTEXT = 12_000
@@ -79,8 +78,6 @@ def handle(agent: str, event: dict) -> str:
             )[:MAX_MEMORY]
         return ""
     if name == "UserPromptSubmit":
-        if agent in ("claude-code", "codex"):
-            wait_for_mcp(agent, timeout=7)
         prompt = str(event.get("prompt") or "")
         memory.save(
             f"session:{session_key}:task", redact(prompt)[:MAX_MEMORY], ttl_days=7

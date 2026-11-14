@@ -2,14 +2,11 @@
   "$schema": "./unified-integration/config/ui.api.schema.json",
   "version": 1,
   "_help": {
-    "api_keys": "Edit secret values only here. Empty or whitespace disables dependent cloud tools, including inherited environment keys. Never commit this file.",
-    "connections": "Non-secret endpoints, client IDs and model names. OPENAI_BASE_URL includes /v1.",
-    "mcp": "Built-in local tools start automatically. External roadmap entries stay hidden until their required references and an installed command array are configured. No shell interpolation or automatic npm downloads. Changes are watched by the MCP gateway.",
-    "claude_code": "Existing custom Claude configuration is preserved. The optional api_config.py claude-key helper reads ANTHROPIC_AUTH_TOKEN or ANTHROPIC_API_KEY for custom gateway authentication without requiring claude.ai login."
+    "api_keys": "Credentials for AgentEnhancements MCP services only. Empty or whitespace hides dependent cloud tools, even when a host agent has an environment key. Do not copy agent login/provider credentials here. Never commit this file.",
+    "connections": "MCP service endpoints, client IDs and model names only. OPENAI_BASE_URL applies to embeddings/vision MCP, not the agent's model provider, and includes /v1.",
+    "mcp": "Shared by any MCP-compatible agent. Built-in local tools start automatically. External entries stay hidden until their required references and an installed command array are configured. Changes are watched by the MCP gateway."
   },
   "api_keys": {
-    "ANTHROPIC_API_KEY": "",
-    "ANTHROPIC_AUTH_TOKEN": "",
     "BING_IMAGE_API_KEY": "",
     "BRAVE_API_KEY": "",
     "ELEVENLABS_API_KEY": "",
@@ -27,8 +24,6 @@
     "TAVILY_API_KEY": ""
   },
   "connections": {
-    "ANTHROPIC_BASE_URL": "",
-    "ANTHROPIC_MODEL": "",
     "GOOGLE_OAUTH_CLIENT_ID": "",
     "LANGUAGE_TOOL_URL": "",
     "MICROSOFT_CLIENT_ID": "",

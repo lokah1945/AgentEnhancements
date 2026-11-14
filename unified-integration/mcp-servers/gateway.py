@@ -39,7 +39,6 @@ from api_config import (
     server_state,
     value,
 )
-from mcp_readiness import mark_ready
 
 
 def public_name(server: str, tool: str) -> str:
@@ -170,7 +169,6 @@ class Gateway:
         self.sessions: set = set()
         self.module_locks = {name: asyncio.Lock() for name in BUILTINS}
         self.signature = ""
-        self.marker: Path | None = None
         self.lock = asyncio.Lock()
         self.server = Server(
             "agent-enhancements", version="2.2.0", lifespan=self.lifespan
@@ -279,11 +277,6 @@ class Gateway:
         """Return currently usable tools; never include missing-key cloud tools."""
         self.remember_session()
         config, _ = read_config()
-        if self.marker is None:
-            try:
-                self.marker = mark_ready()
-            except OSError:
-                pass  # Coordination failure must not hide otherwise usable tools.
         return [entry[2] for entry in self.tools(config).values()]
 
     async def call_tool(self, name: str, arguments: dict) -> types.CallToolResult:
@@ -403,11 +396,6 @@ class Gateway:
             watcher.cancel()
             await asyncio.gather(watcher, return_exceptions=True)
             await asyncio.gather(*(worker.stop() for worker in self.externals.values()))
-            if self.marker:
-                try:
-                    self.marker.unlink(missing_ok=True)
-                except OSError:
-                    pass
 
 
 async def main() -> None:

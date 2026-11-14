@@ -127,6 +127,42 @@ jobs:
         run: ECC_TEST_JOBS=8 node tests/run-all.js
         working-directory: ECC
 
+  mcp-servers:
+    name: in-house MCP servers (health + tools)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ffmpeg / tesseract / Pillow for the media & vision servers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg tesseract-ocr
+          pip install pillow
+      - name: Install the MCP SDK
+        run: pip install 'mcp>=1.0'
+      - name: Health-check all built servers (checklist 4.4)
+        run: bash unified-integration/scripts/setup-mcp.sh --check
+      - name: Run the MCP regression module (offline mode)
+        run: |
+          cd unified-integration
+          python3 - <<'PY'
+          import unittest, sys
+          sys.path.insert(0, "tests")
+          from test_mcp_servers import TestMCPCatalog, TestEmbeddings, \
+              TestTaskRouter, TestFfmpeg, TestVision, TestGraphRAG, \
+              TestStyle, TestVideo, TestNetworkServers
+          suite = unittest.TestSuite()
+          for cls in (TestMCPCatalog, TestEmbeddings, TestTaskRouter,
+                      TestFfmpeg, TestVision, TestGraphRAG, TestStyle,
+                      TestVideo, TestNetworkServers):
+              suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(cls))
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          sys.exit(0 if result.wasSuccessful() else 1)
+          PY
+
   markdownlint:
     name: markdownlint (advisory, owned layer)
     runs-on: ubuntu-latest

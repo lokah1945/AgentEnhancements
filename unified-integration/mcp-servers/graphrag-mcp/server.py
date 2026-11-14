@@ -93,8 +93,8 @@ def _corpus_path(corpus_id: str) -> Path:
 
 
 def _load_corpus(corpus_id: str) -> dict | None:
-    if corpus_id in _CORPORA:
-        return _CORPORA[corpus_id]
+    # Another CLI process may have replaced the corpus. Atomic disk snapshots
+    # are authoritative; process-local caches must not hide other clients' edits.
     path = _corpus_path(corpus_id)
     if path.is_file():
         data = json.loads(path.read_text())

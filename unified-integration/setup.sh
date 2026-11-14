@@ -2355,6 +2355,7 @@ main() {
     local runtime_python
     runtime_python="$(bash "$UNIFIED_DIR/scripts/setup-mcp.sh" --prepare)"
     export PATH="$(dirname "$runtime_python"):$PATH"
+    python3 "$UNIFIED_DIR/scripts/api_config.py" init
     detect_agents
     setup_prompts
     aggregate_skills

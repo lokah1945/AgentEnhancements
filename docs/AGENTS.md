@@ -1,7 +1,7 @@
 ---
 title: Agents
-version: 1.3
-last_updated: 2026-11-14
+version: 1.4
+last_updated: 2026-11-15
 audience: users
 ---
 
@@ -55,8 +55,11 @@ Setup preserves user hooks while installing `SessionStart`, `UserPromptSubmit`,
 `PostToolUse` and `Stop` handlers in `~/.claude/settings.json`. Events are read
 from JSON on stdin, not fictional `TOOL_NAME` environment variables. Relevant
 skill paths and prior session notes are supplied automatically. User-scope MCP
-servers belong in `~/.claude.json`; all nine built servers are installed there.
+servers belong in `~/.claude.json`; the gateway loads all nine bundled backends.
 `CLAUDE.md` is marker-merged, preserving personal instructions.
+Custom gateway auth is supported without a claude.ai login. Provider settings
+are preserved; existing static credentials migrate to the central file through
+a native helper. See [central credentials](CONFIGURATION.md).
 
 ### Codex CLI 0.167.2 (verified)
 
@@ -67,6 +70,10 @@ changed hooks require review through `/hooks`; after trust is recorded,
 ordinary `codex` startup activates them automatically. Setup never bypasses
 hook trust or tool permissions. A disabled hooks feature or managed policy
 can prevent activation. Older Codex versions are not covered by this check.
+Codex 0.169.0 was also tested in an isolated installation. Both versions retain
+the MCP tool catalog within a turn; credential revocation is enforced by the
+gateway even when the client still displays a cached name. Newly added tools
+may require a fresh session. See [configuration](CONFIGURATION.md).
 
 ### OpenCode 2.2.5 (verified)
 
@@ -81,7 +88,11 @@ hooks. It has no runtime npm dependencies. OpenCode loads plugins
 asynchronously; a fresh `/api/plugin` response can be empty until location
 initialization completes. Confirm the `agentenhancements` plugin reaches
 `state.status: active` before treating an empty list as an installation failure.
-All nine built MCP servers are registered. OpenCode 1 plugin APIs differ and
+The gateway is registered under `mcp.servers`, with `disabled: false` and
+`codemode: false` to expose its available tools directly. Legacy flat entries,
+`enabled` and `env` fields are migrated. The prompt hook waits for the managed
+connection to settle so the first model request includes its tools.
+OpenCode 1 plugin APIs differ and
 are not supported by this adapter.
 
 ### Cursor (global rule)

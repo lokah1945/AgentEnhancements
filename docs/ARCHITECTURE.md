@@ -1,7 +1,7 @@
 ---
 title: Architecture
-version: 1.3
-last_updated: 2026-11-14
+version: 1.4
+last_updated: 2026-11-15
 audience: maintainers, contributors
 ---
 
@@ -87,7 +87,10 @@ and skill-index schemas are unchanged.
    agent's own config (`~/.claude/settings.json`, `~/.codex/AGENTS.md`,
    ...). The three native adapters preserve user hooks, MCP servers, providers
    and instruction/plugin arrays. Backups are written next to changed files.
-   Nine built MCP servers are installed in each CLI's native format.
+   One native `agent-enhancements` gateway loads the nine built MCP servers.
+   OpenCode 2 uses `mcp.servers`, `disabled` and `environment`; the adapter
+   migrates legacy flat entries. Its prompt hook waits for the managed MCP
+   connection before the first model request captures available tools.
 6b. **link_native_skills** - runs `scripts/link-skills.sh` to symlink the
    curated set (anthropic-skills + replica-skill) into `~/.claude/skills/`
    and `~/.agents/skills/`, making those skills auto-discoverable at
@@ -153,6 +156,16 @@ Scoring uses stop-word filtering (EN + ID), format-family aliases
 zero-friction boost for natively linked skills.
 
 ## Invariants
+
+The private root `ui.api.json` is the credential source for project MCPs.
+`scripts/api_config.py` reads and validates snapshots; the gateway watches
+configuration and sends `notifications/tools/list_changed`. Calls revalidate
+the current schema and credential state, including previously cached names.
+Offline tool subsets remain available with empty keys. External subprocesses
+start only with configured requirements and commands, receive only their
+mapped credentials, and are replaced on key rotation. The registry snapshot
+retains the full catalog; agent-facing search/map/list filters unavailable
+MCPs using the live API configuration.
 
 - One setup script, one index, one memory system, one compression system
   (CONTRACT §2.1).

@@ -43,13 +43,16 @@ import sys
 from pathlib import Path
 import json5
 import tomllib
+sys.path.insert(0, str(Path(sys.argv[2]) / 'unified-integration/scripts'))
+from api_config import server_state
 
 name = sys.argv[1]
 home = Path.home()
 claude = Path(os.environ.get('CLAUDE_CONFIG_DIR', home / '.claude'))
 codex = Path(os.environ.get('CODEX_HOME', home / '.codex'))
 opencode = Path(os.environ.get('XDG_CONFIG_HOME', home / '.config')) / 'opencode'
-configs = [Path(str(claude) + '.json'), Path(sys.argv[2]) / '.mcp.json',
+claude_mcp = claude / '.claude.json' if os.environ.get('CLAUDE_CONFIG_DIR') else home / '.claude.json'
+configs = [claude_mcp, Path(sys.argv[2]) / '.mcp.json',
            codex / 'config.toml', opencode / 'opencode.json', opencode / 'opencode.jsonc']
 for path in configs:
     if not path.is_file():
@@ -60,6 +63,10 @@ for path in configs:
             servers = doc.get(key, {})
             if key == 'mcp':
                 servers = servers.get('servers', servers)
+            if 'agent-enhancements' in servers and server_state(name)['visible']:
+                gateway = servers['agent-enhancements']
+                if gateway.get('enabled', True) and not gateway.get('disabled', False):
+                    raise SystemExit(0)
             if name in servers and servers[name].get('enabled', True) and not servers[name].get('disabled', False):
                 raise SystemExit(0)
     except (ValueError, OSError):

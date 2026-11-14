@@ -17,8 +17,14 @@ try {
   const { default: plugin } = await import("../opencode-plugin/index.js")
   const hooks = new Map()
   let disposed = 0
+  let mcpPolls = 0
+  let toolReloads = 0
   const cleanup = await plugin.setup({
     location: { directory: root, project: { canonical: root } },
+    mcp: { list: async () => ({ data: [{ name: "agent-enhancements", status: {
+      status: ++mcpPolls === 1 ? "pending" : "connected",
+    } }] }) },
+    tool: { reload: async () => { toolReloads++ } },
     session: {
       hook: async (name, callback) => {
         hooks.set(name, callback)
@@ -28,6 +34,8 @@ try {
     },
   })
   await hooks.get("prompt")({ sessionID: "session-one", prompt: { text: "security audit" } })
+  assert.ok(mcpPolls >= 2)
+  assert.equal(toolReloads, 1)
   const request = { sessionID: "session-one", system: [], messages: [] }
   await hooks.get("context")(request)
   assert.match(request.system[0].text, /security-audit\/SKILL.md/)

@@ -1,0 +1,365 @@
+{
+  "$schema": "./unified-integration/config/ui.api.schema.json",
+  "version": 1,
+  "_help": {
+    "api_keys": "Edit secret values only here. Empty or whitespace disables dependent cloud tools, including inherited environment keys. Never commit this file.",
+    "connections": "Non-secret endpoints, client IDs and model names. OPENAI_BASE_URL includes /v1.",
+    "mcp": "Built-in local tools start automatically. External roadmap entries stay hidden until their required references and an installed command array are configured. No shell interpolation or automatic npm downloads. Changes are watched by the MCP gateway.",
+    "claude_code": "Existing custom Claude configuration is preserved. The optional api_config.py claude-key helper reads ANTHROPIC_AUTH_TOKEN or ANTHROPIC_API_KEY for custom gateway authentication without requiring claude.ai login."
+  },
+  "api_keys": {
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_AUTH_TOKEN": "",
+    "BING_IMAGE_API_KEY": "",
+    "BRAVE_API_KEY": "",
+    "ELEVENLABS_API_KEY": "",
+    "EXA_API_KEY": "",
+    "FIGMA_TOKEN": "",
+    "FIRECRAWL_API_KEY": "",
+    "GITHUB_TOKEN": "",
+    "GOOGLE_OAUTH_CLIENT_SECRET": "",
+    "HEYGEN_API_KEY": "",
+    "LINEAR_API_KEY": "",
+    "MICROSOFT_CLIENT_SECRET": "",
+    "NEO4J_PASSWORD": "",
+    "NEWSAPI_KEY": "",
+    "OPENAI_API_KEY": "",
+    "TAVILY_API_KEY": ""
+  },
+  "connections": {
+    "ANTHROPIC_BASE_URL": "",
+    "ANTHROPIC_MODEL": "",
+    "GOOGLE_OAUTH_CLIENT_ID": "",
+    "LANGUAGE_TOOL_URL": "",
+    "MICROSOFT_CLIENT_ID": "",
+    "NEO4J_URI": "",
+    "NEO4J_USER": "",
+    "OPENAI_BASE_URL": "https://api.openai.com/v1",
+    "OPENAI_EMBEDDING_MODEL": "text-embedding-3-small",
+    "OPENAI_VISION_MODEL": "gpt-4o-mini"
+  },
+  "mcp": {
+    "brave-search-mcp": {
+      "enabled": true,
+      "required": [
+        "BRAVE_API_KEY"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "BRAVE_API_KEY": "BRAVE_API_KEY"
+      }
+    },
+    "tavily-mcp": {
+      "enabled": true,
+      "required": [
+        "TAVILY_API_KEY"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "TAVILY_API_KEY": "TAVILY_API_KEY"
+      }
+    },
+    "exa-mcp": {
+      "enabled": true,
+      "required": [
+        "EXA_API_KEY"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "EXA_API_KEY": "EXA_API_KEY"
+      }
+    },
+    "firecrawl-mcp": {
+      "enabled": true,
+      "required": [
+        "FIRECRAWL_API_KEY"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "FIRECRAWL_API_KEY": "FIRECRAWL_API_KEY"
+      }
+    },
+    "neo4j-mcp": {
+      "enabled": true,
+      "required": [
+        "NEO4J_URI",
+        "NEO4J_USER",
+        "NEO4J_PASSWORD"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "NEO4J_URI": "NEO4J_URI",
+        "NEO4J_USER": "NEO4J_USER",
+        "NEO4J_PASSWORD": "NEO4J_PASSWORD"
+      }
+    },
+    "graphrag-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": []
+    },
+    "embeddings-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    "browser-tools-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "lighthouse-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "pa11y-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "figma-mcp": {
+      "enabled": true,
+      "required": [
+        "FIGMA_TOKEN"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "FIGMA_TOKEN": "FIGMA_TOKEN"
+      }
+    },
+    "storybook-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "mermaid-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "excalidraw-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "google-slides-mcp": {
+      "enabled": true,
+      "required": [
+        "GOOGLE_OAUTH_CLIENT_ID",
+        "GOOGLE_OAUTH_CLIENT_SECRET"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "GOOGLE_OAUTH_CLIENT_ID": "GOOGLE_OAUTH_CLIENT_ID",
+        "GOOGLE_OAUTH_CLIENT_SECRET": "GOOGLE_OAUTH_CLIENT_SECRET"
+      },
+      "note": "Catalog entry only. Client ID/secret alone are not completed OAuth authorization; install and authorize the chosen implementation before setting command."
+    },
+    "office-mcp": {
+      "enabled": true,
+      "required": [
+        "MICROSOFT_CLIENT_ID",
+        "MICROSOFT_CLIENT_SECRET"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "MICROSOFT_CLIENT_ID": "MICROSOFT_CLIENT_ID",
+        "MICROSOFT_CLIENT_SECRET": "MICROSOFT_CLIENT_SECRET"
+      },
+      "note": "Catalog entry only. Client ID/secret alone are not completed OAuth authorization; install and authorize the chosen implementation before setting command."
+    },
+    "image-search-mcp": {
+      "enabled": true,
+      "required": [
+        "BING_IMAGE_API_KEY"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "BING_IMAGE_API_KEY": "BING_IMAGE_API_KEY"
+      }
+    },
+    "ffmpeg-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": []
+    },
+    "video-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": []
+    },
+    "heygen-mcp": {
+      "enabled": true,
+      "required": [
+        "HEYGEN_API_KEY"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "HEYGEN_API_KEY": "HEYGEN_API_KEY"
+      }
+    },
+    "elevenlabs-mcp": {
+      "enabled": true,
+      "required": [
+        "ELEVENLABS_API_KEY"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "ELEVENLABS_API_KEY": "ELEVENLABS_API_KEY"
+      }
+    },
+    "typescript-language-server-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "eslint-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "jupyter-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "python-repl-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "memory-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "task-router-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": []
+    },
+    "github-issues-mcp": {
+      "enabled": true,
+      "required": [
+        "GITHUB_TOKEN"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "GITHUB_TOKEN": "GITHUB_TOKEN"
+      }
+    },
+    "linear-mcp": {
+      "enabled": true,
+      "required": [
+        "LINEAR_API_KEY"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "LINEAR_API_KEY": "LINEAR_API_KEY"
+      }
+    },
+    "wikipedia-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "arxiv-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": []
+    },
+    "newsapi-mcp": {
+      "enabled": true,
+      "required": [
+        "NEWSAPI_KEY"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "NEWSAPI_KEY": "NEWSAPI_KEY"
+      }
+    },
+    "google-news-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": []
+    },
+    "filesystem-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "pdf-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "command": [],
+      "env": {}
+    },
+    "vision-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    "style-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": []
+    },
+    "grammar-mcp": {
+      "enabled": true,
+      "required": [
+        "LANGUAGE_TOOL_URL"
+      ],
+      "optional": [],
+      "command": [],
+      "env": {
+        "LANGUAGE_TOOL_URL": "LANGUAGE_TOOL_URL"
+      }
+    }
+  }
+}

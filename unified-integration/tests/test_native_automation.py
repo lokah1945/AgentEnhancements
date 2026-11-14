@@ -193,8 +193,8 @@ class NativeConfigurationTests(unittest.TestCase):
         self.env = {
             "HOME": str(self.home),
             "CODEX_HOME": str(self.home / ".codex"),
-            "CLAUDE_CONFIG_DIR": str(self.home / ".claude"),
             "XDG_CONFIG_HOME": str(self.home / ".config"),
+            "AGENT_ENHANCEMENTS_API_FILE": str(self.home / "ui.api.json"),
         }
 
     def tearDown(self):
@@ -234,7 +234,7 @@ class NativeConfigurationTests(unittest.TestCase):
         self.assertEqual(len(handlers), 2)
         self.assertEqual(config["env"]["CUSTOM"], "unchanged")
         self.assertEqual(
-            len(json.loads((self.home / ".claude.json").read_text())["mcpServers"]), 9
+            len(json.loads((self.home / ".claude.json").read_text())["mcpServers"]), 1
         )
         self.assertFalse((self.home / ".claude/mcp.json").exists())
 
@@ -254,10 +254,45 @@ class NativeConfigurationTests(unittest.TestCase):
         self.assertIn("# personal comment", content)
         self.assertEqual(doc["model"], "personal-model")
         self.assertEqual(doc["mcp_servers"]["personal"]["command"], "custom")
-        self.assertEqual(len(doc["mcp_servers"]), 10)
+        self.assertEqual(len(doc["mcp_servers"]), 2)
         hooks = json.loads((path.parent / "hooks.json").read_text())["hooks"]
         self.assertIn("SessionStart", hooks)
         self.assertIn("UserPromptSubmit", hooks)
+
+    def test_custom_claude_auth_moves_to_central_file_without_changing_provider(self):
+        path = self.home / ".claude/settings.json"
+        path.parent.mkdir()
+        path.write_text(
+            json.dumps(
+                {
+                    "env": {
+                        "ANTHROPIC_AUTH_TOKEN": "fixture-custom-token",
+                        "ANTHROPIC_API_KEY": "fixture-custom-key",
+                        "ANTHROPIC_BASE_URL": "http://127.0.0.1:1234",
+                        "ANTHROPIC_MODEL": "custom-model",
+                    }
+                }
+            )
+        )
+        self.install("claude-code")
+        doc = json.loads(path.read_text())
+        self.assertEqual(doc["env"]["ANTHROPIC_MODEL"], "custom-model")
+        self.assertEqual(doc["env"]["ANTHROPIC_BASE_URL"], "http://127.0.0.1:1234")
+        self.assertNotIn("ANTHROPIC_AUTH_TOKEN", doc["env"])
+        self.assertNotIn("ANTHROPIC_API_KEY", doc["env"])
+        self.assertIn("api_config.py", doc["apiKeyHelper"])
+        api_path = Path(self.env["AGENT_ENHANCEMENTS_API_FILE"])
+        api = json.loads(api_path.read_text())
+        self.assertEqual(
+            api["api_keys"]["ANTHROPIC_AUTH_TOKEN"], "fixture-custom-token"
+        )
+        api["api_keys"]["ANTHROPIC_AUTH_TOKEN"] = ""
+        api["api_keys"]["ANTHROPIC_API_KEY"] = ""
+        api_path.write_text(json.dumps(api))
+        self.install("claude-code")
+        self.assertEqual(
+            json.loads(api_path.read_text())["api_keys"]["ANTHROPIC_AUTH_TOKEN"], ""
+        )
 
     def test_opencode_edits_existing_jsonc_and_preserves_user_arrays(self):
         path = self.home / ".config/opencode/opencode.jsonc"
@@ -273,15 +308,41 @@ class NativeConfigurationTests(unittest.TestCase):
         self.assertIn("personal.md", doc["instructions"])
         self.assertIn("custom", doc["plugins"])
         self.assertIn("team", doc["skills"])
-        self.assertEqual(len(doc["mcp"]), 9)
+        self.assertEqual(len(doc["mcp"]["servers"]), 1)
         self.assertTrue(
             all(
                 c["type"] == "local" and isinstance(c["command"], list)
-                for c in doc["mcp"].values()
+                for c in doc["mcp"]["servers"].values()
             )
         )
         self.assertFalse(path.with_suffix(".json").exists())
         self.assertTrue(list(path.parent.glob("*.backup.*")))
+
+    def test_opencode_migrates_v1_server_shape_and_environment(self):
+        path = self.home / ".config/opencode/opencode.json"
+        path.parent.mkdir(parents=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "mcp": {
+                        "personal": {
+                            "type": "local",
+                            "command": ["custom"],
+                            "enabled": False,
+                            "env": {"CUSTOM": "preserved"},
+                        }
+                    }
+                }
+            )
+        )
+        self.install("opencode")
+        mcp = json.loads(path.read_text())["mcp"]
+        self.assertEqual(list(mcp), ["servers"])
+        self.assertTrue(mcp["servers"]["personal"]["disabled"])
+        self.assertEqual(
+            mcp["servers"]["personal"]["environment"], {"CUSTOM": "preserved"}
+        )
+        self.assertFalse(mcp["servers"]["agent-enhancements"]["codemode"])
 
     def test_user_server_name_collision_is_preserved(self):
         path = self.home / ".claude.json"
@@ -293,6 +354,14 @@ class NativeConfigurationTests(unittest.TestCase):
             json.loads(path.read_text())["mcpServers"]["style-mcp"]["command"],
             "custom-user",
         )
+
+    def test_custom_claude_config_dir_uses_its_inner_global_file(self):
+        custom = self.home / "custom-claude"
+        self.env["CLAUDE_CONFIG_DIR"] = str(custom)
+        self.install("claude-code")
+        doc = json.loads((custom / ".claude.json").read_text())
+        self.assertIn("agent-enhancements", doc["mcpServers"])
+        self.assertFalse(self.home.joinpath("custom-claude.json").exists())
 
     def test_malformed_user_config_is_untouched_and_setup_reports_failure(self):
         path = self.home / ".claude/settings.json"

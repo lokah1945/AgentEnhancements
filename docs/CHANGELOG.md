@@ -1,11 +1,25 @@
 ---
 title: Changelog
-version: 1.1
-last_updated: 2026-11-13
+version: 1.2
+last_updated: 2026-11-15
 audience: all
 ---
 
 # Changelog
+
+## 2026-11-15 — Central credentials and automatic MCP availability
+
+- Added private root `ui.api.json`, an empty template/schema and all catalog
+  credential mappings. Empty keys override inherited API environment values.
+- Added the native gateway with live tool-list notifications, current-call
+  credential/schema checks, optional external subprocesses and key rotation.
+- Corrected GraphRAG's API metadata; kept local embeddings by default and
+  gated cloud vision/embeddings through the central file.
+- Fixed OpenCode 2's MCP shape/fields and its first-prompt connection race.
+- Redacted configured secrets in lifecycle notes and MCP diagnostics.
+- Fixed stale GraphRAG reads, concurrent video manifest updates and image
+  comparison's incorrect original-size flag.
+- Preserved custom Claude gateway auth without requiring claude.ai login.
 
 ## 2026-11-14 — Native automation audit
 

@@ -1,49 +1,9 @@
 {
-  "_comment": "Canonical built-server template. setup.sh / scripts/native-integration.py render it into Claude user ~/.claude.json, Codex config.toml and OpenCode opencode.json(c). PLACEHOLDER_REPO_ROOT is replaced by the installation path. External catalog servers still require their own installation and credentials.",
+  "_comment": "Canonical native gateway template. setup.sh renders the repository path and isolated Python interpreter for all three CLIs. Credentials are read live from ui.api.json; empty-key cloud tools and unconfigured external servers are hidden. Nine bundled implementations are loaded internally by the gateway.",
   "mcpServers": {
-    "embeddings-mcp": {
+    "agent-enhancements": {
       "command": "python3",
-      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/embeddings-mcp/server.py"],
-      "env": {}
-    },
-    "task-router-mcp": {
-      "command": "python3",
-      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/task-router-mcp/server.py"],
-      "env": {}
-    },
-    "ffmpeg-mcp": {
-      "command": "python3",
-      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/ffmpeg-mcp/server.py"],
-      "env": {}
-    },
-    "vision-mcp": {
-      "command": "python3",
-      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/vision-mcp/server.py"],
-      "env": {}
-    },
-    "graphrag-mcp": {
-      "command": "python3",
-      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/graphrag-mcp/server.py"],
-      "env": {}
-    },
-    "arxiv-mcp": {
-      "command": "python3",
-      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/arxiv-mcp/server.py"],
-      "env": {}
-    },
-    "google-news-mcp": {
-      "command": "python3",
-      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/google-news-mcp/server.py"],
-      "env": {}
-    },
-    "video-mcp": {
-      "command": "python3",
-      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/video-mcp/server.py"],
-      "env": {}
-    },
-    "style-mcp": {
-      "command": "python3",
-      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/style-mcp/server.py"],
+      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/gateway.py"],
       "env": {}
     }
   }

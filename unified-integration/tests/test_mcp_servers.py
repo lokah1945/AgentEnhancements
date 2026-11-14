@@ -31,6 +31,7 @@ import shutil
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from helpers import REPO_DIR
@@ -42,6 +43,20 @@ BUILT = [
     "embeddings-mcp", "task-router-mcp", "ffmpeg-mcp", "vision-mcp",
     "graphrag-mcp", "arxiv-mcp", "google-news-mcp", "video-mcp", "style-mcp",
 ]
+
+
+def setUpModule():
+    """Never let owner credentials turn a regression test into a paid call."""
+    global _api_directory, _api_environment
+    _api_directory = tempfile.TemporaryDirectory()
+    _api_environment = patch.dict(__import__("os").environ, {
+        "AGENT_ENHANCEMENTS_API_FILE": str(Path(_api_directory.name) / "no-credentials.json")})
+    _api_environment.start()
+
+
+def tearDownModule():
+    _api_environment.stop()
+    _api_directory.cleanup()
 
 
 def load_server(slug: str):
@@ -269,6 +284,10 @@ class TestVision(unittest.TestCase):
         self.assertGreater(same, 0.95)
         self.assertGreater(same, diff)
 
+    def test_compare_reports_original_size_difference(self):
+        result = self.mod.TOOLS["compare"](str(self.flat), str(self.text))
+        self.assertFalse(result["same_size"])
+
     def test_describe_without_key_is_honest_metadata(self):
         import os
         saved = os.environ.pop("OPENAI_API_KEY", None)
@@ -358,6 +377,33 @@ class TestStyle(unittest.TestCase):
 
 
 class TestStatePrivacy(unittest.TestCase):
+    def test_graphrag_observes_updates_from_another_client(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"AGENT_MEMORY_ROOT": tmp}
+            with patch.dict(__import__("os").environ, env):
+                a = load_server("graphrag-mcp")
+                b = load_server("graphrag-mcp")
+            a.TOOLS["index"]("shared", documents=[{"text": "Alice builds robots in Boston."}])
+            a.TOOLS["query"]("shared", "Alice")
+            b.TOOLS["index"]("shared", documents=[{"text": "Carol studies planets in Jakarta."}])
+            current = a.TOOLS["query"]("shared", "Carol")
+            self.assertIn("Carol", json.dumps(current))
+            self.assertNotIn("Alice", json.dumps(current))
+
+    def test_concurrent_timeline_updates_do_not_lose_entries(self):
+        from concurrent.futures import ThreadPoolExecutor
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.dict(__import__("os").environ, {"AGENT_MEMORY_ROOT": tmp}):
+                clients = [load_server("video-mcp") for _ in range(16)]
+            clip = Path(tmp) / "fixture.mp4"
+            clip.touch()
+            def save(i):
+                return clients[i].TOOLS["timeline"](f"parallel-{i}", [{"path": str(clip), "start": 0, "end": 1}])
+            with ThreadPoolExecutor(max_workers=8) as executor:
+                results = list(executor.map(save, range(16)))
+            self.assertTrue(all(item.get("ok") for item in results))
+            self.assertEqual(len(clients[0]._load_all()), 16)
+
     def test_corpus_evidence_is_stored_with_private_permissions(self):
         import os
         with tempfile.TemporaryDirectory() as tmp:

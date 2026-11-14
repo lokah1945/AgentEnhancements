@@ -15,7 +15,7 @@ if [ ! -x "$PYTHON_BIN" ]; then
         python3 -m venv "$DATA_DIR/venv" >&2
     fi
 fi
-if ! "$PYTHON_BIN" -c 'import mcp, PIL, yaml, tomlkit, json5' 2>/dev/null; then
+if ! "$PYTHON_BIN" -c 'import mcp, PIL, yaml, tomlkit, json5, jsonschema, filelock' 2>/dev/null; then
     log "Installing runtime dependencies into $DATA_DIR/venv"
     if command -v uv >/dev/null 2>&1; then
         uv pip install --python "$PYTHON_BIN" -r "$UNIFIED_DIR/requirements.txt" >&2

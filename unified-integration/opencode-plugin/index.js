@@ -9,6 +9,27 @@ const dataHome = process.env.XDG_DATA_HOME || join(homedir(), ".local", "share")
 const isolatedPython = join(dataHome, "agentenhancements", "venv", "bin", "python")
 const python = existsSync(isolatedPython) ? isolatedPython : "python3"
 
+/** OpenCode connects MCP asynchronously. Wait for our managed server before
+ * the first model request captures its immutable tool snapshot. */
+async function readyMcp(ctx) {
+  if (!ctx.mcp?.list) return
+  const deadline = Date.now() + 10000
+  try {
+    while (Date.now() < deadline) {
+      const response = await ctx.mcp.list()
+      const servers = Array.isArray(response) ? response : response.data
+      const own = servers.find((server) => server.name === "agent-enhancements")
+      if (!own || own.status.status !== "pending") {
+        if (own?.status.status === "connected") await ctx.tool.reload()
+        return
+      }
+      await new Promise((done) => setTimeout(done, 100))
+    }
+  } catch {
+    // A disconnected/disabled MCP must not abort the user's prompt.
+  }
+}
+
 /** Run the same local event handler as Claude/Codex, without a shell. */
 export function runtime(event) {
   return new Promise((done) => {
@@ -39,6 +60,7 @@ export default {
       hook_event_name: name, session_id: id, cwd, ...extra,
     })
     registrations.push(await ctx.session.hook("prompt", async (input) => {
+      await readyMcp(ctx)
       const id = input.sessionID
       const previous = notes.has(id) ? notes.get(id).previous : await runtime(event("SessionStart", id))
       const skills = await runtime(event("UserPromptSubmit", id, { prompt: input.prompt.text || "" }))

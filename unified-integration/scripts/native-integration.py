@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Merge enhancements into the configuration actually read by each CLI.
 
-Run with the isolated interpreter prepared by setup-mcp.sh. No credentials,
-provider choices, tool approvals, user hooks, or user MCP servers are replaced.
+Run with the isolated interpreter prepared by setup-mcp.sh. Provider choices,
+tool approvals, user hooks and user MCP servers are preserved. Existing custom
+Claude auth environment values move to private ui.api.json via apiKeyHelper.
 """
 
 from __future__ import annotations
@@ -19,6 +20,8 @@ import tempfile
 
 import json5
 import tomlkit
+
+from api_config import BUILTINS, initialize, migrate_claude_auth
 
 UI = Path(__file__).resolve().parent.parent
 ROOT = UI.parent
@@ -101,8 +104,21 @@ def merge_hooks(doc: dict, agent: str) -> None:
 
 
 def mcp_block() -> dict:
-    """Render the canonical MCP template with the isolated Python interpreter."""
-    template = json.loads((UI / "mcp-servers/mcp.json.example").read_text())
+    """Expose one stable gateway; it gates and reloads credentials internally."""
+    initialize()
+    template = json.loads((UI / "mcp-servers/mcp.json.example").read_text())[
+        "mcpServers"
+    ]
+    for name in (
+        "AGENT_ENHANCEMENTS_API_FILE",
+        "AGENT_MEMORY_ROOT",
+        "XDG_STATE_HOME",
+        "AE_FFMPEG_ALLOWED_ROOTS",
+    ):
+        if os.environ.get(name):
+            template["agent-enhancements"].setdefault("env", {})[name] = os.environ[
+                name
+            ]
     return {
         name: {
             **cfg,
@@ -111,17 +127,25 @@ def mcp_block() -> dict:
                 arg.replace("PLACEHOLDER_REPO_ROOT", str(ROOT)) for arg in cfg["args"]
             ],
         }
-        for name, cfg in template["mcpServers"].items()
+        for name, cfg in template.items()
     }
 
 
 def merge_servers(existing: dict, block: dict) -> None:
     """Refresh managed servers; keep name collisions belonging to the user."""
+    # Retire only our previous direct entries. Leaving those active would
+    # bypass the gateway's visibility and credential checks.
+    for name in BUILTINS:
+        old = existing.get(name)
+        if isinstance(old, dict):
+            command = json.dumps(old.get("args", old.get("command", [])))
+            if str(UI / "mcp-servers" / name / "server.py") in command:
+                del existing[name]
     for name, cfg in block.items():
         old = existing.get(name)
         if old is not None and old != cfg:
             old_args = json.dumps(old.get("args", old.get("command", [])))
-            if f"mcp-servers/{name}/server.py" not in old_args:
+            if str(UI / "mcp-servers/gateway.py") not in old_args:
                 print(f"[native] preserving user server: {name}", file=sys.stderr)
                 continue
         existing[name] = cfg
@@ -137,9 +161,30 @@ def install(agent: str, *, mcp_only: bool = False) -> None:
             path = config_dir / "settings.json"
             doc = read_json(path)
             merge_hooks(doc, agent)
+            if not doc.get("apiKeyHelper") and migrate_claude_auth(doc.get("env", {})):
+                doc["apiKeyHelper"] = shlex.join(
+                    [sys.executable, str(UI / "scripts/api_config.py"), "claude-key"]
+                )
+                if os.environ.get("AGENT_ENHANCEMENTS_API_FILE"):
+                    doc["apiKeyHelper"] = (
+                        "env "
+                        + shlex.quote(
+                            "AGENT_ENHANCEMENTS_API_FILE="
+                            + os.environ["AGENT_ENHANCEMENTS_API_FILE"]
+                        )
+                        + " "
+                        + doc["apiKeyHelper"]
+                    )
+                doc.setdefault("env", {}).setdefault(
+                    "CLAUDE_CODE_API_KEY_HELPER_TTL_MS", "1000"
+                )
             write_json(path, doc)
         # User-scope MCP is in ~/.claude.json, not ~/.claude/mcp.json.
-        path = Path(str(config_dir) + ".json")
+        path = (
+            config_dir / ".claude.json"
+            if os.environ.get("CLAUDE_CONFIG_DIR")
+            else home / ".claude.json"
+        )
         doc = read_json(path)
         merge_servers(doc.setdefault("mcpServers", {}), block)
         write_json(path, doc)
@@ -169,11 +214,34 @@ def install(agent: str, *, mcp_only: bool = False) -> None:
             name: {
                 "type": "local",
                 "command": [cfg["command"], *cfg["args"]],
-                "enabled": True,
+                "disabled": False,
+                "codemode": False,
+                **({"environment": cfg["env"]} if cfg.get("env") else {}),
             }
             for name, cfg in block.items()
         }
-        merge_servers(doc.setdefault("mcp", {}), converted)
+        mcp = doc.setdefault("mcp", {})
+        # OpenCode 2 ignores V1's flat mcp.<name> entries. Migrate valid
+        # legacy servers (including personal ones) without changing their
+        # commands, credentials or existing disabled state.
+        servers = mcp.setdefault("servers", {})
+        for name, legacy in list(mcp.items()):
+            if (
+                name == "servers"
+                or not isinstance(legacy, dict)
+                or "type" not in legacy
+            ):
+                continue
+            normalized = dict(legacy)
+            if "enabled" in normalized:
+                enabled = normalized.pop("enabled")
+                normalized.setdefault("disabled", not enabled)
+            if "env" in normalized:
+                env = normalized.pop("env")
+                normalized.setdefault("environment", env)
+            servers.setdefault(name, normalized)
+            del mcp[name]
+        merge_servers(servers, converted)
         if not mcp_only:
             # Use the curated set natively, plus prompt-time routing for the
             # full index, avoiding thousands of skill descriptions per call.

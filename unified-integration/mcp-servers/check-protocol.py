@@ -16,8 +16,11 @@ import tempfile
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+from api_config import BUILTINS
 
-async def check(name: str, script: str) -> bool:
+
+async def check(name: str, script: str, health_tool: str = "health") -> bool:
     """Initialize one subprocess and call its advertised health tool."""
     try:
         async with asyncio.timeout(25):
@@ -32,9 +35,9 @@ async def check(name: str, script: str) -> bool:
                     async with ClientSession(read, write) as session:
                         await session.initialize()
                         tools = await session.list_tools()
-                        if "health" not in {tool.name for tool in tools.tools}:
+                        if health_tool not in {tool.name for tool in tools.tools}:
                             raise ValueError("health tool missing")
-                        result = await session.call_tool("health", {})
+                        result = await session.call_tool(health_tool, {})
                         if result.isError:
                             raise ValueError("health tool returned an MCP error")
                         text = "\n".join(
@@ -55,12 +58,12 @@ async def check(name: str, script: str) -> bool:
 async def main() -> None:
     """Probe the exact built server set in the canonical template."""
     directory = Path(__file__).resolve().parent
-    template = json.loads((directory / "mcp.json.example").read_text())
     results = await asyncio.gather(
         *[
             check(name, str(directory / name / "server.py"))
-            for name in template["mcpServers"]
-        ]
+            for name in BUILTINS
+        ],
+        check("agent-enhancements", str(directory / "gateway.py"), "embeddings_health"),
     )
     print(f"MCP protocol: {sum(results)}/{len(results)} passed")
     if not all(results):

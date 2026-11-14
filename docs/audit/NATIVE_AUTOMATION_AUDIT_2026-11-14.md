@@ -118,10 +118,13 @@ python3 unified-integration/tests/smoke-native-clis.py
 
 ## Hal yang masih membatasi
 
-1. **Akun layanan.** Claude Code pada mesin ini belum login. Credential
-   OpenCode Console yang ada mengembalikan expired/401. Codex sudah login.
-   Setup dan smoke lokal tidak mengganti credential akun. Pemakaian model
-   asli memerlukan akun/provider yang valid, sekali dikonfigurasi oleh pemilik.
+1. **Provider layanan.** Pemilik memakai konfigurasi custom Claude Code;
+   login claude.ai tidak diperlukan untuk jalur gateway custom. Status
+   `claude auth status` bukan bukti konfigurasi custom tidak dapat bekerja.
+   Smoke localhost membuktikan jalur custom tersebut; endpoint/credential
+   produksi pemilik belum diuji. Credential OpenCode Console yang diperiksa
+   sebelumnya mengembalikan expired/401, tetapi provider custom lain bisa
+   dipakai. Setup mempertahankan konfigurasi provider pengguna.
 2. **ECC belum hijau.** Seluruh suite vendornya dijalankan: 8.246 lulus,
    **43 gagal pada 10 file** dari 8.289 test. Rerun terhadap sepuluh file tetap
    menghasilkan 43 kegagalan. Ada asumsi lingkungan yang terbukti gagal

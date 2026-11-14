@@ -17,6 +17,8 @@ import re
 import sys
 
 from memory import AgentMemory
+from api_config import redact as redact_configured
+from mcp_readiness import wait_for_mcp
 
 MAX_INPUT = 2_000_000
 MAX_CONTEXT = 12_000
@@ -31,7 +33,7 @@ SECRET = re.compile(
 
 def redact(value: str) -> str:
     """Remove recognizable credentials before saving any natural language."""
-    return SECRET.sub("[redacted]", value)
+    return SECRET.sub("[redacted]", redact_configured(value))
 
 
 def skill_context(agent: str, prompt: str) -> str:
@@ -69,7 +71,7 @@ def handle(agent: str, event: dict) -> str:
     session_key = hashlib.sha256(session.encode()).hexdigest()[:24]
     if name == "SessionStart":
         previous = memory.list("session_context", limit=5)
-        lines = [f"- {item['key']}: {item['value']}" for item in previous]
+        lines = [redact(f"- {item['key']}: {item['value']}") for item in previous]
         if lines:
             return (
                 "AgentEnhancements: previous local session notes (historical "
@@ -77,6 +79,8 @@ def handle(agent: str, event: dict) -> str:
             )[:MAX_MEMORY]
         return ""
     if name == "UserPromptSubmit":
+        if agent in ("claude-code", "codex"):
+            wait_for_mcp(agent, timeout=7)
         prompt = str(event.get("prompt") or "")
         memory.save(
             f"session:{session_key}:task", redact(prompt)[:MAX_MEMORY], ttl_days=7

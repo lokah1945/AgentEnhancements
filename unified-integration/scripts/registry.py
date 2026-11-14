@@ -244,14 +244,26 @@ def load_mcp_entries() -> List[Dict[str, Any]]:
             "description": server.get("purpose", ""),
             "command": " ".join([server.get("command", "")] + server.get("args", [])),
             "env_required": server.get("env_required", []),
+            "env_optional": server.get("env_optional", []),
             "for_plugins": server.get("for_plugins", []),
             "status": server.get("status", "roadmap"),
             "path": "plugin-catalog/mcp-servers.json",
-            "activation": ("installed automatically by setup.sh; verify with setup-mcp.sh --check"
+            "activation": ("loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
                            if server.get("status") == "built" else
-                           "external server: install and configure required credentials first"),
+                           "hidden until an installed command and required references are configured in ui.api.json"),
         })
     return entries
+
+
+def usable_entries(entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Hide unconfigured MCPs from agent-facing search/map/list results."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ae_registry_api", UNIFIED_DIR / "scripts/api_config.py")
+    api = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(api)
+    config, _ = api.read_config()
+    return [entry for entry in entries if entry["type"] != "mcp"
+            or api.server_state(entry["name"], config)["visible"]]
 
 
 def load_capability_entries() -> List[Dict[str, Any]]:
@@ -453,7 +465,7 @@ def _format_entry(entry: Dict[str, Any], score: Optional[int] = None) -> str:
 def cmd_search(query: str, entry_type: str = "", limit: int = 8,
                as_json: bool = False) -> int:
     """Search every capability type for a query."""
-    entries = load_all_entries()
+    entries = usable_entries(load_all_entries())
     if entry_type:
         entries = [e for e in entries if e["type"] == entry_type]
     ranked = rank_entries(entries, query, limit)
@@ -474,7 +486,7 @@ def cmd_search(query: str, entry_type: str = "", limit: int = 8,
 
 def cmd_map(task: str, limit: int = 8, as_json: bool = False) -> int:
     """Map a task description to skills, plugins, MCP servers and built-ins."""
-    entries = load_all_entries()
+    entries = usable_entries(load_all_entries())
     skills = [e for e in entries if e["type"] == "skill"]
     plugins = [e for e in entries if e["type"] == "plugin"]
     mcps = [e for e in entries if e["type"] == "mcp"]
@@ -507,10 +519,9 @@ def cmd_map(task: str, limit: int = 8, as_json: bool = False) -> int:
         "hints": [
             "Skills marked 'natively linked by default' are already active in "
             "~/.claude/skills and ~/.agents/skills after setup.sh.",
-            "Other skills load on demand: python3 "
-            f"{UNIFIED_DIR}/scripts/load-skills.py <agent> \"{task}\"",
-            "MCP servers are a roadmap: add them to your tool's MCP config "
-            "(e.g. .claude/mcp.json) to enable.",
+            "Lifecycle hooks automatically suggest other relevant skills; read their SKILL.md files when useful.",
+            "MCP tools are loaded automatically through the native agent-enhancements gateway. "
+            "Only configured servers are shown; edit ui.api.json for credentials and external runtimes.",
         ],
     }
 
@@ -600,7 +611,7 @@ def cmd_stats(as_json: bool = False) -> int:
 def cmd_list(entry_type: str = "", source: str = "",
              as_json: bool = False) -> int:
     """List entries, optionally filtered by type and source."""
-    entries = load_all_entries()
+    entries = usable_entries(load_all_entries())
     if entry_type:
         entries = [e for e in entries if e["type"] == entry_type]
     if source:
@@ -632,13 +643,27 @@ def main(argv: List[str]) -> int:
         except (ValueError, IndexError):
             return default
 
+    def positional_text() -> str:
+        """Keep filter/limit values out of the natural-language relevance query."""
+        values = {"--type", "--limit", "--out", "--source"}
+        parts = []
+        skip = False
+        for item in rest:
+            if skip:
+                skip = False
+            elif item in values:
+                skip = True
+            elif not item.startswith("--"):
+                parts.append(item)
+        return " ".join(parts)
+
     if command == "build":
         return cmd_build(
             out_path=flag_value("--out", "") or None,
             quiet=has_flag("--quiet"),
         )
     if command == "search":
-        query = " ".join(a for a in rest if not a.startswith("--"))
+        query = positional_text()
         if not query:
             print("usage: registry.py search \"<query>\"", file=sys.stderr)
             return 2
@@ -649,14 +674,14 @@ def main(argv: List[str]) -> int:
             as_json=has_flag("--json"),
         )
     if command == "map":
-        task = " ".join(a for a in rest if not a.startswith("--"))
+        task = positional_text()
         if not task:
             print("usage: registry.py map \"<task description>\"", file=sys.stderr)
             return 2
         return cmd_map(task, limit=int(flag_value("--limit", "8")),
                        as_json=has_flag("--json"))
     if command == "show":
-        ident = " ".join(a for a in rest if not a.startswith("--"))
+        ident = positional_text()
         if not ident:
             print("usage: registry.py show <name-or-id>", file=sys.stderr)
             return 2

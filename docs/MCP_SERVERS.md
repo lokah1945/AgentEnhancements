@@ -1,7 +1,7 @@
 ---
 title: MCP Server Roadmap
-version: 1.1
-last_updated: 2026-11-14
+version: 1.2
+last_updated: 2026-11-15
 audience: all agents and maintainers
 ---
 
@@ -9,6 +9,15 @@ audience: all agents and maintainers
 
 Konfigurasi mesin terbaca: `plugin-catalog/mcp-servers.json` (38 server,
 prioritas P0/P1/P2). File ini adalah dokumentasi + matriks relasi plugin ke MCP.
+
+Runtime aktif memakai satu gateway native untuk sembilan implementasi bawaan.
+Credential dan pemetaan 38 MCP ada di `ui.api.json` pada root repository;
+lihat [konfigurasi](CONFIGURATION.md). Key kosong menyembunyikan tool cloud;
+server eksternal tanpa runtime/credential tidak ditawarkan ke agent. Perubahan
+dipantau otomatis dan panggilan lama diperiksa kembali. GraphRAG tidak memakai
+API key; embeddings/vision memiliki bagian lokal yang tetap tersedia. Matriks
+di bawah adalah katalog dependency upstream, bukan bukti seluruh layanannya
+sudah terpasang atau dapat dipanggil tanpa credential.
 
 ## Distribusi prioritas
 

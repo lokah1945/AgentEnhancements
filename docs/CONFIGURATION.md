@@ -1,11 +1,75 @@
 ---
 title: Configuration
-version: 1.3
-last_updated: 2026-11-14
+version: 1.4
+last_updated: 2026-11-15
 audience: users, maintainers
 ---
 
 # Configuration
+
+## Central credentials — `ui.api.json`
+
+Setup creates **one private file at the repository root**, using
+[the empty template](../unified-integration/config/ui.api.example.json).
+Edit its `api_keys` string values and `connections` endpoints/client IDs.
+The file is ignored by git and created with mode `0600`. Native CLI configs
+contain the gateway command, not copies of its secrets. The JSON schema
+provides editor validation. Setup preserves populated values.
+
+`mcp.<server>.required` maps each server to central value names.
+An empty/whitespace key disables its dependent cloud tools, even when the
+parent shell has a populated API environment variable. Invalid or missing
+JSON also disables cloud access. Local tools remain available. The gateway
+watches edits every 0.5 seconds and emits MCP tool-list notifications;
+every call rechecks credentials to reject stale cached tools immediately.
+Calls already sent to a provider cannot be withdrawn by clearing a key.
+
+Nine bundled servers provide 36 tools with all keys empty. GraphRAG is local
+and requires no API key. Embeddings default to deterministic local vectors;
+the `openai` backend is permitted only with `OPENAI_API_KEY`. Semantic
+`vision_describe` is hidden without that key; image comparison and OCR stay
+available. `OPENAI_BASE_URL` includes `/v1`; model names have separate fields.
+
+External catalog entries are hidden until required references and an
+installed `command` array are configured in this same file. `env` maps
+subprocess environment names to central reference names, never literal
+secrets. Arguments accept `{python}` and `{repo}`; no shell expansion is
+performed. Configuring a working command activates it automatically. Clearing
+a required key terminates that backend; key rotation reconnects it. A catalog
+entry is not proof that its suggested npm package exists or has completed
+OAuth authorization. Google/Microsoft client IDs and secrets alone do not
+constitute a completed OAuth login.
+
+For optional diagnostics, `python3 unified-integration/scripts/api_config.py
+status` prints key-presence booleans and hidden reasons, never secret values.
+Agents do not need to run it. Runtime session notes redact configured secrets.
+
+Claude Code's existing custom endpoint/model configuration is preserved. A custom
+gateway authenticates using its own credentials; this integration does not
+require a claude.ai login. `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`,
+`ANTHROPIC_BASE_URL` and `ANTHROPIC_MODEL` slots are included for central
+mapping. When existing settings contain custom auth environment values and
+no user-owned helper, setup moves those values to the central file and installs
+the native `apiKeyHelper` automatically. `api_config.py claude-key` prints the
+credential directly to Claude and must not be used as a diagnostic. The helper
+refreshes at a one-second TTL; external environment credentials can still take
+precedence. Existing custom helpers are preserved. Endpoint/model fields stay
+in Claude's native settings; the integration does not guess provider choices.
+
+With an explicit `CLAUDE_CONFIG_DIR`, Claude stores user MCP configuration in
+`<CLAUDE_CONFIG_DIR>/.claude.json`; without that override it uses
+`~/.claude.json`. This distinction is verified using the installed CLI.
+
+Claude's Linux prompt hook waits for its own native MCP tools to be listed;
+coordination markers contain process IDs only in the private user state
+directory. OpenCode uses its public MCP status API. This prevents cold-start
+model requests from racing MCP initialization.
+
+**Codex client limitation:** versions 0.167.2 and 0.169.0 retain their tool
+catalog during a turn. The gateway still rechecks every call and immediately
+rejects revoked credentials, but a newly available tool can require a fresh
+session to appear. Claude/OpenCode passed live empty → populated → empty
+catalog tests without a reconnect command. No CLI permissions are bypassed.
 
 ## Environment variables (immutable interface, CONTRACT §8.1)
 
@@ -17,6 +81,7 @@ audience: users, maintainers
 | `AGENT_SKILLS_DIR` | Skills registry | `<BASE_DIR>/unified-integration/skills` |
 | `HEADROOM_BIN` | Standalone compression binary | auto-detect: repo build, then `PATH` |
 | `AGENT_ENHANCEMENTS_BUILD_HEADROOM` | Optional Rust build during setup/update | `0`; set `1` to build |
+| `AGENT_ENHANCEMENTS_API_FILE` | Optional private API file override for isolated tests/installations | `<repository>/ui.api.json` |
 | `CODEX_HOME` | Native Codex configuration directory | `~/.codex` |
 | `CLAUDE_CONFIG_DIR` | Native Claude configuration directory | `~/.claude` |
 | `XDG_CONFIG_HOME` | OpenCode configuration parent | `~/.config` |
@@ -68,7 +133,9 @@ This integration uses its shared SQLite utility, not a running claude-mem daemon
 
 GraphRAG evidence and video timelines use `AGENT_MEMORY_ROOT/mcp/`, with
 private directories/files and a hash of the server working directory as the
-namespace. Writes replace files atomically. Old shared `/tmp` caches are not
+namespace. Writes replace files atomically. GraphRAG rereads current snapshots;
+video timeline updates also take a process lock to avoid lost concurrent edits.
+Old shared `/tmp` caches are not
 imported automatically. This is process-cwd scoping, not MCP client-root
 sandboxing.
 

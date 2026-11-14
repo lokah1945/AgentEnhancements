@@ -121,6 +121,13 @@ class RegistryCliTests(unittest.TestCase):
         self.assertEqual(code, 0, err)
         self.assertNotIn("skill, anthropic-skills", out)
 
+    def test_filter_values_do_not_become_relevance_keywords(self):
+        code, out, err = self._run("search", "zzxyyqqqq", "--type", "mcp", "--limit", "2", "--json")
+        self.assertEqual(code, 0, err)
+        result = json.loads(out)
+        self.assertEqual(result["query"], "zzxyyqqqq")
+        self.assertEqual(result["results"], [])
+
     def test_show_by_id_and_name(self):
         code, out, _ = self._run("show", "skill:docx")
         self.assertEqual(code, 0)

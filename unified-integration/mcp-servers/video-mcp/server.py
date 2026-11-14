@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Callable
 
 from mcp.server.fastmcp import FastMCP
+from filelock import FileLock
 
 VERSION = "1.0.0"
 STATE_ROOT = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory"))
@@ -134,9 +135,13 @@ def timeline(name: str, clips: list[dict]) -> dict:
             return {"error": f"clips[{index}].position must be top|center|bottom"}
     total = round(sum(float(c["end"]) - float(c["start"]) for c in clips), 3)
     doc = {"name": name, "clips": clips, "total_s": total}
-    store = _load_all()
-    store[name] = doc
-    _save_all(store)
+    STORE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    STORE_DIR.chmod(0o700)
+    # Read/update/replace is a transaction across simultaneous CLI processes.
+    with FileLock(str(STORE_DIR / ".timelines.lock"), mode=0o600, timeout=10):
+        store = _load_all()
+        store[name] = doc
+        _save_all(store)
     return {
         "ok": True, "timeline": name, "clips": len(clips), "total_s": total,
         "hint": f"call render('{name}', '<out.mp4>') to produce the video",

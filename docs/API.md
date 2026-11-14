@@ -1,7 +1,7 @@
 ---
 title: Internal APIs
-version: 1.3
-last_updated: 2026-11-14
+version: 1.4
+last_updated: 2026-11-15
 audience: maintainers, contributors
 ---
 
@@ -29,6 +29,34 @@ zero-friction boost (+3) for natively linked skills.
 Importable functions: `load_skill_entries()`, `load_plugin_entries()`,
 `load_mcp_entries()`, `load_capability_entries()`, `load_all_entries()` and
 `rank_entries(entries, query, limit)`.
+
+`search`, `map` and `list` hide unavailable MCP servers according to the live
+`ui.api.json`. `show`, `stats` and the generated snapshot retain catalog
+information for maintainers; they are not runtime connectivity probes.
+
+## Credential configuration and native MCP gateway
+
+`scripts/api_config.py init` creates the private root `ui.api.json` once.
+`status` returns only credential-presence booleans and readiness reasons.
+Importable functions: `read_config()`, `value(name, config=None)`,
+`server_state(name, config=None)`, `cloud_available(server, key, config=None)`
+and `redact(text, config=None)`. Missing/invalid config never falls back to
+shell API credentials. `AGENT_ENHANCEMENTS_API_FILE` is an optional override.
+`write_config(config)` replaces the file privately and atomically.
+`migrate_claude_auth(env)` moves existing custom Claude credentials into it;
+the native adapter installs the helper while preserving endpoints/models.
+
+`mcp-servers/gateway.py` speaks MCP stdio and advertises `tools.listChanged`.
+Bundled tools are namespaced, for example `embeddings_embed`, `vision_compare`
+and `graphrag_query`. The cloud-only `vision_describe` disappears with an
+empty `OPENAI_API_KEY`; embeddings restrict the backend enum to `local`.
+Current schema validation and credential checks run on every call. Failures
+use `isError: true`. Polling discovers edits without a manual tool invocation.
+
+External servers use `mcp.<name>.command` arrays and `env` reference mappings
+in the same file. Commands run directly, without a shell or npm installation
+step. The gateway proxies tool schemas/results and owns subprocess lifetimes;
+it does not proxy external prompts/resources or complete OAuth grants.
 
 ## Native linking - `unified-integration/scripts/link-skills.sh`
 

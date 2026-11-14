@@ -181,8 +181,14 @@ benar ke slot credential pusat yang sama.
 Fetch ulang mengonfirmasi `origin/master` tetap `7b868327`.
 Branch audit memuat tiga commit audit native sebelumnya, lalu perubahan sesi ini.
 Implementasi awal tercatat pada commit `5652e78d`; koreksi scope tercatat pada
-branch `fix/mcp-credential-boundary`.
-Tidak ada push atau publikasi ke GitHub. Stash dan branch backup sebelum audit
-tetap disimpan. Detail kondisi awal lokal tertinggal 52 commit tersedia pada
+commit `0027db98` pada branch `fix/mcp-credential-boundary`, dipublikasikan
+melalui PR #2 menggunakan akun pemilik repository. Credential GitHub untuk
+publikasi tetap di credential store mesin dan tidak disalin ke proyek.
+
+GitHub Actions tidak menjalankan job karena akun terkunci akibat masalah
+billing. Pengujian lokal setelah koreksi: 188 lulus, dua uji jaringan opsional
+dilewati, protokol MCP 10/10; ECC tetap 8.246 lulus dan 43 gagal baseline.
+Stash dan branch backup sebelum audit tetap disimpan. Detail kondisi awal
+lokal tertinggal 52 commit tersedia pada
 [audit sebelumnya](NATIVE_AUTOMATION_AUDIT_2026-11-14.md).
 

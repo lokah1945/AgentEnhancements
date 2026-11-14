@@ -92,6 +92,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Build skill registry (also unskips the link-skills tests)
+        run: bash unified-integration/setup.sh >/dev/null
       - name: Run regression suite
         run: python3 unified-integration/tests/run-tests.py
 

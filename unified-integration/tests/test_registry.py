@@ -149,6 +149,13 @@ class RegistryCliTests(unittest.TestCase):
         code, _, _ = self._run("explode")
         self.assertEqual(code, 2)
 
+    def test_unrelated_query_does_not_match_default_skills_or_priority_servers(self):
+        code, out, err = self._run("map", "zzxyyqqqq", "--json")
+        self.assertEqual(code, 0, err)
+        result = json.loads(out)
+        for field in ["skills", "plugins", "mcp_servers"]:
+            self.assertEqual(result[field], [], field)
+
     def test_committed_registry_in_repo(self):
         committed = UI_DIR / "skills" / "agent-registry.json"
         self.assertTrue(committed.is_file(), "agent-registry.json must be committed")

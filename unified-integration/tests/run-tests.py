@@ -28,6 +28,7 @@ for mod in [
     "test_hardening",
     "test_modular_tree",
     "test_mcp_servers",
+    "test_native_automation",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))
 

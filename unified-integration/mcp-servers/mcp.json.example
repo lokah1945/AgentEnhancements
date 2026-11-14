@@ -1,5 +1,5 @@
 {
-  "_comment": "Template rendered by unified-integration/scripts/setup-mcp.sh. PLACEHOLDER_REPO_ROOT is replaced with the absolute clone path. Covers the 9 in-house built servers; the 29 to-install upstream servers (brave-search, tavily, filesystem, memory, ...) are documented in plugin-catalog/mcp-servers.json and docs/MCP_INTEGRATION_CHECKLIST.md.",
+  "_comment": "Canonical built-server template. setup.sh / scripts/native-integration.py render it into Claude user ~/.claude.json, Codex config.toml and OpenCode opencode.json(c). PLACEHOLDER_REPO_ROOT is replaced by the installation path. External catalog servers still require their own installation and credentials.",
   "mcpServers": {
     "embeddings-mcp": {
       "command": "python3",

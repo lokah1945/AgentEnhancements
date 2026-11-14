@@ -4,6 +4,15 @@
 
 set -euo pipefail
 
+# Piped one-line installs need the complete repository, not only this script.
+if [ -z "${BASH_SOURCE[0]:-}" ]; then
+    INSTALL_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$HOME/.local/share/AgentEnhancements}"
+    if [ ! -f "$INSTALL_DIR/unified-integration/setup.sh" ]; then
+        git clone https://github.com/lokah1945/AgentEnhancements.git "$INSTALL_DIR"
+    fi
+    exec bash "$INSTALL_DIR/unified-integration/setup.sh" "$@"
+fi
+
 # Enable recursive globbing (needed for prompt discovery) and make
 # non-matching globs expand to nothing instead of the literal pattern.
 shopt -s globstar nullglob
@@ -928,14 +937,14 @@ import sqlite3
 import sys
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 AGENT = "AGENT_PLACEHOLDER"
 MEMORY_ROOT = os.environ.get("AGENT_MEMORY_ROOT", os.path.expanduser("~/.agent-memory"))
 DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
 
 def init_db():
-    os.makedirs(MEMORY_ROOT, exist_ok=True)
+    os.makedirs(MEMORY_ROOT, exist_ok=True, mode=0o700)
     os.makedirs(os.path.join(MEMORY_ROOT, "projects"), exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
@@ -960,7 +969,7 @@ def init_db():
 
 def save_memory(key, value, memory_type="session_context", project=None, metadata=None, ttl_days=None):
     if project is None:
-        project = os.path.basename(os.getcwd())
+        project = os.path.realpath(os.getcwd())
 
     expires_at = None
     if ttl_days:
@@ -968,7 +977,7 @@ def save_memory(key, value, memory_type="session_context", project=None, metadat
         # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
         # against datetime('now') work: the ISO "T" separator sorts
         # after a space and broke timely expiry cleanup.
-        expires_at = (datetime.now() + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
+        expires_at = (datetime.now(timezone.utc) + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
 
     meta_json = json.dumps(metadata) if metadata else None
 
@@ -981,12 +990,13 @@ def save_memory(key, value, memory_type="session_context", project=None, metadat
 
 def load_memory(key, memory_type="session_context", project=None):
     if project is None:
-        project = os.path.basename(os.getcwd())
+        project = os.path.realpath(os.getcwd())
 
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.execute("""
             SELECT value FROM memories
             WHERE agent=? AND project=? AND memory_type=? AND key=?
+              AND (expires_at IS NULL OR expires_at > datetime('now'))
             ORDER BY updated_at DESC LIMIT 1
         """, (AGENT, project, memory_type, key))
         row = cursor.fetchone()
@@ -994,7 +1004,7 @@ def load_memory(key, memory_type="session_context", project=None):
 
 def list_memories(memory_type=None, project=None, limit=20):
     if project is None:
-        project = os.path.basename(os.getcwd())
+        project = os.path.realpath(os.getcwd())
 
     with sqlite3.connect(DB_PATH) as conn:
         if memory_type:
@@ -1002,6 +1012,7 @@ def list_memories(memory_type=None, project=None, limit=20):
                 SELECT memory_type, key, value, metadata, updated_at
                 FROM memories
                 WHERE agent=? AND project=? AND memory_type=?
+                  AND (expires_at IS NULL OR expires_at > datetime('now'))
                 ORDER BY updated_at DESC LIMIT ?
             """, (AGENT, project, memory_type, limit))
         else:
@@ -1009,6 +1020,7 @@ def list_memories(memory_type=None, project=None, limit=20):
                 SELECT memory_type, key, value, metadata, updated_at
                 FROM memories
                 WHERE agent=? AND project=?
+                  AND (expires_at IS NULL OR expires_at > datetime('now'))
                 ORDER BY updated_at DESC LIMIT ?
             """, (AGENT, project, limit))
 
@@ -1025,7 +1037,7 @@ def list_memories(memory_type=None, project=None, limit=20):
 
 def delete_memory(key, memory_type="session_context", project=None):
     if project is None:
-        project = os.path.basename(os.getcwd())
+        project = os.path.realpath(os.getcwd())
 
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.execute("""
@@ -1053,6 +1065,7 @@ def main():
         sys.exit(1)
 
     init_db()
+    os.chmod(DB_PATH, 0o600)
     command = sys.argv[1]
 
     if command == "save":
@@ -1146,7 +1159,7 @@ setup_compression() {
     elif command -v headroom &> /dev/null; then
         log_success "headroom binary found in PATH"
         HEADROOM_CMD="headroom"
-    elif [ -f "$BASE_DIR/headroom/Cargo.toml" ]; then
+    elif [ -f "$BASE_DIR/headroom/Cargo.toml" ] && [ "${AGENT_ENHANCEMENTS_BUILD_HEADROOM:-0}" = "1" ]; then
         if command -v cargo &> /dev/null; then
             log_info "Building headroom from source..."
             if (cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -20); then
@@ -1241,76 +1254,19 @@ EOF
     # Create compression wrapper script
     cat > "$COMPRESSION_DIR/compress.sh" << 'EOF'
 #!/bin/bash
-# Universal context compression wrapper
-
+# Universal context compression wrapper; consumes stdin exactly once.
 set -euo pipefail
-
-# Resolve the installation root from this script's location; the
-# AGENT_ENHANCEMENTS_BASE_DIR environment variable overrides it.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNIFIED_DIR="$(dirname "$SCRIPT_DIR")"
-BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(dirname "$UNIFIED_DIR")}"
-CONFIG_FILE="$UNIFIED_DIR/compression/config.yaml"
-
 INPUT="${1:-/dev/stdin}"
 MODE="${2:-auto}"
 AGENT="${3:-claude-code}"
-
-# Find headroom binary: env override first, then repo build, then PATH
-HEADROOM_BIN="${HEADROOM_BIN:-}"
-if [ -z "$HEADROOM_BIN" ]; then
-    if [ -x "$BASE_DIR/headroom/target/release/headroom" ]; then
-        HEADROOM_BIN="$BASE_DIR/headroom/target/release/headroom"
-    elif command -v headroom &> /dev/null; then
-        HEADROOM_BIN="headroom"
-    fi
-fi
-
-# Read stdin once into a temp file so content detection and compression
-# both see the full stream. Previously the detection pass consumed stdin
-# and the compression pass received nothing.
-TMP_INPUT="$(mktemp "${TMPDIR:-/tmp}/compress-input.XXXXXX")"
-trap 'rm -f "$TMP_INPUT"' EXIT
-if [ "$INPUT" = "-" ] || [ "$INPUT" = "/dev/stdin" ]; then
-    cat > "$TMP_INPUT"
-    INPUT="$TMP_INPUT"
-fi
-
-if [ -n "$HEADROOM_BIN" ]; then
-    case "$MODE" in
-        code|logs|json|markdown|generic)
-            "$HEADROOM_BIN" compress --mode "$MODE" < "$INPUT"
-            ;;
-        auto)
-            # Detect content type from the first 100 lines
-            if head -100 "$INPUT" | grep -q '^{' && head -100 "$INPUT" | grep -q '}'; then
-                "$HEADROOM_BIN" compress --mode json < "$INPUT"
-            elif head -100 "$INPUT" | grep -q '^```'; then
-                "$HEADROOM_BIN" compress --mode code < "$INPUT"
-            elif head -100 "$INPUT" | grep -qE '(ERROR|WARN|INFO|DEBUG).*\['; then
-                "$HEADROOM_BIN" compress --mode logs < "$INPUT"
-            else
-                "$HEADROOM_BIN" compress --mode generic < "$INPUT"
-            fi
-            ;;
-        *)
-            echo "Unknown mode: $MODE (use auto, code, logs, json, markdown or generic)" >&2
-            exit 1
-            ;;
-    esac
-else
-    # Fallback: basic compression without headroom.
-    # "|| true" because head closing the pipe early (truncation at 5000
-    # lines) raises SIGPIPE for upstream stages under "set -o pipefail",
-    # which is expected behaviour here, not an error.
-    cat "$INPUT" | \
-        # Remove trailing whitespace
-        sed 's/[[:space:]]\+$//' | \
-        # Compress repeated lines (keep first occurrence)
-        awk '!seen[$0]++' | \
-        # Limit output
-        head -5000 || true
-fi
+case "$MODE" in
+    auto|code|logs|json|markdown|generic) ;;
+    *) printf 'Unknown mode: %s\n' "$MODE" >&2; exit 2 ;;
+esac
+if [ "$INPUT" = "-" ]; then INPUT=/dev/stdin; fi
+exec python3 "$UNIFIED_DIR/scripts/compress.py" "$MODE" "$AGENT" < "$INPUT"
 EOF
     chmod +x "$COMPRESSION_DIR/compress.sh"
 
@@ -1426,6 +1382,9 @@ merge_agents_md() {
     AGENTS_MD_TARGET="$target_file" AGENTS_MD_SECTION_FILE="$section_file" \
     python3 -c "
 import os
+import shutil
+import tempfile
+from datetime import datetime, timezone
 
 target = os.environ['AGENTS_MD_TARGET']
 section_file = os.environ['AGENTS_MD_SECTION_FILE']
@@ -1451,8 +1410,16 @@ else:
     merged = block + '\n'
 
 os.makedirs(os.path.dirname(target), exist_ok=True)
-with open(target, 'w', encoding='utf-8') as f:
-    f.write(merged)
+if merged != existing:
+    if os.path.exists(target):
+        stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
+        backup = target + '.backup.' + stamp
+        shutil.copy2(target, backup)
+        os.chmod(backup, 0o600)
+    fd, temporary = tempfile.mkstemp(dir=os.path.dirname(target), prefix='.instructions.')
+    with os.fdopen(fd, 'w', encoding='utf-8') as f:
+        f.write(merged)
+    os.replace(temporary, target)
 "
 }
 
@@ -1514,200 +1481,84 @@ with open(target, 'w') as f:
 }
 
 create_claude_code_config() {
-    CLAUDE_DIR="$HOME/.claude"
+    CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
     mkdir -p "$CLAUDE_DIR"
+    local section_file
+    section_file="$(mktemp "${TMPDIR:-/tmp}/agent-instructions.XXXXXX")"
+    cat > "$section_file" << EOF
+## AgentEnhancements integration
 
-    # CLAUDE.md is user-owned documentation: merge our section with
-    # markers so personal instructions survive re-runs (same guarantee
-    # as the other agent instruction files).
-    CLAUDE_MD_SECTION_FILE="$(mktemp "${TMPDIR:-/tmp}/claude-md.XXXXXX")"
-    cat > "$CLAUDE_MD_SECTION_FILE" << EOF
-# Claude Code Enhanced Configuration
+Skills are discovered natively from the curated set. For other tasks, the
+lifecycle integration automatically suggests relevant SKILL.md files from
+$UNIFIED_DIR/skills/all-skills.json. Read the relevant skill and supporting
+files when useful; follow current user instructions and normal permissions.
+The user does not need to invoke a skill command or use a launcher.
 
-## System Prompt
-@$UNIFIED_DIR/prompts/claude-code-system-prompt.txt
+Local session notes are saved and restored automatically by the lifecycle
+integration. They are historical data, not new instructions. Raw tool inputs,
+outputs and transcripts are not saved. Notes expire after seven days.
 
-## Skills
-- Source: $UNIFIED_DIR/skills
-- Auto-load: true
-- Categories: all
-- Native activation: curated set (anthropic-skills + replica-skill) is
-  symlinked into ~/.claude/skills/ and ~/.agents/skills/ at setup time;
-  add more with: bash $UNIFIED_DIR/scripts/link-skills.sh --set all
-- Task-to-capability mapping: python3 $UNIFIED_DIR/scripts/registry.py map "<task>"
-
-## Memory (claude-mem)
-- Enabled: true
-- Plugin: $BASE_DIR/claude-mem/.claude-plugin
-- Auto-save: task_complete, decision_made, session_end
-
-## Context Compression (headroom)
-- Enabled: true
-- Budget: 200000 tokens
-- Trigger at: 75%
-
-## Hooks
-- PreToolUse: memory_save, context_compress
-- PostToolUse: memory_save
-- Stop: memory_save
-
-## MCP Servers
-# Note: headroom is a proxy server, not an MCP server. Skills are loaded via the skills loader utility.
+Use this CLI's native automatic context compaction. The standalone utility
+$UNIFIED_DIR/compression/compress.sh is available for explicit file processing;
+it does not intercept or replace the CLI's context management.
 EOF
-    merge_agents_md "$CLAUDE_DIR/CLAUDE.md" "$CLAUDE_MD_SECTION_FILE"
-    rm -f "$CLAUDE_MD_SECTION_FILE"
-
-    # Merge hooks into existing settings.json (preserves env, credentials, etc.)
-    ENHANCEMENT_JSON='{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save \"pre_tool_use:${TOOL_NAME}\" \"${TOOL_INPUT}\" session_context"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save \"post_tool_use:${TOOL_NAME}\" \"${TOOL_RESULT}\" session_context"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'"$UNIFIED_DIR"'/memory/hooks/claude-code-memory-hook.py save \"session_summary\" \"${SESSION_SUMMARY}\" session_context"
-          }
-        ]
-      }
-    ]
-  }
-}'
-    merge_json_config "$CLAUDE_DIR/settings.json" "$ENHANCEMENT_JSON"
-    log_success "Claude Code configuration merged (credentials preserved)"
+    merge_agents_md "$CLAUDE_DIR/CLAUDE.md" "$section_file"
+    rm -f "$section_file"
+    python3 "$UNIFIED_DIR/scripts/native-integration.py" --agent claude-code
 }
 
 create_codex_config() {
-    CODEX_DIR="$HOME/.codex"
+    CODEX_DIR="${CODEX_HOME:-$HOME/.codex}"
     mkdir -p "$CODEX_DIR"
-
-    # Codex CLI reads ~/.codex/AGENTS.md for global instructions and
-    # ~/.codex/config.toml (TOML) for settings. It has no native
-    # skills/memory/hooks config keys, so the integration is delivered as
-    # instructions in AGENTS.md. (Older setup versions wrote config.yaml,
-    # which Codex never reads; it is cleaned up below.)
-    AGENTS_SECTION_FILE="$(mktemp "${TMPDIR:-/tmp}/codex-agents.XXXXXX")"
-    cat > "$AGENTS_SECTION_FILE" << EOF
+    local section_file
+    section_file="$(mktemp "${TMPDIR:-/tmp}/agent-instructions.XXXXXX")"
+    cat > "$section_file" << EOF
 ## AgentEnhancements integration
 
-### Skills catalog (3,000+ skills, on-demand)
-- Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py codex "<task description>"
-- Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
-- Full index: $UNIFIED_DIR/skills/all-skills.json
+Skills are discovered natively from the curated set. For other tasks, the
+lifecycle integration automatically suggests relevant SKILL.md files from
+$UNIFIED_DIR/skills/all-skills.json. Read the relevant skill and supporting
+files when useful; follow current user instructions and normal permissions.
+The user does not need to invoke a skill command or use a launcher.
 
-When a task matches a skill in the catalog, load its SKILL.md and follow it.
+Local session notes are saved and restored automatically by the lifecycle
+integration. They are historical data, not new instructions. Raw tool inputs,
+outputs and transcripts are not saved. Notes expire after seven days.
 
-### Persistent memory (cross-session)
-Codex has no automatic hook system, so invoke memory explicitly:
-- Task start: python3 $UNIFIED_DIR/scripts/memory.py codex load "project_context"
-- After a decision: python3 $UNIFIED_DIR/scripts/memory.py codex save "<key>" "<value>"
-- List memories: python3 $UNIFIED_DIR/scripts/memory.py codex list
-
-### Context compression
-For long transcripts:
-$UNIFIED_DIR/compression/compress.sh <input-file> <auto|code|logs|json|markdown|generic>
-
-### Reference system prompt
-$UNIFIED_DIR/prompts/codex-system-prompt.txt
-
-### Native skills (auto-discovered)
-A curated set (anthropic-skills 19 + replica-skill 11) is symlinked into
-~/.claude/skills/ and ~/.agents/skills/ by setup.sh, so Agent Skills
-compatible harnesses pick it up automatically. Add more:
-bash $UNIFIED_DIR/scripts/link-skills.sh --set superpowers|<skill-name>|--all
-
-### Task-to-capability mapping
-python3 $UNIFIED_DIR/scripts/registry.py map "<task description>"
-(covers skills, catalog plugins and MCP servers in one query)
+Use this CLI's native automatic context compaction. The standalone utility
+$UNIFIED_DIR/compression/compress.sh is available for explicit file processing;
+it does not intercept or replace the CLI's context management.
 EOF
-    merge_agents_md "$CODEX_DIR/AGENTS.md" "$AGENTS_SECTION_FILE"
-    rm -f "$AGENTS_SECTION_FILE"
-
-    # Remove the stale config.yaml written by older setup versions
-    # (signature-checked: only files carrying our integration keys).
-    if [ -f "$CODEX_DIR/config.yaml" ] && grep -q '^system_prompt: "@' "$CODEX_DIR/config.yaml" 2>/dev/null; then
-        rm -f "$CODEX_DIR/config.yaml"
-        log_info "Removed stale ~/.codex/config.yaml (Codex reads config.toml, never YAML)"
-    fi
-
-    log_success "Codex configuration merged (~/.codex/AGENTS.md)"
+    merge_agents_md "$CODEX_DIR/AGENTS.md" "$section_file"
+    rm -f "$section_file"
+    python3 "$UNIFIED_DIR/scripts/native-integration.py" --agent codex
 }
 
 create_opencode_config() {
-    OPENCODE_DIR="$HOME/.config/opencode"
+    OPENCODE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
     mkdir -p "$OPENCODE_DIR"
-
-    # OpenCode reads ~/.config/opencode/opencode.json (schema:
-    # https://opencode.ai/config.json) - NOT config.json. Valid keys used
-    # here: "instructions" (extra instruction files) and "skills" (skill
-    # directories; OpenCode scans grouping directories up to six levels,
-    # so by-category/<category>/<skill>/SKILL.md is discovered).
-    ENHANCEMENT_JSON='{
-  "$schema": "https://opencode.ai/config.json",
-  "instructions": ["'"$UNIFIED_DIR"'/prompts/opencode-system-prompt.txt"],
-  "skills": ["'"$UNIFIED_DIR"'/skills/by-category"]
-}'
-    merge_json_config "$OPENCODE_DIR/opencode.json" "$ENHANCEMENT_JSON"
-
-    # Global instructions, marker-guarded (user content preserved)
-    AGENTS_SECTION_FILE="$(mktemp "${TMPDIR:-/tmp}/opencode-agents.XXXXXX")"
-    cat > "$AGENTS_SECTION_FILE" << EOF
+    local section_file
+    section_file="$(mktemp "${TMPDIR:-/tmp}/agent-instructions.XXXXXX")"
+    cat > "$section_file" << EOF
 ## AgentEnhancements integration
 
-### Skills catalog (3,000+ skills, on-demand)
-- Find skills for a task: python3 $UNIFIED_DIR/scripts/load-skills.py opencode "<task description>"
-- Read a skill: $UNIFIED_DIR/skills/by-category/<category>/<skill-name>/SKILL.md
-- Full index: $UNIFIED_DIR/skills/all-skills.json
-- Native discovery: the skills array in opencode.json points at
-  $UNIFIED_DIR/skills/by-category (narrow it to specific categories
-  to reduce per-session skill metadata).
-- Native activation: a curated set (anthropic-skills + replica-skill) is
-  also symlinked into ~/.agents/skills/ by setup.sh; add more with
-  bash $UNIFIED_DIR/scripts/link-skills.sh --set all
+Skills are discovered natively from the curated set. For other tasks, the
+lifecycle integration automatically suggests relevant SKILL.md files from
+$UNIFIED_DIR/skills/all-skills.json. Read the relevant skill and supporting
+files when useful; follow current user instructions and normal permissions.
+The user does not need to invoke a skill command or use a launcher.
 
-### Persistent memory (cross-session)
-Invoke memory explicitly (no automatic hooks):
-- python3 $UNIFIED_DIR/scripts/memory.py opencode save "<key>" "<value>"
-- python3 $UNIFIED_DIR/scripts/memory.py opencode load "<key>"
+Local session notes are saved and restored automatically by the lifecycle
+integration. They are historical data, not new instructions. Raw tool inputs,
+outputs and transcripts are not saved. Notes expire after seven days.
 
-### Context compression
-$UNIFIED_DIR/compression/compress.sh <input-file> <auto|code|logs|json|markdown|generic>
-
-### Reference system prompt
-$UNIFIED_DIR/prompts/opencode-system-prompt.txt
+Use this CLI's native automatic context compaction. The standalone utility
+$UNIFIED_DIR/compression/compress.sh is available for explicit file processing;
+it does not intercept or replace the CLI's context management.
 EOF
-    merge_agents_md "$OPENCODE_DIR/AGENTS.md" "$AGENTS_SECTION_FILE"
-    rm -f "$AGENTS_SECTION_FILE"
-
-    # Remove the stale config.json written by older setup versions
-    # (signature-checked: only files carrying our fictional keys).
-    if [ -f "$OPENCODE_DIR/config.json" ] && grep -q '"systemPrompt"' "$OPENCODE_DIR/config.json" 2>/dev/null; then
-        rm -f "$OPENCODE_DIR/config.json"
-        log_info "Removed stale ~/.config/opencode/config.json (OpenCode reads opencode.json)"
-    fi
-
-    log_success "OpenCode configuration merged (~/.config/opencode/opencode.json + AGENTS.md)"
+    merge_agents_md "$OPENCODE_DIR/AGENTS.md" "$section_file"
+    rm -f "$section_file"
+    python3 "$UNIFIED_DIR/scripts/native-integration.py" --agent opencode
 }
 
 create_cursor_config() {
@@ -1998,12 +1849,17 @@ import os
 import sys
 import re
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 SKILLS_DIR = Path(os.environ.get(
     "AGENT_SKILLS_DIR",
     str(Path(__file__).resolve().parent.parent / "skills"),
 ))
+
+AGENT_ALIASES = {"claude": "claude-code", "claude-code": "claude-code",
+                 "codex-cli": "codex", "codex": "codex", "gemini": "gemini-cli",
+                 "gemini-cli": "gemini-cli", "opencode": "opencode",
+                 "cursor": "cursor", "windsurf": "windsurf", "copilot": "copilot", "kiro": "kiro"}
 
 class SkillsLoader:
     def __init__(self, agent: str = "claude-code"):
@@ -2019,40 +1875,57 @@ class SkillsLoader:
         return {"skills": []}
 
     def find_skills(self, task_description: str, max_results: int = 5) -> List[Dict]:
-        """Find relevant skills for a task"""
-        task_lower = task_description.lower()
+        """Rank relevant terms, without treating agent compatibility as relevance."""
+        task_lower = task_description.casefold()
         matches = []
-
-        # Simple keyword matching (in production, use embeddings)
-        keywords = re.findall(r'\b\w+\b', task_lower)
+        stopwords = set("a an the in on is it to for of and or with this that please help me my use using create make i you can do check all analisa cek saya dan di yang untuk dengan ini nya bisa".split())
+        keywords = set(re.findall(r'\b[\w+#-]+\b', task_lower)) - stopwords
+        translations = {"keamanan": "security", "uji": "testing", "pengujian": "testing",
+                        "perbaiki": "debugging", "arsitektur": "architecture",
+                        "dokumentasi": "documentation", "tabel": "spreadsheet",
+                        "presentasi": "pptx", "excel": "xlsx", "bug": "debugging"}
+        keywords.update(translations[k] for k in tuple(keywords) if k in translations)
+        if not keywords:
+            return []
 
         for skill in self.skills_index.get("skills", []):
-            score = 0
-            # Check "when_to_use" keywords
-            when_to_use = skill.get("when_to_use", "").lower()
-            for kw in keywords:
-                if kw in when_to_use:
-                    score += 2
-            # Check tags
-            for tag in skill.get("tags", []):
-                if tag.lower() in task_lower:
-                    score += 3
-            # Check description
-            desc = skill.get("description", "").lower()
-            for kw in keywords:
-                if kw in desc:
-                    score += 1
-
-            # Check agent compatibility
-            if self.agent in skill.get("tools", []):
-                score += 5
-
+            tools = skill.get("tools") or []
+            compatible = {AGENT_ALIASES[t.casefold()] for t in tools if t.casefold() in AGENT_ALIASES}
+            # Some sources use tools for prerequisites (python, git, etc.),
+            # or say "Agent Skills". Those are not incompatible agent names.
+            if compatible and self.agent not in compatible:
+                continue
+            def terms(value):
+                return set(re.findall(r'\b[\w+#]+\b', str(value).casefold()))
+            name = str(skill.get("name", "")).casefold()
+            name_terms = terms(name)
+            tags = terms(" ".join(skill.get("tags") or []))
+            desc = terms(skill.get("description", ""))
+            when = terms(skill.get("when_to_use", ""))
+            score = (12 * len(keywords & name_terms) + 5 * len(keywords & tags)
+                     + 2 * len(keywords & when) + len(keywords & desc))
+            if name in keywords:
+                score += 30
             if score > 0:
                 matches.append((score, skill))
 
         # Sort by score and return top matches
-        matches.sort(key=lambda x: x[0], reverse=True)
+        matches.sort(key=lambda x: (-x[0], x[1].get("name", "")))
         return [skill for _, skill in matches[:max_results]]
+
+    def skill_path(self, skill_name: str) -> Optional[Path]:
+        """Resolve either supported layout while preventing path traversal."""
+        if not skill_name or Path(skill_name).name != skill_name or skill_name in {".", ".."}:
+            return None
+        root = SKILLS_DIR.resolve()
+        categories = SKILLS_DIR / "by-category"
+        directories = sorted(categories.iterdir()) if categories.is_dir() else []
+        directories.append(SKILLS_DIR / "by-agent" / self.agent)
+        for directory in directories:
+            for candidate in (directory / skill_name / "SKILL.md", directory / f"{skill_name}.md"):
+                if candidate.is_file() and candidate.resolve().is_relative_to(root):
+                    return candidate
+        return None
 
     def load_skill(self, skill_name: str) -> Dict:
         """Load a specific skill by name.
@@ -2061,27 +1934,8 @@ class SkillsLoader:
         - directory skills: by-category/<category>/<name>/SKILL.md
         - flat skills:      by-category/<category>/<name>.md
         """
-        # Search in all category directories
-        for cat_dir in (SKILLS_DIR / "by-category").iterdir():
-            if cat_dir.is_dir():
-                for candidate in (
-                    cat_dir / skill_name / "SKILL.md",
-                    cat_dir / f"{skill_name}.md",
-                ):
-                    if candidate.exists():
-                        return self._parse_skill(candidate)
-
-        # Search in agent-specific directories
-        agent_dir = SKILLS_DIR / "by-agent" / self.agent
-        if agent_dir.exists():
-            for candidate in (
-                agent_dir / skill_name / "SKILL.md",
-                agent_dir / f"{skill_name}.md",
-            ):
-                if candidate.exists():
-                    return self._parse_skill(candidate)
-
-        return {}
+        candidate = self.skill_path(skill_name)
+        return self._parse_skill(candidate) if candidate else {}
 
     def _parse_skill(self, skill_file: Path) -> Dict:
         """Parse SKILL.md file"""
@@ -2146,7 +2000,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 MEMORY_ROOT = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory"))
 DB_PATH = MEMORY_ROOT / "memory.db"
@@ -2154,12 +2008,12 @@ DB_PATH = MEMORY_ROOT / "memory.db"
 class AgentMemory:
     def __init__(self, agent: str, project: Optional[str] = None):
         self.agent = agent
-        self.project = project or Path.cwd().name
+        self.project = project or str(Path.cwd().resolve())
         self._init_db()
 
     def _init_db(self):
         """Initialize database"""
-        MEMORY_ROOT.mkdir(parents=True, exist_ok=True)
+        MEMORY_ROOT.mkdir(parents=True, exist_ok=True, mode=0o700)
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS memories (
@@ -2179,6 +2033,7 @@ class AgentMemory:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_project ON memories(agent, project)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_type ON memories(memory_type)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_expires ON memories(expires_at)")
+        DB_PATH.chmod(0o600)
 
     def save(self, key: str, value: str, memory_type: str = "session_context",
              metadata: Optional[Dict] = None, ttl_days: Optional[int] = None) -> None:
@@ -2189,7 +2044,7 @@ class AgentMemory:
             # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
             # against datetime('now') work: the ISO "T" separator sorts
             # after a space and broke timely expiry cleanup.
-            expires_at = (datetime.now() + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
+            expires_at = (datetime.now(timezone.utc) + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
 
         meta_json = json.dumps(metadata) if metadata else None
 
@@ -2206,6 +2061,7 @@ class AgentMemory:
             cursor = conn.execute("""
                 SELECT value FROM memories
                 WHERE agent=? AND project=? AND memory_type=? AND key=?
+                  AND (expires_at IS NULL OR expires_at > datetime('now'))
                 ORDER BY updated_at DESC LIMIT 1
             """, (self.agent, self.project, memory_type, key))
             row = cursor.fetchone()
@@ -2219,6 +2075,7 @@ class AgentMemory:
                     SELECT memory_type, key, value, metadata, updated_at
                     FROM memories
                     WHERE agent=? AND project=? AND memory_type=?
+                      AND (expires_at IS NULL OR expires_at > datetime('now'))
                     ORDER BY updated_at DESC LIMIT ?
                 """, (self.agent, self.project, memory_type, limit))
             else:
@@ -2226,6 +2083,7 @@ class AgentMemory:
                     SELECT memory_type, key, value, metadata, updated_at
                     FROM memories
                     WHERE agent=? AND project=?
+                      AND (expires_at IS NULL OR expires_at > datetime('now'))
                     ORDER BY updated_at DESC LIMIT ?
                 """, (self.agent, self.project, limit))
 
@@ -2408,19 +2266,12 @@ def fallback_compress(content: str, mode: str) -> str:
         if content.strip().startswith(('{', '[')):
             try:
                 data = json.loads(content)
-                # Remove null values, empty arrays/objects
-                def clean(obj):
-                    if isinstance(obj, dict):
-                        return {k: clean(v) for k, v in obj.items() if v is not None and v != [] and v != {}}
-                    elif isinstance(obj, list):
-                        return [clean(v) for v in obj if v is not None and v != [] and v != {}]
-                    return obj
-                cleaned = clean(data)
-                return json.dumps(cleaned, separators=(',', ':'))
+                # Whitespace is removable; nulls and empty values are data.
+                return json.dumps(data, separators=(',', ':'), ensure_ascii=False)
             except:
                 pass
 
-    if mode in ("logs", "auto"):
+    if mode == "logs":
         # Detect log format
         if any(re.search(r'\b(ERROR|WARN|INFO|DEBUG|TRACE)\b', line) for line in lines[:50]):
             # Keep only unique log lines, preserve first occurrence
@@ -2435,21 +2286,8 @@ def fallback_compress(content: str, mode: str) -> str:
                     unique.append(line)
             lines = unique
 
-    if mode in ("code", "auto"):
-        # Preserve code structure, trim comments/whitespace
-        # Simple heuristic: keep lines with code, trim excessive blank lines
-        compressed = []
-        blank_count = 0
-        for line in lines:
-            stripped = line.strip()
-            if not stripped:
-                blank_count += 1
-                if blank_count <= 2:  # Max 2 blank lines
-                    compressed.append(line)
-            else:
-                blank_count = 0
-                compressed.append(line)
-        lines = compressed
+    # Blank lines, whitespace and repeated code can have semantic meaning
+    # (multiline strings, YAML blocks, closing braces). Preserve them.
 
     # Limit total size
     result = '\n'.join(lines)
@@ -2514,11 +2352,15 @@ main() {
     echo "Unified directory: $UNIFIED_DIR"
     echo ""
 
+    local runtime_python
+    runtime_python="$(bash "$UNIFIED_DIR/scripts/setup-mcp.sh" --prepare)"
+    export PATH="$(dirname "$runtime_python"):$PATH"
     detect_agents
     setup_prompts
     aggregate_skills
     build_registry
     setup_memory
+    bash "$UNIFIED_DIR/memory/init-memory.sh"
     setup_compression
     create_agent_configs
     link_native_skills
@@ -2535,9 +2377,9 @@ main() {
     echo "Configured agents: ${AGENTS[*]:-none}"
     echo ""
     echo "Next steps:"
-    echo "  1. Run: $UNIFIED_DIR/memory/init-memory.sh"
-    echo "  2. Launch enhanced agent: $UNIFIED_DIR/launch-agent.sh <agent>"
-    echo "  3. Or use: agent-enhanced <agent> (if symlink created)"
+    echo "  1. Start claude, codex, or opencode normally (no launcher required)."
+    echo "  2. Codex requires review of new/changed hook definitions in /hooks."
+    echo "  3. Verify MCP protocol: bash $UNIFIED_DIR/scripts/setup-mcp.sh --check"
     echo "  4. Link more skills natively: $UNIFIED_DIR/scripts/link-skills.sh --set all"
     echo "  5. Map capabilities for a task: python3 $UNIFIED_DIR/scripts/registry.py map \"<task>\""
     echo ""

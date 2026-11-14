@@ -1,0 +1,5 @@
+mcp>=1.30,<2
+Pillow>=12,<14
+PyYAML>=6,<7
+tomlkit>=0.13,<1
+json5>=0.12,<1

@@ -40,3 +40,7 @@ skills/*/*/
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Runtime dependencies and local audit state
+unified-integration/.venv/
+unified-integration/opencode-plugin/node_modules/

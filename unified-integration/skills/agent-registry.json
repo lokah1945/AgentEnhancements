@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-14T12:29:44.749552+00:00",
+  "generated_at": "2026-11-14T16:16:16.318987+00:00",
   "stats": {
     "total": 3160,
     "by_type": {
@@ -46557,7 +46557,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:tavily-mcp",
@@ -46577,7 +46577,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:exa-mcp",
@@ -46597,7 +46597,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:firecrawl-mcp",
@@ -46617,7 +46617,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:neo4j-mcp",
@@ -46638,7 +46638,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:graphrag-mcp",
@@ -46656,9 +46656,9 @@
         "graphify",
         "agent-reach"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "installed automatically by setup.sh; verify with setup-mcp.sh --check"
     },
     {
       "id": "mcp:embeddings-mcp",
@@ -46677,9 +46677,9 @@
         "understand-anything",
         "agent-reach"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "installed automatically by setup.sh; verify with setup-mcp.sh --check"
     },
     {
       "id": "mcp:browser-tools-mcp",
@@ -46699,7 +46699,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:lighthouse-mcp",
@@ -46716,7 +46716,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:pa11y-mcp",
@@ -46734,7 +46734,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:figma-mcp",
@@ -46754,7 +46754,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:storybook-mcp",
@@ -46772,7 +46772,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:mermaid-mcp",
@@ -46789,7 +46789,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:excalidraw-mcp",
@@ -46806,7 +46806,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:google-slides-mcp",
@@ -46826,7 +46826,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:office-mcp",
@@ -46846,7 +46846,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:image-search-mcp",
@@ -46866,7 +46866,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:ffmpeg-mcp",
@@ -46881,9 +46881,9 @@
       "for_plugins": [
         "openmontage"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "installed automatically by setup.sh; verify with setup-mcp.sh --check"
     },
     {
       "id": "mcp:video-mcp",
@@ -46899,9 +46899,9 @@
         "openmontage",
         "hyperframes"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "installed automatically by setup.sh; verify with setup-mcp.sh --check"
     },
     {
       "id": "mcp:heygen-mcp",
@@ -46920,7 +46920,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:elevenlabs-mcp",
@@ -46940,7 +46940,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:typescript-language-server-mcp",
@@ -46958,7 +46958,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:eslint-mcp",
@@ -46976,7 +46976,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:jupyter-mcp",
@@ -46993,7 +46993,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:python-repl-mcp",
@@ -47010,7 +47010,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:memory-mcp",
@@ -47030,7 +47030,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:task-router-mcp",
@@ -47047,9 +47047,9 @@
         "bmad-method",
         "rea"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "installed automatically by setup.sh; verify with setup-mcp.sh --check"
     },
     {
       "id": "mcp:github-issues-mcp",
@@ -47069,7 +47069,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:linear-mcp",
@@ -47088,7 +47088,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:wikipedia-mcp",
@@ -47105,7 +47105,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:arxiv-mcp",
@@ -47121,9 +47121,9 @@
         "understand-anything",
         "agent-reach"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "installed automatically by setup.sh; verify with setup-mcp.sh --check"
     },
     {
       "id": "mcp:newsapi-mcp",
@@ -47142,7 +47142,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:google-news-mcp",
@@ -47157,9 +47157,9 @@
       "for_plugins": [
         "last-30-days"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "installed automatically by setup.sh; verify with setup-mcp.sh --check"
     },
     {
       "id": "mcp:filesystem-mcp",
@@ -47177,7 +47177,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:pdf-mcp",
@@ -47195,7 +47195,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "mcp:vision-mcp",
@@ -47214,9 +47214,9 @@
         "impeccable",
         "replica-skill"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "installed automatically by setup.sh; verify with setup-mcp.sh --check"
     },
     {
       "id": "mcp:style-mcp",
@@ -47231,9 +47231,9 @@
       "for_plugins": [
         "humanizer"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "installed automatically by setup.sh; verify with setup-mcp.sh --check"
     },
     {
       "id": "mcp:grammar-mcp",
@@ -47252,7 +47252,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "external server: install and configure required credentials first"
     },
     {
       "id": "capability:memory",
@@ -47268,8 +47268,8 @@
         "session",
         "context"
       ],
-      "usage": "python3 /home/z/my-project/repo/unified-integration/scripts/memory.py <agent> save|load|list [\"key\" [\"value\"]]",
-      "automatic": "Claude Code (hooks in ~/.claude/settings.json)"
+      "usage": "python3 unified-integration/scripts/memory.py <agent> save|load|list [\"key\" [\"value\"]]",
+      "automatic": "Claude Code and Codex lifecycle hooks; OpenCode 2 server plugin"
     },
     {
       "id": "capability:compression",
@@ -47285,7 +47285,7 @@
         "transcript",
         "summarize"
       ],
-      "usage": "/home/z/my-project/repo/unified-integration/compression/compress.sh <file> <auto|code|logs|json|markdown|generic>",
+      "usage": "unified-integration/compression/compress.sh <file> <auto|code|logs|json|markdown|generic>",
       "automatic": "none (invoke explicitly)"
     },
     {
@@ -47301,7 +47301,7 @@
         "catalog",
         "match"
       ],
-      "usage": "python3 /home/z/my-project/repo/unified-integration/scripts/load-skills.py <agent> \"<task description>\"",
+      "usage": "python3 unified-integration/scripts/load-skills.py <agent> \"<task description>\"",
       "automatic": "referenced from every agent instruction file"
     },
     {
@@ -47316,7 +47316,7 @@
         "choose",
         "plan"
       ],
-      "usage": "bash /home/z/my-project/repo/unified-integration/scripts/dispatch.sh --dry-run \"<task>\"",
+      "usage": "bash unified-integration/scripts/dispatch.sh --dry-run \"<task>\"",
       "automatic": "none (invoke explicitly)"
     },
     {
@@ -47333,7 +47333,7 @@
         "auto",
         "install"
       ],
-      "usage": "bash /home/z/my-project/repo/unified-integration/scripts/link-skills.sh [--set <source>|all|<name>] [--status] [--unlink]",
+      "usage": "bash unified-integration/scripts/link-skills.sh [--set <source>|all|<name>] [--status] [--unlink]",
       "automatic": "default curated set linked by setup.sh"
     },
     {
@@ -47348,7 +47348,7 @@
         "agent",
         "cli"
       ],
-      "usage": "/home/z/my-project/repo/unified-integration/launch-agent.sh <agent> [args...]",
+      "usage": "unified-integration/launch-agent.sh <agent> [args...]",
       "automatic": "agent-enhanced <agent> when /usr/local/bin is writable"
     },
     {
@@ -47365,7 +47365,7 @@
         "what",
         "which"
       ],
-      "usage": "python3 /home/z/my-project/repo/unified-integration/scripts/registry.py map \"<task description>\"",
+      "usage": "python3 unified-integration/scripts/registry.py map \"<task description>\"",
       "automatic": "referenced from every agent instruction file"
     }
   ]

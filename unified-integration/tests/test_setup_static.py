@@ -73,9 +73,11 @@ class ShippedScriptTests(unittest.TestCase):
         self.assertIn("AGENT_ENHANCEMENTS_UNIFIED_DIR", content)
 
     def test_compress_sh_is_stream_safe(self):
-        content = (UI_DIR / "compression" / "compress.sh").read_text()
-        self.assertIn("mktemp", content)
-        self.assertIn("trap", content)
+        payload = 'function first() {\n  same();\n}\nfunction second() {\n  same();\n}\n'
+        rc, out, err = run(["bash", str(UI_DIR / "compression/compress.sh"), "-", "code"],
+                           input_text=payload, env={"HEADROOM_BIN": "/nonexistent/headroom"})
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(out.rstrip("\n"), payload.rstrip("\n"))
 
     def test_aggregation_is_idempotent(self):
         """cp targets must be cleaned before copy (no nesting on re-runs)."""

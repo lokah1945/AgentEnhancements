@@ -69,19 +69,12 @@ def fallback_compress(content: str, mode: str) -> str:
         if content.strip().startswith(('{', '[')):
             try:
                 data = json.loads(content)
-                # Remove null values, empty arrays/objects
-                def clean(obj):
-                    if isinstance(obj, dict):
-                        return {k: clean(v) for k, v in obj.items() if v is not None and v != [] and v != {}}
-                    elif isinstance(obj, list):
-                        return [clean(v) for v in obj if v is not None and v != [] and v != {}]
-                    return obj
-                cleaned = clean(data)
-                return json.dumps(cleaned, separators=(',', ':'))
+                # Whitespace is removable; nulls and empty values are data.
+                return json.dumps(data, separators=(',', ':'), ensure_ascii=False)
             except:
                 pass
 
-    if mode in ("logs", "auto"):
+    if mode == "logs":
         # Detect log format
         if any(re.search(r'\b(ERROR|WARN|INFO|DEBUG|TRACE)\b', line) for line in lines[:50]):
             # Keep only unique log lines, preserve first occurrence
@@ -96,21 +89,8 @@ def fallback_compress(content: str, mode: str) -> str:
                     unique.append(line)
             lines = unique
 
-    if mode in ("code", "auto"):
-        # Preserve code structure, trim comments/whitespace
-        # Simple heuristic: keep lines with code, trim excessive blank lines
-        compressed = []
-        blank_count = 0
-        for line in lines:
-            stripped = line.strip()
-            if not stripped:
-                blank_count += 1
-                if blank_count <= 2:  # Max 2 blank lines
-                    compressed.append(line)
-            else:
-                blank_count = 0
-                compressed.append(line)
-        lines = compressed
+    # Blank lines, whitespace and repeated code can have semantic meaning
+    # (multiline strings, YAML blocks, closing braces). Preserve them.
 
     # Limit total size
     result = '\n'.join(lines)

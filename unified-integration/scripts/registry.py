@@ -84,7 +84,7 @@ BUILT_IN_CAPABILITIES = [
         "keywords": ["memory", "remember", "preference", "recall", "persist",
                      "session", "context"],
         "usage": 'python3 {unified}/scripts/memory.py <agent> save|load|list ["key" ["value"]]',
-        "automatic": "Claude Code (hooks in ~/.claude/settings.json)",
+        "automatic": "Claude Code and Codex lifecycle hooks; OpenCode 2 server plugin",
     },
     {
         "id": "capability:compression",
@@ -247,7 +247,9 @@ def load_mcp_entries() -> List[Dict[str, Any]]:
             "for_plugins": server.get("for_plugins", []),
             "status": server.get("status", "roadmap"),
             "path": "plugin-catalog/mcp-servers.json",
-            "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh",
+            "activation": ("installed automatically by setup.sh; verify with setup-mcp.sh --check"
+                           if server.get("status") == "built" else
+                           "external server: install and configure required credentials first"),
         })
     return entries
 
@@ -300,7 +302,7 @@ def score_skill(entry: Dict[str, Any], tokens: List[str]) -> int:
             score += 1
     # Natively linked skills are already active in every harness: prefer
     # the zero-friction capability when relevance is otherwise equal.
-    if entry.get("natively_linked_by_default"):
+    if score > 0 and entry.get("natively_linked_by_default"):
         score += 3
     return score
 
@@ -310,7 +312,7 @@ def score_plugin(entry: Dict[str, Any], tokens: List[str], query_lower: str) -> 
     name = (entry.get("name") or "").lower()
     for kw in entry.get("trigger_keywords", []):
         kw_lower = kw.lower()
-        if kw_lower and (kw_lower in query_lower or kw_lower in name):
+        if kw_lower and re.search(r"\b" + re.escape(kw_lower) + r"\b", query_lower):
             score += 6
     fields = set(_tokenize(entry.get("description", "")))
     for phrase in entry.get("best_for", []):
@@ -335,7 +337,7 @@ def score_mcp(entry: Dict[str, Any], tokens: List[str]) -> int:
             score += 4
         if token in fields:
             score += 2
-    if entry.get("priority") == "P0":
+    if score > 0 and entry.get("priority") == "P0":
         score += 1
     return score
 
@@ -389,6 +391,11 @@ def cmd_build(out_path: Optional[str] = None, quiet: bool = False) -> int:
         by_type[entry["type"]] = by_type.get(entry["type"], 0) + 1
         src = entry.get("source") or "built-in"
         by_source[src] = by_source.get(src, 0) + 1
+    # Committed snapshots must not contain the builder's home/checkout path.
+    # Live CLI queries still resolve their own absolute installation path.
+    for entry in entries:
+        if "usage" in entry:
+            entry["usage"] = entry["usage"].replace(str(UNIFIED_DIR), "unified-integration")
     registry = {
         "version": "1.0",
         "description": "Unified capability registry: skills, plugins, MCP "

@@ -81,9 +81,27 @@ class SkillsLoaderTests(unittest.TestCase):
 
     def test_default_skills_dir_resolves_inside_repo(self):
         mod = load_module("loadskills_default", UI_DIR / "scripts" / "load-skills.py")
-        # default must NOT be a hardcoded /root path
-        self.assertNotIn("/root/", str(mod.SKILLS_DIR))
+        # A checkout is allowed under /root; compare to the actual repository.
         self.assertEqual(mod.SKILLS_DIR, UI_DIR / "skills")
+
+    def test_compatibility_alone_does_not_match_unrelated_prompt(self):
+        self.assertEqual(self.mod.SkillsLoader("claude-code").find_skills("zyxwvu"), [])
+
+    def test_missing_registry_tree_does_not_raise(self):
+        import shutil
+        shutil.rmtree(self.root / "by-category")
+        self.assertEqual(self.mod.SkillsLoader("claude-code").load_skill("nope"), {})
+
+    def test_skill_path_rejects_traversal(self):
+        loader = self.mod.SkillsLoader("claude-code")
+        self.assertIsNone(loader.skill_path("../secret"))
+
+    def test_agent_aliases_and_tool_prerequisites_remain_usable(self):
+        loader = self.mod.SkillsLoader("codex")
+        loader.skills_index["skills"][0]["tools"] = ["Codex", "python"]
+        self.assertEqual(loader.find_skills("security")[0]["name"], "dirskill")
+        loader.skills_index["skills"][0]["tools"] = ["Agent Skills", "python"]
+        self.assertEqual(loader.find_skills("security")[0]["name"], "dirskill")
 
 
 if __name__ == "__main__":

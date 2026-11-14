@@ -14,15 +14,18 @@ from __future__ import annotations
 
 import base64
 import json
-import os
 import shutil
 import subprocess
+import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any, Callable
 
 from mcp.server.fastmcp import FastMCP
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+from api_config import cloud_available, read_config, value
 
 VERSION = "1.0.0"
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
@@ -67,7 +70,7 @@ def health() -> dict:
         "version": VERSION,
         "pil": pil,
         "tesseract": bool(shutil.which("tesseract")),
-        "openai_key": bool(os.environ.get("OPENAI_API_KEY")),
+        "openai_key": cloud_available("vision-mcp"),
     }
 
 
@@ -91,7 +94,8 @@ def compare(a: str, b: str) -> dict:
         img_b = Image.open(path_b).convert("RGB")
     except Exception as exc:
         return {"error": f"cannot decode images: {exc}"}
-    if img_a.size != img_b.size:
+    same_size = img_a.size == img_b.size
+    if not same_size:
         img_b = img_b.resize(img_a.size)
     hist_a = img_a.histogram()
     hist_b = img_b.histogram()
@@ -102,12 +106,12 @@ def compare(a: str, b: str) -> dict:
         total = sum(max(x, y) for x, y in zip(ha, hb)) or 1
         intersections.append(sum(min(x, y) for x, y in zip(ha, hb)) / total)
     hist_sim = sum(intersections) / 3
-    from PIL import ImageChops
+    from PIL import ImageChops, ImageStat
     diff = ImageChops.difference(img_a, img_b)
-    stat = sum(diff.convert("L").getdata()) / (img_a.size[0] * img_a.size[1])
+    stat = ImageStat.Stat(diff.convert("L")).mean[0]
     pixel_sim = 1.0 - min(stat / 255.0, 1.0)
     similarity = round(0.5 * hist_sim + 0.5 * pixel_sim, 6)
-    return {"similarity": similarity, "same_size": img_a.size == img_b.size,
+    return {"similarity": similarity, "same_size": same_size,
             "histogram_similarity": round(hist_sim, 6),
             "pixel_similarity": round(pixel_sim, 6)}
 
@@ -144,13 +148,15 @@ def describe(image_path: str, detail: str = "auto") -> dict:
     path, data, err = _load_image(image_path)
     if err:
         return {"error": err}
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-    if api_key:
+    config, _ = read_config()
+    api_key = value("OPENAI_API_KEY", config)
+    if cloud_available("vision-mcp", config=config):
+        model = value("OPENAI_VISION_MODEL", config) or OPENAI_MODEL
         b64 = base64.b64encode(data).decode("ascii")
         suffix = path.suffix.lstrip(".").lower() or "png"
         media = {"jpeg": "image/jpeg", "jpg": "image/jpeg"}.get(suffix, "image/png")
         body = json.dumps({
-            "model": OPENAI_MODEL,
+            "model": model,
             "max_tokens": 400,
             "messages": [{
                 "role": "user",
@@ -163,16 +169,16 @@ def describe(image_path: str, detail: str = "auto") -> dict:
             }],
         }).encode()
         request = urllib.request.Request(
-            OPENAI_URL, data=body,
+            (value("OPENAI_BASE_URL", config) or "https://api.openai.com/v1").rstrip("/") + "/chat/completions", data=body,
             headers={"Content-Type": "application/json"}, method="POST")
         request.add_header("Authorization", f"Bearer {api_key}")
         try:
             with urllib.request.urlopen(request, timeout=60) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
-            return {"mode": "openai", "model": OPENAI_MODEL,
+            return {"mode": "openai", "model": model,
                     "description": payload["choices"][0]["message"]["content"]}
-        except (urllib.error.HTTPError, urllib.error.URLError, KeyError) as exc:
-            return {"error": f"OpenAI vision call failed: {exc}",
+        except (urllib.error.HTTPError, urllib.error.URLError, KeyError, ValueError):
+            return {"error": "Vision API call failed; check ui.api.json endpoint, key and model",
                     "hint": "falling back is explicit - re-run with the key "
                             "unset to get basic_metadata mode"}
     # Honest offline fallback: real metadata, no fabricated description.
@@ -180,14 +186,14 @@ def describe(image_path: str, detail: str = "auto") -> dict:
         from PIL import Image
         img = Image.open(path).convert("RGB")
     except ImportError:
-        return {"error": "no OPENAI_API_KEY and Pillow is not installed",
-                "hint": "either set OPENAI_API_KEY or pip install pillow"}
+        return {"error": "OPENAI_API_KEY is empty in ui.api.json and Pillow is not installed",
+                "hint": "either edit ui.api.json or install pillow"}
     small = img.resize((64, 64))
     colors = sorted(small.getcolors(64 * 64) or [], reverse=True)[:5]
     total = 64 * 64
     return {
         "mode": "basic_metadata",
-        "note": "set OPENAI_API_KEY for a semantic description",
+        "note": "Set OPENAI_API_KEY in ui.api.json for a semantic description",
         "size": list(img.size),
         "format": img.format or path.suffix.lstrip("."),
         "dominant_colors": [

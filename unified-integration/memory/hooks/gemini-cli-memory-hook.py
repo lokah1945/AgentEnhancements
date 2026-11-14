@@ -9,14 +9,14 @@ import sqlite3
 import sys
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 AGENT = "gemini-cli"
 MEMORY_ROOT = os.environ.get("AGENT_MEMORY_ROOT", os.path.expanduser("~/.agent-memory"))
 DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
 
 def init_db():
-    os.makedirs(MEMORY_ROOT, exist_ok=True)
+    os.makedirs(MEMORY_ROOT, exist_ok=True, mode=0o700)
     os.makedirs(os.path.join(MEMORY_ROOT, "projects"), exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
@@ -41,7 +41,7 @@ def init_db():
 
 def save_memory(key, value, memory_type="session_context", project=None, metadata=None, ttl_days=None):
     if project is None:
-        project = os.path.basename(os.getcwd())
+        project = os.path.realpath(os.getcwd())
 
     expires_at = None
     if ttl_days:
@@ -49,7 +49,7 @@ def save_memory(key, value, memory_type="session_context", project=None, metadat
         # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
         # against datetime('now') work: the ISO "T" separator sorts
         # after a space and broke timely expiry cleanup.
-        expires_at = (datetime.now() + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
+        expires_at = (datetime.now(timezone.utc) + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
 
     meta_json = json.dumps(metadata) if metadata else None
 
@@ -62,12 +62,13 @@ def save_memory(key, value, memory_type="session_context", project=None, metadat
 
 def load_memory(key, memory_type="session_context", project=None):
     if project is None:
-        project = os.path.basename(os.getcwd())
+        project = os.path.realpath(os.getcwd())
 
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.execute("""
             SELECT value FROM memories
             WHERE agent=? AND project=? AND memory_type=? AND key=?
+              AND (expires_at IS NULL OR expires_at > datetime('now'))
             ORDER BY updated_at DESC LIMIT 1
         """, (AGENT, project, memory_type, key))
         row = cursor.fetchone()
@@ -75,7 +76,7 @@ def load_memory(key, memory_type="session_context", project=None):
 
 def list_memories(memory_type=None, project=None, limit=20):
     if project is None:
-        project = os.path.basename(os.getcwd())
+        project = os.path.realpath(os.getcwd())
 
     with sqlite3.connect(DB_PATH) as conn:
         if memory_type:
@@ -83,6 +84,7 @@ def list_memories(memory_type=None, project=None, limit=20):
                 SELECT memory_type, key, value, metadata, updated_at
                 FROM memories
                 WHERE agent=? AND project=? AND memory_type=?
+                  AND (expires_at IS NULL OR expires_at > datetime('now'))
                 ORDER BY updated_at DESC LIMIT ?
             """, (AGENT, project, memory_type, limit))
         else:
@@ -90,6 +92,7 @@ def list_memories(memory_type=None, project=None, limit=20):
                 SELECT memory_type, key, value, metadata, updated_at
                 FROM memories
                 WHERE agent=? AND project=?
+                  AND (expires_at IS NULL OR expires_at > datetime('now'))
                 ORDER BY updated_at DESC LIMIT ?
             """, (AGENT, project, limit))
 
@@ -106,7 +109,7 @@ def list_memories(memory_type=None, project=None, limit=20):
 
 def delete_memory(key, memory_type="session_context", project=None):
     if project is None:
-        project = os.path.basename(os.getcwd())
+        project = os.path.realpath(os.getcwd())
 
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.execute("""
@@ -134,6 +137,7 @@ def main():
         sys.exit(1)
 
     init_db()
+    os.chmod(DB_PATH, 0o600)
     command = sys.argv[1]
 
     if command == "save":

@@ -105,10 +105,15 @@ main() {
 
     # Re-run skills aggregation
     log_info "Re-aggregating skills..."
-    "$UNIFIED_DIR/setup.sh" 2>&1 | grep -E "Aggregate|process|complete|skill" | head -20 || true
+    # Draining setup through head terminated it with SIGPIPE after 20
+    # matching log lines, then hid the failed/incomplete installation.
+    if ! "$UNIFIED_DIR/setup.sh"; then
+        log_error "Setup failed; the update is incomplete"
+        return 1
+    fi
 
     # Rebuild headroom if updated
-    if [ -f "$BASE_DIR/headroom/Cargo.toml" ]; then
+    if [ -f "$BASE_DIR/headroom/Cargo.toml" ] && [ "${AGENT_ENHANCEMENTS_BUILD_HEADROOM:-0}" = "1" ]; then
         log_info "Rebuilding headroom..."
         (cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -5) || log_warn "headroom: rebuild failed"
         if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
@@ -117,7 +122,7 @@ main() {
     fi
 
     # Rebuild claude-mem if updated
-    if [ -f "$BASE_DIR/claude-mem/package.json" ]; then
+    if [ -d "$BASE_DIR/claude-mem/.git" ] && [ -f "$BASE_DIR/claude-mem/package.json" ]; then
         log_info "Rebuilding claude-mem..."
         (cd "$BASE_DIR/claude-mem" && npm run build 2>&1 | tail -5) || log_warn "claude-mem: rebuild failed"
         log_success "claude-mem rebuild attempted"

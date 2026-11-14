@@ -31,6 +31,7 @@ import shutil
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from helpers import REPO_DIR
@@ -42,6 +43,20 @@ BUILT = [
     "embeddings-mcp", "task-router-mcp", "ffmpeg-mcp", "vision-mcp",
     "graphrag-mcp", "arxiv-mcp", "google-news-mcp", "video-mcp", "style-mcp",
 ]
+
+
+def setUpModule():
+    """Never let owner credentials turn a regression test into a paid call."""
+    global _api_directory, _api_environment
+    _api_directory = tempfile.TemporaryDirectory()
+    _api_environment = patch.dict(__import__("os").environ, {
+        "AGENT_ENHANCEMENTS_API_FILE": str(Path(_api_directory.name) / "no-credentials.json")})
+    _api_environment.start()
+
+
+def tearDownModule():
+    _api_environment.stop()
+    _api_directory.cleanup()
 
 
 def load_server(slug: str):
@@ -176,6 +191,31 @@ class TestTaskRouter(unittest.TestCase):
     def test_bad_kind_rejected(self):
         self.assertIn("error", self.mod.TOOLS["dispatch"](kind="zsh", command="x"))
 
+    def test_cancel_stops_execution_and_keeps_cancelled_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            marker = Path(tmp) / "should-not-exist"
+            task = self.mod.TOOLS["dispatch"](kind="python", code=(
+                "import time; from pathlib import Path; time.sleep(1); "
+                f"Path({str(marker)!r}).write_text('still running')"))
+            self._wait(task["task_id"], "running")
+            self.mod.TOOLS["cancel"](task["task_id"])
+            time.sleep(1.2)
+            self.assertFalse(marker.exists(), "cancelled process continued executing")
+            self.assertEqual(self.mod.TOOLS["track"](task["task_id"])["status"], "cancelled")
+
+    def test_timeout_stops_child_processes(self):
+        import shlex
+        import sys
+        with tempfile.TemporaryDirectory() as tmp:
+            marker = Path(tmp) / "orphan-wrote-this"
+            code = "import time; from pathlib import Path; time.sleep(2); " + f"Path({str(marker)!r}).touch()"
+            command = shlex.join([sys.executable, "-c", code]) + " & wait"
+            task = self.mod.TOOLS["dispatch"](kind="bash", command=command, timeout=1)
+            result = self._wait(task["task_id"], "failed")
+            self.assertIn("timeout", result["stderr"])
+            time.sleep(1.2)
+            self.assertFalse(marker.exists(), "timeout left a child process running")
+
 
 @unittest.skipUnless(has_binary("ffmpeg"), "ffmpeg binary not installed")
 class TestFfmpeg(unittest.TestCase):
@@ -243,6 +283,10 @@ class TestVision(unittest.TestCase):
         diff = self.mod.TOOLS["compare"](str(self.flat), str(self.text))["similarity"]
         self.assertGreater(same, 0.95)
         self.assertGreater(same, diff)
+
+    def test_compare_reports_original_size_difference(self):
+        result = self.mod.TOOLS["compare"](str(self.flat), str(self.text))
+        self.assertFalse(result["same_size"])
 
     def test_describe_without_key_is_honest_metadata(self):
         import os
@@ -330,6 +374,70 @@ class TestStyle(unittest.TestCase):
         names = [p["pattern"] for p in result["patterns"]]
         self.assertEqual(len(names), len(set(names)))
         self.assertGreaterEqual(len(names), 15)
+
+
+class TestStatePrivacy(unittest.TestCase):
+    def test_graphrag_observes_updates_from_another_client(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"AGENT_MEMORY_ROOT": tmp}
+            with patch.dict(__import__("os").environ, env):
+                a = load_server("graphrag-mcp")
+                b = load_server("graphrag-mcp")
+            a.TOOLS["index"]("shared", documents=[{"text": "Alice builds robots in Boston."}])
+            a.TOOLS["query"]("shared", "Alice")
+            b.TOOLS["index"]("shared", documents=[{"text": "Carol studies planets in Jakarta."}])
+            current = a.TOOLS["query"]("shared", "Carol")
+            self.assertIn("Carol", json.dumps(current))
+            self.assertNotIn("Alice", json.dumps(current))
+
+    def test_concurrent_timeline_updates_do_not_lose_entries(self):
+        from concurrent.futures import ThreadPoolExecutor
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.dict(__import__("os").environ, {"AGENT_MEMORY_ROOT": tmp}):
+                clients = [load_server("video-mcp") for _ in range(16)]
+            clip = Path(tmp) / "fixture.mp4"
+            clip.touch()
+            def save(i):
+                return clients[i].TOOLS["timeline"](f"parallel-{i}", [{"path": str(clip), "start": 0, "end": 1}])
+            with ThreadPoolExecutor(max_workers=8) as executor:
+                results = list(executor.map(save, range(16)))
+            self.assertTrue(all(item.get("ok") for item in results))
+            self.assertEqual(len(clients[0]._load_all()), 16)
+
+    def test_corpus_evidence_is_stored_with_private_permissions(self):
+        import os
+        with tempfile.TemporaryDirectory() as tmp:
+            previous = os.environ.get("AGENT_MEMORY_ROOT")
+            os.environ["AGENT_MEMORY_ROOT"] = tmp
+            try:
+                mod = load_server("graphrag-mcp")
+            finally:
+                if previous is None:
+                    os.environ.pop("AGENT_MEMORY_ROOT", None)
+                else:
+                    os.environ["AGENT_MEMORY_ROOT"] = previous
+            mod.TOOLS["index"]("private", documents=[{"text": "Alice builds robots in Boston."}])
+            path = mod._corpus_path("private")
+            self.assertTrue(path.is_relative_to(Path(tmp)))
+            self.assertEqual(path.stat().st_mode & 0o077, 0)
+            self.assertEqual(path.parent.stat().st_mode & 0o077, 0)
+
+    def test_video_state_is_scoped_to_the_working_directory(self):
+        import os
+        cwd = Path.cwd()
+        with tempfile.TemporaryDirectory() as tmp:
+            first = Path(tmp) / "one/repo"
+            second = Path(tmp) / "two/repo"
+            first.mkdir(parents=True)
+            second.mkdir(parents=True)
+            try:
+                os.chdir(first)
+                a = load_server("video-mcp")
+                os.chdir(second)
+                b = load_server("video-mcp")
+            finally:
+                os.chdir(cwd)
+            self.assertNotEqual(a.STORE_DIR, b.STORE_DIR)
 
 
 @unittest.skipUnless(has_binary("ffmpeg"), "ffmpeg binary not installed")

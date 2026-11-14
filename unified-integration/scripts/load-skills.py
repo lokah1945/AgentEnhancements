@@ -9,12 +9,17 @@ import os
 import sys
 import re
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 SKILLS_DIR = Path(os.environ.get(
     "AGENT_SKILLS_DIR",
     str(Path(__file__).resolve().parent.parent / "skills"),
 ))
+
+AGENT_ALIASES = {"claude": "claude-code", "claude-code": "claude-code",
+                 "codex-cli": "codex", "codex": "codex", "gemini": "gemini-cli",
+                 "gemini-cli": "gemini-cli", "opencode": "opencode",
+                 "cursor": "cursor", "windsurf": "windsurf", "copilot": "copilot", "kiro": "kiro"}
 
 class SkillsLoader:
     def __init__(self, agent: str = "claude-code"):
@@ -30,40 +35,57 @@ class SkillsLoader:
         return {"skills": []}
 
     def find_skills(self, task_description: str, max_results: int = 5) -> List[Dict]:
-        """Find relevant skills for a task"""
-        task_lower = task_description.lower()
+        """Rank relevant terms, without treating agent compatibility as relevance."""
+        task_lower = task_description.casefold()
         matches = []
-
-        # Simple keyword matching (in production, use embeddings)
-        keywords = re.findall(r'\b\w+\b', task_lower)
+        stopwords = set("a an the in on is it to for of and or with this that please help me my use using create make i you can do check all analisa cek saya dan di yang untuk dengan ini nya bisa".split())
+        keywords = set(re.findall(r'\b[\w+#-]+\b', task_lower)) - stopwords
+        translations = {"keamanan": "security", "uji": "testing", "pengujian": "testing",
+                        "perbaiki": "debugging", "arsitektur": "architecture",
+                        "dokumentasi": "documentation", "tabel": "spreadsheet",
+                        "presentasi": "pptx", "excel": "xlsx", "bug": "debugging"}
+        keywords.update(translations[k] for k in tuple(keywords) if k in translations)
+        if not keywords:
+            return []
 
         for skill in self.skills_index.get("skills", []):
-            score = 0
-            # Check "when_to_use" keywords
-            when_to_use = skill.get("when_to_use", "").lower()
-            for kw in keywords:
-                if kw in when_to_use:
-                    score += 2
-            # Check tags
-            for tag in skill.get("tags", []):
-                if tag.lower() in task_lower:
-                    score += 3
-            # Check description
-            desc = skill.get("description", "").lower()
-            for kw in keywords:
-                if kw in desc:
-                    score += 1
-
-            # Check agent compatibility
-            if self.agent in skill.get("tools", []):
-                score += 5
-
+            tools = skill.get("tools") or []
+            compatible = {AGENT_ALIASES[t.casefold()] for t in tools if t.casefold() in AGENT_ALIASES}
+            # Some sources use tools for prerequisites (python, git, etc.),
+            # or say "Agent Skills". Those are not incompatible agent names.
+            if compatible and self.agent not in compatible:
+                continue
+            def terms(value):
+                return set(re.findall(r'\b[\w+#]+\b', str(value).casefold()))
+            name = str(skill.get("name", "")).casefold()
+            name_terms = terms(name)
+            tags = terms(" ".join(skill.get("tags") or []))
+            desc = terms(skill.get("description", ""))
+            when = terms(skill.get("when_to_use", ""))
+            score = (12 * len(keywords & name_terms) + 5 * len(keywords & tags)
+                     + 2 * len(keywords & when) + len(keywords & desc))
+            if name in keywords:
+                score += 30
             if score > 0:
                 matches.append((score, skill))
 
         # Sort by score and return top matches
-        matches.sort(key=lambda x: x[0], reverse=True)
+        matches.sort(key=lambda x: (-x[0], x[1].get("name", "")))
         return [skill for _, skill in matches[:max_results]]
+
+    def skill_path(self, skill_name: str) -> Optional[Path]:
+        """Resolve either supported layout while preventing path traversal."""
+        if not skill_name or Path(skill_name).name != skill_name or skill_name in {".", ".."}:
+            return None
+        root = SKILLS_DIR.resolve()
+        categories = SKILLS_DIR / "by-category"
+        directories = sorted(categories.iterdir()) if categories.is_dir() else []
+        directories.append(SKILLS_DIR / "by-agent" / self.agent)
+        for directory in directories:
+            for candidate in (directory / skill_name / "SKILL.md", directory / f"{skill_name}.md"):
+                if candidate.is_file() and candidate.resolve().is_relative_to(root):
+                    return candidate
+        return None
 
     def load_skill(self, skill_name: str) -> Dict:
         """Load a specific skill by name.
@@ -72,27 +94,8 @@ class SkillsLoader:
         - directory skills: by-category/<category>/<name>/SKILL.md
         - flat skills:      by-category/<category>/<name>.md
         """
-        # Search in all category directories
-        for cat_dir in (SKILLS_DIR / "by-category").iterdir():
-            if cat_dir.is_dir():
-                for candidate in (
-                    cat_dir / skill_name / "SKILL.md",
-                    cat_dir / f"{skill_name}.md",
-                ):
-                    if candidate.exists():
-                        return self._parse_skill(candidate)
-
-        # Search in agent-specific directories
-        agent_dir = SKILLS_DIR / "by-agent" / self.agent
-        if agent_dir.exists():
-            for candidate in (
-                agent_dir / skill_name / "SKILL.md",
-                agent_dir / f"{skill_name}.md",
-            ):
-                if candidate.exists():
-                    return self._parse_skill(candidate)
-
-        return {}
+        candidate = self.skill_path(skill_name)
+        return self._parse_skill(candidate) if candidate else {}
 
     def _parse_skill(self, skill_file: Path) -> Dict:
         """Parse SKILL.md file"""

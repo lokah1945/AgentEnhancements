@@ -126,6 +126,10 @@ class TestScaffoldIdempotency(unittest.TestCase):
     def test_double_run_is_stable(self):
         if not SCAFFOLD_SCRIPT.is_file():
             self.skipTest("scaffold script not present")
+        # A fresh clone intentionally has no generated tree. Generate once
+        # before comparing the two subsequent runs for idempotency.
+        subprocess.run(["bash", str(SCAFFOLD_SCRIPT)], check=True,
+                       capture_output=True, cwd=REPO_DIR, timeout=120)
         snapshot = sorted(
             str(p.relative_to(REPO_DIR))
             for p in SKILLS_DIR.rglob("*")

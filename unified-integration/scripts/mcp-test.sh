@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNIFIED_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BASE_DIR="$(cd "$UNIFIED_DIR/.." && pwd)"
 SERVERS_JSON="$BASE_DIR/plugin-catalog/mcp-servers.json"
-MCP_JSON="$BASE_DIR/.claude/mcp.json"
+PYTHON_BIN="$(bash "$SCRIPT_DIR/setup-mcp.sh" --prepare)"
 
 pass() { echo -e "\033[0;32m[PASS]\033[0m $*"; }
 warn() { echo -e "\033[1;33m[WARN]\033[0m $*"; }
@@ -37,16 +37,50 @@ get_servers() {
 }
 
 is_configured() {
-    local id="$1"
-    if [ -f "$MCP_JSON" ]; then
-        jq -e --arg id "$id" '.mcpServers[$id] != null' "$MCP_JSON" 2> /dev/null
-    else
-        return 1
-    fi
+    "$PYTHON_BIN" - "$1" "$BASE_DIR" <<'PYCONFIG'
+import os
+import sys
+from pathlib import Path
+import json5
+import tomllib
+sys.path.insert(0, str(Path(sys.argv[2]) / 'unified-integration/scripts'))
+from api_config import server_state
+
+name = sys.argv[1]
+home = Path.home()
+claude = Path(os.environ.get('CLAUDE_CONFIG_DIR', home / '.claude'))
+codex = Path(os.environ.get('CODEX_HOME', home / '.codex'))
+opencode = Path(os.environ.get('XDG_CONFIG_HOME', home / '.config')) / 'opencode'
+claude_mcp = claude / '.claude.json' if os.environ.get('CLAUDE_CONFIG_DIR') else home / '.claude.json'
+configs = [claude_mcp, Path(sys.argv[2]) / '.mcp.json',
+           codex / 'config.toml', opencode / 'opencode.json', opencode / 'opencode.jsonc']
+for path in configs:
+    if not path.is_file():
+        continue
+    try:
+        doc = tomllib.loads(path.read_text()) if path.suffix == '.toml' else json5.loads(path.read_text())
+        for key in ['mcpServers', 'mcp_servers', 'mcp']:
+            servers = doc.get(key, {})
+            if key == 'mcp':
+                servers = servers.get('servers', servers)
+            if 'agent-enhancements' in servers and server_state(name)['visible']:
+                gateway = servers['agent-enhancements']
+                if gateway.get('enabled', True) and not gateway.get('disabled', False):
+                    raise SystemExit(0)
+            if name in servers and servers[name].get('enabled', True) and not servers[name].get('disabled', False):
+                raise SystemExit(0)
+    except (ValueError, OSError):
+        continue
+raise SystemExit(1)
+PYCONFIG
 }
 
 check_installable() {
     local id="$1"
+    # Built servers use the isolated runtime already prepared above.
+    if jq -e --arg id "$id" '.servers[] | select(.id == $id and .status == "built")' "$SERVERS_JSON" >/dev/null; then
+        return 1
+    fi
     local cmd
     cmd="$(jq -r --arg id "$id" '.servers[] | select(.id == $id) | .command' "$SERVERS_JSON")"
     case "$cmd" in
@@ -86,7 +120,7 @@ main() {
                 passed=$((passed + 1))
             fi
         else
-            fail "$srv (not in .claude/mcp.json)"
+            fail "$srv (not configured in native agent settings)"
             failed=$((failed + 1))
         fi
     done <<< "$servers"

@@ -84,6 +84,8 @@ AgentEnhancements/
 ├── unified-integration/                # installation pipeline
 │   ├── setup.sh                        # 2,542-line installer (8 agent CLIs)
 │   ├── update-skills.sh                # registry re-builder
+│   ├── mcp-servers/                    # 9 in-house MCP servers + installer template
+│   ├── scripts/setup-mcp.sh            # MCP config installer for 6 agent CLIs
 │   ├── skills/
 │   │   ├── all-skills.json             # 3,094 skills aggregated registry
 │   │   ├── agent-registry.json         # per-agent install mapping
@@ -97,7 +99,7 @@ AgentEnhancements/
 │   ├── hooks/                          # 16 hook scripts
 │   ├── memory/, compression/           # cross-session state
 │   ├── scripts/                        # 11 utility scripts
-│   └── tests/                          # 110 tests (77 original + 12 audit + 21 modular-tree)
+│   └── tests/                          # 149 tests (77 + 12 audit + 21 tree + 39 MCP)
 │
 ├── vendored upstream projects (frozen)
 │   ├── anthropic-skills/               # github.com/anthropics/skills (19 sub-skills)
@@ -242,8 +244,8 @@ it merges rather than overwrites user customizations (post-H-1 audit fix).
 
 ## 5. Quality posture
 
-- **110 tests** in `unified-integration/tests/` (77 original + 12 audit
-  hardening + 21 modular-tree integration). All passing.
+- **149 tests** in `unified-integration/tests/` (77 original + 12 audit
+  hardening + 21 modular-tree + 39 MCP-server). All passing.
 - **Static checks**: `bash -n`, `py_compile`, JSON schema validation —
   enforced in CI.
 - **End-to-end setup** verified against 8 stub agent CLIs in an isolated
@@ -281,9 +283,10 @@ finish the merger. Summary:
 
 - **38 MCP servers** declared across the 21 plugins; **5 P0** servers must be
   installed before Phase 1 is functional.
-- **9 servers to build from scratch** (`embeddings-mcp`, `ffmpeg-mcp`,
-  `task-router-mcp`, `vision-mcp`, `style-mcp`, `graphrag-mcp`,
-  `arxiv-mcp`, `google-news-mcp`, `video-mcp`).
+- **9 servers built in-house** at `unified-integration/mcp-servers/`
+  (embeddings, task-router, ffmpeg, vision, graphrag, arxiv,
+  google-news, video, style) - installed by `setup-mcp.sh`, gated by
+  CI job `mcp-servers`, covered by 39 regression tests.
 - **20 distinct API keys / env vars** required across the catalog: Brave,
   Tavily, Exa, Firecrawl, Figma, HeyGen, ElevenLabs, Microsoft Graph,
   Google OAuth, NewsAPI, Linear, GitHub, OpenAI, Bing Image, Neo4j,

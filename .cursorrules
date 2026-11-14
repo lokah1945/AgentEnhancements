@@ -248,7 +248,7 @@ When building a new MCP server (see `docs/MCP_INTEGRATION_CHECKLIST.md`):
 - MCP roadmap: `plugin-catalog/mcp-servers.json`
 - MCP build checklist: `docs/MCP_INTEGRATION_CHECKLIST.md`
 - Setup pipeline: `unified-integration/setup.sh`
-- Test suite: `unified-integration/tests/` (110 tests)
+- Test suite: `unified-integration/tests/` (149 tests)
 - Audit report: `docs/audit/E2E_AUDIT_2026-11.md`
 - Contribution contract: `CONTRACT.md` (§12.3 commit message format)
 

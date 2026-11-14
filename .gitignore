@@ -31,6 +31,12 @@ unified-integration/skills/by-category/general/*
 # Config backups created by setup.sh merges
 *.backup.*
 
+# Generated modular skills tree: per-plugin symlink dirs are produced by
+# scripts/scaffold_modular_skills.sh from plugin-catalog/catalog.json
+# (policy mirrors unified-integration/skills/by-category above: commit the
+# index + docs, not the generated tree). Track READMEs + manifest.json.
+skills/*/*/
+
 # Python bytecode
 __pycache__/
 *.pyc

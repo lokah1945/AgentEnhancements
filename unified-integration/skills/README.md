@@ -2,7 +2,7 @@
 
 This directory contains aggregated skills from multiple sources:
 
-1. **agentic-awesome-skills** - 2,884+ skills (primary source)
+1. **agentic-awesome-skills** - 2,781 skills (primary source)
 2. **ECC** - Additional skills and commands
 3. **Ponytail** - Additional skills and hooks
 4. **Superpowers** - Additional skills

@@ -448,11 +448,43 @@ EOF
                 # Also copy to by-agent/ for each compatible tool
                 while IFS= read -r tool; do
                     if [ -n "$tool" ]; then
-                        agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
+                        # Normalize tool names to match agent directory names
+                        normalized_tool="$tool"
+                        case "$tool" in
+                            "codex-cli"|"Codex"|"codex")
+                                normalized_tool="codex"
+                                ;;
+                            "claude-code"|"Claude"|"claude")
+                                normalized_tool="claude-code"
+                                ;;
+                            "gemini-cli"|"gemini")
+                                normalized_tool="gemini-cli"
+                                ;;
+                            "Agent Skills"|"antigravity")
+                                # Skip non-agent tools
+                                continue
+                                ;;
+                            *)
+                                # Use as-is for cursor, copilot, windsurf, kiro, opencode
+                                normalized_tool="$tool"
+                                ;;
+                        esac
+                        
+                        agent_target_dir="$SKILLS_DIR/by-agent/$normalized_tool/$skill_name"
                         mkdir -p "$(dirname "$agent_target_dir")"
                         cp -r "$skill_dir" "$agent_target_dir" 2>/dev/null || true
                     fi
                 done <<< "$skill_tools"
+
+                # Fallback: if no tools specified or no match with our agent list, copy to all known agents
+                tool_count=$(echo "$skill_tools" | grep -v '^$' | wc -l)
+                if [ "$tool_count" -eq 0 ] || [ -z "$skill_tools" ]; then
+                    for agent in "claude-code" "codex" "cursor" "gemini-cli" "opencode" "copilot" "windsurf" "kiro"; do
+                        agent_target_dir="$SKILLS_DIR/by-agent/$agent/$skill_name"
+                        mkdir -p "$(dirname "$agent_target_dir")"
+                        cp -r "$skill_dir" "$agent_target_dir" 2>/dev/null || true
+                    done
+                fi
 
                 # Add to unified index using Python
                 python3 -c "

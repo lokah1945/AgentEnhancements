@@ -30,7 +30,7 @@ skills/
 │   ├── copilot/
 │   ├── windsurf/
 │   └── kiro/
-└── all-skills.json
+└─�� all-skills.json
 ```
 
 ## Usage

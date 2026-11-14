@@ -5,6 +5,11 @@ AGENT="${1:-claude-code}"
 shift
 
 UNIFIED_DIR="/root/agent-enhancements/unified-integration"
+BASE_DIR="/root/agent-enhancements"
+
+# Allow override via environment
+UNIFIED_DIR="${AGENT_ENHANCEMENTS_UNIFIED_DIR:-$UNIFIED_DIR}"
+BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$BASE_DIR}"
 
 # Load detected agents
 source "$UNIFIED_DIR/config/detected-agents.sh" 2>/dev/null || true
@@ -21,9 +26,11 @@ fi
 
 # Set environment variables
 export AGENT_MEMORY_ROOT="$HOME/.agent-memory"
-export AGENT_SKILLS_DIR="/root/agent-enhancements/unified-integration/skills"
-export AGENT_COMPRESSION_CONFIG="/root/agent-enhancements/unified-integration/compression/config.yaml"
-export AGENT_PROMPTS_DIR="/root/agent-enhancements/unified-integration/prompts"
+export AGENT_SKILLS_DIR="$UNIFIED_DIR/skills"
+export AGENT_COMPRESSION_CONFIG="$UNIFIED_DIR/compression/config.yaml"
+export AGENT_PROMPTS_DIR="$UNIFIED_DIR/prompts"
+export AGENT_ENHANCEMENTS_BASE_DIR="$BASE_DIR"
+export AGENT_ENHANCEMENTS_UNIFIED_DIR="$UNIFIED_DIR"
 
 # Launch agent with enhancements
 case "$AGENT" in

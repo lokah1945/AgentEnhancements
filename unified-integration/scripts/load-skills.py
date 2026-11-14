@@ -11,7 +11,8 @@ import re
 from pathlib import Path
 from typing import List, Dict, Any
 
-SKILLS_DIR = Path("/root/agent-enhancements/unified-integration/skills")
+# Allow override via environment
+SKILLS_DIR = Path(os.environ.get("AGENT_SKILLS_DIR", "/root/project/AgentEnhancements/unified-integration/skills"))
 
 class SkillsLoader:
     def __init__(self, agent: str = "claude-code"):
@@ -67,14 +68,14 @@ class SkillsLoader:
         # Search in all category directories
         for cat_dir in (SKILLS_DIR / "by-category").iterdir():
             if cat_dir.is_dir():
-                skill_file = cat_dir / f"{skill_name}.md"
+                skill_file = cat_dir / skill_name / "SKILL.md"
                 if skill_file.exists():
                     return self._parse_skill(skill_file)
 
         # Search in agent-specific directories
         agent_dir = SKILLS_DIR / "by-agent" / self.agent
         if agent_dir.exists():
-            skill_file = agent_dir / f"{skill_name}.md"
+            skill_file = agent_dir / skill_name / "SKILL.md"
             if skill_file.exists():
                 return self._parse_skill(skill_file)
 
@@ -95,7 +96,7 @@ class SkillsLoader:
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print("Usage: load-skills.py <agent> <task_description>")
         sys.exit(1)
 
@@ -108,7 +109,9 @@ def main():
     for skill in skills:
         print(f"Skill: {skill.get('name', 'Unknown')}")
         print(f"  Description: {skill.get('description', 'N/A')}")
+        print(f"  Category: {skill.get('category', 'N/A')}")
         print(f"  Tags: {', '.join(skill.get('tags', []))}")
+        print(f"  Tools: {', '.join(skill.get('tools', []))}")
         print()
 
 if __name__ == "__main__":

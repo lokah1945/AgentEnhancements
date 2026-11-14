@@ -8,11 +8,12 @@ import subprocess
 import sys
 import os
 import json
+import re
 from pathlib import Path
 from typing import Optional
 
-HEADROOM_BIN = os.environ.get("HEADROOM_BIN", "headroom")
-FALLBACK_BIN = "/root/agent-enhancements/headroom/target/release/headroom"
+HEADROOM_BIN = os.environ.get("HEADROOM_BIN", "headroom-proxy")
+FALLBACK_BIN = "/root/project/AgentEnhancements/headroom/target/release/headroom-proxy"
 
 def get_headroom_bin() -> Optional[str]:
     """Find headroom binary"""

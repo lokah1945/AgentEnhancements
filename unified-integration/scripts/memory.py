@@ -157,6 +157,7 @@ def main():
             print(value)
         else:
             print(f"Memory not found: {key}")
+            sys.exit(1)
 
     elif command == "list":
         mem_type = sys.argv[3] if len(sys.argv) > 3 else None
@@ -175,6 +176,7 @@ def main():
             print(f"Deleted: {key}")
         else:
             print(f"Not found: {key}")
+            sys.exit(1)
 
     elif command == "cleanup":
         count = memory.cleanup_expired()

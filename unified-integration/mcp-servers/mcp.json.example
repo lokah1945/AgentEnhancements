@@ -1,0 +1,50 @@
+{
+  "_comment": "Template rendered by unified-integration/scripts/setup-mcp.sh. PLACEHOLDER_REPO_ROOT is replaced with the absolute clone path. Covers the 9 in-house built servers; the 29 to-install upstream servers (brave-search, tavily, filesystem, memory, ...) are documented in plugin-catalog/mcp-servers.json and docs/MCP_INTEGRATION_CHECKLIST.md.",
+  "mcpServers": {
+    "embeddings-mcp": {
+      "command": "python3",
+      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/embeddings-mcp/server.py"],
+      "env": {}
+    },
+    "task-router-mcp": {
+      "command": "python3",
+      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/task-router-mcp/server.py"],
+      "env": {}
+    },
+    "ffmpeg-mcp": {
+      "command": "python3",
+      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/ffmpeg-mcp/server.py"],
+      "env": {}
+    },
+    "vision-mcp": {
+      "command": "python3",
+      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/vision-mcp/server.py"],
+      "env": {}
+    },
+    "graphrag-mcp": {
+      "command": "python3",
+      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/graphrag-mcp/server.py"],
+      "env": {}
+    },
+    "arxiv-mcp": {
+      "command": "python3",
+      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/arxiv-mcp/server.py"],
+      "env": {}
+    },
+    "google-news-mcp": {
+      "command": "python3",
+      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/google-news-mcp/server.py"],
+      "env": {}
+    },
+    "video-mcp": {
+      "command": "python3",
+      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/video-mcp/server.py"],
+      "env": {}
+    },
+    "style-mcp": {
+      "command": "python3",
+      "args": ["PLACEHOLDER_REPO_ROOT/unified-integration/mcp-servers/style-mcp/server.py"],
+      "env": {}
+    }
+  }
+}

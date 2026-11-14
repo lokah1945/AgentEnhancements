@@ -1,7 +1,7 @@
 {
   "$schema": "https://agentenhancements.dev/schema/mcp-servers.v1.json",
   "version": "1.0.0",
-  "description": "Roadmap MCP server yang perlu dibangun/dipasang untuk mengaktifkan 21 plugin v2 AgentEnhancements. Prioritas: P0 wajib sebelum Phase 1, P1 untuk Phase 2, P2 nice-to-have. Build order: docs/MCP_INTEGRATION_CHECKLIST.md.",
+  "description": "Roadmap MCP server yang perlu dibangun/dipasang untuk mengaktifkan 21 plugin v2 AgentEnhancements. Prioritas: P0 wajib sebelum Phase 1, P1 untuk Phase 2, P2 nice-to-have. Build order: docs/MCP_INTEGRATION_CHECKLIST.md. Status 'built' = in-house server di unified-integration/mcp-servers/ (test: test_mcp_servers.py, installer: scripts/setup-mcp.sh).",
   "servers": [
     {
       "id": "brave-search-mcp",
@@ -118,7 +118,8 @@
         "OPENAI_API_KEY"
       ],
       "purpose": "Graph-based retrieval (G-RAG) untuk dokumen besar.",
-      "status": "to-build"
+      "status": "built",
+      "implementation": "unified-integration/mcp-servers/graphrag-mcp/server.py"
     },
     {
       "id": "embeddings-mcp",
@@ -138,7 +139,8 @@
         "OPENAI_API_KEY"
       ],
       "purpose": "Embedding service seragam untuk semua skill yang butuh vektor.",
-      "status": "to-build"
+      "status": "built",
+      "implementation": "unified-integration/mcp-servers/embeddings-mcp/server.py"
     },
     {
       "id": "browser-tools-mcp",
@@ -331,7 +333,8 @@
       ],
       "env_required": [],
       "purpose": "Editing video non-linear via ffmpeg.",
-      "status": "to-build"
+      "status": "built",
+      "implementation": "unified-integration/mcp-servers/ffmpeg-mcp/server.py"
     },
     {
       "id": "video-mcp",
@@ -348,7 +351,8 @@
       ],
       "env_required": [],
       "purpose": "Wrapper shot list, timeline, transcode.",
-      "status": "to-build"
+      "status": "built",
+      "implementation": "unified-integration/mcp-servers/video-mcp/server.py"
     },
     {
       "id": "heygen-mcp",
@@ -488,7 +492,8 @@
       ],
       "env_required": [],
       "purpose": "Dispatch sub-agent + track progress.",
-      "status": "to-build"
+      "status": "built",
+      "implementation": "unified-integration/mcp-servers/task-router-mcp/server.py"
     },
     {
       "id": "github-issues-mcp",
@@ -558,7 +563,8 @@
       ],
       "env_required": [],
       "purpose": "Fetch paper abstracts + full text untuk research.",
-      "status": "to-build"
+      "status": "built",
+      "implementation": "unified-integration/mcp-servers/arxiv-mcp/server.py"
     },
     {
       "id": "newsapi-mcp",
@@ -592,7 +598,8 @@
       ],
       "env_required": [],
       "purpose": "RSS Google News fallback bila NewsAPI unavailable.",
-      "status": "to-build"
+      "status": "built",
+      "implementation": "unified-integration/mcp-servers/google-news-mcp/server.py"
     },
     {
       "id": "filesystem-mcp",
@@ -646,7 +653,8 @@
         "OPENAI_API_KEY"
       ],
       "purpose": "Multimodal image understanding.",
-      "status": "to-build"
+      "status": "built",
+      "implementation": "unified-integration/mcp-servers/vision-mcp/server.py"
     },
     {
       "id": "style-mcp",
@@ -662,7 +670,8 @@
       ],
       "env_required": [],
       "purpose": "Deteksi AI-ism + style scoring.",
-      "status": "to-build"
+      "status": "built",
+      "implementation": "unified-integration/mcp-servers/style-mcp/server.py"
     },
     {
       "id": "grammar-mcp",
@@ -684,6 +693,10 @@
     }
   ],
   "legend": {
+    "to-install": "upstream package exists; install via npx/pip + env vars",
+    "to-build": "no upstream package; must be implemented in-house",
+    "built": "implemented in-house at unified-integration/mcp-servers/<id>/ (server.py + tests + installer)",
+    "installed": "deployed in the user environment (flipped after setup)",
     "P0": "Wajib sebelum Phase 1 (skills basic tidak jalan tanpa ini)",
     "P1": "Phase 2 (mengaktifkan plugin utuh)",
     "P2": "Nice-to-have (Phase 3+ / cadangan)"

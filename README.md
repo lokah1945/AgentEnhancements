@@ -134,8 +134,11 @@ AgentEnhancements/
 │   ├── memory/                    # Memory integration (parameterized-SQL hooks)
 │   ├── compression/               # Context compression (headroom + fallback)
 │   ├── scripts/                   # Utility scripts (loader, memory, registry.py,
-│   │                              # link-skills.sh, dispatch, catalog tooling)
-│   └── tests/                     # Regression test suite (110 tests)
+│   │                              # link-skills.sh, dispatch, setup-mcp.sh)
+│   ├── mcp-servers/               # 9 in-house MCP servers (embeddings, task-router,
+│   │                              # ffmpeg, vision, graphrag, arxiv, google-news,
+│   │                              # video, style) + smoke_test + mcp.json template
+│   └── tests/                     # Regression test suite (149 tests)
 │
 ├── skills/                        # Modular plugin tree (5 categories, 21 plugins)
 │   ├── manifest.json              # Aggregator index (committed)
@@ -150,6 +153,7 @@ AgentEnhancements/
 ├── scripts/                       # Repo-level generators (scaffold_modular_skills.sh,
 │                                  #  generate_skills_index.py)
 ├── docs/MCP_INTEGRATION_CHECKLIST.md  # Step-by-step MCP server build plan (38 servers)
+├── docs/ENV_VARS.md              # Every API key / env var: source + rotation policy
 ├── anthropic-skills/              # 19 official Anthropic skills (vendored, Apache-2.0)
 ├── replica-skill/                 # 11 vendored app-cloning sub-skills
 ├── agentic-awesome-skills/        # 2,781 vendored skills
@@ -336,7 +340,7 @@ bash unified-integration/scripts/mcp-test.sh --priority P0
 ## Testing & Validation
 
 ```bash
-# Integration-layer regression suite (110 tests)
+# Integration-layer regression suite (149 tests)
 python3 unified-integration/tests/run-tests.py
 
 # Plugin catalog validation (21 manifests)

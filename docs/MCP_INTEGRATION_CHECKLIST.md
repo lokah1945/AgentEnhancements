@@ -8,8 +8,11 @@
 > **Status legend**
 > - `to-install` (29 servers) — upstream package exists; install via `npx` /
 >   `pip` and configure env vars.
-> - `to-build` (9 servers) — no upstream package; must be implemented in-house
->   following the Anthropic `mcp-builder` skill pattern.
+> - ~~`to-build` (9 servers)~~ → **BUILT** (2026-11-14): all 9 in-house
+>   servers now live at `unified-integration/mcp-servers/<id>/server.py`
+>   (installer: `scripts/setup-mcp.sh`, tests: `test_mcp_servers.py`,
+>   CI job: `mcp-servers`). What remains is *deployment* (API keys,
+>   machine provisioning), not *building*.
 
 ## 0. Pre-flight (do this before anything else)
 
@@ -22,7 +25,8 @@
       string to "21 plugin" in a separate commit.
 - [ ] **0.2** Provision a secrets vault (1Password CLI / `pass` / `direnv`).
       The catalog requires **20 distinct env vars**; never hard-code any.
-- [ ] **0.3** Set up a Python 3.11+ venv for the 9 to-build servers:
+- [x] **0.3** Python 3.11+ env for the 9 in-house servers (BUILT; needs
+      `pip install 'mcp>=1.0'` — see `unified-integration/mcp-servers/`):
       ```bash
       python3 -m venv ~/.venvs/agentenhancements-mcp
       source ~/.venvs/agentenhancements-mcp/bin/activate
@@ -161,40 +165,40 @@ agent-skills-addyosmani, impeccable, ui-ux-pro-max) become minimally usable.
 | `elevenlabs-mcp` | `ELEVENLABS_API_KEY` | `npx -y elevenlabs-mcp` (consent-gated) |
 | `embeddings-mcp` | `OPENAI_API_KEY` | **BUILD** — see §P1 build A |
 
-### P1 build A — `embeddings-mcp`  ·  category=ml, status=to-build
+### P1 build A — `embeddings-mcp`  ·  category=ml, status=BUILT ✔
 
-- [ ] Spec: tools `embed(text, model="text-embedding-3-small")`,
+- [x] Spec: tools `embed(text, model="text-embedding-3-small")`,
       `embed_batch(texts[])`, `cosine(a, b)`.
-- [ ] Backend: OpenAI by default; allow LangChain local fallback.
-- [ ] Path: `unified-integration/mcp-servers/embeddings-mcp/server.py`.
-- [ ] Follow `anthropic-skills/skills/mcp-builder/SKILL.md`.
-- [ ] Test: embed "hello", embed "world", cosine > 0.
-- [ ] Wire env var `OPENAI_API_KEY`.
+- [x] Backend: OpenAI by default; allow LangChain local fallback.
+- [x] Path: `unified-integration/mcp-servers/embeddings-mcp/server.py`.
+- [x] Follow `anthropic-skills/skills/mcp-builder/SKILL.md`.
+- [x] Test: embed "hello", embed "world", cosine > 0.
+- [x] Wire env var `OPENAI_API_KEY`.
 
-### P1 build B — `task-router-mcp`  ·  category=task, status=to-build
+### P1 build B — `task-router-mcp`  ·  category=task, status=BUILT ✔
 
-- [ ] Spec: tools `dispatch(task_spec)`, `track(task_id)`, `cancel(task_id)`,
+- [x] Spec: tools `dispatch(task_spec)`, `track(task_id)`, `cancel(task_id)`,
       `health`.
-- [ ] Backend: in-process thread pool; spawn sub-agent via `setup.sh`'s
+- [x] Backend: in-process thread pool; spawn sub-agent via `setup.sh`'s
       `launch-agent.sh`.
-- [ ] Path: `unified-integration/mcp-servers/task-router-mcp/server.py`.
-- [ ] Test: dispatch a 2-step task, verify both complete.
+- [x] Path: `unified-integration/mcp-servers/task-router-mcp/server.py`.
+- [x] Test: dispatch a 2-step task, verify both complete.
 
-### P1 build C — `ffmpeg-mcp`  ·  category=media, status=to-build
+### P1 build C — `ffmpeg-mcp`  ·  category=media, status=BUILT ✔
 
-- [ ] Spec: tools `cut(path, start, end)`, `concat(paths[])`, `transcode(path,
+- [x] Spec: tools `cut(path, start, end)`, `concat(paths[])`, `transcode(path,
       codec)`, `extract_audio(path)`, `thumbnail(path, t)`.
-- [ ] Backend: shell out to `ffmpeg`; never expose arbitrary args.
-- [ ] Path: `unified-integration/mcp-servers/ffmpeg-mcp/server.py`.
-- [ ] Test: cut a 10s test clip to 5s, compare durations.
+- [x] Backend: shell out to `ffmpeg`; never expose arbitrary args.
+- [x] Path: `unified-integration/mcp-servers/ffmpeg-mcp/server.py`.
+- [x] Test: cut a 10s test clip to 5s, compare durations.
 
-### P1 build D — `vision-mcp`  ·  category=core, status=to-build
+### P1 build D — `vision-mcp`  ·  category=core, status=BUILT ✔
 
-- [ ] Spec: tools `describe(image_path)`, `ocr(image_path)`,
+- [x] Spec: tools `describe(image_path)`, `ocr(image_path)`,
       `compare(img_a, img_b)`.
-- [ ] Backend: OpenAI Vision (`gpt-4o`) by default; allow local LLaVA fallback.
-- [ ] Path: `unified-integration/mcp-servers/vision-mcp/server.py`.
-- [ ] Test: describe a screenshot, assert non-empty caption.
+- [x] Backend: OpenAI Vision (`gpt-4o`) by default; allow local LLaVA fallback.
+- [x] Path: `unified-integration/mcp-servers/vision-mcp/server.py`.
+- [x] Test: describe a screenshot, assert non-empty caption.
 
 ### Phase 2 acceptance
 
@@ -232,30 +236,30 @@ agent-skills-addyosmani, impeccable, ui-ux-pro-max) become minimally usable.
 | `style-mcp` | (none) | **BUILD** — AI-ism detector |
 | `grammar-mcp` | `LANGUAGE_TOOL_URL` | Self-host LanguageTool |
 
-### P2 build A — `graphrag-mcp`  ·  graph, to-build
+### P2 build A — `graphrag-mcp`  ·  graph, status=BUILT ✔
 
-- [ ] Use Microsoft GraphRAG as backend; expose `index(docs[])`,
+- [x] Use Microsoft GraphRAG as backend; expose `index(docs[])`,
       `query(question)`.
-- [ ] Path: `unified-integration/mcp-servers/graphrag-mcp/server.py`.
+- [x] Path: `unified-integration/mcp-servers/graphrag-mcp/server.py`.
 
-### P2 build B — `arxiv-mcp`  ·  reference, to-build
+### P2 build B — `arxiv-mcp`  ·  reference, status=BUILT ✔
 
-- [ ] Use `arxiv` PyPI lib; expose `search(query, max=10)`,
+- [x] Use `arxiv` PyPI lib; expose `search(query, max=10)`,
       `fetch(arxiv_id)`.
 
-### P2 build C — `google-news-mcp`  ·  news, to-build
+### P2 build C — `google-news-mcp`  ·  news, status=BUILT ✔
 
-- [ ] RSS scraping of `news.google.com`; expose `top(topic, lang)`.
+- [x] RSS scraping of `news.google.com`; expose `top(topic, lang)`.
 
-### P2 build D — `video-mcp`  ·  media, to-build
+### P2 build D — `video-mcp`  ·  media, status=BUILT ✔
 
-- [ ] Wraps `ffmpeg-mcp` with shot-list + timeline semantics.
+- [x] Wraps `ffmpeg-mcp` with shot-list + timeline semantics.
 
-### P2 build E — `style-mcp`  ·  writing, to-build
+### P2 build E — `style-mcp`  ·  writing, status=BUILT ✔
 
-- [ ] AI-ism detector: regex + small classifier for "delve", "in conclusion",
+- [x] AI-ism detector: regex + small classifier for "delve", "in conclusion",
       "navigate the landscape", etc.
-- [ ] Expose `score(text)`, `rewrite(text, target_score)`.
+- [x] Expose `score(text)`, `rewrite(text, target_score)`.
 
 ### Phase 3 acceptance
 
@@ -276,12 +280,12 @@ agent-skills-addyosmani, impeccable, ui-ux-pro-max) become minimally usable.
 - [ ] **4.3** Update `unified-integration/setup.sh` MCP-install section to
       auto-install all `installed` servers and refuse to start if any P0
       server is missing (fail-fast).
-- [ ] **4.4** Add a CI job `test-mcp-health` that pings every `installed`
-      server's `health` tool against a stub agent.
+- [x] **4.4** CI job `mcp-servers` runs `setup-mcp.sh --check` (health
+      probe per built server) + the offline `test_mcp_servers.py` module.
 - [ ] **4.5** Update `README.md` and `README_INTEGRATION.md` "What's next"
       section to reflect completion.
-- [ ] **4.6** Document the env-var setup in `docs/ENV_VARS.md` (one row per
-      var: name, purpose, where to obtain, rotation policy).
+- [x] **4.6** Documented in `docs/ENV_VARS.md` (one row per var: name,
+      purpose, where to obtain, rotation policy).
 - [ ] **4.7** Tag a release: `git tag v2.0.0-mcp-complete`.
 
 ---
@@ -290,17 +294,19 @@ agent-skills-addyosmani, impeccable, ui-ux-pro-max) become minimally usable.
 
 | Phase | Servers delivered | Cumulative | Notes |
 |-------|-------------------|------------|-------|
-| 1 | 5 (P0) | 5 / 38 | Skills minimally usable |
-| 2 | 22 (P1) | 27 / 38 | Skills fully usable per category |
-| 3 | 11 (P2) | 38 / 38 | Complete |
-| 4 | — | — | Wiring + QA + release |
+| 1 | 5 (P0) | 5 / 38 | Skills minimally usable (needs API keys) |
+| 2 | 22 (P1) | 27 / 38 | 4 in-house builds DONE; 18 installs need keys |
+| 3 | 11 (P2) | 38 / 38 | 5 in-house builds DONE; 6 installs need keys |
+| 4 | wiring | — | drift gate + mcp-servers CI job DONE; release tag pending keys |
+
+**In-house build progress: 9 / 9 complete** (`unified-integration/mcp-servers/`).
 
 ## Build vs install split
 
 | Status | Count | Servers |
 |--------|-------|---------|
 | `to-install` | 29 | brave-search, tavily, exa, firecrawl, neo4j, browser-tools, lighthouse, pa11y, figma, storybook, mermaid, excalidraw, google-slides, office, image-search, heygen, elevenlabs, typescript-language-server, eslint, jupyter, python-repl, memory, github-issues, linear, wikipedia, newsapi, grammar, filesystem, pdf |
-| `to-build` | 9 | graphrag, embeddings, ffmpeg, video, task-router, arxiv, google-news, vision, style |
+| `built` | 9 | graphrag, embeddings, ffmpeg, video, task-router, arxiv, google-news, vision, style — all at `unified-integration/mcp-servers/`, install via `bash unified-integration/scripts/setup-mcp.sh` |
 
 ## Required API integrations (20 distinct env vars)
 

@@ -106,7 +106,9 @@ jobs:
       - name: Build skill registry (also unskips the link-skills tests)
         run: bash unified-integration/setup.sh >/dev/null
       - name: Run regression suite
-        run: python3 unified-integration/tests/run-tests.py
+        run: |
+          runtime_python="$(bash unified-integration/scripts/setup-mcp.sh --prepare)"
+          "$runtime_python" unified-integration/tests/run-tests.py
 
   ecc-tests:
     name: ECC test suite (CONTRACT §5.1)

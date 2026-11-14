@@ -18,6 +18,9 @@ import concurrent.futures
 import os
 import re
 import shutil
+import signal
+import sys
+import threading
 import subprocess
 import tempfile
 import time
@@ -52,6 +55,8 @@ _DENYLIST = [
 
 _TASKS: dict[str, dict] = {}
 _WORKSPACES: dict[str, str] = {}
+_PROCESSES: dict[str, subprocess.Popen] = {}
+_LOCK = threading.RLock()
 _POOL = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
 
@@ -62,38 +67,78 @@ def _refused(command: str) -> str | None:
     return None
 
 
+def _terminate(proc: subprocess.Popen) -> None:
+    """Stop the task's process group, including ordinary child processes."""
+    try:
+        if os.name == "posix":
+            os.killpg(proc.pid, signal.SIGKILL)
+        else:
+            proc.kill()
+    except ProcessLookupError:
+        pass
+
+
 def _run_task(task_id: str, spec: dict) -> None:
     entry = _TASKS[task_id]
-    entry["status"] = "running"
-    entry["started_at"] = time.time()
-    workspace = _WORKSPACES[task_id]
+    output = {"stdout": b"", "stderr": b""}
+    readers = []
+    proc = None
+
+    def drain(stream, key: str) -> None:
+        # Drain continually and retain a bounded tail. capture_output=True
+        # previously buffered the entire output in RAM before truncating it.
+        try:
+            while chunk := stream.read(4096):
+                output[key] = (output[key] + chunk)[-STDOUT_TAIL:]
+        finally:
+            stream.close()
+
     try:
-        if spec["kind"] == "bash":
-            proc = subprocess.run(
-                ["bash", "-lc", spec["command"]],
-                capture_output=True, text=True,
-                timeout=spec["timeout"], cwd=workspace,
-            )
-        else:  # python
-            proc = subprocess.run(
-                ["python3", "-c", spec["code"]],
-                capture_output=True, text=True,
-                timeout=spec["timeout"], cwd=workspace,
-            )
-        entry.update(
-            status="done" if proc.returncode == 0 else "failed",
-            exit_code=proc.returncode,
-            stdout=proc.stdout[-STDOUT_TAIL:],
-            stderr=proc.stderr[-STDOUT_TAIL:],
-        )
-    except subprocess.TimeoutExpired:
-        entry.update(status="failed", exit_code=-1,
-                     stderr=f"timeout after {spec['timeout']}s")
-    except Exception as exc:  # defensive: registry must stay consistent
-        entry.update(status="failed", exit_code=-1, stderr=f"{type(exc).__name__}: {exc}")
+        with _LOCK:
+            # A queued cancellation must never start executing later.
+            if entry["status"] == "cancelled":
+                return
+            entry.update(status="running", started_at=time.time())
+            argv = (["bash", "-lc", spec["command"]] if spec["kind"] == "bash"
+                    else [sys.executable, "-c", spec["code"]])
+            proc = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    cwd=_WORKSPACES[task_id], start_new_session=(os.name == "posix"))
+            _PROCESSES[task_id] = proc
+        for stream, key in [(proc.stdout, "stdout"), (proc.stderr, "stderr")]:
+            reader = threading.Thread(target=drain, args=(stream, key), daemon=True)
+            reader.start()
+            readers.append(reader)
+        timed_out = False
+        try:
+            proc.wait(timeout=spec["timeout"])
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            _terminate(proc)
+            proc.wait()
+        for reader in readers:
+            reader.join(timeout=2)
+        with _LOCK:
+            entry.update(exit_code=proc.returncode,
+                         stdout=output["stdout"].decode("utf-8", errors="replace"),
+                         stderr=output["stderr"].decode("utf-8", errors="replace"))
+            if timed_out:
+                entry.update(exit_code=-1, stderr=f"timeout after {spec['timeout']}s")
+            if entry["status"] != "cancelled":
+                entry["status"] = "done" if proc.returncode == 0 and not timed_out else "failed"
+    except Exception as exc:
+        if proc is not None:
+            _terminate(proc)
+        with _LOCK:
+            if entry["status"] != "cancelled":
+                entry.update(status="failed", exit_code=-1, stderr=f"{type(exc).__name__}: {exc}")
     finally:
-        entry["finished_at"] = time.time()
-        entry["duration_s"] = round(entry["finished_at"] - entry["started_at"], 3)
+        with _LOCK:
+            _PROCESSES.pop(task_id, None)
+            entry["finished_at"] = time.time()
+            entry["duration_s"] = round(entry["finished_at"] - entry.get("started_at", entry["created_at"]), 3)
+            cancelled = entry["status"] == "cancelled"
+        if cancelled:
+            shutil.rmtree(_WORKSPACES.get(task_id, ""), ignore_errors=True)
 
 
 @_tool
@@ -167,16 +212,20 @@ def track(task_id: str) -> dict:
 @_tool
 def cancel(task_id: str) -> dict:
     """Cancel a queued/running task (running subprocesses are killed)."""
-    entry = _TASKS.get(task_id)
-    if entry is None:
-        return {"error": f"unknown task_id {task_id!r}"}
-    if entry["status"] in ("done", "failed", "cancelled"):
-        return {"task_id": task_id, "status": entry["status"],
-                "note": "task already finished; nothing to cancel"}
-    entry["status"] = "cancelled"
-    entry["finished_at"] = time.time()
-    shutil.rmtree(_WORKSPACES.get(task_id, ""), ignore_errors=True)
+    with _LOCK:
+        entry = _TASKS.get(task_id)
+        if entry is None:
+            return {"error": f"unknown task_id {task_id!r}"}
+        if entry["status"] in ("done", "failed", "cancelled"):
+            return {"task_id": task_id, "status": entry["status"],
+                    "note": "task already finished; nothing to cancel"}
+        entry["status"] = "cancelled"
+        entry["finished_at"] = time.time()
+        proc = _PROCESSES.get(task_id)
+    if proc is not None:
+        _terminate(proc)
     return {"task_id": task_id, "status": "cancelled"}
+
 
 
 @_tool

@@ -19,13 +19,17 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-import os
+from pathlib import Path
 import re
+import sys
 import urllib.error
 import urllib.request
 from typing import Any, Callable
 
 from mcp.server.fastmcp import FastMCP
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+from api_config import cloud_available, read_config, value
 
 VERSION = "1.0.0"
 LOCAL_DIM = 256
@@ -61,16 +65,17 @@ def _local_embed(text: str) -> list[float]:
 
 
 def _openai_embed(texts: list[str]) -> list[list[float]] | dict:
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-    if not api_key:
+    config, _ = read_config()
+    api_key = value("OPENAI_API_KEY", config)
+    if not cloud_available("embeddings-mcp", config=config):
         return {
-            "error": "OPENAI_API_KEY is not set",
-            "hint": "export OPENAI_API_KEY=... or pass backend='local' "
+            "error": "OPENAI_API_KEY is empty or disabled in ui.api.json",
+            "hint": "edit ui.api.json or pass backend='local' "
                     "for the deterministic offline embedder",
         }
-    payload = json.dumps({"model": OPENAI_MODEL, "input": texts}).encode()
+    payload = json.dumps({"model": value("OPENAI_EMBEDDING_MODEL", config) or OPENAI_MODEL, "input": texts}).encode()
     request = urllib.request.Request(
-        OPENAI_URL,
+        (value("OPENAI_BASE_URL", config) or "https://api.openai.com/v1").rstrip("/") + "/embeddings",
         data=payload,
         headers={"Content-Type": "application/json"},
         method="POST",
@@ -80,23 +85,20 @@ def _openai_embed(texts: list[str]) -> list[list[float]] | dict:
         with urllib.request.urlopen(request, timeout=OPENAI_TIMEOUT) as resp:
             body = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", "replace")[:300]
         return {
             "error": f"OpenAI API returned HTTP {exc.code}",
-            "hint": "check key validity / quota; response tail: " + detail,
+            "hint": "check the endpoint, key validity and quota in ui.api.json",
         }
     except urllib.error.URLError as exc:
         return {
-            "error": f"cannot reach OpenAI API: {exc.reason}",
+            "error": "cannot reach the configured embeddings API",
             "hint": "check network / proxy settings, or use backend='local'",
         }
     return [item["embedding"] for item in body["data"]]
 
 
 def _resolve_backend(requested: str | None) -> str:
-    if requested:
-        return requested
-    return "openai" if os.environ.get("OPENAI_API_KEY") else "local"
+    return requested or "local"
 
 
 @_tool
@@ -107,7 +109,7 @@ def health() -> dict:
         "server": "embeddings-mcp",
         "version": VERSION,
         "backends": {
-            "openai": bool(os.environ.get("OPENAI_API_KEY")),
+            "openai": cloud_available("embeddings-mcp"),
             "local": True,
         },
         "local_dim": LOCAL_DIM,
@@ -122,11 +124,13 @@ def embed(text: str, backend: str | None = None) -> dict:
     Args:
         text: the string to embed.
         backend: "openai" (needs OPENAI_API_KEY) or "local" (deterministic,
-            offline). Defaults to openai when the key is present, else local.
+            offline). Defaults to local; cloud use must choose openai explicitly.
     """
     if not isinstance(text, str) or not text.strip():
         return {"error": "text must be a non-empty string"}
     chosen = _resolve_backend(backend)
+    if chosen not in ("local", "openai"):
+        return {"error": "backend must be local or openai"}
     if chosen == "local":
         return {"backend": "local", "dim": LOCAL_DIM, "embedding": _local_embed(text)}
     result = _openai_embed([text])
@@ -143,6 +147,8 @@ def embed_batch(texts: list[str], backend: str | None = None) -> dict:
     if not all(isinstance(t, str) and t.strip() for t in texts):
         return {"error": "every item in texts must be a non-empty string"}
     chosen = _resolve_backend(backend)
+    if chosen not in ("local", "openai"):
+        return {"error": "backend must be local or openai"}
     if chosen == "local":
         return {
             "backend": "local",

@@ -114,12 +114,11 @@
         "-m",
         "graphrag_mcp"
       ],
-      "env_required": [
-        "OPENAI_API_KEY"
-      ],
+      "env_required": [],
       "purpose": "Graph-based retrieval (G-RAG) untuk dokumen besar.",
       "status": "built",
-      "implementation": "unified-integration/mcp-servers/graphrag-mcp/server.py"
+      "implementation": "unified-integration/mcp-servers/graphrag-mcp/server.py",
+      "env_optional": []
     },
     {
       "id": "embeddings-mcp",
@@ -135,12 +134,13 @@
         "-m",
         "embeddings_mcp"
       ],
-      "env_required": [
-        "OPENAI_API_KEY"
-      ],
+      "env_required": [],
       "purpose": "Embedding service seragam untuk semua skill yang butuh vektor.",
       "status": "built",
-      "implementation": "unified-integration/mcp-servers/embeddings-mcp/server.py"
+      "implementation": "unified-integration/mcp-servers/embeddings-mcp/server.py",
+      "env_optional": [
+        "OPENAI_API_KEY"
+      ]
     },
     {
       "id": "browser-tools-mcp",
@@ -649,12 +649,13 @@
         "-m",
         "vision_mcp"
       ],
-      "env_required": [
-        "OPENAI_API_KEY"
-      ],
+      "env_required": [],
       "purpose": "Multimodal image understanding.",
       "status": "built",
-      "implementation": "unified-integration/mcp-servers/vision-mcp/server.py"
+      "implementation": "unified-integration/mcp-servers/vision-mcp/server.py",
+      "env_optional": [
+        "OPENAI_API_KEY"
+      ]
     },
     {
       "id": "style-mcp",

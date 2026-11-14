@@ -40,3 +40,12 @@ skills/*/*/
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Runtime dependencies and local audit state
+unified-integration/.venv/
+unified-integration/opencode-plugin/node_modules/
+
+# Canonical machine-local credentials; only the empty template is tracked.
+/ui.api.json
+/ui.api.json.*
+/.ui-api-*

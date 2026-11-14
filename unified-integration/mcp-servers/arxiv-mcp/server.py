@@ -22,7 +22,7 @@ from typing import Callable
 from mcp.server.fastmcp import FastMCP
 
 VERSION = "1.0.0"
-API_URL = "http://export.arxiv.org/api/query"
+API_URL = "https://export.arxiv.org/api/query"
 NS = {"atom": "http://www.w3.org/2005/Atom",
       "arxiv": "http://arxiv.org/schemas/atom"}
 CACHE_DIR = Path(tempfile.gettempdir()) / "ae-arxiv-cache"

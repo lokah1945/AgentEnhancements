@@ -1,11 +1,55 @@
 ---
 title: Changelog
-version: 1.1
-last_updated: 2026-11-13
+version: 1.3
+last_updated: 2026-11-15
 audience: all
 ---
 
 # Changelog
+
+## 2026-11-15 — Keep credential centralization within MCP scope
+
+- Removed Claude auth migration, the project key helper and all agent/provider
+  credential fields from the central template. Existing native credentials,
+  provider endpoints and user helpers are preserved.
+- Scoped `ui.api.json` to MCP service requirements shared by any compatible
+  agent; missing-key tool hiding and MCP environment-reference mappings remain.
+- Removed Linux CLI process/readiness-file coordination from shared runtime.
+- Added regression coverage that native agent credentials remain unchanged
+  and never populate the MCP credential file.
+
+## 2026-11-15 — Central credentials and automatic MCP availability
+
+- Added private root `ui.api.json`, an empty template/schema and all catalog
+  credential mappings. Empty keys override inherited API environment values.
+- Added the native gateway with live tool-list notifications, current-call
+  credential/schema checks, optional external subprocesses and key rotation.
+- Corrected GraphRAG's API metadata; kept local embeddings by default and
+  gated cloud vision/embeddings through the central file.
+- Fixed OpenCode 2's MCP shape/fields and its first-prompt connection race.
+- Redacted configured secrets in lifecycle notes and MCP diagnostics.
+- Fixed stale GraphRAG reads, concurrent video manifest updates and image
+  comparison's incorrect original-size flag.
+- Preserved custom Claude gateway auth without requiring claude.ai login.
+
+## 2026-11-14 — Native automation audit
+
+- Sync the local checkout with GitHub while preserving the original dirty
+  state in a stash and backup branch.
+- Install native Claude/Codex lifecycle hooks, an OpenCode 2 plugin, and all
+  nine built MCP servers in the configuration each CLI actually consumes.
+- Preserve user hooks/config arrays, isolate memory by canonical project
+  path, enforce expiry, and avoid persisting raw tool bodies.
+- Repair destructive compression fallback, unrelated skill ranking, updater
+  SIGPIPE, piped installation, task cancellation/timeout, and private MCP state.
+- Make Rust builds opt-in; install Python dependencies in an isolated environment.
+- Validation: 173 integration tests passed (including live network cases),
+  nine stdio MCP probes passed, and all three real CLIs passed a localhost
+  model-fixture smoke test with automatic notes. The vendored ECC suite remains
+  at 8,246 passed / 43 failed; its ten failing files were reproduced unchanged.
+- Account limitations and the local credential finding are documented in the
+  [native automation audit](audit/NATIVE_AUTOMATION_AUDIT_2026-11-14.md).
+
 
 All notable changes to the owned integration layer of this repository.
 Vendored projects change upstream; see their own histories.

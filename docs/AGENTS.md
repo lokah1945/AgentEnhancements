@@ -1,7 +1,7 @@
 ---
 title: Agents
-version: 1.2
-last_updated: 2026-11-13
+version: 1.5
+last_updated: 2026-11-15
 audience: users
 ---
 
@@ -49,32 +49,52 @@ Claude Code can additionally consume the upstream marketplace:
 
 ## Per-agent notes
 
-### Claude Code (full automatic activation)
-Hooks are merged into `~/.claude/settings.json`:
-`PreToolUse`/`PostToolUse` save tool events, `Stop` saves the session
-summary. `~/.claude/CLAUDE.md` is (re)written by setup - keep personal
-instructions out of that file or re-add them afterwards. The curated skill
-set is linked into `~/.claude/skills/` for native auto-discovery.
+### Claude Code 2.1.202 (verified)
 
-### Codex (instructions-based activation)
-Codex reads `~/.codex/AGENTS.md` for global instructions and
-`~/.codex/config.toml` (TOML) for settings. Setup writes a
-marker-guarded integration section into `AGENTS.md` covering the skills
-catalog, memory and compression commands, plus the native-skill and
-registry-mapping entry points. Codex has no hook system, so memory is
-invoked explicitly per the instructions. Older setup versions wrote
-`~/.codex/config.yaml`, which Codex never reads; setup removes it
-(signature-checked) when found.
+Setup preserves user hooks while installing `SessionStart`, `UserPromptSubmit`,
+`PostToolUse` and `Stop` handlers in `~/.claude/settings.json`. Events are read
+from JSON on stdin, not fictional `TOOL_NAME` environment variables. Relevant
+skill paths and prior session notes are supplied automatically. User-scope MCP
+servers belong in `~/.claude.json`; the gateway loads all nine bundled backends.
+`CLAUDE.md` is marker-merged, preserving personal instructions.
+Custom gateway authentication remains entirely in Claude's native settings.
+AgentEnhancements does not import its tokens, endpoints or helper into the
+project. The shared [MCP configuration](CONFIGURATION.md) is independent of
+the host agent's model-provider authentication.
 
-### OpenCode (native config + instructions)
-Setup merges into `~/.config/opencode/opencode.json` using the official
-schema (`$schema: https://opencode.ai/config.json`): the `instructions`
-array points at the OpenCode system prompt and the `skills` array points
-at `unified-integration/skills/by-category` (OpenCode scans grouping
-directories up to six levels). A marker-guarded `AGENTS.md` in the same
-directory documents the memory and compression commands. Older setup
-versions wrote `config.json` with fictional keys; setup removes it
-(signature-checked) when found.
+### Codex CLI 0.167.2 (verified)
+
+Setup merges MCP servers into `~/.codex/config.toml`, lifecycle hooks into
+`~/.codex/hooks.json`, and instructions into `~/.codex/AGENTS.md`.
+`CODEX_HOME` is respected. Current Codex supports lifecycle hooks. New or
+changed hooks require review through `/hooks`; after trust is recorded,
+ordinary `codex` startup activates them automatically. Setup never bypasses
+hook trust or tool permissions. A disabled hooks feature or managed policy
+can prevent activation. Older Codex versions are not covered by this check.
+Codex 0.169.0 was also tested in an isolated installation. Both versions retain
+the MCP tool catalog within a turn; credential revocation is enforced by the
+gateway even when the client still displays a cached name. Newly added tools
+may require a fresh session. See [configuration](CONFIGURATION.md).
+
+### OpenCode 2.2.5 (verified)
+
+Setup edits the existing `~/.config/opencode/opencode.jsonc`, or creates
+`opencode.json` if JSONC is absent. Personal instructions, plugins, providers
+and MCP entries are preserved. JSONC comments remain in the timestamped backup;
+the merged document is serialized as JSON. `XDG_CONFIG_HOME` is respected.
+
+The local `unified-integration/opencode-plugin` server plugin handles prompt
+routing, context injection and session notes through OpenCode 2 lifecycle
+hooks. It has no runtime npm dependencies. OpenCode loads plugins
+asynchronously; a fresh `/api/plugin` response can be empty until location
+initialization completes. Confirm the `agentenhancements` plugin reaches
+`state.status: active` before treating an empty list as an installation failure.
+The gateway is registered under `mcp.servers`, with `disabled: false` and
+`codemode: false` to expose its available tools directly. Legacy flat entries,
+`enabled` and `env` fields are migrated. The prompt hook waits for the managed
+connection to settle so the first model request includes its tools.
+OpenCode 1 plugin APIs differ and
+are not supported by this adapter.
 
 ### Cursor (global rule)
 Setup writes `~/.cursor/rules/agent-enhancements.mdc` (frontmatter-scoped

@@ -10,7 +10,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 MEMORY_ROOT = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory"))
 DB_PATH = MEMORY_ROOT / "memory.db"
@@ -18,12 +18,12 @@ DB_PATH = MEMORY_ROOT / "memory.db"
 class AgentMemory:
     def __init__(self, agent: str, project: Optional[str] = None):
         self.agent = agent
-        self.project = project or Path.cwd().name
+        self.project = project or str(Path.cwd().resolve())
         self._init_db()
 
     def _init_db(self):
         """Initialize database"""
-        MEMORY_ROOT.mkdir(parents=True, exist_ok=True)
+        MEMORY_ROOT.mkdir(parents=True, exist_ok=True, mode=0o700)
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS memories (
@@ -43,6 +43,7 @@ class AgentMemory:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_project ON memories(agent, project)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_type ON memories(memory_type)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_expires ON memories(expires_at)")
+        DB_PATH.chmod(0o600)
 
     def save(self, key: str, value: str, memory_type: str = "session_context",
              metadata: Optional[Dict] = None, ttl_days: Optional[int] = None) -> None:
@@ -53,7 +54,7 @@ class AgentMemory:
             # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
             # against datetime('now') work: the ISO "T" separator sorts
             # after a space and broke timely expiry cleanup.
-            expires_at = (datetime.now() + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
+            expires_at = (datetime.now(timezone.utc) + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
 
         meta_json = json.dumps(metadata) if metadata else None
 
@@ -70,6 +71,7 @@ class AgentMemory:
             cursor = conn.execute("""
                 SELECT value FROM memories
                 WHERE agent=? AND project=? AND memory_type=? AND key=?
+                  AND (expires_at IS NULL OR expires_at > datetime('now'))
                 ORDER BY updated_at DESC LIMIT 1
             """, (self.agent, self.project, memory_type, key))
             row = cursor.fetchone()
@@ -83,6 +85,7 @@ class AgentMemory:
                     SELECT memory_type, key, value, metadata, updated_at
                     FROM memories
                     WHERE agent=? AND project=? AND memory_type=?
+                      AND (expires_at IS NULL OR expires_at > datetime('now'))
                     ORDER BY updated_at DESC LIMIT ?
                 """, (self.agent, self.project, memory_type, limit))
             else:
@@ -90,6 +93,7 @@ class AgentMemory:
                     SELECT memory_type, key, value, metadata, updated_at
                     FROM memories
                     WHERE agent=? AND project=?
+                      AND (expires_at IS NULL OR expires_at > datetime('now'))
                     ORDER BY updated_at DESC LIMIT ?
                 """, (self.agent, self.project, limit))
 

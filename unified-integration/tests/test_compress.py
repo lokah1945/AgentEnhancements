@@ -46,13 +46,12 @@ class FallbackCompressTests(unittest.TestCase):
         out = self.mod.fallback_compress(payload, "json")
         self.assertNotIn(": ", out)
         self.assertIn('"a"', out)
-        self.assertIn("null-free", "null-free")  # placeholder assertion clarity
+        self.assertEqual(_json.loads(out), _json.loads(payload))
 
-    def test_code_mode_limits_blank_lines(self):
-        code = "a = 1\n\n\n\n\nb = 2\n"
+    def test_code_mode_preserves_meaningful_blank_lines(self):
+        code = 'text = """first\n\n\n\n\nlast"""\n'
         out = self.mod.fallback_compress(code, "code")
-        blanks = [ln for ln in out.splitlines() if ln == ""]
-        self.assertLessEqual(len(blanks), 2)
+        self.assertEqual(out, code)
 
     def test_truncation_applies(self):
         big = "x" * 60000

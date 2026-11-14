@@ -1,7 +1,7 @@
 ---
 title: Architecture
-version: 1.2
-last_updated: 2026-11-13
+version: 1.5
+last_updated: 2026-11-15
 audience: maintainers, contributors
 ---
 
@@ -48,8 +48,19 @@ AgentEnhancements/
 └── system-prompts-and-models-of-ai-tools/  # vendored (prompt sources)
 ```
 
+## Automatic runtime
+
+Claude Code and Codex pass native JSON events to `scripts/runtime.py`.
+OpenCode 2 loads `opencode-plugin/index.js` and bridges its prompt/context/idle
+hooks to the same runtime. Startup recalls notes; prompt events suggest relevant
+skills; stop/idle events persist summaries. No launcher or manual skill command
+is needed. Native compaction remains under each CLI's control. The memory DB
+and skill-index schemas are unchanged.
+
 ## Setup pipeline (`setup.sh`)
 
+0. **prepare runtime** - create an isolated Python environment and install
+   declared dependencies; no global pip installation.
 1. **detect_agents** - probes PATH for known agent CLIs; writes
    `config/detected-agents.sh` (machine-specific, never hand-edited).
 2. **setup_prompts** - copies per-agent prompt files from
@@ -69,13 +80,17 @@ AgentEnhancements/
    committed registry remains a fallback.
 4. **setup_memory** - writes `memory/config.yaml`, `init-memory.sh` and the
    per-agent memory hooks (Python, parameterized SQL + thin bash wrappers).
-5. **setup_compression** - locates or builds headroom (cargo optional;
-   degrades to a native fallback), writes `compression/config.yaml` and the
-   stream-safe `compress.sh` wrapper.
+5. **setup_compression** - locates headroom, optionally builds it when
+   `AGENT_ENHANCEMENTS_BUILD_HEADROOM=1`, and writes the standalone wrapper.
+   The default uses an existing binary or the Python fallback.
 6. **create_agent_configs** - merges hooks/prompts into each detected
    agent's own config (`~/.claude/settings.json`, `~/.codex/AGENTS.md`,
-   ...). Existing keys are preserved; only the `hooks` key is replaced.
-   Backups are written next to each modified file.
+   ...). The three native adapters preserve user hooks, MCP servers, providers
+   and instruction/plugin arrays. Backups are written next to changed files.
+   One native `agent-enhancements` gateway loads the nine built MCP servers.
+   OpenCode 2 uses `mcp.servers`, `disabled` and `environment`; the adapter
+   migrates legacy flat entries. Its prompt hook waits for the managed MCP
+   connection before the first model request captures available tools.
 6b. **link_native_skills** - runs `scripts/link-skills.sh` to symlink the
    curated set (anthropic-skills + replica-skill) into `~/.claude/skills/`
    and `~/.agents/skills/`, making those skills auto-discoverable at
@@ -141,6 +156,19 @@ Scoring uses stop-word filtering (EN + ID), format-family aliases
 zero-friction boost for natively linked skills.
 
 ## Invariants
+
+The private root `ui.api.json` is the credential source for project MCPs.
+It is not an agent credential store: native authentication, provider settings
+and login helpers are outside its scope. The loader and gateway have no
+agent-specific authentication or process-coordination logic.
+`scripts/api_config.py` reads and validates snapshots; the gateway watches
+configuration and sends `notifications/tools/list_changed`. Calls revalidate
+the current schema and credential state, including previously cached names.
+Offline tool subsets remain available with empty keys. External subprocesses
+start only with configured requirements and commands, receive only their
+mapped credentials, and are replaced on key rotation. The registry snapshot
+retains the full catalog; agent-facing search/map/list filters unavailable
+MCPs using the live API configuration.
 
 - One setup script, one index, one memory system, one compression system
   (CONTRACT §2.1).

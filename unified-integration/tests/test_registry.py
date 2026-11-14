@@ -121,6 +121,13 @@ class RegistryCliTests(unittest.TestCase):
         self.assertEqual(code, 0, err)
         self.assertNotIn("skill, anthropic-skills", out)
 
+    def test_filter_values_do_not_become_relevance_keywords(self):
+        code, out, err = self._run("search", "zzxyyqqqq", "--type", "mcp", "--limit", "2", "--json")
+        self.assertEqual(code, 0, err)
+        result = json.loads(out)
+        self.assertEqual(result["query"], "zzxyyqqqq")
+        self.assertEqual(result["results"], [])
+
     def test_show_by_id_and_name(self):
         code, out, _ = self._run("show", "skill:docx")
         self.assertEqual(code, 0)
@@ -148,6 +155,13 @@ class RegistryCliTests(unittest.TestCase):
     def test_unknown_command_fails(self):
         code, _, _ = self._run("explode")
         self.assertEqual(code, 2)
+
+    def test_unrelated_query_does_not_match_default_skills_or_priority_servers(self):
+        code, out, err = self._run("map", "zzxyyqqqq", "--json")
+        self.assertEqual(code, 0, err)
+        result = json.loads(out)
+        for field in ["skills", "plugins", "mcp_servers"]:
+            self.assertEqual(result[field], [], field)
 
     def test_committed_registry_in_repo(self):
         committed = UI_DIR / "skills" / "agent-registry.json"

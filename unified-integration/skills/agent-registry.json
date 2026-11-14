@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-14T12:29:44.749552+00:00",
+  "generated_at": "2026-11-14T20:53:24.286976+00:00",
   "stats": {
     "total": 3160,
     "by_type": {
@@ -46549,6 +46549,7 @@
       "env_required": [
         "BRAVE_API_KEY"
       ],
+      "env_optional": [],
       "for_plugins": [
         "agent-reach",
         "last-30-days",
@@ -46557,7 +46558,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:tavily-mcp",
@@ -46571,13 +46572,14 @@
       "env_required": [
         "TAVILY_API_KEY"
       ],
+      "env_optional": [],
       "for_plugins": [
         "agent-reach",
         "rea"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:exa-mcp",
@@ -46591,13 +46593,14 @@
       "env_required": [
         "EXA_API_KEY"
       ],
+      "env_optional": [],
       "for_plugins": [
         "agent-reach",
         "last-30-days"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:firecrawl-mcp",
@@ -46611,13 +46614,14 @@
       "env_required": [
         "FIRECRAWL_API_KEY"
       ],
+      "env_optional": [],
       "for_plugins": [
         "agent-reach",
         "graphify"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:neo4j-mcp",
@@ -46633,12 +46637,13 @@
         "NEO4J_USER",
         "NEO4J_PASSWORD"
       ],
+      "env_optional": [],
       "for_plugins": [
         "graphify"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:graphrag-mcp",
@@ -46649,16 +46654,15 @@
       "category": "graph",
       "description": "Graph-based retrieval (G-RAG) untuk dokumen besar.",
       "command": "python -m graphrag_mcp",
-      "env_required": [
-        "OPENAI_API_KEY"
-      ],
+      "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "graphify",
         "agent-reach"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
     },
     {
       "id": "mcp:embeddings-mcp",
@@ -46669,7 +46673,8 @@
       "category": "ml",
       "description": "Embedding service seragam untuk semua skill yang butuh vektor.",
       "command": "python -m embeddings_mcp",
-      "env_required": [
+      "env_required": [],
+      "env_optional": [
         "OPENAI_API_KEY"
       ],
       "for_plugins": [
@@ -46677,9 +46682,9 @@
         "understand-anything",
         "agent-reach"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
     },
     {
       "id": "mcp:browser-tools-mcp",
@@ -46691,6 +46696,7 @@
       "description": "Kontrol browser headless untuk audit UI, screenshot, dan perf.",
       "command": "npx -y @agent-infra/browser-tools-mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "agent-skills-addyosmani",
         "impeccable",
@@ -46699,7 +46705,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:lighthouse-mcp",
@@ -46711,12 +46717,13 @@
       "description": "Lighthouse audit automation untuk Core Web Vitals.",
       "command": "npx -y lighthouse-mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "agent-skills-addyosmani"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:pa11y-mcp",
@@ -46728,13 +46735,14 @@
       "description": "Audit accessibility otomatis.",
       "command": "npx -y pa11y-mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "agent-skills-addyosmani",
         "ui-ux-pro-max"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:figma-mcp",
@@ -46748,13 +46756,14 @@
       "env_required": [
         "FIGMA_TOKEN"
       ],
+      "env_optional": [],
       "for_plugins": [
         "ui-ux-pro-max",
         "impeccable"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:storybook-mcp",
@@ -46766,13 +46775,14 @@
       "description": "Inspeksi component story untuk QA visual.",
       "command": "npx -y storybook-mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "ui-ux-pro-max",
         "impeccable"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:mermaid-mcp",
@@ -46784,12 +46794,13 @@
       "description": "Render diagram Mermaid ke SVG/PNG.",
       "command": "npx -y mermaid-mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "diagram-design"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:excalidraw-mcp",
@@ -46801,12 +46812,13 @@
       "description": "Sketcky diagrams untuk whiteboard-style.",
       "command": "npx -y excalidraw-mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "diagram-design"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:google-slides-mcp",
@@ -46821,12 +46833,13 @@
         "GOOGLE_OAUTH_CLIENT_ID",
         "GOOGLE_OAUTH_CLIENT_SECRET"
       ],
+      "env_optional": [],
       "for_plugins": [
         "ppt-master"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:office-mcp",
@@ -46841,12 +46854,13 @@
         "MICROSOFT_CLIENT_ID",
         "MICROSOFT_CLIENT_SECRET"
       ],
+      "env_optional": [],
       "for_plugins": [
         "ppt-master"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:image-search-mcp",
@@ -46860,13 +46874,14 @@
       "env_required": [
         "BING_IMAGE_API_KEY"
       ],
+      "env_optional": [],
       "for_plugins": [
         "ppt-master",
         "diagram-design"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:ffmpeg-mcp",
@@ -46878,12 +46893,13 @@
       "description": "Editing video non-linear via ffmpeg.",
       "command": "python -m ffmpeg_mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "openmontage"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
     },
     {
       "id": "mcp:video-mcp",
@@ -46895,13 +46911,14 @@
       "description": "Wrapper shot list, timeline, transcode.",
       "command": "python -m video_mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "openmontage",
         "hyperframes"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
     },
     {
       "id": "mcp:heygen-mcp",
@@ -46915,12 +46932,13 @@
       "env_required": [
         "HEYGEN_API_KEY"
       ],
+      "env_optional": [],
       "for_plugins": [
         "hyperframes"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:elevenlabs-mcp",
@@ -46934,13 +46952,14 @@
       "env_required": [
         "ELEVENLABS_API_KEY"
       ],
+      "env_optional": [],
       "for_plugins": [
         "hyperframes",
         "openmontage"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:typescript-language-server-mcp",
@@ -46952,13 +46971,14 @@
       "description": "LSP-based code navigation untuk TS.",
       "command": "npx -y typescript-language-server-mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "mattpocock-skills",
         "agent-skills-addyosmani"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:eslint-mcp",
@@ -46970,13 +46990,14 @@
       "description": "Lint + autofix via MCP.",
       "command": "npx -y eslint-mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "mattpocock-skills",
         "agent-skills-addyosmani"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:jupyter-mcp",
@@ -46988,12 +47009,13 @@
       "description": "Eksekusi notebook untuk ML prototype.",
       "command": "python -m jupyter_mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "karpathy-skills"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:python-repl-mcp",
@@ -47005,12 +47027,13 @@
       "description": "REPL untuk derivasi numerik / eksperimen cepat.",
       "command": "python -m python_repl_mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "karpathy-skills"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:memory-mcp",
@@ -47022,6 +47045,7 @@
       "description": "Shared memory layer lintas orchestrator.",
       "command": "npx -y @modelcontextprotocol/server-memory",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "bmad-method",
         "gsd",
@@ -47030,7 +47054,7 @@
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:task-router-mcp",
@@ -47042,14 +47066,15 @@
       "description": "Dispatch sub-agent + track progress.",
       "command": "python -m task_router_mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "gsd",
         "bmad-method",
         "rea"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
     },
     {
       "id": "mcp:github-issues-mcp",
@@ -47063,13 +47088,14 @@
       "env_required": [
         "GITHUB_TOKEN"
       ],
+      "env_optional": [],
       "for_plugins": [
         "bmad-method",
         "gsd"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:linear-mcp",
@@ -47083,12 +47109,13 @@
       "env_required": [
         "LINEAR_API_KEY"
       ],
+      "env_optional": [],
       "for_plugins": [
         "bmad-method"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:wikipedia-mcp",
@@ -47100,12 +47127,13 @@
       "description": "Baseline knowledge retrieval.",
       "command": "npx -y wikipedia-mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "understand-anything"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:arxiv-mcp",
@@ -47117,13 +47145,14 @@
       "description": "Fetch paper abstracts + full text untuk research.",
       "command": "python -m arxiv_mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "understand-anything",
         "agent-reach"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
     },
     {
       "id": "mcp:newsapi-mcp",
@@ -47137,12 +47166,13 @@
       "env_required": [
         "NEWSAPI_KEY"
       ],
+      "env_optional": [],
       "for_plugins": [
         "last-30-days"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:google-news-mcp",
@@ -47154,12 +47184,13 @@
       "description": "RSS Google News fallback bila NewsAPI unavailable.",
       "command": "python -m google_news_mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "last-30-days"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
     },
     {
       "id": "mcp:filesystem-mcp",
@@ -47171,13 +47202,14 @@
       "description": "Filesystem access standar untuk semua skill.",
       "command": "npx -y @modelcontextprotocol/server-filesystem",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "anthropic-skills",
         "all"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:pdf-mcp",
@@ -47189,13 +47221,14 @@
       "description": "Ekstrak / generate PDF.",
       "command": "npx -y pdf-mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "anthropic-skills",
         "ppt-master"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:vision-mcp",
@@ -47206,7 +47239,8 @@
       "category": "core",
       "description": "Multimodal image understanding.",
       "command": "python -m vision_mcp",
-      "env_required": [
+      "env_required": [],
+      "env_optional": [
         "OPENAI_API_KEY"
       ],
       "for_plugins": [
@@ -47214,9 +47248,9 @@
         "impeccable",
         "replica-skill"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
     },
     {
       "id": "mcp:style-mcp",
@@ -47228,12 +47262,13 @@
       "description": "Deteksi AI-ism + style scoring.",
       "command": "python -m style_mcp",
       "env_required": [],
+      "env_optional": [],
       "for_plugins": [
         "humanizer"
       ],
-      "status": "to-build",
+      "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
     },
     {
       "id": "mcp:grammar-mcp",
@@ -47247,12 +47282,13 @@
       "env_required": [
         "LANGUAGE_TOOL_URL"
       ],
+      "env_optional": [],
       "for_plugins": [
         "humanizer"
       ],
       "status": "to-install",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "add to the tool's MCP config (e.g. .claude/mcp.json), then mcp-test.sh"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "capability:memory",
@@ -47268,8 +47304,8 @@
         "session",
         "context"
       ],
-      "usage": "python3 /home/z/my-project/repo/unified-integration/scripts/memory.py <agent> save|load|list [\"key\" [\"value\"]]",
-      "automatic": "Claude Code (hooks in ~/.claude/settings.json)"
+      "usage": "python3 unified-integration/scripts/memory.py <agent> save|load|list [\"key\" [\"value\"]]",
+      "automatic": "Claude Code and Codex lifecycle hooks; OpenCode 2 server plugin"
     },
     {
       "id": "capability:compression",
@@ -47285,7 +47321,7 @@
         "transcript",
         "summarize"
       ],
-      "usage": "/home/z/my-project/repo/unified-integration/compression/compress.sh <file> <auto|code|logs|json|markdown|generic>",
+      "usage": "unified-integration/compression/compress.sh <file> <auto|code|logs|json|markdown|generic>",
       "automatic": "none (invoke explicitly)"
     },
     {
@@ -47301,7 +47337,7 @@
         "catalog",
         "match"
       ],
-      "usage": "python3 /home/z/my-project/repo/unified-integration/scripts/load-skills.py <agent> \"<task description>\"",
+      "usage": "python3 unified-integration/scripts/load-skills.py <agent> \"<task description>\"",
       "automatic": "referenced from every agent instruction file"
     },
     {
@@ -47316,7 +47352,7 @@
         "choose",
         "plan"
       ],
-      "usage": "bash /home/z/my-project/repo/unified-integration/scripts/dispatch.sh --dry-run \"<task>\"",
+      "usage": "bash unified-integration/scripts/dispatch.sh --dry-run \"<task>\"",
       "automatic": "none (invoke explicitly)"
     },
     {
@@ -47333,7 +47369,7 @@
         "auto",
         "install"
       ],
-      "usage": "bash /home/z/my-project/repo/unified-integration/scripts/link-skills.sh [--set <source>|all|<name>] [--status] [--unlink]",
+      "usage": "bash unified-integration/scripts/link-skills.sh [--set <source>|all|<name>] [--status] [--unlink]",
       "automatic": "default curated set linked by setup.sh"
     },
     {
@@ -47348,7 +47384,7 @@
         "agent",
         "cli"
       ],
-      "usage": "/home/z/my-project/repo/unified-integration/launch-agent.sh <agent> [args...]",
+      "usage": "unified-integration/launch-agent.sh <agent> [args...]",
       "automatic": "agent-enhanced <agent> when /usr/local/bin is writable"
     },
     {
@@ -47365,7 +47401,7 @@
         "what",
         "which"
       ],
-      "usage": "python3 /home/z/my-project/repo/unified-integration/scripts/registry.py map \"<task description>\"",
+      "usage": "python3 unified-integration/scripts/registry.py map \"<task description>\"",
       "automatic": "referenced from every agent instruction file"
     }
   ]

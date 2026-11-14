@@ -133,7 +133,7 @@ AgentEnhancements/
 │   ├── compression/               # Context compression (headroom + fallback)
 │   ├── scripts/                   # Utility scripts (loader, memory, registry.py,
 │   │                              # link-skills.sh, dispatch, catalog tooling)
-│   └── tests/                     # Regression test suite (77 tests)
+│   └── tests/                     # Regression test suite (89 tests)
 │
 ├── plugin-catalog/                # 21 curated external plugin sources
 ├── anthropic-skills/              # 19 official Anthropic skills (vendored, Apache-2.0)
@@ -300,7 +300,7 @@ All other agent configurations are written in each tool's native format — see 
 
 ## MCP Servers
 
-`plugin-catalog/mcp-servers.json` is a **roadmap** of 36 candidate MCP servers (P0-P2), not a pre-wired configuration. To enable a server, add it to your tool's MCP config (e.g. `.claude/mcp.json` for Claude Code) using the command documented in the roadmap entry, then verify with:
+`plugin-catalog/mcp-servers.json` is a **roadmap** of 38 candidate MCP servers (P0-P2), not a pre-wired configuration. To enable a server, add it to your tool's MCP config (e.g. `.claude/mcp.json` for Claude Code) using the command documented in the roadmap entry, then verify with:
 
 ```bash
 bash unified-integration/scripts/mcp-test.sh --priority P0
@@ -311,7 +311,7 @@ bash unified-integration/scripts/mcp-test.sh --priority P0
 ## Testing & Validation
 
 ```bash
-# Integration-layer regression suite (77 tests)
+# Integration-layer regression suite (89 tests)
 python3 unified-integration/tests/run-tests.py
 
 # Plugin catalog validation (21 manifests)

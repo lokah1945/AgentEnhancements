@@ -14,6 +14,11 @@
 unified-integration/skills/.skills-meta.tmp
 unified-integration/skills/all-skills.json.tmp
 
+# Machine-specific detection state written by setup.sh at install time
+# (which agents happen to be installed on THIS machine - committing it
+# only produces permanent cross-machine drift)
+unified-integration/config/detected-agents.sh
+
 # Generated skill registry trees: populated by setup.sh at install time
 # (see docs/audit/AUDIT_REPORT.md F-28). The committed flat samples in
 # by-category/general/ stay tracked; everything generated is ignored.

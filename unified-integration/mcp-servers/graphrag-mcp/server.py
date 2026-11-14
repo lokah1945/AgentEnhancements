@@ -10,7 +10,7 @@ not LLM-driven. This keeps the server fully offline, deterministic and
 testable; an LLM extractor can be layered later behind the same API.
 
 - index(corpus_id, documents): build an in-memory entity graph, persisted
-  to /tmp/ae-graphrag/<corpus>.json.
+  to private per-user, working-directory-scoped storage.
 - query(corpus_id, question, k): extract question entities, expand 1-hop
   neighbors, rank evidence sentences by graph + lexical overlap.
 - status(corpus_id): corpus stats.
@@ -18,6 +18,8 @@ testable; an LLM extractor can be layered later behind the same API.
 from __future__ import annotations
 
 import json
+import hashlib
+import os
 import math
 import re
 import tempfile
@@ -28,7 +30,11 @@ from typing import Callable
 from mcp.server.fastmcp import FastMCP
 
 VERSION = "1.0.0"
-STORE_DIR = Path(tempfile.gettempdir()) / "ae-graphrag"
+# Corpus evidence may contain private source text. Do not store it in a
+# world-readable shared /tmp namespace or collide across working directories.
+STATE_ROOT = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory"))
+PROJECT_KEY = hashlib.sha256(str(Path.cwd().resolve()).encode()).hexdigest()[:24]
+STORE_DIR = STATE_ROOT / "mcp" / "graphrag" / PROJECT_KEY
 STOPWORDS = {
     "the", "a", "an", "and", "or", "but", "if", "then", "of", "to", "in",
     "on", "for", "with", "by", "at", "from", "as", "is", "are", "was",
@@ -99,8 +105,16 @@ def _load_corpus(corpus_id: str) -> dict | None:
 
 def _save_corpus(corpus_id: str, data: dict) -> None:
     _CORPORA[corpus_id] = data
-    STORE_DIR.mkdir(parents=True, exist_ok=True)
-    _corpus_path(corpus_id).write_text(json.dumps(data, ensure_ascii=False))
+    STORE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    STORE_DIR.chmod(0o700)
+    fd, temporary = tempfile.mkstemp(dir=STORE_DIR, prefix=".corpus-")
+    try:
+        with os.fdopen(fd, "w") as stream:
+            json.dump(data, stream, ensure_ascii=False)
+        os.replace(temporary, _corpus_path(corpus_id))
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def _build_graph(documents: list[dict]) -> dict:

@@ -13,6 +13,8 @@ construction and EDL export are fully offline.
 from __future__ import annotations
 
 import json
+import hashlib
+import os
 import re
 import shutil
 import subprocess
@@ -23,7 +25,9 @@ from typing import Callable
 from mcp.server.fastmcp import FastMCP
 
 VERSION = "1.0.0"
-STORE_DIR = Path(tempfile.gettempdir()) / "ae-video-mcp"
+STATE_ROOT = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory"))
+PROJECT_KEY = hashlib.sha256(str(Path.cwd().resolve()).encode()).hexdigest()[:24]
+STORE_DIR = STATE_ROOT / "mcp" / "video" / PROJECT_KEY
 TIMELINES = STORE_DIR / "timelines.json"
 MAX_CLIPS = 64
 FFMPEG = "ffmpeg"
@@ -45,8 +49,16 @@ def _load_all() -> dict:
 
 
 def _save_all(data: dict) -> None:
-    STORE_DIR.mkdir(parents=True, exist_ok=True)
-    TIMELINES.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+    STORE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    STORE_DIR.chmod(0o700)
+    fd, temporary = tempfile.mkstemp(dir=STORE_DIR, prefix=".timelines-")
+    try:
+        with os.fdopen(fd, "w") as stream:
+            json.dump(data, stream, ensure_ascii=False, indent=2)
+        os.replace(temporary, TIMELINES)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def _safe_name(name: str) -> bool:

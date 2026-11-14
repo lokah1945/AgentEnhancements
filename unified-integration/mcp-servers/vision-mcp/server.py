@@ -102,9 +102,9 @@ def compare(a: str, b: str) -> dict:
         total = sum(max(x, y) for x, y in zip(ha, hb)) or 1
         intersections.append(sum(min(x, y) for x, y in zip(ha, hb)) / total)
     hist_sim = sum(intersections) / 3
-    from PIL import ImageChops
+    from PIL import ImageChops, ImageStat
     diff = ImageChops.difference(img_a, img_b)
-    stat = sum(diff.convert("L").getdata()) / (img_a.size[0] * img_a.size[1])
+    stat = ImageStat.Stat(diff.convert("L")).mean[0]
     pixel_sim = 1.0 - min(stat / 255.0, 1.0)
     similarity = round(0.5 * hist_sim + 0.5 * pixel_sim, 6)
     return {"similarity": similarity, "same_size": img_a.size == img_b.size,

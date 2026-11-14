@@ -118,6 +118,8 @@ The launcher validates the agent against the last detection run, initializes mem
 
 ```
 AgentEnhancements/
+├── README_INTEGRATION.md           # Integration & architecture guide (the merger narrative)
+├── .cursorrules                    # Centralized system prompt (Karpathy + Anthropic best practices)
 ├── unified-integration/           # Main integration layer
 │   ├── setup.sh                   # One-line installer (single source of truth)
 │   ├── update-skills.sh           # Skill refresh from upstream sources
@@ -133,9 +135,21 @@ AgentEnhancements/
 │   ├── compression/               # Context compression (headroom + fallback)
 │   ├── scripts/                   # Utility scripts (loader, memory, registry.py,
 │   │                              # link-skills.sh, dispatch, catalog tooling)
-│   └── tests/                     # Regression test suite (89 tests)
+│   └── tests/                     # Regression test suite (110 tests)
 │
-├── plugin-catalog/                # 21 curated external plugin sources
+├── skills/                        # Modular plugin tree (5 categories, 21 plugins)
+│   ├── manifest.json              # Aggregator index (committed)
+│   ├── README.md                  # Tree architecture + coverage
+│   ├── code/                      # 4 plugins: TS rigor, minimal ML, perf, replica
+│   ├── research/                  # 5 plugins: graph, deep research, explain, trends, reasoning
+│   ├── tokens-optimization/       # 4 plugins: budget, compress, atomic exec, personas
+│   ├── design/                    # 4 plugins: tokens, polish, slides, diagrams
+│   └── multimedia-writing/        # 4 plugins: docs, video, avatars, humanize
+│                                  # (per-plugin dirs are generated: bash scripts/scaffold_modular_skills.sh)
+├── plugin-catalog/                # 21 curated external plugin sources (canonical manifests)
+├── scripts/                       # Repo-level generators (scaffold_modular_skills.sh,
+│                                  #  generate_skills_index.py)
+├── docs/MCP_INTEGRATION_CHECKLIST.md  # Step-by-step MCP server build plan (38 servers)
 ├── anthropic-skills/              # 19 official Anthropic skills (vendored, Apache-2.0)
 ├── replica-skill/                 # 11 vendored app-cloning sub-skills
 ├── agentic-awesome-skills/        # 2,781 vendored skills
@@ -163,6 +177,17 @@ The unified index (`unified-integration/skills/all-skills.json`) currently conta
 | Ponytail | 6 |
 
 The on-disk registry (`skills/by-category/`, `skills/by-agent/`) is generated when you run `setup.sh`.
+
+### Modular plugin tree (`skills/`)
+
+The 21 cataloged plugins are exposed as a self-contained modular tree at `skills/<category>/<slug>/` (each dir holds `SKILL.md` + `manifest.json`). The tree is generated from `plugin-catalog/catalog.json` - never edited by hand:
+
+```bash
+bash scripts/scaffold_modular_skills.sh     # build/rebuild the tree
+python3 scripts/generate_skills_index.py    # refresh skills/manifest.json + READMEs
+```
+
+See `skills/README.md` for the tree architecture and `README_INTEGRATION.md` for the full integration narrative.
 
 ### Capability Registry (all-in-one mapping)
 
@@ -311,7 +336,7 @@ bash unified-integration/scripts/mcp-test.sh --priority P0
 ## Testing & Validation
 
 ```bash
-# Integration-layer regression suite (89 tests)
+# Integration-layer regression suite (110 tests)
 python3 unified-integration/tests/run-tests.py
 
 # Plugin catalog validation (21 manifests)

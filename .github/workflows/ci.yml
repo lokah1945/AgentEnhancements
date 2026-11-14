@@ -25,7 +25,7 @@ jobs:
               echo "::error file=$f::bash syntax check failed"
               status=1
             fi
-          done < <(find unified-integration -name '*.sh' -print0)
+          done < <(find unified-integration scripts -name '*.sh' -print0)
           exit $status
 
       - name: py_compile on all integration Python scripts
@@ -36,7 +36,7 @@ jobs:
               echo "::error file=$f::python compile failed"
               status=1
             fi
-          done < <(find unified-integration -name '*.py' -print0)
+          done < <(find unified-integration scripts -name '*.py' -print0)
           exit $status
 
       - name: JSON validity of the skills index and friends
@@ -47,7 +47,11 @@ jobs:
               echo "::error file=$f::invalid JSON"
               status=1
             fi
-          done < <(find unified-integration -name '*.json' -print0)
+          done < <(find unified-integration scripts plugin-catalog -name '*.json' -print0 
+                   -not -path '*/node_modules/*')
+          # also validate the committed modular-tree index
+          python3 -m json.tool skills/manifest.json > /dev/null || {
+            echo "::error file=skills/manifest.json::invalid JSON"; exit 1; }
           exit $status
 
       - name: Filename policy (no temp/fixed/new/vN files in owned layer)
@@ -92,6 +96,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Build modular skills tree (scaffold from catalog)
+        run: |
+          bash scripts/scaffold_modular_skills.sh
+          python3 scripts/generate_skills_index.py
+          git diff --exit-code -- skills/ || {
+            echo "::error::committed skills index drifted from catalog.json - regenerate with scripts/generate_skills_index.py";
+            exit 1; }
       - name: Build skill registry (also unskips the link-skills tests)
         run: bash unified-integration/setup.sh >/dev/null
       - name: Run regression suite
@@ -128,5 +139,6 @@ jobs:
       - name: Lint owned documentation
         run: |
           npx -y markdownlint-cli \
-            README.md CONTRACT.md docs/*.md unified-integration/skills/README.md || \
+            README.md README_INTEGRATION.md CONTRACT.md docs/*.md \
+            unified-integration/skills/README.md skills/*.md skills/*/README.md || \
             echo "::warning::markdownlint reported issues (advisory)"

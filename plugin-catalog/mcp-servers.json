@@ -1,7 +1,7 @@
 {
   "$schema": "https://agentenhancements.dev/schema/mcp-servers.v1.json",
   "version": "1.0.0",
-  "description": "Roadmap MCP server yang perlu dibangun/dipasang untuk mengaktifkan 20 plugin v2 AgentEnhancements. Prioritas: P0 wajib sebelum Phase 1, P1 untuk Phase 2, P2 nice-to-have.",
+  "description": "Roadmap MCP server yang perlu dibangun/dipasang untuk mengaktifkan 21 plugin v2 AgentEnhancements. Prioritas: P0 wajib sebelum Phase 1, P1 untuk Phase 2, P2 nice-to-have. Build order: docs/MCP_INTEGRATION_CHECKLIST.md.",
   "servers": [
     {
       "id": "brave-search-mcp",

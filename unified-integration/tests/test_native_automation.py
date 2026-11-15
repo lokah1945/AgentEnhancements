@@ -83,7 +83,10 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(
             result["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit"
         )
-        self.assertIn("security-audit/SKILL.md", context)
+        # Cards are bounded pointers: name + one-line summary, with the
+        # catalog search command for full detail (context contract §8.4).
+        self.assertIn("security-audit", context)
+        self.assertIn("registry.py search", context)
 
     def test_same_basename_repositories_do_not_share_memory(self):
         self.event(

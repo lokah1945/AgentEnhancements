@@ -38,7 +38,8 @@ try {
   assert.equal(toolReloads, 1)
   const request = { sessionID: "session-one", system: [], messages: [] }
   await hooks.get("context")(request)
-  assert.match(request.system[0].text, /security-audit\/SKILL.md/)
+  assert.match(request.system[0].text, /security-audit/)
+  assert.match(request.system[0].text, /registry\.py search/)
   await hooks.get("experimental.idle")({ sessionID: "session-one" })
   await hooks.get("prompt")({ sessionID: "session-two", prompt: { text: "security audit" } })
   const restored = { sessionID: "session-two", system: [], messages: [] }

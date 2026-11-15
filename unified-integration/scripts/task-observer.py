@@ -214,6 +214,15 @@ def status(root: Path) -> Dict[str, Any]:
 # workspace bootstrap (upstream "Workspace creation", idempotent)
 # ---------------------------------------------------------------------------
 
+def _bundle_version() -> str:
+    """Version string from the vendored bundle's frontmatter (never a fetch)."""
+    try:
+        fm = _read_frontmatter(BUNDLE_DIR / "SKILL.md")
+        return fm.get("version", "unknown")
+    except OSError:
+        return "unknown"
+
+
 def bootstrap_workspace(root: Path) -> str:
     """Create the upstream four-artefact workspace; idempotent, no network.
 
@@ -286,13 +295,13 @@ def bootstrap_context(root: Path, agent: str) -> str:
             "unaffected."
         )
     lines = [
-        "AgentEnhancements task-observer is active for this session "
-        "(vended bundle at "
-        f"{BUNDLE_DIR}, CC-BY-4.0, rebelytics/one-skill-to-rule-them-all).",
+        "AgentEnhancements task-observer is active (v" + _bundle_version()
+        + ", CC-BY-4.0, rebelytics/one-skill-to-rule-them-all).",
         f"Observation workspace: {root}",
-        "Log observations during the session when evidence exists "
-        f"(helper: {BUNDLE_SCRIPTS / 'new-observation.sh'}), through:",
-        f"python3 {Path(__file__)} log --workspace \"{root}\" <json-spec>",
+        "Log observations when evidence exists, via:",
+        f"python3 {Path(__file__)} log --workspace \"{root}\" "
+        "--title <t> --issue <t> --principle <t>"
+        " [--skill <name> ...] [--improvement <t>]",
         f"Open observations: {info['open_observations']}; "
         f"last review: {info['last_review']}.",
     ]
@@ -313,6 +322,47 @@ def bootstrap_context(root: Path, agent: str) -> str:
         lines.append(f"- {entry.stem}: {title} (skill: {skill})")
         shown += 1
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Stop-event backstop (upstream "Deliverable-event flush")
+# ---------------------------------------------------------------------------
+
+def stop_backstop(root: Path, session_label: str) -> str:
+    """Flush/checkpoint duty at session Stop, mirroring the upstream
+    deliverable-event flush that the excluded experimental plugin
+    (plugins/task-observer-flush) provided.
+
+    Upstream semantics (SKILL.md "How to Log"): whenever a unit of work
+    ends, pending observations are written and a checkpoint line is
+    appended to skill-observations/checkpoints.log - a remembered
+    "ask whether" is not enforcement. This adapter cannot know which
+    observations the agent considered pending, so the backstop records an
+    honest checkpoint line: session ended, pending-observation state
+    unknown from the adapter's side, with the reminder to log any
+    unwritten evidence. It never fabricates observations and never
+    touches entry files.
+
+    Bounded: one line per Stop, no bodies, no transcript content.
+    """
+    if is_disabled(root):
+        return ""
+    if not (BUNDLE_DIR / "SKILL.md").is_file():
+        return ""
+    state = state_dir(root)
+    if not state.is_dir():
+        return ""  # never started; nothing to checkpoint
+    try:
+        line = (
+            f"{_now_date()} stop-flush session={session_label} "
+            "pending-observations-unknown; log any unwritten evidence now "
+            "(upstream: deliverable-event flush at work-unit end)\n"
+        )
+        with open(state / "checkpoints.log", "a", encoding="utf-8") as fh:
+            fh.write(line[:500])
+    except OSError:
+        return ""  # advisory by contract
+    return ""
 
 
 # ---------------------------------------------------------------------------
@@ -588,16 +638,33 @@ def stage_candidate(
             if (candidate / "SKILL.md").is_file():
                 source = candidate
                 break
-    if source is None and (BUNDLE_DIR / "SKILL.md").is_file():
-        source = BUNDLE_DIR
+        if source is None:
+            # Unknown skill names are refused with the searched roots:
+            # silently staging the observer bundle under another skill's
+            # name would produce a candidate that promotes the wrong tree.
+            return (
+                f"refused: source skill '{skill_name}' not found in the "
+                "vendored tree (searched: "
+                + ", ".join(str(r.name) for r in search_roots)
+                + "); only the task-observer bundle itself is stageable "
+                "by that name"
+            )
+    else:
+        source = BUNDLE_DIR if (BUNDLE_DIR / "SKILL.md").is_file() else None
     if source is None:
-        return f"refused: source skill '{skill_name}' not found in the vendored tree"
+        return "refused: task-observer bundle not installed (no SKILL.md)"
     stage_root = updates_dir(root) / _now_date()
     stage = stage_root / skill_name
     if stage.exists():
         shutil.rmtree(stage)
     stage.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(source, stage)
+    try:
+        # Preserve symlinks as links (a dangling one in the SOURCE tree
+        # must not crash staging with an unhandled shutil.Error).
+        _copy_tree(source, stage)
+    except (OSError, RecursionError, shutil.Error) as exc:
+        shutil.rmtree(stage, ignore_errors=True)
+        return f"refused: could not copy the source tree: {exc}"
     (stage / "PROPOSAL.md").write_text(
         "---\n"
         f"status: staged\n"
@@ -702,13 +769,49 @@ def _canonical_source(skill_name: str) -> Optional[Path]:
     return None
 
 
+def _same_filesystem(a: Path, b: Path) -> bool:
+    """True when both existing parents sit on one device (rename is atomic)."""
+    try:
+        return os.stat(a).st_dev == os.stat(b).st_dev
+    except OSError:
+        return False
+
+
+def _copy_tree(src: Path, dst: Path) -> None:
+    """Copy a tree preserving symlinks as symlinks (never dereference).
+
+    The staged copy lives in user-writable workspace data; dereferencing
+    a tampered symlink would materialize out-of-tree content into the
+    canonical repo tree, and a symlink loop would recurse unboundedly.
+    ``symlinks=True`` copies the link itself. Callers treat OSError and
+    RecursionError as refusals, so a hostile or broken stage never
+    escapes the transaction.
+    """
+    shutil.copytree(src, dst, symlinks=True)
+
+
 def promote(root: Path, staged_name: str) -> str:
     """Apply an approved staged copy to the canonical source tree.
 
     The canonical source is the vendored tree at the repository root
     (task-observer/..., replica-skill/<name>/, ...); re-running setup.sh
-    regenerates the aggregated by-category copies from it. A rollback
-    record is written first.
+    regenerates the aggregated by-category copies from it.
+
+    Transaction order (works within one filesystem AND across them):
+
+    1. Backup: COPY the live source into the rollback slot (renames
+       cannot cross devices; a copied backup is equally recoverable and
+       is verified before the source is touched).
+    2. Candidate: COPY the staged tree to a sibling ".new" directory on
+       the SAME filesystem as the target, so the swap itself is a local
+       rename (atomic on that filesystem).
+    3. Swap: rename target -> ".old" sibling, rename ".new" -> target.
+       Both renames are intra-filesystem by construction.
+    4. On any failure: ".new" is removed and/or ".old" is renamed back,
+       so the source is never left absent or half-replaced.
+
+    The rollback record names the backup copy; a rollback restores from
+    it. Nothing healthy is deleted before its replacement is in place.
     """
     if not _valid_skill_name(staged_name):
         return "refused: invalid staged name (single path component, no '..')"
@@ -748,28 +851,51 @@ def promote(root: Path, staged_name: str) -> str:
     backup = rollback_dir / f"{staged_name}-{stamp}"
     if backup.exists():
         shutil.rmtree(backup)
-    # Atomic-ish swap: build the new tree at a sibling path, rename the
-    # canonical tree aside into the rollback slot, then rename the new
-    # tree into place. A failure at any step restores the canonical tree,
-    # so the source is never left deleted.
     new_tree = target.with_name(target.name + ".new")
-    if new_tree.exists():
-        shutil.rmtree(new_tree)
-    shutil.copytree(stage, new_tree)
+    old_tree = target.with_name(target.name + ".old")
+    for scratch in (new_tree, old_tree):
+        if scratch.exists():
+            shutil.rmtree(scratch)
+    # 1. Backup the live source FIRST (copy, device-safe), then verify the
+    #    backup actually contains the source's SKILL.md before touching
+    #    anything: an unverifiable backup aborts the promotion. A copy
+    #    failure (permissions, symlink loop) is a refusal, never an
+    #    uncaught traceback, and cleans up its partial artifacts.
+    try:
+        _copy_tree(target, backup)
+    except (OSError, RecursionError) as exc:
+        shutil.rmtree(backup, ignore_errors=True)
+        return f"refused: backup copy failed: {exc}"
+    if not (backup / "SKILL.md").is_file():
+        shutil.rmtree(backup, ignore_errors=True)
+        return "refused: backup verification failed (no SKILL.md in the copy)"
+    # 2. Prepare the candidate beside the target (same filesystem).
+    try:
+        _copy_tree(stage, new_tree)
+    except (OSError, RecursionError) as exc:
+        shutil.rmtree(backup, ignore_errors=True)
+        shutil.rmtree(new_tree, ignore_errors=True)
+        return f"refused: staged copy failed: {exc}"
     (new_tree / "PROPOSAL.md").unlink(missing_ok=True)
     try:
-        os.rename(target, backup)
+        # 3. Swap via intra-filesystem renames only.
+        os.rename(target, old_tree)
         try:
             os.rename(new_tree, target)
         except OSError:
-            os.rename(backup, target)  # restore: never leave source absent
-            return "refused: promotion failed while installing the staged copy; source restored"
+            os.rename(old_tree, target)  # restore; never leave source absent
+            return ("refused: promotion failed while installing the staged "
+                    "copy; source restored")
     except OSError as exc:
-        if new_tree.exists():
-            shutil.rmtree(new_tree, ignore_errors=True)
-        if not target.exists() and backup.exists():
-            os.rename(backup, target)
+        for scratch in (new_tree,):
+            if scratch.exists():
+                shutil.rmtree(scratch, ignore_errors=True)
+        if not target.exists() and old_tree.exists():
+            os.rename(old_tree, target)
         return f"degraded: promotion swap failed: {exc}"
+    # 4. Swap done; the superseded tree is already preserved in `backup`,
+    #    so the ".old" sibling is redundant and can be dropped.
+    shutil.rmtree(old_tree, ignore_errors=True)
     with open(updates_dir(root) / "PENDING.md", "a", encoding="utf-8") as fh:
         fh.write(
             f"- {_now_date()} PROMOTED {staged_name} from {stage} "
@@ -782,7 +908,14 @@ def promote(root: Path, staged_name: str) -> str:
 
 
 def rollback(root: Path, staged_name: str) -> str:
-    """Restore the most recent rollback backup for a promoted skill."""
+    """Restore the most recent rollback backup for a promoted skill.
+
+    Same transaction discipline as promote(): the restore copy is staged
+    and verified BESIDE the live source first; the live tree is only
+    renamed away once the verified replacement exists, and any failure
+    restores it. The source is never deleted before its replacement is
+    in place.
+    """
     if not _valid_skill_name(staged_name):
         return "refused: invalid staged name (single path component, no '..')"
     rollback_dir = updates_dir(root) / "rollback"
@@ -795,9 +928,35 @@ def rollback(root: Path, staged_name: str) -> str:
     target = _canonical_source(staged_name)
     if target is None:
         return f"refused: canonical source for '{staged_name}' not found"
-    if target.exists():
-        shutil.rmtree(target)
-    shutil.copytree(backup, target)
+    staged_restore = target.with_name(target.name + ".restore")
+    if staged_restore.exists():
+        shutil.rmtree(staged_restore)
+    try:
+        _copy_tree(backup, staged_restore)
+    except (OSError, RecursionError) as exc:
+        shutil.rmtree(staged_restore, ignore_errors=True)
+        return f"degraded: rollback staging failed: {exc}"
+    if not (staged_restore / "SKILL.md").is_file():
+        shutil.rmtree(staged_restore, ignore_errors=True)
+        return "refused: rollback backup verification failed (no SKILL.md)"
+    old_tree = target.with_name(target.name + ".old")
+    if old_tree.exists():
+        shutil.rmtree(old_tree)
+    try:
+        if target.exists():
+            os.rename(target, old_tree)
+        try:
+            os.rename(staged_restore, target)
+        except OSError:
+            if old_tree.exists():
+                os.rename(old_tree, target)  # never leave source absent
+            return "refused: rollback swap failed; source restored"
+    except OSError as exc:
+        shutil.rmtree(staged_restore, ignore_errors=True)
+        if not target.exists() and old_tree.exists():
+            os.rename(old_tree, target)
+        return f"degraded: rollback swap failed: {exc}"
+    shutil.rmtree(old_tree, ignore_errors=True)
     with open(updates_dir(root) / "PENDING.md", "a", encoding="utf-8") as fh:
         fh.write(f"- {_now_date()} ROLLED BACK {staged_name} to {backup}\n")
     return f"rolled back {staged_name} from {backup}; re-run setup.sh"
@@ -855,10 +1014,17 @@ def main() -> int:
     root = _cli_root(args)
 
     def emit(message: str) -> int:
-        """Print a result; refusal/degraded messages exit non-zero."""
+        """Print a result; refusal/degraded/failure messages exit non-zero.
+
+        A promotion that fails (including the cross-filesystem swap) must
+        surface a non-zero exit to scripts and hooks that chain commands.
+        Advisory hook output stays zero-exit; only this CLI's own failed
+        operations report failure.
+        """
         print(message)
         return 1 if message.startswith(("refused", "observer disabled",
-                                        "not written", "helper refused")) else 0
+                                        "not written", "helper refused",
+                                        "degraded")) else 0
 
     if args.command == "status":
         print(json.dumps(status(root), indent=2))

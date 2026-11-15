@@ -50,6 +50,43 @@ def public_name(server: str, tool: str) -> str:
     return safe
 
 
+def slim_schema(definition: types.Tool) -> types.Tool:
+    """Drop wire-redundant weight from a tool definition.
+
+    Three source-server conventions bloat every cold start without
+    carrying decision-relevant information:
+
+    - seven optional fields serialized as explicit nulls/icons/meta/...;
+    - every parameter name echoed as a "title" string;
+    - descriptions that repeat the inputSchema as an "Args:" prose block
+      (the schema already documents each parameter; constraints that ONLY
+      exist in prose - allowed values, ranges - are preserved by keeping
+      the pre-Args text, which the servers write as the summary line).
+
+    The MCP schema stays valid; every tool, parameter, enum, default and
+    required field is preserved. Calls are validated against the same
+    slimmer schema, so nothing is hidden from execution - the surface is
+    smaller, the contract is not.
+    """
+    doc = definition.model_dump(mode="json", exclude_none=True)
+
+    def drop_titles(node: Any) -> Any:
+        if isinstance(node, dict):
+            return {k: drop_titles(v) for k, v in node.items() if k != "title"}
+        if isinstance(node, list):
+            return [drop_titles(item) for item in node]
+        return node
+
+    if isinstance(doc.get("inputSchema"), dict):
+        doc["inputSchema"] = drop_titles(doc["inputSchema"])
+    description = doc.get("description")
+    if isinstance(description, str):
+        cut = re.search(r"\n\s*Args:\s*\n", description)
+        if cut:
+            doc["description"] = description[: cut.start()].strip()
+    return types.Tool.model_validate(doc)
+
+
 def failed(message: str) -> types.CallToolResult:
     """An explicit tool error rather than a successful-looking error envelope."""
     return types.CallToolResult(
@@ -222,7 +259,15 @@ class Gateway:
                 worker.task = asyncio.create_task(worker.run())
 
     def tools(self, config: dict) -> dict[str, tuple[str, str, types.Tool]]:
-        """Build a fresh tool catalog; local subsets require no cloud credential."""
+        """Build a fresh tool catalog; local subsets require no cloud credential.
+
+        Per-server ``health`` tools are consolidated into ONE gateway-level
+        ``ae_health`` tool: eight near-identical health schemas were ~800
+        tokens of every cold start while carrying no decision the model
+        needs before calling anything. The per-server health entry points
+        remain callable through ae_health (it fans out and reports each
+        server in one result).
+        """
         result = {}
         sources = {
             **self.definitions,
@@ -232,18 +277,17 @@ class Gateway:
             if not server_state(name, config)["visible"]:
                 continue
             for original in definitions:
+                if original.name == "health":
+                    # Consolidated below; never advertise per-server copies.
+                    continue
                 if (
                     name == "vision-mcp"
                     and original.name == "describe"
                     and not cloud_available(name, config=config)
                 ):
                     continue
-                tool = original.model_copy(deep=True)
+                tool = slim_schema(original)
                 tool.name = public_name(name, original.name)
-                if original.name == "health":
-                    tool.annotations = types.ToolAnnotations(
-                        readOnlyHint=True, destructiveHint=False, idempotentHint=True
-                    )
                 if name == "embeddings-mcp" and original.name in (
                     "embed",
                     "embed_batch",
@@ -264,7 +308,101 @@ class Gateway:
                         + "."
                     )
                 result[tool.name] = (name, original.name, tool)
+        result["ae_health"] = ("__gateway__", "ae_health", self._health_tool())
         return result
+
+    def _health_tool(self) -> types.Tool:
+        """One consolidated health tool replacing the per-server copies."""
+        return types.Tool(
+            name="ae_health",
+            description=(
+                "Health of every active AgentEnhancements backend in one "
+                "call (status, version, degraded reasons)."
+            ),
+            inputSchema={"type": "object", "properties": {}},
+        )
+
+    async def _run_health(self) -> types.CallToolResult:
+        """Fan out to every visible backend's health entry point.
+
+        Bundled backends keep the proven call_tool execution path (module
+        lock + worker thread with its own loop) so blocking IO stays off
+        the gateway loop; the FastMCP result (a list of content parts, or
+        (parts, structured)) is parsed into the per-backend report.
+        """
+        config, _ = read_config()
+        report: dict[str, Any] = {}
+        for entry in self.tools(config).values():
+            server, original = entry[0], entry[1]
+            if server == "__gateway__" or original == "health":
+                continue
+            try:
+                if server in self.modules:
+                    async with self.module_locks[server]:
+                        result = await asyncio.to_thread(
+                            lambda s=server: asyncio.run(
+                                self.modules[s].mcp.call_tool("health", {})
+                            )
+                        )
+                    if isinstance(result, tuple):
+                        parts, data = list(result[0]), result[1]
+                    elif isinstance(result, dict):
+                        parts = [types.TextContent(
+                            type="text", text=json.dumps(result))]
+                        data = result
+                    else:
+                        parts, data = list(result), None
+                    if not isinstance(data, dict):
+                        data = {}
+                        if len(parts) == 1 and parts[0].type == "text":
+                            try:
+                                parsed = json.loads(parts[0].text)
+                                if isinstance(parsed, dict):
+                                    data = parsed
+                            except ValueError:
+                                pass
+                    report[server] = {
+                        "status": data.get("status", "unknown"),
+                        **{
+                            k: v
+                            for k, v in data.items()
+                            if k in ("server", "version", "degraded", "reason")
+                        },
+                    }
+                else:
+                    worker = self.externals.get(server)
+                    if worker is None or not worker.ready.is_set():
+                        report[server] = {"status": "unavailable"}
+                        continue
+                    response = await worker.call("health", {})
+                    text = "\n".join(
+                        c.text for c in response.content if c.type == "text"
+                    )
+                    try:
+                        payload = json.loads(text)
+                    except ValueError:
+                        payload = {}
+                    if not isinstance(payload, dict):
+                        payload = {}
+                    report[server] = {
+                        "status": payload.get("status", "unknown"),
+                        **{
+                            k: v
+                            for k, v in payload.items()
+                            if k in ("server", "version", "degraded", "reason")
+                        },
+                    }
+            except Exception:  # noqa: BLE001 - one backend must not kill the rest
+                report[server] = {"status": "error"}
+        overall = (
+            "ok"
+            if all(v.get("status") == "ok" for v in report.values()) or not report
+            else "degraded"
+        )
+        return types.CallToolResult(
+            content=[types.TextContent(type="text", text=json.dumps(report))],
+            structuredContent={"status": overall, "backends": report},
+        )
 
     def remember_session(self) -> None:
         """Remember connected clients for tools/list_changed notifications."""
@@ -282,6 +420,8 @@ class Gateway:
     async def call_tool(self, name: str, arguments: dict) -> types.CallToolResult:
         """Gate stale names, validate current schemas, then execute the backend."""
         self.remember_session()
+        if name == "ae_health":
+            return await self._run_health()
         config, _ = read_config()
         entry = self.tools(config).get(name)
         if not entry:

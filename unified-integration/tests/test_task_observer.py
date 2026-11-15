@@ -139,7 +139,10 @@ class AggregationTests(TaskObserverTestCase):
 class NativeLinkingTests(TaskObserverTestCase):
     def test_task_observer_is_in_default_native_set(self):
         linker = (UI_DIR / "scripts/link-skills.sh").read_text()
-        self.assertIn('DEFAULT_SOURCES="anthropic-skills replica-skill task-observer"', linker)
+        # Context-frugal default: the observer is the only ambient native
+        # skill; discovery covers the rest (CONTRACT.md §8.4).
+        self.assertIn('DEFAULT_SOURCES="task-observer"', linker)
+        self.assertIn('CURATED_SOURCES="anthropic-skills replica-skill task-observer"', linker)
         registry = (UI_DIR / "scripts/registry.py").read_text()
         self.assertIn('"task-observer")', registry)
 
@@ -577,3 +580,62 @@ class SecurityHardeningTests(TaskObserverTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReviewHardeningTests(TaskObserverTestCase):
+    """Regression coverage for the 2026-11-15 independent review (S1/S2)."""
+
+    def _stage_and_promote(self, changes):
+        """Stage task-observer and promote; returns (stage_dir, promote_out)."""
+        _rc, out, _err = self.cli("stage", "task-observer", changes)
+        self.assertIn("staged:", out, _err)
+        root = self.memory / "task-observer"
+        stage = sorted((root / "skill-updates").glob("*/task-observer"))[-1]
+        self.assertTrue((stage / "PROPOSAL.md").is_file())
+        rc, out, err = self.cli("promote", "task-observer")
+        self.assertEqual(rc, 0, err)
+        self.assertIn("promoted", out)
+        return stage, out
+
+    def test_rollback_is_transactional(self):
+        """S1: rollback verifies the restore copy BEFORE touching the live
+        tree; a corrupt backup is refused and the source stays in place."""
+        self._stage_and_promote("rollback transaction check")
+        root = self.memory / "task-observer"
+        backups = sorted((root / "skill-updates" / "rollback").glob("task-observer-*"))
+        self.assertTrue(backups)
+        # Corrupt the newest backup so verification fails: no SKILL.md.
+        (backups[-1] / "SKILL.md").unlink()
+        before = (BUNDLE / "SKILL.md").read_bytes()
+        rc, out, _err = self.cli("rollback", "task-observer")
+        self.assertIn("refused", out)
+        self.assertNotEqual(rc, 0)  # refusals exit non-zero
+        # The live tree was never touched.
+        self.assertEqual((BUNDLE / "SKILL.md").read_bytes(), before)
+        run(["git", "checkout", "--", "task-observer/"],
+            cwd=REPO_DIR)
+
+    def test_staged_symlink_is_copied_as_link_not_dereferenced(self):
+        """S2: a symlink planted in the staged copy stays a link; the
+        target's content is never materialized into the repo tree."""
+        _rc, out, _err = self.cli("stage", "task-observer", "symlink copy check")
+        self.assertIn("staged:", out)
+        root = self.memory / "task-observer"
+        secret = self.root / "secret.txt"
+        secret.write_text("TOPSECRET")
+        stage = sorted((root / "skill-updates").glob("*/task-observer"))[-1]
+        (stage / "planted-link.txt").symlink_to(secret)
+        rc, out, err = self.cli("promote", "task-observer")
+        self.assertEqual(rc, 0, err)
+        self.assertIn("promoted", out)
+        planted = BUNDLE / "planted-link.txt"
+        self.assertTrue(planted.is_symlink())
+        # git sees a symlink blob (mode 120000), not file content.
+        _c, st, _e = run(["git", "status", "--porcelain", "--",
+                          "task-observer/planted-link.txt"], cwd=REPO_DIR)
+        self.assertIn("planted-link.txt", st)
+        self.assertNotIn("TOPSECRET", st)
+        # cleanup: roll back and restore pristine
+        self.cli("rollback", "task-observer")
+        run(["git", "checkout", "--", "task-observer/"], cwd=REPO_DIR)
+        run(["git", "clean", "-fd", "task-observer/"], cwd=REPO_DIR)

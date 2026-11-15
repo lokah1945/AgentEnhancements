@@ -178,10 +178,11 @@ function run() {
     const stub = path.join(tmp, 'stub-gh.js');
     fs.writeFileSync(stub, `
       const args = process.argv.slice(2);
+      const closedAt = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const url = args.find((a) => a.includes('/issues?state=closed')) || '';
       if (url) {
-        const page1 = [{ number: 1, state: 'closed', closed_at: '2026-10-11T00:00:00Z', html_url: 'u1', title: 'a', body: 'no refs here' }];
-        const page2 = [{ number: 88, state: 'closed', closed_at: '2026-10-11T00:00:00Z', html_url: 'u88', title: 'page two', body: 'no refs either' }];
+        const page1 = [{ number: 1, state: 'closed', closed_at: closedAt, html_url: 'u1', title: 'a', body: 'no refs here' }];
+        const page2 = [{ number: 88, state: 'closed', closed_at: closedAt, html_url: 'u88', title: 'page two', body: 'no refs either' }];
         process.stdout.write(JSON.stringify([page1, page2]));
         return;
       }
@@ -190,7 +191,7 @@ function run() {
         process.exit(1);
       }
       if (args.some((a) => a.includes('/issues/1/comments'))) {
-        process.stdout.write(JSON.stringify([{ body: 'Delivered through #3500', html_url: 'c1', created_at: '2026-10-11T00:00:00Z' }]));
+        process.stdout.write(JSON.stringify([{ body: 'Delivered through #3500', html_url: 'c1', created_at: closedAt }]));
         return;
       }
       if (args.some((a) => a.includes('/pulls/'))) {

@@ -977,18 +977,22 @@ async function runTests() {
   if (
     await asyncTest('allows project fallback only for legacy sessions without worktree metadata', async () => {
       const isoHome = fs.mkdtempSync(path.join(os.tmpdir(), 'ecc-project-only-start-'));
+      const projectDir = path.join(isoHome, 'legacy-project');
+      execFileSync('git', ['init', '-q', projectDir]);
       const sessionsDir = getCanonicalSessionsDir(isoHome);
       fs.mkdirSync(sessionsDir, { recursive: true });
       fs.mkdirSync(path.join(isoHome, '.claude', 'skills', 'learned'), { recursive: true });
 
       const sessionFile = path.join(sessionsDir, '2026-02-11-projectonly-session.tmp');
-      fs.writeFileSync(sessionFile, buildSessionStartFixture(PROJECT_ONLY_SESSION_SENTINEL, { worktree: '' }));
+      fs.writeFileSync(sessionFile, buildSessionStartFixture(PROJECT_ONLY_SESSION_SENTINEL, {
+        project: path.basename(projectDir), worktree: ''
+      }));
 
       try {
         const result = await runScript(path.join(scriptsDir, 'session-start.js'), '', {
           HOME: isoHome,
           USERPROFILE: isoHome
-        });
+        }, projectDir);
         assert.strictEqual(result.code, 0);
         const additionalContext = getSessionStartAdditionalContext(result.stdout);
         assert.ok(additionalContext.includes(PROJECT_ONLY_SESSION_SENTINEL), 'Should still inject legacy same-project sessions');

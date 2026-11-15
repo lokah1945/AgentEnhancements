@@ -10,9 +10,9 @@ deterministic outputs where possible, actionable error envelopes, a
 | Server | Priority | Category | Feeds plugins | Offline |
 |--------|----------|----------|---------------|---------|
 | [`embeddings-mcp`](./embeddings-mcp/) | P1 | ml | graphify, understand-anything, agent-reach | local backend |
-| [`task-router-mcp`](./task-router-mcp/) | P1 | task | gsd, bmad-method, rea | yes |
+| [`task-router-mcp`](./task-router-mcp/) | P1 | task | gsd, bmad-method (**opt-in**: hidden until `enabled: true` in ui.api.json — docs/SAFETY.md §0) | yes |
 | [`ffmpeg-mcp`](./ffmpeg-mcp/) | P1 | media | openmontage | yes (needs ffmpeg binary) |
-| [`vision-mcp`](./vision-mcp/) | P1 | core | anthropic-skills, impeccable, replica-skill | compare/ocr/metadata |
+| [`vision-mcp`](./vision-mcp/) | P1 | core | anthropic-skills, impeccable, replica-skill | compare/ocr/metadata (describe uploads images to OpenAI when keyed — docs/SAFETY.md §3) |
 | [`graphrag-mcp`](./graphrag-mcp/) | P2 | graph | graphify, agent-reach | yes (lexical mode) |
 | [`arxiv-mcp`](./arxiv-mcp/) | P2 | reference | understand-anything, agent-reach | no (open API, no key) |
 | [`google-news-mcp`](./google-news-mcp/) | P2 | news | last-30-days | no (open RSS, no key) |

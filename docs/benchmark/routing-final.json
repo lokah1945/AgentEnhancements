@@ -1,0 +1,32 @@
+{
+  "positives": 41,
+  "negatives": 10,
+  "recall_at_5_tuning": 0.9696969696969697,
+  "recall_at_5_holdout": 1.0,
+  "recall_at_5_all": 0.975609756097561,
+  "negative_suppression": 0.9,
+  "target_recall": 0.95,
+  "target_negative": 0.9,
+  "misses": [
+    {
+      "intent": "potong klip 30 detik dari rekaman ini",
+      "labels": [
+        "mcp:ffmpeg-mcp",
+        "mcp:video-mcp",
+        "plugin:openmontage"
+      ],
+      "top5": [],
+      "hit": false
+    }
+  ],
+  "negative_fires": [
+    {
+      "intent": "summarize the plot of Hamlet in one paragraph",
+      "top5": [
+        "skill:paragraph-keyword-optimizer",
+        "skill:claude-api"
+      ],
+      "abstained": false
+    }
+  ]
+}

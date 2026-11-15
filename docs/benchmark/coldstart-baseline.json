@@ -1,0 +1,44 @@
+{
+  "measurement": "cold-start baseline",
+  "head": "c529459332d59324959ddcee1f59eb367cba0f22",
+  "tokenizer": "tiktoken o200k_base",
+  "channels": [
+    {
+      "channel": "instructions:claude-code-CLAUDE.md-section",
+      "chars": 890,
+      "tokens": 173,
+      "note": ""
+    },
+    {
+      "channel": "hook:SessionStart-additionalContext",
+      "chars": 0,
+      "tokens": 0,
+      "note": "fresh memory root, observer active"
+    },
+    {
+      "channel": "hook:UserPromptSubmit-skillContext",
+      "chars": 621,
+      "tokens": 149,
+      "note": "top-3 skill suggestions for a typical work prompt"
+    },
+    {
+      "channel": "native:linked-skill-descriptions",
+      "chars": 16096,
+      "tokens": 3501,
+      "note": "31 skills from default native sources"
+    },
+    {
+      "channel": "native:ALL-skill-descriptions (counterfactual --set all)",
+      "chars": 663682,
+      "tokens": 132576,
+      "note": "what an old/duplicate-root install or --set all injects"
+    },
+    {
+      "channel": "mcp:gateway-tools/list",
+      "chars": 14222,
+      "tokens": 4029,
+      "note": "31 tools, default visibility"
+    }
+  ],
+  "cold_start_total_excluding_counterfactual": 7852
+}

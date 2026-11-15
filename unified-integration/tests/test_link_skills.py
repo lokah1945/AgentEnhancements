@@ -45,23 +45,24 @@ class LinkSkillsTests(unittest.TestCase):
         self.assertIn(".claude/skills", out)
         self.assertIn(".agents/skills", out)
 
-    def test_default_set_links_thirty_one_skills_into_both_targets(self):
+    def test_default_set_links_only_the_ambient_observer(self):
+        """Context-frugal default (CONTRACT.md §8.4): the ambient
+        task-observer is natively linked; everything else stays reachable
+        through on-demand discovery, not native metadata."""
         if not self.registry_present:
             self.skipTest("by-category registry not built (run setup.sh)")
         code, out, err = self._link("--quiet")
         self.assertEqual(code, 0, err)
         claude = self.home_path / ".claude" / "skills"
         agents = self.home_path / ".agents" / "skills"
-        self.assertEqual(len(list(claude.iterdir())), 31)
-        self.assertEqual(len(list(agents.iterdir())), 31)
-        # Official document skills must be among them, resolvable SKILL.md
-        for name in ("docx", "pdf", "pptx", "xlsx", "mcp-builder",
-                     "replica-recon", "task-observer"):
-            target = claude / name
-            self.assertTrue(target.is_symlink(), f"{name} not linked in .claude")
-            self.assertTrue((target / "SKILL.md").is_file(),
-                            f"{name} link does not resolve to a SKILL.md")
-            self.assertTrue((agents / name / "SKILL.md").is_file())
+        self.assertEqual(list(claude.iterdir()), [claude / "task-observer"])
+        self.assertEqual(list(agents.iterdir()), [agents / "task-observer"])
+        # The default link must resolve to a real SKILL.md.
+        target = claude / "task-observer"
+        self.assertTrue(target.is_symlink(), "task-observer not linked in .claude")
+        self.assertTrue((target / "SKILL.md").is_file(),
+                        "task-observer link does not resolve to a SKILL.md")
+        self.assertTrue((agents / "task-observer" / "SKILL.md").is_file())
 
     def test_linking_is_idempotent(self):
         if not self.registry_present:

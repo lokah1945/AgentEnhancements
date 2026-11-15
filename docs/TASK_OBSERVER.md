@@ -238,4 +238,4 @@ python3 unified-integration/scripts/task-observer.py rollback replica-diff  # un
 ```
 
 The same flow runs automatically in
-`unified-integration/tests/test_task_observer.py` (38 tests).
+`unified-integration/tests/test_task_observer.py` (39 tests).

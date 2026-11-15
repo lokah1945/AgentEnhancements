@@ -467,12 +467,24 @@ class ErrorRecoveryTests(TaskObserverTestCase):
         finally:
             os.chmod(root, 0o700)
 
-    def test_status_not_installed_reported(self):
-        env = dict(os.environ)
-        env["AGENT_MEMORY_ROOT"] = str(self.memory)
-        mod = load_module("to_probe", SCRIPT, env=env)
-        info = mod.status(mod.workspace_root())
-        self.assertIn(info["state"], ("ready", "not installed", "disabled"))
+    def test_status_before_first_session_is_ready_without_creating_workspace(self):
+        mod = load_observer()
+        root = self.memory / "task-observer"
+        info = mod.status(root)
+        self.assertTrue(info["bundle_installed"])
+        self.assertTrue(info["helpers_present"])
+        self.assertEqual(info["state"], "ready")
+        self.assertFalse(info["workspace_exists"])
+        self.assertFalse(root.exists())
+
+    def test_status_reports_missing_bundle(self):
+        mod = load_observer()
+        mod.BUNDLE_DIR = self.root / "missing-bundle"
+        mod.BUNDLE_SCRIPTS = mod.BUNDLE_DIR / "scripts"
+        info = mod.status(self.memory / "task-observer")
+        self.assertEqual(info["state"], "not installed")
+        self.assertFalse(info["bundle_installed"])
+        self.assertFalse(info["helpers_present"])
 
 
 class UpstreamSemanticsTests(TaskObserverTestCase):

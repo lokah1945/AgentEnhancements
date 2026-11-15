@@ -16,6 +16,7 @@ audience: users, contributors
 | Ponytail | `ponytail/skills/` | |
 | Superpowers | `superpowers/skills/` | |
 | replica-skill | `replica-skill/` | 11 app-cloning sub-skills (repo-root layout) |
+| agency-agents | `agency-agents/skills/` | 283 The Agency personas in 18 division subdirectories (converted from the vendored upstream by `scripts/convert_agency_agents.py`); names are prefixed `agency-` so they never collide |
 | anthropic-skills | `anthropic-skills/skills/` | 19 official Anthropic skills (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...); processed LAST so the official version wins name collisions |
 
 ## SKILL.md frontmatter
@@ -87,7 +88,7 @@ user-owned directories, files and foreign symlinks are never touched.
 After setup, normal natural-language tasks trigger native discovery and prompt
 routing automatically in Claude Code, current Codex and OpenCode 2. The 30-skill
 curated set supplies native metadata; prompt-time routing searches the complete
-3,094-skill catalog without injecting all descriptions into every request.
+3,377-skill catalog without injecting all descriptions into every request.
 Matching is lexical with a small English/Indonesian alias set, so recommendations
 are guidance, not a guarantee that every task will select the ideal skill.
 Agent aliases such as `Codex`/`codex-cli` are normalized during matching; tools

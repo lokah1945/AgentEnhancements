@@ -1,0 +1,220 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-game-development",
+  "name": "The Agency — Game Development Division (21 personas)",
+  "slug": "game-development",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "21 persona pengembangan game dari The Agency (agency-agents) — pengembangan game lintas engine: desain sistem, level, audio, narasi, ekonomi, Unity, Unreal, Godot, Blender, Roblox. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "pengembangan game lintas engine: desain sistem, level, audio, narasi, ekonomi, Unity, Unreal, Godot, Blender, Roblox",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "game designer",
+    "unity",
+    "unreal engine",
+    "godot",
+    "roblox",
+    "blender"
+  ],
+  "best_for": [
+    "desain sistem game dan ekonomi in-game",
+    "implementasi Unity/Unreal/Godot",
+    "tooling Blender dan Roblox"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "blender-addon-engineer",
+      "role": "Blender Add-on Engineer"
+    },
+    {
+      "slug": "economy-designer",
+      "role": "Economy Designer"
+    },
+    {
+      "slug": "game-audio-engineer",
+      "role": "Game Audio Engineer"
+    },
+    {
+      "slug": "game-designer",
+      "role": "Game Designer"
+    },
+    {
+      "slug": "godot-gameplay-scripter",
+      "role": "Godot Gameplay Scripter"
+    },
+    {
+      "slug": "godot-multiplayer-engineer",
+      "role": "Godot Multiplayer Engineer"
+    },
+    {
+      "slug": "godot-shader-developer",
+      "role": "Godot Shader Developer"
+    },
+    {
+      "slug": "level-designer",
+      "role": "Level Designer"
+    },
+    {
+      "slug": "narrative-designer",
+      "role": "Narrative Designer"
+    },
+    {
+      "slug": "roblox-avatar-creator",
+      "role": "Roblox Avatar Creator"
+    },
+    {
+      "slug": "roblox-experience-designer",
+      "role": "Roblox Experience Designer"
+    },
+    {
+      "slug": "roblox-systems-scripter",
+      "role": "Roblox Systems Scripter"
+    },
+    {
+      "slug": "technical-artist",
+      "role": "Technical Artist"
+    },
+    {
+      "slug": "unity-architect",
+      "role": "Unity Architect"
+    },
+    {
+      "slug": "unity-editor-tool-developer",
+      "role": "Unity Editor Tool Developer"
+    },
+    {
+      "slug": "unity-multiplayer-engineer",
+      "role": "Unity Multiplayer Engineer"
+    },
+    {
+      "slug": "unity-shader-graph-artist",
+      "role": "Unity Shader Graph Artist"
+    },
+    {
+      "slug": "unreal-multiplayer-architect",
+      "role": "Unreal Multiplayer Architect"
+    },
+    {
+      "slug": "unreal-systems-engineer",
+      "role": "Unreal Systems Engineer"
+    },
+    {
+      "slug": "unreal-technical-artist",
+      "role": "Unreal Technical Artist"
+    },
+    {
+      "slug": "unreal-world-builder",
+      "role": "Unreal World Builder"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/game-development/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/game-development/blender-addon-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/economy-designer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/game-audio-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/game-designer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/godot-gameplay-scripter/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/godot-multiplayer-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/godot-shader-developer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/level-designer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/narrative-designer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/roblox-avatar-creator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/roblox-experience-designer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/roblox-systems-scripter/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/technical-artist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/unity-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/unity-editor-tool-developer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/unity-multiplayer-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/unity-shader-graph-artist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/unreal-multiplayer-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/unreal-systems-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/unreal-technical-artist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/game-development/unreal-world-builder/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

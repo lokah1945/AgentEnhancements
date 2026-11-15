@@ -1,0 +1,137 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-nexus",
+  "name": "The Agency — NEXUS Orchestration Playbooks",
+  "slug": "nexus",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "Playbook orkestrasi NEXUS dari The Agency: pipeline multi-agen fase 0-6 (discovery -> strategy -> foundation -> build -> hardening -> launch -> operate) dengan quality gate antar fase, plus runbook skenario startup MVP, kampanye marketing, fitur enterprise, dan respons insiden.",
+  "capabilities": [
+    "orkestrasi NEXUS: playbook fase 0-6, runbook skenario (startup MVP, kampanye marketing, fitur enterprise, incident), koordinasi multi-agen"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "nexus",
+    "multi-agent pipeline",
+    "orchestrator",
+    "quality gates",
+    "startup mvp"
+  ],
+  "best_for": [
+    "orkestrasi tim multi-agen lintas divisi",
+    "pipeline produk end-to-end dengan quality gate",
+    "skenario MVP/startup/incident"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "nexus-quickstart",
+      "role": "panduan mulai cepat pipeline NEXUS"
+    },
+    {
+      "slug": "phase-0-discovery",
+      "role": "playbook fase discovery"
+    },
+    {
+      "slug": "phase-1-strategy",
+      "role": "playbook fase strategi"
+    },
+    {
+      "slug": "phase-2-foundation",
+      "role": "playbook fase fondasi"
+    },
+    {
+      "slug": "phase-3-build",
+      "role": "playbook fase build (dev<->qa loop)"
+    },
+    {
+      "slug": "phase-4-hardening",
+      "role": "playbook fase hardening"
+    },
+    {
+      "slug": "phase-5-launch",
+      "role": "playbook fase launch"
+    },
+    {
+      "slug": "phase-6-operate",
+      "role": "playbook fase operasi"
+    },
+    {
+      "slug": "scenario-startup-mvp",
+      "role": "runbook skenario startup MVP"
+    },
+    {
+      "slug": "scenario-marketing-campaign",
+      "role": "runbook skenario kampanye marketing"
+    },
+    {
+      "slug": "scenario-enterprise-feature",
+      "role": "runbook skenario fitur enterprise"
+    },
+    {
+      "slug": "scenario-incident-response",
+      "role": "runbook skenario respons insiden"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/nexus/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/strategy/QUICKSTART.md",
+      "type": "upstream-doc"
+    },
+    {
+      "path": "agency-agents/strategy/nexus-strategy.md",
+      "type": "upstream-doc"
+    },
+    {
+      "path": "agency-agents/strategy/EXECUTIVE-BRIEF.md",
+      "type": "upstream-doc"
+    },
+    {
+      "path": "agency-agents/strategy/playbooks/phase-0-discovery.md",
+      "type": "upstream-doc"
+    },
+    {
+      "path": "agency-agents/strategy/playbooks/phase-1-strategy.md",
+      "type": "upstream-doc"
+    },
+    {
+      "path": "agency-agents/strategy/playbooks/phase-2-foundation.md",
+      "type": "upstream-doc"
+    },
+    {
+      "path": "agency-agents/strategy/playbooks/phase-3-build.md",
+      "type": "upstream-doc"
+    },
+    {
+      "path": "agency-agents/strategy/playbooks/phase-4-hardening.md",
+      "type": "upstream-doc"
+    },
+    {
+      "path": "agency-agents/strategy/playbooks/phase-5-launch.md",
+      "type": "upstream-doc"
+    },
+    {
+      "path": "agency-agents/strategy/playbooks/phase-6-operate.md",
+      "type": "upstream-doc"
+    }
+  ]
+}

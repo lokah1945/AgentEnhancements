@@ -50,7 +50,8 @@ class RegistryModuleTests(unittest.TestCase):
     def test_plugin_and_mcp_entries(self):
         plugins = self.mod.load_plugin_entries()
         mcps = self.mod.load_mcp_entries()
-        self.assertEqual(len(plugins), 21)
+        self.assertEqual(len(plugins), 40)
+        self.assertIn("plugin:engineering", {p["id"] for p in plugins})
         self.assertGreaterEqual(len(mcps), 36)
         self.assertIn("plugin:anthropic-skills", {p["id"] for p in plugins})
         self.assertIn("plugin:ppt-master", {p["id"] for p in plugins})
@@ -88,8 +89,8 @@ class RegistryModuleTests(unittest.TestCase):
             data = json.loads(out.read_text())
             types = {e["type"] for e in data["entries"]}
             self.assertEqual(types, {"skill", "plugin", "mcp", "capability"})
-            self.assertEqual(data["stats"]["by_type"]["plugin"], 21)
-            self.assertGreaterEqual(data["stats"]["by_type"]["skill"], 3000)
+            self.assertEqual(data["stats"]["by_type"]["plugin"], 40)
+            self.assertGreaterEqual(data["stats"]["by_type"]["skill"], 3377)
             self.assertGreaterEqual(data["stats"]["by_type"]["mcp"], 36)
             self.assertGreaterEqual(data["stats"]["by_type"]["capability"], 7)
 
@@ -167,7 +168,7 @@ class RegistryCliTests(unittest.TestCase):
         committed = UI_DIR / "skills" / "agent-registry.json"
         self.assertTrue(committed.is_file(), "agent-registry.json must be committed")
         data = json.loads(committed.read_text())
-        self.assertEqual(data["stats"]["by_type"]["plugin"], 21)
+        self.assertEqual(data["stats"]["by_type"]["plugin"], 40)
 
 
 if __name__ == "__main__":

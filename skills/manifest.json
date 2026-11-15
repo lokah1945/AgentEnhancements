@@ -1,13 +1,14 @@
 {
   "version": "1.0.0",
   "description": "Modular skill tree index. Each entry is a self-contained directory under skills/<category>/<slug>/ containing SKILL.md + manifest.json. Backed by symlinks into plugin-catalog/.",
-  "total_plugins": 21,
+  "total_plugins": 40,
   "categories": [
     "code",
     "research",
     "tokens-optimization",
     "design",
-    "multimedia-writing"
+    "multimedia-writing",
+    "agency"
   ],
   "plugins": [
     {
@@ -528,6 +529,408 @@
         "edit",
         "ffmpeg",
         "shorts"
+      ]
+    },
+    {
+      "id": "agency-academic",
+      "slug": "academic",
+      "name": "The Agency — Academic Division (6 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/academic",
+      "skill_md": "skills/agency/academic/SKILL.md",
+      "manifest": "skills/agency/academic/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "worldbuilding",
+        "narrative design",
+        "story structure",
+        "cultural systems",
+        "statistical analysis"
+      ]
+    },
+    {
+      "id": "agency-design",
+      "slug": "design",
+      "name": "The Agency — Design Division (10 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/design",
+      "skill_md": "skills/agency/design/SKILL.md",
+      "manifest": "skills/agency/design/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "ui designer",
+        "ux research",
+        "design system",
+        "brand identity",
+        "visual storytelling"
+      ]
+    },
+    {
+      "id": "agency-engineering",
+      "slug": "engineering",
+      "name": "The Agency — Engineering Division (66 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/engineering",
+      "skill_md": "skills/agency/engineering/SKILL.md",
+      "manifest": "skills/agency/engineering/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "frontend developer",
+        "backend architect",
+        "devops",
+        "code review",
+        "sre",
+        "database"
+      ]
+    },
+    {
+      "id": "agency-finance",
+      "slug": "finance",
+      "name": "The Agency — Finance Division (5 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/finance",
+      "skill_md": "skills/agency/finance/SKILL.md",
+      "manifest": "skills/agency/finance/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "bookkeeper",
+        "financial analyst",
+        "fpa",
+        "investment research",
+        "tax strategy"
+      ]
+    },
+    {
+      "id": "agency-game-development",
+      "slug": "game-development",
+      "name": "The Agency — Game Development Division (21 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/game-development",
+      "skill_md": "skills/agency/game-development/SKILL.md",
+      "manifest": "skills/agency/game-development/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "game designer",
+        "unity",
+        "unreal engine",
+        "godot",
+        "roblox",
+        "blender"
+      ]
+    },
+    {
+      "id": "agency-gis",
+      "slug": "gis",
+      "name": "The Agency — GIS Division (13 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/gis",
+      "skill_md": "skills/agency/gis/SKILL.md",
+      "manifest": "skills/agency/gis/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "gis",
+        "arcgis",
+        "maplibre",
+        "spatial data",
+        "bim",
+        "drone mapping"
+      ]
+    },
+    {
+      "id": "agency-healthcare",
+      "slug": "healthcare",
+      "name": "The Agency — Healthcare Division (3 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/healthcare",
+      "skill_md": "skills/agency/healthcare/SKILL.md",
+      "manifest": "skills/agency/healthcare/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "clinical evidence",
+        "healthcare compliance",
+        "sovereign health"
+      ]
+    },
+    {
+      "id": "agency-marketing",
+      "slug": "marketing",
+      "name": "The Agency — Marketing Division (37 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/marketing",
+      "skill_md": "skills/agency/marketing/SKILL.md",
+      "manifest": "skills/agency/marketing/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "growth",
+        "content creator",
+        "seo",
+        "social media",
+        "tiktok",
+        "email marketing"
+      ]
+    },
+    {
+      "id": "agency-paid-media",
+      "slug": "paid-media",
+      "name": "The Agency — Paid Media Division (7 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/paid-media",
+      "skill_md": "skills/agency/paid-media/SKILL.md",
+      "manifest": "skills/agency/paid-media/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "ppc",
+        "google ads",
+        "paid social",
+        "conversion tracking",
+        "ad creative"
+      ]
+    },
+    {
+      "id": "agency-product",
+      "slug": "product",
+      "name": "The Agency — Product Division (6 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/product",
+      "skill_md": "skills/agency/product/SKILL.md",
+      "manifest": "skills/agency/product/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "product manager",
+        "prioritization",
+        "user feedback",
+        "dx engineer",
+        "roadmap"
+      ]
+    },
+    {
+      "id": "agency-project-management",
+      "slug": "project-management",
+      "name": "The Agency — Project Management Division (7 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/project-management",
+      "skill_md": "skills/agency/project-management/SKILL.md",
+      "manifest": "skills/agency/project-management/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "project manager",
+        "sprint planning",
+        "jira",
+        "meeting notes",
+        "scoping"
+      ]
+    },
+    {
+      "id": "agency-research",
+      "slug": "research",
+      "name": "The Agency — Research Division (1 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/research",
+      "skill_md": "skills/agency/research/SKILL.md",
+      "manifest": "skills/agency/research/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "literature review",
+        "research synthesist",
+        "evidence synthesis",
+        "citation"
+      ]
+    },
+    {
+      "id": "agency-sales",
+      "slug": "sales",
+      "name": "The Agency — Sales Division (9 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/sales",
+      "skill_md": "skills/agency/sales/SKILL.md",
+      "manifest": "skills/agency/sales/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "outbound",
+        "discovery call",
+        "meddpicc",
+        "proposal",
+        "pipeline"
+      ]
+    },
+    {
+      "id": "agency-security",
+      "slug": "security",
+      "name": "The Agency — Security Division (12 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/security",
+      "skill_md": "skills/agency/security/SKILL.md",
+      "manifest": "skills/agency/security/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "threat model",
+        "penetration test",
+        "incident response",
+        "siem",
+        "appsec"
+      ]
+    },
+    {
+      "id": "agency-spatial-computing",
+      "slug": "spatial-computing",
+      "name": "The Agency — Spatial Computing Division (6 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/spatial-computing",
+      "skill_md": "skills/agency/spatial-computing/SKILL.md",
+      "manifest": "skills/agency/spatial-computing/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "visionos",
+        "webxr",
+        "ar",
+        "vr",
+        "spatial ui",
+        "metal"
+      ]
+    },
+    {
+      "id": "agency-specialized",
+      "slug": "specialized",
+      "name": "The Agency — Specialized Division (59 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/specialized",
+      "skill_md": "skills/agency/specialized/SKILL.md",
+      "manifest": "skills/agency/specialized/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "mcp builder",
+        "orchestrator",
+        "translation",
+        "customer service",
+        "legal review",
+        "recruitment"
+      ]
+    },
+    {
+      "id": "agency-support",
+      "slug": "support",
+      "name": "The Agency — Support Division (6 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/support",
+      "skill_md": "skills/agency/support/SKILL.md",
+      "manifest": "skills/agency/support/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "customer support",
+        "analytics",
+        "finance tracker",
+        "legal compliance",
+        "executive summary"
+      ]
+    },
+    {
+      "id": "agency-testing",
+      "slug": "testing",
+      "name": "The Agency — Testing Division (9 personas)",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/testing",
+      "skill_md": "skills/agency/testing/SKILL.md",
+      "manifest": "skills/agency/testing/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "qa",
+        "test automation",
+        "performance testing",
+        "api testing",
+        "accessibility audit"
+      ]
+    },
+    {
+      "id": "agency-nexus",
+      "slug": "nexus",
+      "name": "The Agency — NEXUS Orchestration Playbooks",
+      "category": "agency",
+      "status": "integrated-ready",
+      "vendored": true,
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "source_license": "MIT",
+      "path": "skills/agency/nexus",
+      "skill_md": "skills/agency/nexus/SKILL.md",
+      "manifest": "skills/agency/nexus/manifest.json",
+      "mcp_servers": [],
+      "trigger_keywords": [
+        "nexus",
+        "multi-agent pipeline",
+        "orchestrator",
+        "quality gates",
+        "startup mvp"
       ]
     }
   ]

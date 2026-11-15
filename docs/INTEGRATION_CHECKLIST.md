@@ -13,7 +13,11 @@ Legenda: [ ] belum · [x] selesai · [~] partial · [!] blocked
 
 ## FASE 0 — Bootstrap (SELESAI)
 
-- [x] Struktur `plugin-catalog/{code,research,tokens-optimization,design,multimedia-writing}`
+- [x] Struktur `plugin-catalog/{code,research,tokens-optimization,design,multimedia-writing,agency}`
+- [x] agency-agents vendored di `agency-agents/` (MIT, LICENSE asli) — 283 persona + NEXUS playbooks
+- [x] 19 manifest pack agency + SKILL.md guide di `plugin-catalog/agency/`
+- [x] Konversi persona ke Agent Skills: `python3 scripts/convert_agency_agents.py`
+- [x] agency-agents terdaftar di pipeline agregasi setup.sh + update-skills.sh
 - [x] 21 manifest JSON (20 remote + 1 vendored replica-skill)
 - [x] 21 SKILL.md panduan integrasi (replica-skill termasuk)
 - [x] `plugin-catalog/catalog.json` index (21 plugin, terpisah dari unified index)

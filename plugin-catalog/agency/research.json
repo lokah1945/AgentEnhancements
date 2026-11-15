@@ -1,0 +1,57 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-research",
+  "name": "The Agency — Research Division (1 personas)",
+  "slug": "research",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "1 persona sintesis riset dari The Agency (agency-agents) — sintesis riset: literature review, evaluasi sumber, pelacakan sitasi. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "sintesis riset: literature review, evaluasi sumber, pelacakan sitasi",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "literature review",
+    "research synthesist",
+    "evidence synthesis",
+    "citation"
+  ],
+  "best_for": [
+    "sintesis literatur dengan evaluasi sumber",
+    "peta bukti berbobot jujur"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "research-synthesist",
+      "role": "Research Synthesist"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/research/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/research/research-synthesist/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

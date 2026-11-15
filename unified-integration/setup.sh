@@ -396,6 +396,8 @@ This directory contains aggregated skills from multiple sources:
 5. **replica-skill** - 11 app-cloning sub-skills
 6. **anthropic-skills** - 19 official Anthropic skills (docx, pdf, pptx,
    xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
+7. **agency-agents** - 283 AI-persona skills from The Agency (18 divisions,
+   converted to Agent Skills format by scripts/convert_agency_agents.py)
 
 ## Structure
 
@@ -581,6 +583,20 @@ EOF
     # agentic-awesome-skills, and the official vendored version must win.
     if [ -d "$BASE_DIR/anthropic-skills/skills" ]; then
         process_skills_source "anthropic-skills" "$BASE_DIR/anthropic-skills/skills"
+    fi
+
+    # Process skills from agency-agents (The Agency, vendored): 283 persona
+    # skills across 18 divisions, pre-converted to Agent Skills format into
+    # agency-agents/skills/<division>/<agent-slug>/SKILL.md by
+    # scripts/convert_agency_agents.py. Names carry the "agency-" prefix so
+    # they cannot collide with third-party copies of similar names. The
+    # tree is division-nested, so each division directory is aggregated in
+    # turn (process_skills_source scans one level deep).
+    if [ -d "$BASE_DIR/agency-agents/skills" ]; then
+        for agency_div in "$BASE_DIR"/agency-agents/skills/*/; do
+            [ -d "$agency_div" ] || continue
+            process_skills_source "agency-agents" "$agency_div"
+        done
     fi
 
     # Create final unified skills index with metadata.

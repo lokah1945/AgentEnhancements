@@ -7,8 +7,8 @@
 
 ## 1. Project purpose
 
-`AgentEnhancements` is a **single integration layer that unifies 21 external
-skill repositories** (5 categories) plus a setup pipeline that provisions
+`AgentEnhancements` is a **single integration layer that unifies 40 external
+skill repositories** (6 categories) plus a setup pipeline that provisions
 8 AI-agent CLIs (Claude Code, Codex CLI, Cursor, Continue, Gemini CLI,
 GitHub Copilot CLI, Kiro, OpenCode, Windsurf) from one source of truth.
 
@@ -19,8 +19,9 @@ them.
 
 YES. **17 / 17** plugins from the merger request are present in
 `plugin-catalog/catalog.json`, plus **4 additional** plugins discovered and
-integrated during the audit. Total: **21 plugins** across the 5 requested
-categories.
+integrated during the audit, plus **19 agency packs** vendored from
+`github.com/msitarzewski/agency-agents` (18 divisions + NEXUS orchestration
+playbooks). Total: **40 plugins** across 6 categories (5 requested + `agency`).
 
 | # | Category | Requested plugin | Catalog ID | Status | Source |
 |---|----------|------------------|------------|--------|--------|
@@ -45,6 +46,8 @@ categories.
 | 18 | multimedia | OpenMontage | `multimedia-openmontage` | integrated-ready | `github.com/calesthio/OpenMontage` |
 | 19 | multimedia | Hyperframes | `multimedia-hyperframes` | integrated-ready | `github.com/heygen-com/hyperframes` |
 | 20 | multimedia | Humanizer | `multimedia-humanizer` | integrated-ready | `github.com/blader/humanizer` |
+| 21 | agency | The Agency division packs (18) | `agency-<division>` | **vendored** | `github.com/msitarzewski/agency-agents` |
+| 22 | agency | NEXUS orchestration playbooks | `agency-nexus` | **vendored** | `github.com/msitarzewski/agency-agents` |
 
 **Status legend**
 
@@ -67,16 +70,17 @@ AgentEnhancements/
 ├── CONTRACT.md                         # contribution contract (§12.3 commit format)
 │
 ├── skills/                             # ← modular tree (NEW)
-│   ├── manifest.json                   # aggregator index (21 plugins)
+│   ├── manifest.json                   # aggregator index (40 plugins)
 │   ├── README.md                       # tree architecture
 │   ├── code/{4 plugins}/               # each has SKILL.md + manifest.json
 │   ├── research/{5 plugins}/
 │   ├── tokens-optimization/{4 plugins}/
 │   ├── design/{4 plugins}/
-│   └── multimedia-writing/{4 plugins}/
+│   ├── multimedia-writing/{4 plugins}/
+│   └── agency/{19 packs}/
 │
 ├── plugin-catalog/                     # canonical catalog + per-plugin manifests
-│   ├── catalog.json                    # 21 plugins, 5 categories, upstream URLs
+│   ├── catalog.json                    # 40 plugins, 6 categories, upstream URLs
 │   ├── mcp-servers.json                # 36 MCP servers, P0/P1/P2 priority
 │   ├── code/, research/, ...           # original SKILL.md + manifest sources
 │   └── README.md
@@ -87,7 +91,7 @@ AgentEnhancements/
 │   ├── mcp-servers/                    # 9 in-house MCP servers + installer template
 │   ├── scripts/setup-mcp.sh            # MCP config installer for 6 agent CLIs
 │   ├── skills/
-│   │   ├── all-skills.json             # 3,094 skills aggregated registry
+│   │   ├── all-skills.json             # 3,377 skills aggregated registry
 │   │   ├── agent-registry.json         # per-agent install mapping
 │   │   ├── by-category/                # 10 functional categories
 │   │   └── by-agent/                   # per-agent file lists
@@ -104,6 +108,7 @@ AgentEnhancements/
 ├── vendored upstream projects (frozen)
 │   ├── anthropic-skills/               # github.com/anthropics/skills (19 sub-skills)
 │   ├── replica-skill/                  # github.com/Jakeschincariol/replica-skill (11 sub-skills)
+│   ├── agency-agents/                  # github.com/msitarzewski/agency-agents (283 personas)
 │   ├── agentic-awesome-skills/         # skills collection
 │   ├── claude-mem/                     # cross-session memory
 │   ├── headroom/                       # context-window optimization
@@ -129,7 +134,9 @@ The architecture is **three layered caches** with strict one-way data flow:
 
 1. **Catalog layer** (`plugin-catalog/`) — source of truth for **what**
    plugins exist and where their upstream lives. Maintained by humans; each
-   plugin has a JSON manifest + a SKILL.md guide.
+   plugin has a JSON manifest + a SKILL.md guide. Categories: `code`,
+   `research`, `tokens-optimization`, `design`, `multimedia-writing`,
+   `agency` (The Agency persona packs).
 
 2. **Modular skills layer** (`skills/`) — the **canonical on-disk layout**
    that humans and agents read. Generated from the catalog by
@@ -143,7 +150,7 @@ The architecture is **three layered caches** with strict one-way data flow:
 Data flow: **catalog → skills tree → unified-integration → agent CLIs**.
 Never edit the upper layers directly; regenerate from below.
 
-### 3.2 The 21 plugins, by category
+### 3.2 The 40 plugins, by category
 
 #### Code (`skills/code/`)
 
@@ -191,6 +198,31 @@ Never edit the upper layers directly; regenerate from below.
 | `hyperframes` | Personalized talking-head video (consent-gated) | heygen-mcp, elevenlabs-mcp, voice-clone-mcp |
 | `humanizer` | Remove AI-isms from generated text, naturalize tone | style-mcp, grammar-mcp |
 
+#### Agency Personas (`skills/agency/`)
+
+Vendored from `github.com/msitarzewski/agency-agents` (MIT). The 19 packs are
+`academic`, `design`, `engineering`, `finance`, `game-development`, `gis`,
+`healthcare`, `marketing`, `paid-media`, `product`, `project-management`,
+`research`, `sales`, `security`, `spatial-computing`, `specialized`,
+`support`, `testing`, and `nexus`. 283 personas are
+converted to Agent Skills format (`agency-agents/skills/<division>/<slug>/`)
+by `scripts/convert_agency_agents.py` and aggregated into the unified index
+under the `agency-agents` source (skill names prefixed `agency-`). Persona
+packs need no MCP servers — they are behavioral guidance, not tooling.
+
+| Pack | Personas | Pack | Personas |
+|------|----------|------|----------|
+| engineering | 66 | specialized | 59 |
+| marketing | 37 | game-development | 21 |
+| security | 12 | gis | 13 |
+| design | 10 | sales | 9 |
+| testing | 9 | paid-media | 7 |
+| project-management | 7 | product | 6 |
+| academic | 6 | spatial-computing | 6 |
+| support | 6 | finance | 5 |
+| healthcare | 3 | research | 1 |
+| nexus (playbooks) | 12 docs | | |
+
 ### 3.3 Orchestrators
 
 Three plugins double as **cross-cutting orchestrators** (declared in
@@ -204,13 +236,14 @@ Three plugins double as **cross-cutting orchestrators** (declared in
 
 ### 3.4 Vendored upstream projects (frozen copies)
 
-In addition to the 21 cataloged plugins, **9 complete upstream projects** are
+In addition to the 40 cataloged plugins, **10 complete upstream projects** are
 vendored into the repo root (their source code, not just manifests):
 
 | Project | Origin | Why vendored |
 |---------|--------|--------------|
 | `anthropic-skills/` | github.com/anthropics/skills | Multi-skill bundle, 19 sub-skills |
 | `replica-skill/` | github.com/Jakeschincariol/replica-skill | Multi-skill bundle, 11 sub-skills |
+| `agency-agents/` | github.com/msitarzewski/agency-agents | 283 persona skills + NEXUS playbooks |
 | `agentic-awesome-skills/` | awesome-list fork | Curated skill index, used as discovery source |
 | `claude-mem/` | github.com/crystalsta/claudemem | Cross-session memory hooks |
 | `headroom/` | github.com/withspectrum/headroom | Context-window optimization primitives |
@@ -219,9 +252,9 @@ vendored into the repo root (their source code, not just manifests):
 | `system-prompts-and-models-of-ai-tools/` | leaked prompt archive | Reference for prompt engineering |
 | `ECC/` | Engineering Coding Conventions | Lint rules + skill specs for code quality |
 
-These contribute ~3,073 additional skills (on top of the 21 cataloged) to the
+These contribute ~3,356 additional skills (on top of the 40 cataloged) to the
 aggregated `all-skills.json` registry, bringing the **total installed skill
-count to 3,094**.
+count to 3,377**.
 
 ## 4. The setup pipeline
 
@@ -231,7 +264,7 @@ count to 3,094**.
 │   ↓ (scaffold_modular_skills.sh)                                   │
 │ skills/<cat>/<slug>/SKILL.md + manifest.json                       │
 │   ↓ (update-skills.sh, scans all SKILL.md)                         │
-│ unified-integration/skills/all-skills.json  (3,094 skills)         │
+│ unified-integration/skills/all-skills.json  (3,377 skills)         │
 │   ↓ (setup.sh, per-agent dispatch)                                 │
 │ ~/.claude/CLAUDE.md      ~/.codex/AGENTS.md      ~/.cursor/...     │
 │ ~/.continue/config.json  ~/.gemini/...           ~/.kiro/...       │
@@ -281,7 +314,8 @@ For full options (dry-run, agent filter, no-vendored mode) see
 See **`docs/MCP_INTEGRATION_CHECKLIST.md`** for the step-by-step plan to
 finish the merger. Summary:
 
-- **38 MCP servers** declared across the 21 plugins; **5 P0** servers must be
+- **38 MCP servers** declared across the 40 plugins (the agency persona packs
+  need none); **5 P0** servers must be
   installed before Phase 1 is functional.
 - **9 servers built in-house** at `unified-integration/mcp-servers/`
   (embeddings, task-router, ffmpeg, vision, graphrag, arxiv,

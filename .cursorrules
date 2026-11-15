@@ -86,6 +86,25 @@ skill spec before acting**:
 | Video montage | `skills/multimedia-writing/openmontage/SKILL.md` |
 | Talking-head video | `skills/multimedia-writing/hyperframes/SKILL.md` (consent-gated) |
 | Humanize text | `skills/multimedia-writing/humanizer/SKILL.md` |
+| Frontend / backend / DevOps persona | `skills/agency/engineering/SKILL.md` |
+| UI / UX / brand persona | `skills/agency/design/SKILL.md` |
+| Threat model / pentest / DFIR persona | `skills/agency/security/SKILL.md` |
+| QA / E2E / performance persona | `skills/agency/testing/SKILL.md` |
+| Growth / SEO / social persona | `skills/agency/marketing/SKILL.md` |
+| PPC / paid social persona | `skills/agency/paid-media/SKILL.md` |
+| Sales / MEDDPICC / RFP persona | `skills/agency/sales/SKILL.md` |
+| Product / PM persona | `skills/agency/product/SKILL.md` |
+| Project management persona | `skills/agency/project-management/SKILL.md` |
+| Finance / FP&A persona | `skills/agency/finance/SKILL.md` |
+| GIS / geospatial persona | `skills/agency/gis/SKILL.md` |
+| Unity / Unreal / Godot / Roblox persona | `skills/agency/game-development/SKILL.md` |
+| visionOS / WebXR persona | `skills/agency/spatial-computing/SKILL.md` |
+| Multi-domain specialist persona | `skills/agency/specialized/SKILL.md` |
+| Support / analytics persona | `skills/agency/support/SKILL.md` |
+| Worldbuilding / narrative persona | `skills/agency/academic/SKILL.md` |
+| Healthcare compliance persona | `skills/agency/healthcare/SKILL.md` |
+| Literature synthesis persona | `skills/agency/research/SKILL.md` |
+| Multi-agent orchestration (NEXUS) | `skills/agency/nexus/SKILL.md` |
 
 To discover skills by keyword, run:
 

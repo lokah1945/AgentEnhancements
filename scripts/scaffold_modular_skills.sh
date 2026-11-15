@@ -69,7 +69,7 @@ PY
 
 echo "DONE"
 ls -la "$SKILLS"
-for cat in code research tokens-optimization design multimedia-writing; do
+for cat in code research tokens-optimization design multimedia-writing agency; do
   printf '%-22s -> ' "$cat"
   ls "$SKILLS/$cat" 2>/dev/null | tr '\n' ' '
   echo

@@ -1,0 +1,156 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-gis",
+  "name": "The Agency — GIS Division (13 personas)",
+  "slug": "gis",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "13 persona geospasial dari The Agency (agency-agents) — geospasial: konsultasi GIS, ETL spasial, geoprocessing, GeoAI, BIM, drone mapping, web GIS, kartografi. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "geospasial: konsultasi GIS, ETL spasial, geoprocessing, GeoAI, BIM, drone mapping, web GIS, kartografi",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "gis",
+    "arcgis",
+    "maplibre",
+    "spatial data",
+    "bim",
+    "drone mapping"
+  ],
+  "best_for": [
+    "pipeline data geospasial",
+    "peta web dan dashboard interaktif",
+    "digital twin dan reality capture"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "gis-3d-scene-developer",
+      "role": "3D & Scene Developer"
+    },
+    {
+      "slug": "gis-analyst",
+      "role": "GIS Analyst"
+    },
+    {
+      "slug": "gis-bim-specialist",
+      "role": "BIM/GIS Specialist"
+    },
+    {
+      "slug": "gis-cartography-designer",
+      "role": "Cartography Designer"
+    },
+    {
+      "slug": "gis-drone-reality-mapping",
+      "role": "Drone/Reality Mapping Specialist"
+    },
+    {
+      "slug": "gis-geoai-ml-engineer",
+      "role": "GeoAI/ML Engineer"
+    },
+    {
+      "slug": "gis-geoprocessing-specialist",
+      "role": "Geoprocessing Specialist"
+    },
+    {
+      "slug": "gis-qa-engineer",
+      "role": "GIS QA Engineer"
+    },
+    {
+      "slug": "gis-solution-engineer",
+      "role": "Solution Engineer"
+    },
+    {
+      "slug": "gis-spatial-data-engineer",
+      "role": "Spatial Data Engineer"
+    },
+    {
+      "slug": "gis-spatial-data-scientist",
+      "role": "Spatial Data Scientist"
+    },
+    {
+      "slug": "gis-technical-consultant",
+      "role": "Technical Consultant"
+    },
+    {
+      "slug": "gis-web-gis-developer",
+      "role": "Web GIS Developer"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/gis/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-3d-scene-developer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-analyst/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-bim-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-cartography-designer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-drone-reality-mapping/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-geoai-ml-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-geoprocessing-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-qa-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-solution-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-spatial-data-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-spatial-data-scientist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-technical-consultant/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/gis/gis-web-gis-developer/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

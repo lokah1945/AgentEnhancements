@@ -1,3 +1,10 @@
+---
+title: Environment Variables Reference
+version: 1.1
+last_updated: 2026-11-15
+audience: users, maintainers
+---
+
 # Environment Variables Reference
 
 Every secret / config knob the MCP roadmap and the in-house servers use,
@@ -13,11 +20,15 @@ history immediately.
 
 | Var | Server | Required | Purpose |
 |-----|--------|----------|---------|
-| `OPENAI_API_KEY` | embeddings-mcp, vision-mcp | for openai/semantic modes | text-embedding-3-small; gpt-4o-mini vision. Without it: deterministic `local` embedder and honest `basic_metadata` describe mode. |
+| `OPENAI_API_KEY` | embeddings-mcp, vision-mcp | for openai/semantic modes | text-embedding-3-small; gpt-4o-mini vision. **Privacy:** with the key set, `vision-mcp describe` uploads the image (base64) to `api.openai.com` / `OPENAI_BASE_URL` — see docs/SAFETY.md §3. Without it: deterministic `local` embedder and honest `basic_metadata` describe mode. |
 | `AE_FFMPEG_ALLOWED_ROOTS` | ffmpeg-mcp | no | extra allowed path roots for inputs/outputs (`:`-separated). Defaults: cwd + /tmp. |
 
 The remaining in-house servers (task-router, graphrag, arxiv,
 google-news, video, style) need **no** environment variables.
+
+**task-router-mcp** runs arbitrary bash/python payloads with your user
+privileges. It is **hidden by default** and must be enabled explicitly in
+`ui.api.json` (`"task-router-mcp": {"enabled": true}`) — see docs/SAFETY.md §0.
 
 ## Upstream to-install servers (see `plugin-catalog/mcp-servers.json`)
 

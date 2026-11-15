@@ -47,9 +47,13 @@ class SetupStaticTests(unittest.TestCase):
         self.assertNotIn("\\${", self.src)
 
     def test_merge_uses_env_vars(self):
-        self.assertIn("os.environ['ENHANCEMENT_JSON']", self.src)
+        # merge_yaml_config passes its payload through the environment
+        # (R003/F-10); the dead merge_json_config was removed (AE-20), so
+        # the surviving contract is ENHANCEMENT_YAML + TARGET_FILE.
+        self.assertIn("os.environ['ENHANCEMENT_YAML']", self.src)
         self.assertIn("os.environ['TARGET_FILE']", self.src)
         self.assertNotIn("json.loads('$enhancement_json')", self.src)
+        self.assertNotIn("yaml.safe_load('$enhancement_yaml')", self.src)
 
 
 class ShippedScriptTests(unittest.TestCase):

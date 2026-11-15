@@ -42,8 +42,21 @@ EXPECTED_PLUGINS: Dict[str, Set[str]] = {
 }
 
 
+def load_roadmap_ids(root: Path) -> Set[str]:
+    """Read the canonical MCP server ids from plugin-catalog/mcp-servers.json."""
+    roadmap = root / "plugin-catalog" / "mcp-servers.json"
+    if not roadmap.is_file():
+        return set()
+    try:
+        data = json.loads(roadmap.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return set()
+    return {server.get("id") for server in data.get("servers", []) if server.get("id")}
+
+
 def validate_category(
-    root: Path, category: str, errors: List[str], warnings: List[str]
+    root: Path, category: str, errors: List[str], warnings: List[str],
+    roadmap_ids: Set[str] = frozenset(),
 ) -> Set[str]:
     """Validate one catalog category directory; return slugs found."""
     found: Set[str] = set()
@@ -71,6 +84,13 @@ def validate_category(
             warnings.append(f"{json_path.name}: capabilities kosong")
         if not data.get("mcp_servers_suggested"):
             warnings.append(f"{json_path.name}: mcp_servers_suggested kosong")
+        # Suggested MCP servers must exist in the roadmap catalog
+        for server_id in data.get("mcp_servers_suggested", []):
+            if roadmap_ids and server_id not in roadmap_ids:
+                errors.append(
+                    f"{json_path.name}: mcp_servers_suggested '{server_id}' "
+                    f"tidak ada di plugin-catalog/mcp-servers.json"
+                )
         slug = data.get("slug", json_path.stem)
         found.add(slug)
         guide = cat_dir / slug / "SKILL.md"
@@ -81,10 +101,19 @@ def validate_category(
             ref = root / sf["path"]
             if not ref.exists():
                 errors.append(f"{json_path.name}: referensi path tidak ada: {sf['path']}")
+        # sub_skills with an explicit path must point at a real file
+        for sub in data.get("sub_skills", []):
+            sub_path = sub.get("path")
+            if sub_path and not (root / sub_path).is_file():
+                errors.append(
+                    f"{json_path.name}: sub_skill '{sub.get('slug')}' "
+                    f"path tidak ada: {sub_path}"
+                )
     return found
 
 
-def validate_catalog_index(root: Path, errors: List[str]) -> int:
+def validate_catalog_index(root: Path, errors: List[str],
+                           roadmap_ids: Set[str] = frozenset()) -> int:
     """Validate plugin-catalog/catalog.json consistency with manifests."""
     index_path = root / "plugin-catalog" / "catalog.json"
     if not index_path.is_file():
@@ -101,6 +130,25 @@ def validate_catalog_index(root: Path, errors: List[str]) -> int:
         manifest = root / entry["manifest_path"]
         if not manifest.is_file():
             errors.append(f"catalog.json: manifest tidak ada: {entry['manifest_path']}")
+            continue
+        # Index MCP refs must match the roadmap and the source manifest
+        for server_id in entry.get("mcp_servers", []):
+            if roadmap_ids and server_id not in roadmap_ids:
+                errors.append(
+                    f"catalog.json[{entry.get('id')}]: mcp_servers "
+                    f"'{server_id}' tidak ada di mcp-servers.json"
+                )
+        try:
+            manifest_data = json.loads(manifest.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if set(entry.get("mcp_servers", [])) != set(
+            manifest_data.get("mcp_servers_suggested", [])
+        ):
+            errors.append(
+                f"catalog.json[{entry.get('id')}]: mcp_servers tidak sinkron "
+                f"dengan manifest {entry['manifest_path']}"
+            )
     return total
 
 
@@ -114,15 +162,16 @@ def main() -> int:
 
     errors: List[str] = []
     warnings: List[str] = []
+    roadmap_ids = load_roadmap_ids(root)
     found_total = 0
     for category in VALID_CATEGORIES:
-        found = validate_category(root, category, errors, warnings)
+        found = validate_category(root, category, errors, warnings, roadmap_ids)
         found_total += len(found)
         missing = EXPECTED_PLUGINS[category] - found
         if missing:
             errors.append(f"Plugin hilang di {category}/: {sorted(missing)}")
 
-    index_total = validate_catalog_index(root, errors)
+    index_total = validate_catalog_index(root, errors, roadmap_ids)
     expected_total = sum(len(v) for v in EXPECTED_PLUGINS.values())
 
     print("=" * 60)

@@ -1,45 +1,49 @@
 {
   "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
   "id": "research-rea",
-  "name": "REA (Reasoning + Acting)",
+  "name": "REA (Reverse Engineer Anything)",
   "slug": "rea",
   "category": "research",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "status": "integrated-ready",
   "source": {
     "type": "github",
     "url": "https://github.com/morluto/rea",
-    "license": "MIT (verify on upstream)"
+    "license": "MIT"
   },
-  "description": "Reason-Explain-Act loop untuk riset multi-step: tiap iterasi menyusun rencana, menjelaskan alasan, lalu memilih tool. Mendukung reflection dan backtracking ketika hasil divergen.",
+  "description": "Reverse Engineer Anything (upstream morluto/rea): MCP server untuk menganalisis bagaimana sebuah aplikasi bekerja - dari perilaku app, JavaScript/Electron, assembly .NET, APK Android, website, sampai binary native. Analisis berjalan lokal, terintegrasi dengan disassembler (Ghidra, IDA, Hopper), dan setiap kesimpulan disertai bukti pendukung. AE tidak mem-vendor server upstream; panduan ini menjelaskan instalasi dan penggunaannya.",
   "capabilities": [
-    "plan-reason-act loop",
-    "self-reflection",
-    "backtracking",
-    "tool selection policy"
+    "app & binary behavior analysis",
+    "javascript/electron app inspection",
+    ".net assembly analysis",
+    "android apk inspection",
+    "website analysis",
+    "native binary analysis with disassembler integration",
+    "evidence-backed conclusions"
   ],
   "tools_required": [
-    "web_search",
+    "rea MCP server (install upstream)",
     "bash",
-    "read_file",
-    "write_file"
+    "read_file"
   ],
-  "mcp_servers_suggested": [
-    "task-router-mcp",
-    "memory-mcp"
-  ],
+  "mcp_servers_suggested": [],
   "trigger_keywords": [
     "rea",
-    "reasoning",
-    "reflection",
-    "multi-step"
+    "reverse engineer",
+    "decompile",
+    "disassemble",
+    "binary analysis",
+    "analisis binary",
+    "apk analysis",
+    "how does this app work"
   ],
   "best_for": [
-    "complex investigations",
-    "hypothesis testing",
-    "A/B research"
+    "understanding unfamiliar code and binaries",
+    "authorized security research",
+    "interoperability analysis",
+    "malware triage (authorized environments)"
   ],
-  "integration_notes": "Pakai sebagai orchestrator lapis atas; REA boleh memanggil skill research lain.",
+  "integration_notes": "Upstream adalah MCP server tersendiri - instal dari github.com/morluto/rea lalu daftarkan ke config MCP host. Hanya untuk riset yang sah: kode/binary yang Anda miliki atau berwenang analisis (pendidikan, interoperabilitas, audit keamanan berizin). Untuk membangun ulang aplikasi secara clean-room dari nol, pakai replica-skill.",
   "skill_files": [
     {
       "path": "plugin-catalog/research/rea/SKILL.md",

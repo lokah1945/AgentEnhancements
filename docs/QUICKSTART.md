@@ -13,7 +13,7 @@ Mulai pakai satu plugin dari katalog dalam 5 menit.
 
 ```bash
 cd AgentEnhancements
-ls plugin-catalog/     # 5 kategori + catalog.json + mcp-servers.json
+ls plugin-catalog/     # 6 kategori + catalog.json + mcp-servers.json
 ls plugin-catalog/code/  # 4 plugin (Matt Pocock, Karpathy, Addy Osmani, Replica)
 ```
 
@@ -21,14 +21,14 @@ ls plugin-catalog/code/  # 4 plugin (Matt Pocock, Karpathy, Addy Osmani, Replica
 
 ```bash
 python3 unified-integration/scripts/catalog-validate.py --root .
-# harus: ALL CHECKS PASSED (21/21 plugin)
+# harus: ALL CHECKS PASSED (40/40 plugin)
 ```
 
 ## 3. Wire katalog ke registry (30 detik)
 
 ```bash
 bash unified-integration/scripts/catalog-wire.sh
-# 21 plugin guide ter-symlink ke unified-integration/skills/by-category/
+# 40 plugin guide ter-symlink ke unified-integration/skills/by-category/
 ```
 
 ## 4. Test 1 plugin (1 menit)
@@ -102,7 +102,7 @@ bash unified-integration/scripts/consent-gate.sh "sales outreach" voice.wav user
 
 ## Selesai
 
-Anda sudah: validasi 21 plugin, wire registry, test plugin, pakai dispatcher,
+Anda sudah: validasi 40 plugin, wire registry, test plugin, pakai dispatcher,
 dan memverifikasi skill resmi Anthropic + pemetaan all-in-one.
 
 **Langkah berikutnya**: `docs/COOKBOOK.md` (resep gabungan), `docs/INTEGRATION_CHECKLIST.md`

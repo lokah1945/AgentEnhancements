@@ -85,6 +85,14 @@ detect_agents() {
         log_success "Found: Gemini CLI"
     fi
 
+    local host
+    for host in hermes; do
+        if command -v "$host" &> /dev/null; then
+            AGENTS+=("$host")
+            log_success "Found: $host"
+        fi
+    done
+
     # Check for Windsurf
     if command -v windsurf &> /dev/null; then
         AGENTS+=("windsurf")
@@ -101,6 +109,19 @@ detect_agents() {
     if command -v kiro &> /dev/null; then
         AGENTS+=("kiro")
         log_success "Found: Kiro"
+    fi
+
+    local selected_agents
+    selected_agents="$(python3 "$UNIFIED_DIR/scripts/native-integration.py" --print-selection)"
+    if [ -n "$selected_agents" ]; then
+        local selected=() candidate
+        for candidate in "${AGENTS[@]}"; do
+            case ",$selected_agents," in
+                *",$candidate,"*) selected+=("$candidate") ;;
+            esac
+        done
+        AGENTS=("${selected[@]}")
+        log_info "Using saved native-agent selection: $selected_agents"
     fi
 
     if [ ${#AGENTS[@]} -eq 0 ]; then
@@ -458,7 +479,7 @@ EOF
     done
 
     # Create agent directories
-    AGENT_LIST=("claude-code" "codex" "cursor" "gemini-cli" "opencode" "copilot" "windsurf" "kiro")
+    AGENT_LIST=("claude-code" "codex" "cursor" "gemini-cli" "opencode" "copilot" "windsurf" "kiro" "hermes")
     for agent in "${AGENT_LIST[@]}"; do
         mkdir -p "$SKILLS_DIR/by-agent/$agent"
     done
@@ -536,7 +557,7 @@ EOF
                 while IFS= read -r tool; do
                     if [ -n "$tool" ]; then
                         case "$tool" in
-                            claude-code|codex|cursor|gemini-cli|opencode|copilot|windsurf|kiro)
+                            claude-code|codex|cursor|gemini-cli|opencode|copilot|windsurf|kiro|hermes)
                                 agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
                                 mkdir -p "$(dirname "$agent_target_dir")"
                                 rm -rf "$agent_target_dir"
@@ -602,7 +623,7 @@ EOF
                 while IFS= read -r tool; do
                     if [ -n "$tool" ]; then
                         case "$tool" in
-                            claude-code|codex|cursor|gemini-cli|opencode|copilot|windsurf|kiro)
+                            claude-code|codex|cursor|gemini-cli|opencode|copilot|windsurf|kiro|hermes)
                                 agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
                                 mkdir -p "$(dirname "$agent_target_dir")"
                                 rm -rf "$agent_target_dir"
@@ -871,7 +892,7 @@ unified = {
     'skills': skills,
     'total_skills': len(skills),
     'categories': categories,
-    'agents_supported': ['claude-code', 'codex', 'cursor', 'gemini-cli', 'opencode', 'copilot', 'windsurf', 'kiro'],
+    'agents_supported': ['claude-code', 'codex', 'cursor', 'gemini-cli', 'opencode', 'copilot', 'windsurf', 'kiro', 'hermes'],
     'agent_skill_counts': agent_counts,
     'last_updated': datetime.now(timezone.utc).isoformat()
 }
@@ -1418,6 +1439,9 @@ create_agent_configs() {
             gemini-cli)
                 create_gemini_config
                 ;;
+            hermes)
+                python3 "$UNIFIED_DIR/scripts/native-integration.py" --agent "$agent"
+                ;;
             windsurf)
                 create_windsurf_config
                 ;;
@@ -1890,6 +1914,7 @@ case "$AGENT" in
     opencode)    exec opencode "$@" ;;
     cursor)      exec cursor "$@" ;;
     gemini-cli)  exec gemini "$@" ;;
+    hermes) exec "$AGENT" "$@" ;;
     windsurf)    exec windsurf "$@" ;;
     copilot)     exec gh copilot "$@" ;;
     kiro)        exec kiro "$@" ;;
@@ -2472,7 +2497,7 @@ main() {
     echo "Configured agents: ${AGENTS[*]:-none}"
     echo ""
     echo "Next steps:"
-    echo "  1. Start claude, codex, or opencode normally (no launcher required)."
+    echo "  1. Start claude, codex, opencode, or hermes normally (no launcher required)."
     echo "  2. Codex requires review of new/changed hook definitions in /hooks."
     echo "  3. Verify MCP protocol: bash $UNIFIED_DIR/scripts/setup-mcp.sh --check"
     echo "  4. Find capabilities on demand: python3 $UNIFIED_DIR/scripts/registry.py search \"<task>\""
@@ -2490,6 +2515,7 @@ main() {
     echo "  - ~/.claude/settings.json + CLAUDE.md          (Claude Code: hooks + instructions)"
     echo "  - ~/.codex/AGENTS.md                            (Codex: global instructions)"
     echo "  - ~/.config/opencode/opencode.json + AGENTS.md  (OpenCode: schema-valid config + instructions)"
+    echo "  - ~/.hermes/profiles/<profile>/config.yaml + SOUL.md (Hermes: selected profiles, native plugin + MCP)"
     echo "  - ~/.cursor/rules/agent-enhancements.mdc        (Cursor: global rule)"
     echo "  - ~/.gemini/GEMINI.md + config.yaml             (Gemini CLI: global context + reference)"
     echo "  - ~/.codeium/windsurf/rules/agent-enhancements.md (Windsurf: global rule)"
@@ -2497,8 +2523,8 @@ main() {
     echo "  - ~/.kiro/config.yaml                           (Kiro: reference config)"
     echo ""
     echo "Native skill activation (all Agent Skills compatible harnesses):"
-    echo "  - ~/.claude/skills/   curated set linked (Claude Code auto-discovery)"
-    echo "  - ~/.agents/skills/   curated set linked (cross-agent standard)"
+    echo "  - ~/.claude/skills/   ambient task-observer linked (Claude Code auto-discovery)"
+    echo "  - ~/.agents/skills/   ambient task-observer linked (cross-agent standard)"
     echo ""
     echo "Environment variables for customization:"
     echo "  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: repository root detected from setup.sh location)"

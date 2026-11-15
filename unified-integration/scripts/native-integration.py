@@ -9,19 +9,22 @@ Only project-owned integration entries are managed; agent auth stays native.
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
 import shlex
 import shutil
+import subprocess
 import sys
-import tempfile
 
-import json5
 import tomlkit
 
 from api_config import BUILTINS, initialize
+from native_config import read_json, write, write_json
+from native_hermes import host_selection_path, install_hermes
+
+EXTRA_COMMANDS = {"hermes": "hermes"}
+NATIVE_AGENTS = ("claude-code", "codex", "opencode", "hermes")
 
 UI = Path(__file__).resolve().parent.parent
 ROOT = UI.parent
@@ -34,37 +37,12 @@ EVENTS = (
 )
 
 
-def write(path: Path, content: str) -> None:
-    """Back up changes and replace atomically with private file permissions."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists():
-        if path.read_text() == content:
-            return
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
-        backup = path.with_name(path.name + ".backup." + stamp)
-        shutil.copy2(path, backup)
-        backup.chmod(0o600)
-    fd, temporary = tempfile.mkstemp(prefix="." + path.name + ".", dir=path.parent)
-    try:
-        with os.fdopen(fd, "w") as stream:
-            stream.write(content)
-        os.replace(temporary, path)
-    finally:
-        if os.path.exists(temporary):
-            os.unlink(temporary)
-
-
-def read_json(path: Path) -> dict:
-    """Read JSON or JSONC, rejecting malformed/non-object user configuration."""
-    doc = json5.loads(path.read_text()) if path.exists() else {}
-    if not isinstance(doc, dict):
-        raise ValueError(f"configuration must be an object: {path}")
-    return doc
-
-
-def write_json(path: Path, doc: dict) -> None:
-    """Serialize configuration; the original, including JSONC comments, is backed up."""
-    write(path, json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+def runtime_python() -> str:
+    """Keep venv command paths stable across python/python3 entry points."""
+    canonical = Path(sys.prefix) / "bin/python3"
+    if sys.prefix != sys.base_prefix and canonical.is_file():
+        return str(canonical)
+    return sys.executable
 
 
 def own_hook(handler: dict) -> bool:
@@ -87,7 +65,7 @@ def merge_hooks(doc: dict, agent: str) -> None:
             if handlers:
                 retained.append({**group, "hooks": handlers})
         hooks[event] = retained
-    command = shlex.join([sys.executable, str(UI / "scripts/runtime.py"), agent])
+    command = shlex.join([runtime_python(), str(UI / "scripts/runtime.py"), agent])
     if os.environ.get("AGENT_MEMORY_ROOT"):
         command = (
             "env "
@@ -127,7 +105,7 @@ def mcp_block() -> dict:
     return {
         name: {
             **cfg,
-            "command": sys.executable,
+            "command": runtime_python(),
             "args": [
                 arg.replace("PLACEHOLDER_REPO_ROOT", str(ROOT)) for arg in cfg["args"]
             ],
@@ -153,10 +131,16 @@ def merge_servers(existing: dict, block: dict) -> None:
             if str(UI / "mcp-servers/gateway.py") not in old_args:
                 print(f"[native] preserving user server: {name}", file=sys.stderr)
                 continue
-        existing[name] = cfg
+        # The managed command may change after an update; per-tool approvals,
+        # timeouts and user environment entries are still the user's settings.
+        merged = {**(old or {}), **cfg}
+        for field in ("env", "environment"):
+            if field in cfg and old and isinstance(old.get(field), dict):
+                merged[field] = {**old[field], **cfg[field]}
+        existing[name] = merged
 
 
-def install(agent: str, *, mcp_only: bool = False) -> None:
+def install(agent: str, *, mcp_only: bool = False, profiles: list[str] | None = None) -> None:
     """Install one existing supported agent using its native configuration."""
     home = Path.home()
     block = mcp_block()
@@ -188,6 +172,13 @@ def install(agent: str, *, mcp_only: bool = False) -> None:
             merge_hooks(hooks, agent)
             write_json(path, hooks)
     elif agent == "opencode":
+        # Never replace a working V1 config with a V2-only document.
+        executable = shutil.which("opencode")
+        if executable:
+            version = subprocess.run([executable, "--version"], capture_output=True,
+                                     text=True, timeout=10)
+            if version.returncode or not version.stdout.strip().removeprefix("opencode v").startswith("2."):
+                raise ValueError("OpenCode 2 is required; upgrade the CLI before installing its adapter")
         config_dir = (
             Path(os.environ.get("XDG_CONFIG_HOME", home / ".config")) / "opencode"
         )
@@ -261,6 +252,10 @@ def install(agent: str, *, mcp_only: bool = False) -> None:
                 "up next to it (mode 0600)",
                 file=sys.stderr,
             )
+    elif agent in EXTRA_COMMANDS:
+        install_hermes(block, merge_servers, mcp_only=mcp_only, profiles=profiles)
+    else:
+        raise ValueError(f"unsupported agent: {agent}")
     print(
         f"[native] {agent}: configured"
         + (" MCP" if mcp_only else " hooks/plugin + MCP")
@@ -271,15 +266,36 @@ def main() -> None:
     """Native installation entry point; errors fail setup instead of claiming success."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--agent", choices=["claude-code", "codex", "opencode", "all"], default="all"
+        "--agent", choices=["claude-code", "codex", "opencode", *EXTRA_COMMANDS, "all"], default="all"
     )
     parser.add_argument("--mcp-only", action="store_true")
+    parser.add_argument("--profile", action="append", help="select a Hermes profile (repeatable; saved locally)")
+    parser.add_argument("--select-agents", help="persist an explicit comma-separated native-agent selection")
+    parser.add_argument("--print-selection", action="store_true", help="print the saved selection without installing")
     args = parser.parse_args()
+    selection = read_json(host_selection_path())
+    selected = selection.get("agents")
+    if args.select_agents is not None:
+        selected = list(dict.fromkeys(args.select_agents.split(",")))
+    if selected is not None and (not isinstance(selected, list) or not selected
+                                or any(agent not in NATIVE_AGENTS for agent in selected)):
+        parser.error("selection must contain supported native agent names")
+    if args.print_selection:
+        print(",".join(selected or []))
+        return
     agents = (
-        ["claude-code", "codex", "opencode"] if args.agent == "all" else [args.agent]
+        ["claude-code", "codex", "opencode", *[
+            agent for agent, command in EXTRA_COMMANDS.items() if shutil.which(command)
+        ]] if args.agent == "all" else [args.agent]
     )
     for agent in agents:
-        install(agent, mcp_only=args.mcp_only)
+        if args.agent == "all" and selected is not None and agent not in selected:
+            continue
+        install(agent, mcp_only=args.mcp_only, profiles=args.profile if agent == "hermes" else None)
+    if args.select_agents is not None:
+        selection = read_json(host_selection_path())
+        selection["agents"] = selected
+        write_json(host_selection_path(), selection)
 
 
 if __name__ == "__main__":

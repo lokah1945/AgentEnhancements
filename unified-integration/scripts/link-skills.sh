@@ -31,13 +31,20 @@ UNIFIED_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(cd "$UNIFIED_DIR/.." && pwd)}"
 SKILLS_DIR="${AGENT_SKILLS_DIR:-$UNIFIED_DIR/skills}"
 
-# Sources linked by default: the official Anthropic skills, the
-# app-cloning pipeline, and the task-observer meta-skill (ambient
-# observation of skill usage; its activation rides the lifecycle runtime,
-# the native link only makes the bundle discoverable). Production-grade,
-# well-scoped, and together small enough to keep per-session skill
-# metadata cheap for every harness.
-DEFAULT_SOURCES="anthropic-skills replica-skill task-observer"
+# Sources linked by default (context-frugal profile, CONTRACT.md §8.4):
+# only task-observer is ambient - its activation rides the lifecycle
+# runtime, so the native link is what makes the bundle discoverable.
+# Everything else in the 3.3k-skill catalog stays fully reachable
+# through the on-demand discovery surface (lifecycle hook suggestions
+# + registry.py search/map/show), so the default native metadata cost
+# stays tiny without hiding any capability.
+DEFAULT_SOURCES="task-observer"
+
+# Curated sets a user may request explicitly (--set curated):
+# well-scoped sources with bounded per-session metadata cost (~3.5k
+# tokens of native descriptions). The full catalog stays reachable on
+# demand; "--set all" is audited, never default.
+CURATED_SOURCES="anthropic-skills replica-skill task-observer"
 
 QUIET=0
 
@@ -166,6 +173,87 @@ show_status() {
     done
 }
 
+# Audit an existing installation for the heavy-exposure patterns the
+# context contract forbids as defaults (CONTRACT.md §8.4): a full-catalog
+# link set from an older install (or a manual --set all), and links whose
+# target no longer exists. Prints findings; fixes only apply with
+# --migrate, and only ever touch registry-owned symlinks.
+audit_install() {
+    local migrate="$1"
+    local findings=0
+    local target
+    for target in "${TARGETS[@]}"; do
+        [ -d "$target" ] || continue
+        local ours=0 stale=0 entry
+        local stale_names=""
+        for entry in "$target"/*; do
+            [ -L "$entry" ] || continue
+            local current
+            current="$(readlink "$entry" 2>/dev/null || true)"
+            case "$current" in
+                "$SKILLS_DIR"/*)
+                    ours=$((ours + 1))
+                    if [ ! -e "$entry" ]; then
+                        stale=$((stale + 1))
+                        stale_names="$stale_names $(basename "$entry")"
+                    fi
+                    ;;
+            esac
+        done
+        if [ "$ours" -gt 50 ]; then
+            findings=$((findings + 1))
+            log_warn "$target: $ours registry-owned links - full-catalog exposure"
+            log_warn "  (native metadata for every linked skill enters each session;"
+            log_warn "   the default profile links only the ambient task-observer)."
+            if [ "$migrate" = "yes" ]; then
+                log_info "  migrating: unlinking all but the default set..."
+                local keep
+                for keep in $(resolve_skills sources "$DEFAULT_SOURCES"); do
+                    local kname
+                    kname="${keep%%$'\t'*}"
+                    local dst="$target/$kname"
+                    [ -L "$dst" ] && mv "$dst" "$target/.ae-keep-$kname" 2>/dev/null || true
+                done
+                local entry2
+                for entry2 in "$target"/*; do
+                    [ -L "$entry2" ] || continue
+                    local cur
+                    cur="$(readlink "$entry2" 2>/dev/null || true)"
+                    case "$cur" in
+                        "$SKILLS_DIR"/*) rm -f "$entry2" ;;
+                    esac
+                done
+                local keep2
+                for keep2 in "$target"/.ae-keep-*; do
+                    [ -e "$keep2" ] || [ -L "$keep2" ] || continue
+                    local base
+                    base="$(basename "$keep2")"
+                    base="${base#.ae-keep-}"
+                    mv "$keep2" "$target/$base" 2>/dev/null || true
+                done
+                log_info "  migrated: default set kept, others unlinked"
+            else
+                log_info "  run with --migrate to keep only the default set"
+            fi
+        fi
+        if [ "$stale" -gt 0 ]; then
+            findings=$((findings + 1))
+            log_warn "$target: $stale stale link(s) (target missing):$stale_names"
+            if [ "$migrate" = "yes" ]; then
+                local sname
+                for sname in $stale_names; do
+                    rm -f "$target/$sname"
+                done
+                log_info "  stale links removed"
+            fi
+        fi
+    done
+    if [ "$findings" -eq 0 ]; then
+        log_info "audit: no heavy-exposure or stale links found"
+    fi
+    return 0
+}
+
 usage() {
     sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
@@ -181,11 +269,17 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --set)
             [ $# -ge 2 ] || { log_error "--set requires a value"; exit 2; }
-            if [ "$2" = "all" ]; then
-                SET_SOURCES="*"
-            else
-                SET_SOURCES="$2"
-            fi
+            case "$2" in
+                all)
+                    SET_SOURCES="*"
+                    ;;
+                curated)
+                    SET_SOURCES="$CURATED_SOURCES"
+                    ;;
+                *)
+                    SET_SOURCES="$2"
+                    ;;
+            esac
             shift 2
             ;;
         --all)
@@ -194,6 +288,14 @@ while [ $# -gt 0 ]; do
             ;;
         --status)
             ACTION="status"
+            shift
+            ;;
+        --audit)
+            ACTION="audit"
+            shift
+            ;;
+        --migrate)
+            ACTION="migrate"
             shift
             ;;
         --unlink)
@@ -233,6 +335,11 @@ fi
 
 if [ "$ACTION" = "status" ]; then
     show_status
+    exit 0
+fi
+
+if [ "$ACTION" = "audit" ] || [ "$ACTION" = "migrate" ]; then
+    audit_install "$([ "$ACTION" = "migrate" ] && echo yes || echo no)"
     exit 0
 fi
 
@@ -287,6 +394,10 @@ while IFS=$'\t' read -r name category; do
 done <<< "$RESOLVED"
 
 log_info "done: $LINKED skill(s) linked into ${#TARGETS[@]} target directory(ies)"
-if [ "$SET_SOURCES" = "*" ] || [ "$SET_SOURCES" = "all" ]; then
-    log_warn "--all links the ENTIRE catalog: per-session skill metadata may be heavy for some harnesses"
+if [ "$SET_SOURCES" = "*" ]; then
+    log_warn "--set all links the ENTIRE catalog (~130k tokens of native skill"
+    log_warn "descriptions for some harnesses - the historical 200k cold-start"
+    log_warn "report traces to this path). Prefer on-demand discovery:"
+    log_warn "  registry.py search \"<task>\"   # bounded cards"
+    log_warn "  link-skills.sh --set curated   # bounded native set"
 fi

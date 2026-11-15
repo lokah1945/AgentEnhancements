@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-11-15T14:43:17.214340+00:00",
+  "index_version": "1.1",
+  "registry_entries": {
+    "total": 3464,
+    "skills": 3378
+  },
+  "families": [
+    {
+      "family": "coding",
+      "about": "debugging, refactoring, code review, language testing",
+      "entries": 590
+    },
+    {
+      "family": "security",
+      "about": "hardening, threat modeling, appsec workflows",
+      "entries": 257
+    },
+    {
+      "family": "architecture",
+      "about": "system design and architecture records",
+      "entries": 106
+    },
+    {
+      "family": "documents",
+      "about": "docx/pdf/pptx/xlsx document pipelines",
+      "entries": 192
+    },
+    {
+      "family": "devops",
+      "about": "CI/CD, containers, release workflows",
+      "entries": 257
+    },
+    {
+      "family": "ai-ml",
+      "about": "ML engineering, prompt, agent, LLM tooling",
+      "entries": 333
+    },
+    {
+      "family": "productivity",
+      "about": "planning, writing, personal workflow",
+      "entries": 374
+    },
+    {
+      "family": "other",
+      "about": "everything else",
+      "entries": 1269
+    }
+  ],
+  "surfaces": [
+    {
+      "surface": "plugins",
+      "about": "curated external plugin catalog (integration guides)"
+    },
+    {
+      "surface": "mcp",
+      "about": "MCP servers exposed through the agent-enhancements gateway"
+    },
+    {
+      "surface": "builtins",
+      "about": "memory, compression, dispatch, registry, linking, observer"
+    }
+  ],
+  "bootstrap_tokens_approx": 457
+}

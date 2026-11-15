@@ -109,7 +109,8 @@ class RegistryCliTests(unittest.TestCase):
                     "always_available", "hints"):
             self.assertIn(key, plan)
         self.assertEqual(plan["skills"][0]["name"], "docx")
-        self.assertTrue(plan["skills"][0]["natively_linked_by_default"])
+        # Cards carry live readiness instead of the static native flag.
+        self.assertEqual(plan["skills"][0]["ready"], "yes")
 
     def test_map_human_output(self):
         code, out, err = self._run("map", "extract pdf form fields")
@@ -127,7 +128,7 @@ class RegistryCliTests(unittest.TestCase):
         self.assertEqual(code, 0, err)
         result = json.loads(out)
         self.assertEqual(result["query"], "zzxyyqqqq")
-        self.assertEqual(result["results"], [])
+        self.assertEqual(result["cards"], [])
 
     def test_show_by_id_and_name(self):
         code, out, _ = self._run("show", "skill:docx")

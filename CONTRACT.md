@@ -351,3 +351,25 @@ Co-Authored-By: <agent-name> <session-id>
 
 **End of Contract**  
 *This document is the supreme governing rule for this repository. No agent, human, or process may override it without explicit written approval from the project maintainers.*
+### 8.4 Context budget contract (library model)
+
+The default profile is context-frugal. Budgets are implementation limits
+enforced by `unified-integration/scripts/context_budget.py` and tested by
+CI fixtures — not claims:
+
+| Surface | Limit (tokens) |
+|---|---:|
+| L0 bootstrap map (skills/library-map.json) | ≤ 1,000 |
+| Cold start total (all AE channels, model-visible) | ≤ 4,000 |
+| Memory recall (inside total) | ≤ 600 |
+| Observer ambient (inside total) | ≤ 250 |
+| One search result page | ≤ 800, max 5 cards |
+| One detail page | ≤ 1,200 |
+| Native description allocation | ≤ 2,500 |
+| Tool schema allocation (model-visible) | ≤ 1,800 |
+
+Rules: `--set all` is never default (audited via `link-skills.sh --audit`,
+migrated via `--migrate`); the catalog stays fully reachable through
+`registry.py search/map/show` cards and lifecycle-hook suggestions;
+scale fixture (1×/5×/10×) must keep L0 growth ≤ 200 tokens. Measurement:
+tiktoken o200k_base proxy unless host usage telemetry is available.

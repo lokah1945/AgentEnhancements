@@ -139,7 +139,10 @@ class AggregationTests(TaskObserverTestCase):
 class NativeLinkingTests(TaskObserverTestCase):
     def test_task_observer_is_in_default_native_set(self):
         linker = (UI_DIR / "scripts/link-skills.sh").read_text()
-        self.assertIn('DEFAULT_SOURCES="anthropic-skills replica-skill task-observer"', linker)
+        # Context-frugal default: the observer is the only ambient native
+        # skill; discovery covers the rest (CONTRACT.md §8.4).
+        self.assertIn('DEFAULT_SOURCES="task-observer"', linker)
+        self.assertIn('CURATED_SOURCES="anthropic-skills replica-skill task-observer"', linker)
         registry = (UI_DIR / "scripts/registry.py").read_text()
         self.assertIn('"task-observer")', registry)
 

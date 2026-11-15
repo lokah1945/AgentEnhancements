@@ -80,9 +80,33 @@ class NonFatalMergeTests(unittest.TestCase):
     def setUpClass(cls):
         cls.src = (UI_DIR / "setup.sh").read_text()
 
-    def test_json_merge_failure_restores_backup(self):
-        self.assertIn('Merge failed for $target_file (existing file not valid JSON?)', self.src)
-        self.assertIn('cp "$backup_file" "$target_file"', self.src)
+    def test_merge_failure_keeps_original(self):
+        """A broken per-user config must not be corrupted or clobbered.
+
+        merge_json_config (dead code) was removed in AE-20; the surviving
+        merge_yaml_config computes the merge before writing, so on failure
+        the original file is simply left untouched - no backup/restore
+        dance and no stray backup file.
+        """
+        self.assertIn(
+            'Merge failed for $target_file (existing file not valid YAML?) - original kept',
+            self.src,
+        )
+        self.assertNotIn(
+            'Merge failed for $target_file (existing file not valid JSON?)',
+            self.src,
+            "dead merge_json_config error string must stay removed",
+        )
+
+    def test_yaml_merge_backs_up_only_on_change(self):
+        """AE-17: the backup happens after an actual content change."""
+        merge = self.src.split("merge_yaml_config() {", 1)[1].split("\n}", 1)[0]
+        self.assertIn('if [ "$merged" = "$(cat "$target_file")" ]; then', merge)
+        self.assertLess(
+            merge.index('if [ "$merged" = "$(cat "$target_file")" ]; then'),
+            merge.index('cp "$target_file" "$backup_file"'),
+            "unchanged configs must return before any backup is created",
+        )
 
     def test_yaml_merge_checks_pyyaml_first(self):
         self.assertIn('python3 -c "import yaml" 2>/dev/null', self.src)

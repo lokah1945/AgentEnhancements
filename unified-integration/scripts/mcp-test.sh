@@ -4,6 +4,8 @@
 #   bash mcp-test.sh --priority P0|P1|P2
 #   bash mcp-test.sh --for-plugin <slug>
 #   bash mcp-test.sh --server <id>
+#   bash mcp-test.sh --prepare --priority P0   # also create/refresh the
+#                                              # isolated MCP runtime first
 
 set -euo pipefail
 
@@ -11,7 +13,32 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNIFIED_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BASE_DIR="$(cd "$UNIFIED_DIR/.." && pwd)"
 SERVERS_JSON="$BASE_DIR/plugin-catalog/mcp-servers.json"
-PYTHON_BIN="$(bash "$SCRIPT_DIR/setup-mcp.sh" --prepare)"
+
+# Precheck required tooling up front instead of failing mid-run (AE-22).
+for tool in jq python3; do
+    command -v "$tool" >/dev/null 2>&1 || {
+        echo "[FAIL] $tool is required but not installed" >&2
+        exit 2
+    }
+done
+
+# Reading the tests should not mutate the environment by default (AE-22):
+# use the existing isolated runtime when present, fall back to python3.
+# Pass --prepare as the FIRST argument to create/refresh it explicitly
+# (that variant performs network installs via pip).
+VENV_PY="$HOME/.local/share/agentenhancements/venv/bin/python"
+if [ "${1:-}" = "--prepare" ]; then
+    PYTHON_BIN="$(bash "$SCRIPT_DIR/setup-mcp.sh" --prepare)"
+    shift
+elif [ -x "$VENV_PY" ]; then
+    PYTHON_BIN="$VENV_PY"
+else
+    PYTHON_BIN="$(command -v python3)"
+fi
+if ! "$PYTHON_BIN" -c "import json5" >/dev/null 2>&1; then
+    echo "[FAIL] json5 module not available for $PYTHON_BIN - run this script with --prepare (or bash unified-integration/scripts/setup-mcp.sh --prepare) once" >&2
+    exit 2
+fi
 
 pass() { echo -e "\033[0;32m[PASS]\033[0m $*"; }
 warn() { echo -e "\033[1;33m[WARN]\033[0m $*"; }

@@ -89,7 +89,7 @@ class Mock(BaseHTTPRequestHandler):
                 name = tool.get("name") or tool.get("function", {}).get("name", "")
                 if "embeddings" in name or "vision" in name:
                     declared.append(name)
-                if name.endswith("embeddings_health"):
+                if name == "ae_health":
                     health.append((name, namespace))
                 visit(
                     tool.get("tools", []),
@@ -542,7 +542,7 @@ def main() -> None:
             "--model",
             "claude-sonnet-4-6",
             "--allowedTools",
-            "mcp__agent-enhancements__embeddings_health",
+            "mcp__agent-enhancements__ae_health",
         ]
         opencfg = root / "project/opencode.json"
         fixture = root / "fixture-plugin"

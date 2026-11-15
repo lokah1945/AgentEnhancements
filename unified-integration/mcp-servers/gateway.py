@@ -323,7 +323,13 @@ class Gateway:
         )
 
     async def _run_health(self) -> types.CallToolResult:
-        """Fan out to every visible backend's health entry point."""
+        """Fan out to every visible backend's health entry point.
+
+        Bundled backends keep the proven call_tool execution path (module
+        lock + worker thread with its own loop) so blocking IO stays off
+        the gateway loop; the FastMCP result (a list of content parts, or
+        (parts, structured)) is parsed into the per-backend report.
+        """
         config, _ = read_config()
         report: dict[str, Any] = {}
         for entry in self.tools(config).values():
@@ -333,18 +339,36 @@ class Gateway:
             try:
                 if server in self.modules:
                     async with self.module_locks[server]:
-                        outcome = await asyncio.to_thread(
+                        result = await asyncio.to_thread(
                             lambda s=server: asyncio.run(
                                 self.modules[s].mcp.call_tool("health", {})
                             )
                         )
-                    payload = (
-                        outcome[1]
-                        if isinstance(outcome, tuple) and len(outcome) > 1
-                        else {}
-                    )
-                    if not isinstance(payload, dict):
-                        payload = {}
+                    if isinstance(result, tuple):
+                        parts, data = list(result[0]), result[1]
+                    elif isinstance(result, dict):
+                        parts = [types.TextContent(
+                            type="text", text=json.dumps(result))]
+                        data = result
+                    else:
+                        parts, data = list(result), None
+                    if not isinstance(data, dict):
+                        data = {}
+                        if len(parts) == 1 and parts[0].type == "text":
+                            try:
+                                parsed = json.loads(parts[0].text)
+                                if isinstance(parsed, dict):
+                                    data = parsed
+                            except ValueError:
+                                pass
+                    report[server] = {
+                        "status": data.get("status", "unknown"),
+                        **{
+                            k: v
+                            for k, v in data.items()
+                            if k in ("server", "version", "degraded", "reason")
+                        },
+                    }
                 else:
                     worker = self.externals.get(server)
                     if worker is None or not worker.ready.is_set():
@@ -357,20 +381,27 @@ class Gateway:
                     try:
                         payload = json.loads(text)
                     except ValueError:
-                        payload = {"status": "unknown"}
-                report[server] = {
-                    "status": payload.get("status", "unknown"),
-                    **{
-                        k: v
-                        for k, v in payload.items()
-                        if k in ("server", "version", "degraded", "reason")
-                    },
-                }
+                        payload = {}
+                    if not isinstance(payload, dict):
+                        payload = {}
+                    report[server] = {
+                        "status": payload.get("status", "unknown"),
+                        **{
+                            k: v
+                            for k, v in payload.items()
+                            if k in ("server", "version", "degraded", "reason")
+                        },
+                    }
             except Exception:  # noqa: BLE001 - one backend must not kill the rest
                 report[server] = {"status": "error"}
+        overall = (
+            "ok"
+            if all(v.get("status") == "ok" for v in report.values()) or not report
+            else "degraded"
+        )
         return types.CallToolResult(
             content=[types.TextContent(type="text", text=json.dumps(report))],
-            structuredContent={"status": "ok", "backends": report},
+            structuredContent={"status": overall, "backends": report},
         )
 
     def remember_session(self) -> None:

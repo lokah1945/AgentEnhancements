@@ -658,7 +658,13 @@ def stage_candidate(
     if stage.exists():
         shutil.rmtree(stage)
     stage.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(source, stage)
+    try:
+        # Preserve symlinks as links (a dangling one in the SOURCE tree
+        # must not crash staging with an unhandled shutil.Error).
+        _copy_tree(source, stage)
+    except (OSError, RecursionError, shutil.Error) as exc:
+        shutil.rmtree(stage, ignore_errors=True)
+        return f"refused: could not copy the source tree: {exc}"
     (stage / "PROPOSAL.md").write_text(
         "---\n"
         f"status: staged\n"
@@ -772,8 +778,16 @@ def _same_filesystem(a: Path, b: Path) -> bool:
 
 
 def _copy_tree(src: Path, dst: Path) -> None:
-    """Copy a tree with copy2 semantics (metadata preserved)."""
-    shutil.copytree(src, dst)
+    """Copy a tree preserving symlinks as symlinks (never dereference).
+
+    The staged copy lives in user-writable workspace data; dereferencing
+    a tampered symlink would materialize out-of-tree content into the
+    canonical repo tree, and a symlink loop would recurse unboundedly.
+    ``symlinks=True`` copies the link itself. Callers treat OSError and
+    RecursionError as refusals, so a hostile or broken stage never
+    escapes the transaction.
+    """
+    shutil.copytree(src, dst, symlinks=True)
 
 
 def promote(root: Path, staged_name: str) -> str:
@@ -844,13 +858,24 @@ def promote(root: Path, staged_name: str) -> str:
             shutil.rmtree(scratch)
     # 1. Backup the live source FIRST (copy, device-safe), then verify the
     #    backup actually contains the source's SKILL.md before touching
-    #    anything: an unverifiable backup aborts the promotion.
-    _copy_tree(target, backup)
+    #    anything: an unverifiable backup aborts the promotion. A copy
+    #    failure (permissions, symlink loop) is a refusal, never an
+    #    uncaught traceback, and cleans up its partial artifacts.
+    try:
+        _copy_tree(target, backup)
+    except (OSError, RecursionError) as exc:
+        shutil.rmtree(backup, ignore_errors=True)
+        return f"refused: backup copy failed: {exc}"
     if not (backup / "SKILL.md").is_file():
         shutil.rmtree(backup, ignore_errors=True)
         return "refused: backup verification failed (no SKILL.md in the copy)"
     # 2. Prepare the candidate beside the target (same filesystem).
-    _copy_tree(stage, new_tree)
+    try:
+        _copy_tree(stage, new_tree)
+    except (OSError, RecursionError) as exc:
+        shutil.rmtree(backup, ignore_errors=True)
+        shutil.rmtree(new_tree, ignore_errors=True)
+        return f"refused: staged copy failed: {exc}"
     (new_tree / "PROPOSAL.md").unlink(missing_ok=True)
     try:
         # 3. Swap via intra-filesystem renames only.
@@ -883,7 +908,14 @@ def promote(root: Path, staged_name: str) -> str:
 
 
 def rollback(root: Path, staged_name: str) -> str:
-    """Restore the most recent rollback backup for a promoted skill."""
+    """Restore the most recent rollback backup for a promoted skill.
+
+    Same transaction discipline as promote(): the restore copy is staged
+    and verified BESIDE the live source first; the live tree is only
+    renamed away once the verified replacement exists, and any failure
+    restores it. The source is never deleted before its replacement is
+    in place.
+    """
     if not _valid_skill_name(staged_name):
         return "refused: invalid staged name (single path component, no '..')"
     rollback_dir = updates_dir(root) / "rollback"
@@ -896,9 +928,35 @@ def rollback(root: Path, staged_name: str) -> str:
     target = _canonical_source(staged_name)
     if target is None:
         return f"refused: canonical source for '{staged_name}' not found"
-    if target.exists():
-        shutil.rmtree(target)
-    shutil.copytree(backup, target)
+    staged_restore = target.with_name(target.name + ".restore")
+    if staged_restore.exists():
+        shutil.rmtree(staged_restore)
+    try:
+        _copy_tree(backup, staged_restore)
+    except (OSError, RecursionError) as exc:
+        shutil.rmtree(staged_restore, ignore_errors=True)
+        return f"degraded: rollback staging failed: {exc}"
+    if not (staged_restore / "SKILL.md").is_file():
+        shutil.rmtree(staged_restore, ignore_errors=True)
+        return "refused: rollback backup verification failed (no SKILL.md)"
+    old_tree = target.with_name(target.name + ".old")
+    if old_tree.exists():
+        shutil.rmtree(old_tree)
+    try:
+        if target.exists():
+            os.rename(target, old_tree)
+        try:
+            os.rename(staged_restore, target)
+        except OSError:
+            if old_tree.exists():
+                os.rename(old_tree, target)  # never leave source absent
+            return "refused: rollback swap failed; source restored"
+    except OSError as exc:
+        shutil.rmtree(staged_restore, ignore_errors=True)
+        if not target.exists() and old_tree.exists():
+            os.rename(old_tree, target)
+        return f"degraded: rollback swap failed: {exc}"
+    shutil.rmtree(old_tree, ignore_errors=True)
     with open(updates_dir(root) / "PENDING.md", "a", encoding="utf-8") as fh:
         fh.write(f"- {_now_date()} ROLLED BACK {staged_name} to {backup}\n")
     return f"rolled back {staged_name} from {backup}; re-run setup.sh"

@@ -41,51 +41,63 @@
   "sub_skills": [
     {
       "slug": "nexus-quickstart",
-      "role": "panduan mulai cepat pipeline NEXUS"
+      "role": "panduan mulai cepat pipeline NEXUS",
+      "path": "agency-agents/strategy/QUICKSTART.md"
     },
     {
       "slug": "phase-0-discovery",
-      "role": "playbook fase discovery"
+      "role": "playbook fase discovery",
+      "path": "agency-agents/strategy/playbooks/phase-0-discovery.md"
     },
     {
       "slug": "phase-1-strategy",
-      "role": "playbook fase strategi"
+      "role": "playbook fase strategi",
+      "path": "agency-agents/strategy/playbooks/phase-1-strategy.md"
     },
     {
       "slug": "phase-2-foundation",
-      "role": "playbook fase fondasi"
+      "role": "playbook fase fondasi",
+      "path": "agency-agents/strategy/playbooks/phase-2-foundation.md"
     },
     {
       "slug": "phase-3-build",
-      "role": "playbook fase build (dev<->qa loop)"
+      "role": "playbook fase build (dev<->qa loop)",
+      "path": "agency-agents/strategy/playbooks/phase-3-build.md"
     },
     {
       "slug": "phase-4-hardening",
-      "role": "playbook fase hardening"
+      "role": "playbook fase hardening",
+      "path": "agency-agents/strategy/playbooks/phase-4-hardening.md"
     },
     {
       "slug": "phase-5-launch",
-      "role": "playbook fase launch"
+      "role": "playbook fase launch",
+      "path": "agency-agents/strategy/playbooks/phase-5-launch.md"
     },
     {
       "slug": "phase-6-operate",
-      "role": "playbook fase operasi"
+      "role": "playbook fase operasi",
+      "path": "agency-agents/strategy/playbooks/phase-6-operate.md"
     },
     {
       "slug": "scenario-startup-mvp",
-      "role": "runbook skenario startup MVP"
+      "role": "runbook skenario startup MVP",
+      "path": "agency-agents/strategy/runbooks/scenario-startup-mvp.md"
     },
     {
       "slug": "scenario-marketing-campaign",
-      "role": "runbook skenario kampanye marketing"
+      "role": "runbook skenario kampanye marketing",
+      "path": "agency-agents/strategy/runbooks/scenario-marketing-campaign.md"
     },
     {
       "slug": "scenario-enterprise-feature",
-      "role": "runbook skenario fitur enterprise"
+      "role": "runbook skenario fitur enterprise",
+      "path": "agency-agents/strategy/runbooks/scenario-enterprise-feature.md"
     },
     {
       "slug": "scenario-incident-response",
-      "role": "runbook skenario respons insiden"
+      "role": "runbook skenario respons insiden",
+      "path": "agency-agents/strategy/runbooks/scenario-incident-response.md"
     }
   ],
   "skill_files": [

@@ -24,7 +24,9 @@ classify() {
     # Orchestrator tier first
     if echo "$lc" | grep -qE '(build product|greenfield|from scratch|bangun .* dari nol)'; then echo "bmad-method"; return; fi
     if echo "$lc" | grep -qE '(kerjakan semua|do all|selesaikan|clear backlog)'; then echo "gsd"; return; fi
-    if echo "$lc" | grep -qE '(investigate|telusuri|cari tahu kenapa)'; then echo "rea"; return; fi
+    # REA = Reverse Engineer Anything (upstream morluto/rea): analysis of
+    # binaries/apps. Rebuilding an app from scratch stays with replica-skill.
+    if echo "$lc" | grep -qE '(reverse engineer|reksayasa balik|decompil|disassembl|binary analysis|analisis binary|apk analysis|inspect (the )?(binary|executable|apk))'; then echo "rea"; return; fi
 
     # Anthropic official technical skills (vendored + natively linked)
     if echo "$lc" | grep -qE '(mcp server|build .*mcp|model context protocol)'; then echo "mcp-builder"; return; fi
@@ -40,13 +42,13 @@ classify() {
     if echo "$lc" | grep -qE '(\.xlsx|\.xlsm|\.xltx|\.csv|\.tsv|excel|spreadsheet)'; then echo "xlsx"; return; fi
 
     # Plugin tier
-    if echo "$lc" | grep -qE '(clone app|clone aplikasi|clone .* app|klon|replica|reverse engineer|rebuild app|build my own version|versi sendiri)'; then echo "replica-skill"; return; fi
+    if echo "$lc" | grep -qE '(clone app|clone aplikasi|clone .* app|klon|replica|rebuild app|build my own version|versi sendiri)'; then echo "replica-skill"; return; fi
     if echo "$lc" | grep -qE '(typescript|refactor ts|zod|generic)'; then echo "mattpocock-skills"; return; fi
     if echo "$lc" | grep -qE '(prototype|sketch|numpy|torch|first principle)'; then echo "karpathy-skills"; return; fi
     if echo "$lc" | grep -qE '(\bperf\b|performance|lighthouse|core web vitals|a11y|accessibility)'; then echo "agent-skills-addyosmani"; return; fi
     if echo "$lc" | grep -qE '(knowledge graph|entity relation|graphify)'; then echo "graphify"; return; fi
     if echo "$lc" | grep -qE '(deep research|literature|citation)'; then echo "agent-reach"; return; fi
-    if echo "$lc" | grep -qE '(explain|understand|jelaskan|apa itu|feynman)'; then echo "understand-anything"; return; fi
+    if echo "$lc" | grep -qE '(explain|understand|jelaskan|apa itu|feynman|investigate|telusuri|cari tahu kenapa)'; then echo "understand-anything"; return; fi
     if echo "$lc" | grep -qE '(recent|last 30 days|update terbaru|trend)'; then echo "last-30-days"; return; fi
     if echo "$lc" | grep -qE '(token budget|compress prompt|too long)'; then echo "gstack"; return; fi
     if echo "$lc" | grep -qE '(caveman|minimize prompt|shorthand)'; then echo "caveman"; return; fi
@@ -73,8 +75,9 @@ classify() {
     if echo "$lc" | grep -qE '(unity|unreal|godot|roblox|game design|game economy)'; then echo "game-development"; return; fi
     if echo "$lc" | grep -qE '(visionos|webxr|spatial computing|vision pro)'; then echo "spatial-computing"; return; fi
 
-    # Fallback default
-    echo "rea"
+    # No match: honest abstain. Forcing a catalog skill onto an unrelated
+    # task wastes context; ordinary agent tools are the right default.
+    echo "none"
 }
 
 find_guide() {
@@ -116,6 +119,16 @@ if echo "$prompt" | grep -qE '^\[skill:[a-z0-9-]+\]'; then
 fi
 if [ -z "$skill" ]; then
     skill=$(classify "$prompt")
+fi
+
+# Honest abstain: no catalog skill matched, ordinary agent tools suffice.
+if [ "$skill" = "none" ]; then
+    echo "=== Dispatch Plan ==="
+    echo "User prompt : $prompt"
+    echo "Skill match : none (no catalog skill fits; use ordinary tools)"
+    echo "======================"
+    log_info "Tidak ada skill katalog yang cocok - lanjutkan dengan ordinary tools"
+    exit 0
 fi
 
 guide=$(find_guide "$skill") || {

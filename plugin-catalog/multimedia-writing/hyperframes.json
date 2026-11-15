@@ -24,8 +24,7 @@
   ],
   "mcp_servers_suggested": [
     "heygen-mcp",
-    "elevenlabs-mcp",
-    "voice-clone-mcp"
+    "elevenlabs-mcp"
   ],
   "trigger_keywords": [
     "avatar",

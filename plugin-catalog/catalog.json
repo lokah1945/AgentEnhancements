@@ -77,7 +77,7 @@
         "generics"
       ],
       "mcp_servers": [
-        "typescript-language-server",
+        "typescript-language-server-mcp",
         "eslint-mcp"
       ],
       "source_url": "https://github.com/mattpocock/skills",
@@ -189,24 +189,25 @@
     {
       "id": "research-rea",
       "slug": "rea",
-      "name": "REA (Reasoning + Acting)",
+      "name": "REA (Reverse Engineer Anything)",
       "category": "research",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "status": "integrated-ready",
       "manifest_path": "plugin-catalog/research/rea.json",
       "guide_path": "plugin-catalog/research/rea/SKILL.md",
       "trigger_keywords": [
         "rea",
-        "reasoning",
-        "reflection",
-        "multi-step"
+        "reverse engineer",
+        "decompile",
+        "disassemble",
+        "binary analysis",
+        "analisis binary",
+        "apk analysis",
+        "how does this app work"
       ],
-      "mcp_servers": [
-        "task-router-mcp",
-        "memory-mcp"
-      ],
+      "mcp_servers": [],
       "source_url": "https://github.com/morluto/rea",
-      "source_license": "MIT (verify on upstream)",
+      "source_license": "MIT",
       "vendored": false
     },
     {
@@ -274,9 +275,7 @@
         "shorthand",
         "compression"
       ],
-      "mcp_servers": [
-        "tokenizer-mcp"
-      ],
+      "mcp_servers": [],
       "source_url": "https://github.com/JuliusBrussee/Caveman",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
@@ -321,10 +320,7 @@
         "cache",
         "context"
       ],
-      "mcp_servers": [
-        "llm-cache-mcp",
-        "tokenizer-mcp"
-      ],
+      "mcp_servers": [],
       "source_url": "https://github.com/garrytan/gstack",
       "source_license": "MIT (verify on upstream)",
       "vendored": false
@@ -503,8 +499,7 @@
       ],
       "mcp_servers": [
         "heygen-mcp",
-        "elevenlabs-mcp",
-        "voice-clone-mcp"
+        "elevenlabs-mcp"
       ],
       "source_url": "https://github.com/heygen-com/hyperframes",
       "source_license": "MIT (verify on upstream)",
@@ -973,5 +968,5 @@
       "for_mode": "hipotesis-driven, multi-step"
     }
   ],
-  "last_updated": "2026-11-12T19:56:04.707215+00:00"
+  "last_updated": "2026-11-15"
 }

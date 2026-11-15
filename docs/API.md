@@ -66,12 +66,21 @@ the unified registry are created, refreshed or removed.
 
 | Invocation | Effect |
 |-----------|--------|
-| `link-skills.sh [--quiet]` | Link the default curated set (anthropic-skills 19 + replica-skill 11) into every target. |
+| `link-skills.sh [--quiet]` | Link the default curated set (anthropic-skills 19 + replica-skill 11 + task-observer 1) into every target. |
 | `link-skills.sh --set <source>` | Link every skill of one source. |
 | `link-skills.sh --set all` / `--all` | Link the entire catalog (heavy per-session metadata; warned). |
 | `link-skills.sh <name> [...]` | Link specific skills by name. |
 | `link-skills.sh --status` | Per-target listing with ownership counts. |
 | `link-skills.sh --unlink [names ...]` | Remove registry-owned links (all, or only the named ones). |
+
+## Task Observer status - `unified-integration/scripts/task-observer.py`
+
+`status` returns JSON describing the vendored bundle and observation workspace.
+An installed, enabled bundle reports `state: "ready"` before the first session
+as well as after bootstrap. `workspace_exists` separately indicates whether
+bootstrap has created the workspace; reading status never creates it.
+Missing bundles report `state: "not installed"`, and disabled workspaces report
+`state: "disabled"`. Diagnostic states retain the `degraded` prefix.
 
 ## Skills loader - `unified-integration/scripts/load-skills.py`
 

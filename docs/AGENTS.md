@@ -1,7 +1,7 @@
 ---
 title: Agents
-version: 1.5
-last_updated: 2026-11-15
+version: 1.6
+last_updated: 2026-11-16
 audience: users
 ---
 
@@ -15,10 +15,11 @@ preserve your personal content across re-runs.
 ## Detection
 
 | Agent | Detected via |
-|-------|--------------|
+| ------- | -------------- |
 | claude-code | `command -v claude` |
 | codex | `command -v codex` |
 | opencode | `command -v opencode` |
+| hermes | `command -v hermes` |
 | cursor | `command -v cursor` |
 | gemini-cli | `command -v gemini` |
 | windsurf | `command -v windsurf` |
@@ -28,6 +29,20 @@ preserve your personal content across re-runs.
 The result is written to `unified-integration/config/detected-agents.sh`
 (machine-local, do not commit).
 
+An explicit native-agent selection survives subsequent setup runs. For example:
+
+```bash
+runtime_python="$(bash unified-integration/scripts/setup-mcp.sh --prepare)"
+"$runtime_python" unified-integration/scripts/native-integration.py \
+  --select-agents claude-code,codex,opencode,hermes \
+  --profile ilma --profile master-chief
+bash unified-integration/setup.sh
+```
+
+The selection is stored outside git at
+`${XDG_DATA_HOME:-~/.local/share}/agentenhancements/host-selection.json`.
+Only existing Hermes profiles are selected; sibling profiles remain untouched.
+
 ## Native skill activation (all agents)
 
 Regardless of which agent is detected, `setup.sh` symlinks a curated skill
@@ -35,13 +50,14 @@ set into the directories that Agent Skills compatible harnesses read
 automatically at runtime:
 
 | Target | Read by |
-|--------|---------|
+| -------- | --------- |
 | `~/.claude/skills/` | Claude Code (personal skills, auto-discovered) |
 | `~/.agents/skills/` | cross-agent Agent Skills standard (agentskills.io) |
 
-Default curated set: the 19 official **anthropic-skills** (docx, pdf, pptx,
-xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...) plus the
-11 **replica-skill** sub-skills. Extend or remove links with
+The default links only the ambient **task-observer** skill. Other capabilities
+are discovered on demand through the local library map and registry.
+`link-skills.sh --set curated` explicitly selects the 31-skill collection
+(anthropic-skills, replica-skill and task-observer). Extend or remove links with
 `unified-integration/scripts/link-skills.sh` (see [SKILLS.md](SKILLS.md)).
 
 Claude Code can additionally consume the upstream marketplace:
@@ -76,7 +92,7 @@ the MCP tool catalog within a turn; credential revocation is enforced by the
 gateway even when the client still displays a cached name. Newly added tools
 may require a fresh session. See [configuration](CONFIGURATION.md).
 
-### OpenCode 2.2.5 (verified)
+### OpenCode 2.3.0 (verified; 2.2.5 also tested)
 
 Setup edits the existing `~/.config/opencode/opencode.jsonc`, or creates
 `opencode.json` if JSONC is absent. Personal instructions, plugins, providers
@@ -95,33 +111,73 @@ The gateway is registered under `mcp.servers`, with `disabled: false` and
 connection to settle so the first model request includes its tools.
 OpenCode 1 plugin APIs differ and
 are not supported by this adapter.
+Setup checks the installed version before changing the OpenCode configuration.
+
+### Hermes Agent (native profiles)
+
+Setup installs the shared MCP gateway in each selected profile's `config.yaml`,
+adds a bounded library pointer to `SOUL.md`, and links the local
+`unified-integration/hermes-plugin` as `plugins/agent-enhancements`.
+The named plugin is enabled through Hermes's native `plugins.enabled` setting.
+An explicitly disabled plugin or a conflicting user plugin causes an error.
+
+The plugin uses `pre_llm_call`, `post_llm_call` and `post_tool_call` to discover
+skills, recall notes and persist short task/session summaries. Conversation
+history and tool payloads are never forwarded to AE. Model providers, persona
+content and host approvals are preserved. `--mcp-only` installs only the gateway.
+`HERMES_HOME` is respected. If an existing `active_profile` points to a missing
+profile, setup repairs it using the saved explicit profile selection.
+
+Use `hermes -p ilma` or `hermes -p master-chief` normally. The installed Hermes
+build reporting v0.17.0, upstream `f1345290`, passed native CLI tests for both
+profiles. Compatibility requires its public plugin hook API; the test command
+below verifies actual installation behavior rather than a version label alone.
 
 ### Cursor (global rule)
+
 Setup writes `~/.cursor/rules/agent-enhancements.mdc` (frontmatter-scoped
 global rule). Cursor's real `~/.cursor/settings.json` is no longer
 polluted with integration keys; fictional keys from older versions are
 cleaned up (signature-checked).
 
 ### Gemini CLI (global context file)
+
 Setup writes a marker-guarded section into `~/.gemini/GEMINI.md` (the
 hierarchical global context file Gemini CLI loads at session start) and
 keeps `~/.gemini/config.yaml` as a reference summary.
 
 ### Windsurf (global rule)
+
 Setup writes `~/.codeium/windsurf/rules/agent-enhancements.md`. The
 legacy `~/.windsurf/config.yaml` (never read by Windsurf) is removed
 (signature-checked) when found.
 
 ### GitHub Copilot / Kiro (reference config)
+
 `~/.config/github-copilot/config.yaml` and `~/.kiro/config.yaml` carry a
 reference summary of the integration settings. Use these agents through
 the launcher to get the full environment.
+
+## Native verification
+
+```bash
+runtime_python="$(bash unified-integration/scripts/setup-mcp.sh --prepare)"
+"$runtime_python" unified-integration/scripts/doctor.py
+"$runtime_python" unified-integration/tests/smoke-native-clis.py --exercise-tools
+"$runtime_python" unified-integration/tests/smoke-hermes.py
+```
+
+Doctor reads the selected hosts' actual configurations, starts their configured
+MCP command, checks health and calls a local tool. It retains failed targets in
+its report and exits nonzero on failure. These commands use local tools and
+isolated model fixtures; provider account authentication must also be verified
+through the native CLI. See [RUNBOOK.md](RUNBOOK.md).
 
 ## Marker-guarded files
 
 Instruction files written by setup are wrapped in:
 
-```
+```text
 <!-- agent-enhancements:begin -->
 ... integration content ...
 <!-- agent-enhancements:end -->

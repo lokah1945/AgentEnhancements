@@ -1,7 +1,7 @@
 ---
 title: Architecture
-version: 1.5
-last_updated: 2026-11-15
+version: 1.6
+last_updated: 2026-11-16
 audience: maintainers, contributors
 ---
 
@@ -12,12 +12,12 @@ audience: maintainers, contributors
 AgentEnhancements is an **aggregation platform**: it vendors eight open-source
 projects and wires them together through a single integration layer so that
 AI coding assistants (Claude Code, Codex, OpenCode, Cursor, Gemini CLI,
-Windsurf, Copilot, Kiro) can share one skills registry, one capability
+Windsurf, Copilot, Kiro, Hermes) can share one skills registry, one capability
 registry, one memory system and one compression layer. ONE install provides
 everything; a curated skill set is additionally activated natively so
 compatible harnesses discover it automatically at runtime.
 
-```
+```text
 AgentEnhancements/
 ├── unified-integration/     # OWNED integration layer (this repo's code)
 │   ├── setup.sh             # single entry point / installer
@@ -29,12 +29,13 @@ AgentEnhancements/
 │   │   ├── all-skills.json  # UNIFIED SKILLS INDEX (schema below)
 │   │   ├── agent-registry.json  # CAPABILITY REGISTRY (skills+plugins+MCP+capabilities)
 │   │   ├── by-category/     # populated by setup.sh (10 canonical buckets)
-│   │   └── by-agent/        # populated by setup.sh (8 canonical agents)
+│   │   └── by-agent/        # populated by setup.sh (9 canonical agents)
 │   ├── memory/              # hooks + config for the memory system
 │   ├── compression/         # headroom wrapper + config
 │   ├── scripts/             # load-skills.py, memory.py, compress.py,
 │   │                        # registry.py, link-skills.sh, dispatch.sh,
 │   │                        # task-observer.py (observer host adapter),
+│   │                        # native-integration.py, native_hermes.py, doctor.py,
 │   │                        # catalog tooling (validate/wire/test/consent/audit)
 │   └── tests/               # regression suite (python3 tests/run-tests.py)
 ├── agentic-awesome-skills/  # vendored (skills, primary source)
@@ -42,7 +43,7 @@ AgentEnhancements/
 ├── claude-mem/              # vendored
 ├── ECC/                     # vendored
 ├── headroom/                # vendored (Rust)
-├── agency-agents/           # vendored (283 The Agency personas + NEXUS playbooks)
+├── agency-agents/           # vendored (283 personas + NEXUS playbooks)
 ├── plugin-catalog/          # curated external plugin sources (40) + MCP roadmap
 ├── ponytail/                # vendored
 ├── replica-skill/           # vendored (11 app-cloning sub-skills)
@@ -55,7 +56,11 @@ AgentEnhancements/
 
 Claude Code and Codex pass native JSON events to `scripts/runtime.py`.
 OpenCode 2 loads `opencode-plugin/index.js` and bridges its prompt/context/idle
-hooks to the same runtime. Startup recalls notes, bootstraps the Task
+hooks to the same runtime. Selected Hermes profiles load `hermes-plugin` through
+their native plugin configuration and bridge its pre/post-LLM and post-tool
+callbacks to that runtime. Only explicit lifecycle fields are forwarded;
+conversation histories and tool payloads stay with the host.
+Startup recalls notes, bootstraps the Task
 Observer workspace and injects a bounded observer context (status, open
 observations); prompt events suggest relevant skills; stop/idle events
 persist summaries. No launcher or manual skill command
@@ -68,10 +73,13 @@ and skill-index schemas are unchanged.
    declared dependencies; no global pip installation.
 1. **detect_agents** - probes PATH for known agent CLIs; writes
    `config/detected-agents.sh` (machine-specific, never hand-edited).
+   A saved machine-local host selection filters the detected agents.
 2. **setup_prompts** - copies per-agent prompt files from
    `system-prompts-and-models-of-ai-tools/` into `prompts/` (bash globstar
    is required for the recursive globs) and writes the universal prompt.
-3. **aggregate_skills** - walks `skills/` of the eight skill sources (agency-agents is division-nested, so each division directory is scanned in turn; task-observer is a root-layout source whose SKILL.md sits at the source root and is aggregated as a single skill), parses
+3. **aggregate_skills** - walks `skills/` of the eight skill sources.
+   Agency-agents uses nested divisions, each scanned in turn. Task-observer
+   has a root-level SKILL.md and is aggregated as a single skill. Parses
    SKILL.md frontmatter (re-parsed from file so YAML block scalars become
    real descriptions), copies each skill directory into `by-category/`
    and `by-agent/` (idempotently: targets are removed before copy), and
@@ -90,14 +98,14 @@ and skill-index schemas are unchanged.
    The default uses an existing binary or the Python fallback.
 6. **create_agent_configs** - merges hooks/prompts into each detected
    agent's own config (`~/.claude/settings.json`, `~/.codex/AGENTS.md`,
-   ...). The three native adapters preserve user hooks, MCP servers, providers
+   ...). The four native adapters preserve user hooks, MCP servers, providers
    and instruction/plugin arrays. Backups are written next to changed files.
    One native `agent-enhancements` gateway loads the nine built MCP servers.
    OpenCode 2 uses `mcp.servers`, `disabled` and `environment`; the adapter
    migrates legacy flat entries. Its prompt hook waits for the managed MCP
    connection before the first model request captures available tools.
 6b. **link_native_skills** - runs `scripts/link-skills.sh` to symlink the
-   curated set (anthropic-skills + replica-skill + task-observer) into `~/.claude/skills/`
+   default ambient skill (task-observer) into `~/.claude/skills/`
    and `~/.agents/skills/`, making those skills auto-discoverable at
    runtime by every Agent Skills compatible harness. Ownership-safe and
    non-fatal.
@@ -133,7 +141,7 @@ templates inside `setup.sh` and the committed files must stay byte-identical
   "total_skills": 3378,
   "categories": {"security": 268, "...": 0},
   "agents_supported": ["claude-code", "codex", "cursor", "gemini-cli",
-                        "opencode", "copilot", "windsurf", "kiro"],
+                        "opencode", "copilot", "windsurf", "kiro", "hermes"],
   "agent_skill_counts": {"claude-code": 93},
   "last_updated": "2026-11-13T00:00:00Z"
 }

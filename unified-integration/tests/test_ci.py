@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+import shlex
 import tempfile
 import unittest
 
@@ -18,6 +19,10 @@ class WorkflowTests(unittest.TestCase):
         cls.ecc_check = next(
             step["run"] for step in workflow["jobs"]["ecc-tests"]["steps"]
             if step.get("name") == "Run ECC tests"
+        )
+        cls.mcp_check = next(
+            step["run"] for step in workflow["jobs"]["mcp-servers"]["steps"]
+            if step.get("name") == "Run the MCP regression module (offline mode)"
         )
         cls.steps = workflow["jobs"]["static-checks"]["steps"]
         cls.shell_steps = [
@@ -92,3 +97,20 @@ class WorkflowTests(unittest.TestCase):
             settings["ECC_TEST_SERIAL"].split(","),
             ["ci/build.test.js", "ci/dist.test.js", "ci/rename.test.js", "ci/timing.test.js"],
         )
+
+    def test_mcp_regression_uses_prepared_runtime(self):
+        runtime = self.root / "runtime/bin/python"
+        runtime.parent.mkdir(parents=True)
+        runtime.write_text('#!/bin/bash\nprintf "prepared MCP runtime\\n"\n')
+        runtime.chmod(0o755)
+        scripts = self.root / "unified-integration/scripts"
+        scripts.mkdir()
+        (scripts / "setup-mcp.sh").write_text(
+            '#!/bin/bash\n[ "$1" = "--prepare" ] || exit 2\n'
+            f'printf "%s\\n" {shlex.quote(str(runtime))}\n'
+        )
+        rc, out, err = run(
+            ["bash", "-e", "-o", "pipefail", "-c", self.mcp_check], cwd=self.root
+        )
+        self.assertEqual(rc, 0, out + err)
+        self.assertEqual(out.strip(), "prepared MCP runtime")

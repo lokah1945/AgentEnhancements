@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
-version: 1.4
-last_updated: 2026-11-15
+version: 1.5
+last_updated: 2026-11-16
 audience: users
 ---
 
@@ -40,14 +40,32 @@ use a sandbox/approval bypass to solve this.
 **OpenCode plugin list is initially empty**
 Plugins initialize asynchronously. Wait for the location to finish warming and
 verify `agentenhancements` has `state.status: active` through `/api/plugin`.
-The adapter targets OpenCode 2.2.5; OpenCode 1 uses a different plugin API.
+The adapter targets OpenCode 2 (verified with 2.2.5 and 2.3.0); setup refuses
+OpenCode 1 before changing its configuration. Upgrade the CLI first.
+
+**A selected agent is missing or a Hermes profile is not configured**
+Check the saved `host-selection.json` described in [CONFIGURATION.md](CONFIGURATION.md).
+Re-run `native-integration.py` with the intended `--select-agents` and repeated
+`--profile` values. Profile names must already exist. Only selected Hermes
+profiles are modified; missing aliases are not recreated.
+
+**Hermes says the plugin is disabled or reports a plugin collision**
+Check that profile's `plugins.enabled`, `plugins.disabled` and
+`plugins/agent-enhancements`. Setup preserves explicit disable settings and
+foreign plugin directories. Resolve the setting through Hermes before retrying.
 
 **Model calls fail with authentication errors**
 Enhancement setup does not create provider accounts. Claude Code requires its
 own login; an expired OpenCode Console/provider key must be replaced through
 that provider's account flow. Native hooks and local MCP health can be tested
-without making paid model calls. Run `bash unified-integration/scripts/setup-mcp.sh --check`
-for the nine built servers' actual protocol tests.
+without making paid model calls. Run
+`bash unified-integration/scripts/setup-mcp.sh --check` for the nine built
+servers' actual protocol tests.
+`doctor.py` additionally checks each selected native host, but does not test
+provider authentication. For Hermes, run `hermes -p <profile> chat -q
+'Return exactly READY' --quiet --max-turns 1`. A missing Nous token requires
+that profile's native login or a deliberately selected working provider;
+installing MCP does not repair an unavailable model slug.
 
 **Existing JSONC comments disappeared**
 Merged JSONC is serialized as JSON to preserve its values safely. The original

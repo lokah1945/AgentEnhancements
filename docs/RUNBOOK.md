@@ -1,7 +1,7 @@
 ---
 title: "Operations Runbook & Doctor"
-version: "1.0"
-last_updated: "2026-11-15"
+version: "1.1"
+last_updated: "2026-11-16"
 audience: "Maintainers, on-call"
 ---
 
@@ -11,6 +11,30 @@ audience: "Maintainers, on-call"
 
 Jalankan dari root repo. Setiap langkah menyebut gejala, perintah, dan
 tindakan bila gagal.
+
+Pemeriksaan konfigurasi native seluruh host yang dipilih:
+
+```bash
+runtime_python="$(bash unified-integration/scripts/setup-mcp.sh --prepare)"
+"$runtime_python" unified-integration/scripts/doctor.py --json
+```
+
+Doctor menghitung setiap target, termasuk profil Hermes yang hilang atau
+gagal, dan keluar nonzero bila ada kegagalan. Pemeriksaan mencakup CLI,
+konfigurasi MCP yang benar-benar terpasang, health, serta pemanggilan tool
+lokal. Autentikasi model perlu diuji terpisah melalui CLI aslinya.
+
+Uji integrasi CLI dengan model fixture lokal (tanpa akun berbayar):
+
+```bash
+"$runtime_python" unified-integration/tests/smoke-native-clis.py --exercise-tools
+"$runtime_python" unified-integration/tests/smoke-hermes.py
+```
+
+Fixture Codex memberi persetujuan otomatis hanya untuk `ae_health` pada
+subproses pengujian. Pengaturan persetujuan global tidak diubah. Uji Hermes
+memverifikasi discovery MCP, injeksi skill, serta simpan ringkasan/tugas di
+dua profil sementara.
 
 ### 1. Bundle vendored utuh?
 
@@ -25,8 +49,8 @@ print("MISMATCH:", bad) if bad else print("OK: bundle pristine")
 PY
 ```
 
-Gagal → `git checkout -- task-observer/` (bundle adalah pin kanonik;
-perubahan hanya lewat prosedur promote yang tercatat di PENDING.md).
+Jika checksum gagal, periksa perubahan dengan `git diff -- task-observer/`.
+Pulihkan hanya perubahan yang tidak diperlukan; bundle adalah pin kanonik.
 
 ### 2. MCP gateway hidup?
 
@@ -44,7 +68,10 @@ umum: dependensi venv (jalankan ulang --prepare), ui.api.json rusak
 ### 3. Konteks sesi dalam budget?
 
 ```bash
-AGENT_MEMORY_ROOT=$(mktemp -d) python3 unified-integration/scripts/runtime.py claude-code <<<'{"hook_event_name":"SessionStart","session_id":"d","cwd":"/tmp"}'
+AGENT_MEMORY_ROOT="$(mktemp -d)" python3 \
+  unified-integration/scripts/runtime.py claude-code <<'JSON'
+{"hook_event_name":"SessionStart","session_id":"d","cwd":"/tmp"}
+JSON
 ```
 
 Output harus ≤ ~400 token (observer card). Bila membengkak: cek
@@ -73,12 +100,12 @@ neg-suppression ≥ 90%): lihat `docs/benchmark/REPORT_2026-11-15.md`.
 ## Ledger kanal host (siapa menyuntik apa)
 
 | Kanal | Isi | Batas |
-|---|---|---:|
+| --- | --- | ---: |
 | CLAUDE.md/AGENTS.md section | pointer L0 + aturan | ~640 tok |
 | SessionStart hook | observer card + memory recall | 250 + 600 |
 | UserPromptSubmit hook | 3 kartu skill | 250 |
 | Native skills (~/.claude/skills) | deskripsi skill tertaut | 2500 |
-| MCP tools/list | 24 skema tool | 1800 |
+| MCP tools/list | skema tool yang diaktifkan | 1800 |
 
 Cold start total ≤ 4.000 token (CONTRACT §8.4). Perubahan kanal baru
 wajib mendaftar di `context_budget.COLD_START_CHANNELS` + test CI.

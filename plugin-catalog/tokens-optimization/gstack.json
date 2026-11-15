@@ -23,10 +23,7 @@
     "read_file",
     "write_file"
   ],
-  "mcp_servers_suggested": [
-    "llm-cache-mcp",
-    "tokenizer-mcp"
-  ],
+  "mcp_servers_suggested": [],
   "trigger_keywords": [
     "token",
     "compress",

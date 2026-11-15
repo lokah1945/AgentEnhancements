@@ -169,14 +169,14 @@ Never edit the upper layers directly; regenerate from below.
 | `agent-reach` | Deep multi-source research with citation tracking | brave-search-mcp, tavily-mcp, exa-mcp, firecrawl-mcp |
 | `understand-anything` | Feynman-style concept explanation for onboarding | wikipedia-mcp, arxiv-mcp, embeddings-mcp |
 | `last-30-days` | Fresh-trend monitoring (last 30 days of news / releases) | brave-search-mcp, newsapi-mcp, google-news-mcp |
-| `rea` | Reasoning + Acting loop with reflection for multi-step problems | task-router-mcp, memory-mcp |
+| `rea` | Reverse Engineer Anything — analyze how apps/binaries work (upstream `morluto/rea` MCP server, install separately) | rea MCP server (upstream) |
 
 #### Tokens / Optimization (`skills/tokens-optimization/`)
 
 | Plugin | Purpose | MCP servers needed |
 |--------|---------|---------------------|
-| `gstack` | Token budgeting, cache strategy, context compression | llm-cache-mcp, tokenizer-mcp |
-| `caveman` | Aggressive shorthand compression for token reduction | tokenizer-mcp |
+| `gstack` | Token budgeting, cache strategy, context compression | — |
+| `caveman` | Aggressive shorthand compression for token reduction | — |
 | `gsd` | Atomic parallel checklist execution (Get Shit Done) | task-router-mcp, memory-mcp |
 | `bmad-method` | Multi-persona agile (PM/SM/Dev/Architect) build orchestrator | linear-mcp, github-issues-mcp, memory-mcp |
 
@@ -195,7 +195,7 @@ Never edit the upper layers directly; regenerate from below.
 |--------|---------|---------------------|
 | `anthropic-skills` | Office docs (.docx/.pdf/.pptx/.xlsx), MCP server authoring, skill creator, webapp testing — **19 sub-skills vendored** | filesystem-mcp, pdf-mcp, vision-mcp |
 | `openmontage` | Non-linear video editing via ffmpeg for shorts / montages | ffmpeg-mcp, video-mcp |
-| `hyperframes` | Personalized talking-head video (consent-gated) | heygen-mcp, elevenlabs-mcp, voice-clone-mcp |
+| `hyperframes` | Personalized talking-head video (consent-gated) | heygen-mcp, elevenlabs-mcp |
 | `humanizer` | Remove AI-isms from generated text, naturalize tone | style-mcp, grammar-mcp |
 
 #### Agency Personas (`skills/agency/`)

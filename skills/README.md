@@ -20,7 +20,7 @@ skills/
 │   └── agent-reach/                # Agent-Reach
 │   └── graphify/                # Graphify
 │   └── last-30-days/                # Last 30 Days
-│   └── rea/                # REA (Reasoning + Acting)
+│   └── rea/                # REA (Reverse Engineer Anything)
 │   └── understand-anything/                # Understand Anything
 ├── tokens-optimization/
 │   ├── README.md                    # Tokens / Optimization category overview
@@ -90,7 +90,7 @@ Plugins (4):
 
 - **Agent Skills (Addy Osmani)** (`agent-skills-addyosmani`) — integrated-ready — MCP: browser-tools-mcp, lighthouse-mcp, pa11y-mcp
 - **Andrej Karpathy Skills** (`karpathy-skills`) — integrated-ready — MCP: jupyter-mcp, python-repl-mcp
-- **Matt Pocock Skills** (`mattpocock-skills`) — integrated-ready — MCP: typescript-language-server, eslint-mcp
+- **Matt Pocock Skills** (`mattpocock-skills`) — integrated-ready — MCP: typescript-language-server-mcp, eslint-mcp
 - **Replica Skill (11 sub-skills)** (`replica-skill`) — vendored — MCP: browser-tools-mcp, vision-mcp
 
 ### Research  ·  `skills/research/`
@@ -102,7 +102,7 @@ Plugins (5):
 - **Agent-Reach** (`agent-reach`) — integrated-ready — MCP: brave-search-mcp, tavily-mcp, exa-mcp, firecrawl-mcp
 - **Graphify** (`graphify`) — integrated-ready — MCP: neo4j-mcp, graphrag-mcp, embeddings-mcp
 - **Last 30 Days** (`last-30-days`) — integrated-ready — MCP: brave-search-mcp, newsapi-mcp, google-news-mcp
-- **REA (Reasoning + Acting)** (`rea`) — integrated-ready — MCP: task-router-mcp, memory-mcp
+- **REA (Reverse Engineer Anything)** (`rea`) — integrated-ready — MCP: (none)
 - **Understand Anything** (`understand-anything`) — integrated-ready — MCP: wikipedia-mcp, arxiv-mcp, embeddings-mcp
 
 ### Tokens / Optimization  ·  `skills/tokens-optimization/`
@@ -112,9 +112,9 @@ Token / context budget skills: compression, agile persona dispatch, atomic paral
 Plugins (4):
 
 - **BMAD Method** (`bmad-method`) — integrated-ready — MCP: linear-mcp, github-issues-mcp, memory-mcp
-- **Caveman** (`caveman`) — integrated-ready — MCP: tokenizer-mcp
+- **Caveman** (`caveman`) — integrated-ready — MCP: (none)
 - **Get Shit Done (GSD)** (`gsd`) — integrated-ready — MCP: task-router-mcp, memory-mcp
-- **GStack** (`gstack`) — integrated-ready — MCP: llm-cache-mcp, tokenizer-mcp
+- **GStack** (`gstack`) — integrated-ready — MCP: (none)
 
 ### Design  ·  `skills/design/`
 
@@ -135,7 +135,7 @@ Plugins (4):
 
 - **Anthropic Skills** (`anthropic-skills`) — vendored — MCP: filesystem-mcp, pdf-mcp, vision-mcp
 - **Humanizer** (`humanizer`) — integrated-ready — MCP: style-mcp, grammar-mcp
-- **Hyperframes** (`hyperframes`) — integrated-ready — MCP: heygen-mcp, elevenlabs-mcp, voice-clone-mcp
+- **Hyperframes** (`hyperframes`) — integrated-ready — MCP: heygen-mcp, elevenlabs-mcp
 - **OpenMontage** (`openmontage`) — integrated-ready — MCP: ffmpeg-mcp, video-mcp
 
 ### Agency Personas  ·  `skills/agency/`

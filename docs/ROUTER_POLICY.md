@@ -1,7 +1,7 @@
 ---
 title: Router Policy
-version: 1.1
-last_updated: 2026-11-13
+version: 1.2
+last_updated: 2026-11-15
 audience: all agents
 ---
 
@@ -12,17 +12,18 @@ dipanggil. Implementasi heuristic ada di `unified-integration/scripts/dispatch.s
 
 ## Hierarki Dispatch
 
-Dispatch berlapis: **orchestrator** (BMAD / GSD / REA) lebih dulu untuk mode
-eksekusi besar, lalu **skill resmi Anthropic** untuk intent yang sangat
-spesifik (format file, MCP, skill engineering, testing, API), lalu **plugin
-spesifik** per sub-task.
+Dispatch berlapis: **orchestrator** (BMAD / GSD untuk mode eksekusi besar, REA
+untuk analisis rekayasa balik) lebih dulu, lalu **skill resmi Anthropic** untuk
+intent yang sangat spesifik (format file, MCP, skill engineering, testing, API),
+lalu **plugin spesifik** per sub-task. Prompt yang tidak cocok kategori mana pun
+jatuh ke **ordinary tools** (abstain jujur), bukan dipaksakan ke satu skill.
 
 ```
 User prompt
    |
-   +--[orchestrator tier]--> bmad / gsd / rea
+   +--[orchestrator tier]--> bmad / gsd / rea (reverse engineering)
    |                           |
-   |                           +--[plugin tier]--> 21 plugin katalog
+   |                           +--[plugin tier]--> 40 plugin katalog
    |
    +--[anthropic skill tier]--> docx / pdf / pptx / xlsx / mcp-builder /
    |                           skill-creator / webapp-testing / claude-api
@@ -30,6 +31,8 @@ User prompt
    |                           natively linked saat setup)
    |
    +--[plugin tier langsung]--> bila trigger keyword jelas
+   |
+   +--[fallback]--> none: ordinary agent tools (tidak ada skill yang dipaksa)
 ```
 
 Skill tier Anthropic dievaluasi SETELAH orchestrator tapi SEBELUM plugin
@@ -42,7 +45,7 @@ sinyal paling spesifik.
 |------------------|--------------|-------------------|
 | "build product", "greenfield", "dari nol" | bmad-method | — (BMAD invoke sendiri) |
 | "kerjakan semua", "do all", "clear backlog" | gsd | — (GSD invoke per task) |
-| "investigate", "telusuri", "cari tahu kenapa" | rea | — (REA invoke per hipotesis) |
+| "reverse engineer", "decompile", "disassemble", "binary/APK analysis" | rea (Reverse Engineer Anything) | — (butuh server upstream morluto/rea) |
 | "build / integrate mcp server", "model context protocol" | — | mcp-builder (skill resmi) |
 | "create / improve / eval a skill", "buat skill" | — | skill-creator (skill resmi) |
 | "test webapp", "playwright", "browser screenshot" | — | webapp-testing (skill resmi) |
@@ -51,13 +54,13 @@ sinyal paling spesifik.
 | sebut `.pdf` / "pdf" | — | pdf (skill resmi) |
 | sebut `.pptx` / `.potx` / "powerpoint" | — | pptx (skill resmi) |
 | sebut `.xlsx` / `.csv` / "excel" / "spreadsheet" | — | xlsx (skill resmi) |
-| "clone app X", "reverse engineer", "build my own version" | — | replica-skill (11 sub-skill berurutan) |
-| "research <topik>", "compare X vs Y" | rea | agent-reach, graphify, last-30-days |
+| "clone app X", "build my own version" | — | replica-skill (11 sub-skill berurutan; REA untuk analisis, replica untuk rebuild) |
+| "research <topik>", "compare X vs Y" | — | agent-reach (deep research), graphify, last-30-days |
 | "refactor TS", "ketatkan types" | — | mattpocock-skills |
 | "prototype", "sketch", "numpy" | — | karpathy-skills |
 | "audit perf", "lighthouse", "a11y" | — | agent-skills-addyosmani |
 | "knowledge graph", "extract entity" | — | graphify |
-| "jelaskan", "apa itu" | — | understand-anything |
+| "jelaskan", "apa itu", "investigate", "telusuri" | — | understand-anything |
 | "recent", "last 30 days", "trend" | — | last-30-days |
 | "compress prompt", "token budget" | — | gstack (lalu caveman bila ekstrem) |
 | "design system", "design tokens" | — | ui-ux-pro-max |
@@ -77,7 +80,10 @@ sinyal paling spesifik.
    (tanpa sebut format) -> ppt-master; tapi begitu `.pptx`/"powerpoint"
    disebut -> pptx (skill resmi menangani file-nya).
 4. **Plugin spesifik menang** bila trigger eksplisit (mis. "clone app" pasti ke replica-skill).
-5. **Fallback default**: rea (selidiki dulu sebelum eksekusi).
+5. **Fallback default**: `none` — bila tidak ada pola yang cocok, gunakan
+   ordinary agent tools. Jangan memaksakan skill katalog ke tugas yang tidak
+   relevan (routing lama ke "rea" salah: REA adalah skill reverse engineering,
+   bukan orchestrator riset umum).
 
 Pemetaan menyeluruh lintas tier (skills + plugins + MCP sekaligus):
 `python3 unified-integration/scripts/registry.py map "<task>"`.
@@ -87,7 +93,6 @@ Pemetaan menyeluruh lintas tier (skills + plugins + MCP sekaligus):
 | Source | Target | Mekanisme |
 |--------|--------|-----------|
 | bmad-method | mattpocock / addyosmani / replica-build | story ke code task |
-| rea | agent-reach | hipotesis ke research sub-query |
 | agent-reach | graphify | sources ke citation graph |
 | replica-entrepreneur | replica-build | keluhan user ke fix plan |
 | ui-ux-pro-max | impeccable | spec ke polish audit |

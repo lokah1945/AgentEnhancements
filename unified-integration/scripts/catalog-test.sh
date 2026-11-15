@@ -21,10 +21,20 @@ if [ -z "$slug" ]; then
     exit 2
 fi
 
-# Locate manifest across categories
+# Locate manifest across categories (the category list comes from
+# catalog.json so new categories - e.g. agency packs - are covered
+# automatically instead of being silently skipped).
 manifest=""
 category_found=""
-for category in code research tokens-optimization design multimedia-writing; do
+CATEGORIES_JSON="$CATALOG_DIR/catalog.json"
+if [ -f "$CATEGORIES_JSON" ]; then
+    category_list=$(jq -r '.categories[]' "$CATEGORIES_JSON")
+else
+    # Fallback: discover categories from the directory tree itself.
+    category_list=$(cd "$CATALOG_DIR" && ls -d */ 2>/dev/null | tr -d '/')
+fi
+[ -z "$category_list" ] && category_list="code research tokens-optimization design multimedia-writing agency"
+for category in $category_list; do
     candidate="$CATALOG_DIR/$category/$slug.json"
     if [ -f "$candidate" ]; then
         manifest="$candidate"

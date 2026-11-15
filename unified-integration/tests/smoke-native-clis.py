@@ -71,8 +71,13 @@ class Mock(BaseHTTPRequestHandler):
                                 data, _ = json.JSONDecoder().raw_decode(
                                     raw[raw.index("{") :]
                                 )
+                                # Consolidated ae_health payload: one
+                                # report per backend; embeddings carries the
+                                # openai credential boolean. Older per-server
+                                # payloads had it at the top level.
+                                emb = data.get("embeddings-mcp", data)
                                 health_outputs.setdefault(self.path, {})[identity] = (
-                                    data["backends"]["openai"]
+                                    emb.get("backends", {}).get("openai")
                                 )
                             except (ValueError, KeyError):
                                 pass

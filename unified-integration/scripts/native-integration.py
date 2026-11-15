@@ -25,7 +25,13 @@ from api_config import BUILTINS, initialize
 
 UI = Path(__file__).resolve().parent.parent
 ROOT = UI.parent
-EVENTS = ("SessionStart", "UserPromptSubmit", "PostToolUse", "Stop")
+EVENTS = (
+    "SessionStart",
+    "UserPromptSubmit",
+    "PreToolUse",
+    "PostToolUse",
+    "Stop",
+)
 
 
 def write(path: Path, content: str) -> None:

@@ -71,8 +71,25 @@ def slim_schema(definition: types.Tool) -> types.Tool:
     doc = definition.model_dump(mode="json", exclude_none=True)
 
     def drop_titles(node: Any) -> Any:
+        """Strip "title" annotation strings, but never a parameter NAME:
+        keys of a properties container are parameters (a schema with
+        properties.title, possibly required, must stay satisfiable), so
+        that container is special-cased and its keys kept; every other
+        "title" - on the schema, inside a property value, in items - is
+        an annotation and is dropped."""
         if isinstance(node, dict):
-            return {k: drop_titles(v) for k, v in node.items() if k != "title"}
+            out = {}
+            for k, v in node.items():
+                if k == "properties" and isinstance(v, dict):
+                    out[k] = {
+                        pk: drop_titles(pv) if isinstance(pv, dict) else pv
+                        for pk, pv in v.items()
+                    }
+                elif k == "title":
+                    continue
+                else:
+                    out[k] = drop_titles(v)
+            return out
         if isinstance(node, list):
             return [drop_titles(item) for item in node]
         return node
@@ -361,13 +378,23 @@ class Gateway:
                                     data = parsed
                             except ValueError:
                                 pass
+                    extras = {
+                        k: v
+                        for k, v in data.items()
+                        if k in ("server", "version", "degraded", "reason")
+                    }
+                    # Backends that report a provider-availability map
+                    # (embeddings: {"openai": bool, "local": bool}) keep it
+                    # in the consolidated report: smoke tests assert
+                    # credential rotation through it. Booleans only.
+                    inner = data.get("backends")
+                    if isinstance(inner, dict) and all(
+                        isinstance(v, bool) for v in inner.values()
+                    ):
+                        extras["backends"] = inner
                     report[server] = {
                         "status": data.get("status", "unknown"),
-                        **{
-                            k: v
-                            for k, v in data.items()
-                            if k in ("server", "version", "degraded", "reason")
-                        },
+                        **extras,
                     }
                 else:
                     worker = self.externals.get(server)
@@ -384,10 +411,17 @@ class Gateway:
                         payload = {}
                     if not isinstance(payload, dict):
                         payload = {}
+                    # Same redaction the call_tool path applies: external
+                    # MCPs may echo environment values in error text. Only
+                    # provenance fields survive, string-clamped.
+                    _config = config
                     report[server] = {
                         "status": payload.get("status", "unknown"),
                         **{
-                            k: v
+                            k: (
+                                str(redact(str(v)[:200], _config))
+                                if isinstance(v, str) else v
+                            )
                             for k, v in payload.items()
                             if k in ("server", "version", "degraded", "reason")
                         },

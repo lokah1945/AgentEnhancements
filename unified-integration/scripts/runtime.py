@@ -21,6 +21,7 @@ from api_config import redact as redact_configured
 from context_budget import (
     MAX_MEMORY,
     MAX_OBSERVER_AMBIENT,
+    MAX_SKILL_CARDS,
     clamp_to_budget,
 )
 
@@ -65,7 +66,7 @@ def skill_context(agent: str, prompt: str) -> str:
         "AgentEnhancements local skill candidates for this task (read the "
         "SKILL.md of one you choose; full catalog search: registry.py "
         "search \"<task>\"):\n" + "\n".join(lines),
-        250,
+        MAX_SKILL_CARDS,
         label="skill candidates",
     )
 

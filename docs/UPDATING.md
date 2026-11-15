@@ -1,434 +1,203 @@
-# Updating Guide
-
-**Version**: 2.0  
-**Last Updated**: 2026-11-01  
-**Audience**: Users, DevOps, maintainers
-
 ---
+title: Updating Guide
+version: 2.1
+last_updated: 2026-11-15
+audience: users, devops, maintainers
+---
+
+# Updating Guide
 
 ## 1. Overview
 
 This guide covers all update procedures for the AgentEnhancements project.
 
+> **Vendoring reality (read first).** All eleven source directories
+> (`agentic-awesome-skills/`, `ECC/`, `anthropic-skills/`, `claude-mem/`,
+> `headroom/`, `ponytail/`, `superpowers/`, `replica-skill/`,
+> `agency-agents/`, `system-prompts-and-models-of-ai-tools/`,
+> `task-observer/`) are **vendored full copies without `.git`**. There is
+> nothing to `git pull` inside them. `update-skills.sh` therefore
+> re-aggregates from what is on disk and prints per-source re-vendor
+> instructions; refreshing upstream content is a deliberate, reviewed
+> re-vendor procedure (§2.2), never an automatic pull. Upstream URLs and
+> licenses per directory: root `LICENSE` notice + `docs/LICENSE_AUDIT.md`.
+
 ### Update Categories
 
 | Category | Frequency | Command | Risk |
 |----------|-----------|---------|------|
-| Skill Sources | Monthly | `./update-skills.sh` | Low |
-| Project Dependencies | As needed | Manual | Medium |
-| Core Tools (headroom, claude-mem) | Quarterly | Manual | Medium |
-| Setup Script | Per release | Git pull | Low |
+| Registry/aggregation refresh | Any time | `./unified-integration/update-skills.sh` | Low |
+| Vendored source refresh (re-vendor) | Deliberate, reviewed | Manual (§2.2) | Medium |
+| Project dependencies (requirements.txt) | As needed | Manual | Medium |
+| Setup script | Per release | Git pull of this repo | Low |
 | Agent CLIs | Per agent release | Agent-specific | Low |
 
 ---
 
-## 2. Updating Skill Sources (Monthly)
+## 2. Refreshing skills and the registry
 
-### 2.1 Automated Update (Recommended)
+### 2.1 Registry refresh (safe, repeatable)
 
 ```bash
-# Run the update script
-/root/agent-enhancements/unified-integration/update-skills.sh
-
-# What it does:
-# 1. Git pulls all source repos (agentic-awesome-skills, ECC, ponytail, superpowers, etc.)
-# 2. Rebuilds headroom if updated
-# 3. Rebuilds claude-mem if updated
-# 4. Prompts to re-run setup.sh
+cd <repo>
+./unified-integration/update-skills.sh
 ```
 
-### 2.2 Manual Update (If Automated Fails)
+What it actually does: re-runs the aggregation pipeline
+(`setup.sh` → `all-skills.json` → `agent-registry.json`) from the vendored
+copies on disk, and prints a per-source reminder that vendored directories
+must be re-vendored to move to a new upstream version. Exit 0 means the
+registry is consistent with the tree — not that upstreams were contacted.
+
+Optional: `AGENT_ENHANCEMENTS_BUILD_HEADROOM=1 ./unified-integration/update-skills.sh`
+also rebuilds the Rust headroom binary from the vendored source.
+
+### 2.2 Re-vendor one source (the real update procedure)
 
 ```bash
-# 1. Update each source
-cd /root/agent-enhancements/agentic-awesome-skills && git pull origin main
-cd /root/agent-enhancements/ECC && git pull origin main
-cd /root/agent-enhancements/ponytail && git pull origin main
-cd /root/agent-enhancements/superpowers && git pull origin main
-cd /root/agent-enhancements/system-prompts-and-models-of-ai-tools && git pull origin main
-cd /root/agent-enhancements/claude-mem && git pull origin main
-cd /root/agent-enhancements/headroom && git pull origin main
-
-# 2. Rebuild compiled components
-cd /root/agent-enhancements/headroom && cargo build --release
-cd /root/agent-enhancements/claude-mem && npm run build
-
-# 3. Regenerate all configs
-/root/agent-enhancements/unified-integration/setup.sh
+# Example: agentic-awesome-skills (MIT code + CC-BY-4.0 content)
+cd /tmp && git clone --depth 1 https://github.com/sickn33/agentic-awesome-skills.git fresh
+diff -rq fresh "$AGENT_ENHANCEMENTS_BASE_DIR/agentic-awesome-skills" | head   # review drift
+rm -rf "$AGENT_ENHANCEMENTS_BASE_DIR/agentic-awesome-skills"
+mkdir -p "$AGENT_ENHANCEMENTS_BASE_DIR/agentic-awesome-skills"
+cp -r fresh/. "$AGENT_ENHANCEMENTS_BASE_DIR/agentic-awesome-skills/"
+rm -rf "$AGENT_ENHANCEMENTS_BASE_DIR/agentic-awesome-skills/.git"  # keep the vendor clean
 ```
 
-### 2.3 Verify Update
+Then: record the upstream commit you vendored in the commit message
+(`chore(vendor): refresh <source> from <url>@<sha>`), re-run
+`./unified-integration/setup.sh`, and run the regression suite
+(`python3 unified-integration/tests/run-tests.py`). For sources with
+license notices (claude-mem, headroom: Apache-2.0 + NOTICE), keep the
+NOTICE files. Never silently drop or rewrite LICENSE files during a
+re-vendor.
+
+`task-observer` is **pinned** — refresh only through the checksumed
+procedure in `task-observer/VENDORED.json` (details: `docs/TASK_OBSERVER.md`).
+
+### 2.3 Verify Refresh
 
 ```bash
-# Check skill counts
-python3 -c "
-import json
-with open('/root/agent-enhancements/unified-integration/skills/all-skills.json') as f:
-    d = json.load(f)
-    print(f'Total skills: {d[\"total_skills\"]}')
-    print(f'Categories: {d[\"categories\"]}')
-    print(f'Last updated: {d[\"last_updated\"]}')
-"
-
-# Test skill loading
-python3 /root/agent-enhancements/unified-integration/scripts/load-skills.py claude-code "security audit"
-
-# Test all agents
-for agent in claude-code codex opencode cursor gemini-cli windsurf kiro; do
-    /root/agent-enhancements/unified-integration/launch-agent.sh $agent --version 2>&1 | head -1
-done
+python3 unified-integration/scripts/registry.py stats
+python3 unified-integration/scripts/load-skills.py claude-code "security audit"
+bash unified-integration/scripts/link-skills.sh --status
 ```
 
 ---
 
 ## 3. Updating Core Dependencies
 
-### 3.0 Vendored skill suites (anthropic-skills, replica-skill, task-observer)
-
-Both are vendored copies (no `.git`), so `update-skills.sh` skips them with
-a warning. Refresh them by re-vendoring:
+### 3.1 headroom (Rust, vendored)
 
 ```bash
-# anthropic-skills (19 official Anthropic skills, Apache-2.0)
-cd /tmp && git clone --depth 1 https://github.com/anthropics/skills.git fresh
-rm -rf "$AGENT_ENHANCEMENTS_BASE_DIR/anthropic-skills"
-mkdir -p "$AGENT_ENHANCEMENTS_BASE_DIR/anthropic-skills"
-cp -r fresh/. "$AGENT_ENHANCEMENTS_BASE_DIR/anthropic-skills/"
-rm -rf "$AGENT_ENHANCEMENTS_BASE_DIR/anthropic-skills/.git"   # keep the vendor clean
-
-# replica-skill: same procedure from https://github.com/Jakeschincariol/replica-skill
-# (keep the original LICENSE file that ships with it)
-
-# task-observer (CC-BY-4.0) is PINNED: never refresh to a new HEAD silently.
-# 1. clone https://github.com/rebelytics/one-skill-to-rule-them-all at a reviewed commit
-# 2. copy ONLY the runtime bundle files listed in task-observer/VENDORED.json
-#    (SKILL.md, references/, scripts/, LICENSE, guides) into task-observer/
-# 3. update task-observer/VENDORED.md + VENDORED.json (new commit, version, checksums)
-# 4. diff, run the integration tests, then re-aggregate
-# Details: docs/TASK_OBSERVER.md ("Update / provenance")
-
-# Then re-aggregate, rebuild the registry and re-link native skills:
-cd "$AGENT_ENHANCEMENTS_BASE_DIR" && ./unified-integration/setup.sh
+cd "$AGENT_ENHANCEMENTS_BASE_DIR/headroom" && cargo build --release
+# A new upstream version requires the §2.2 re-vendor procedure first.
 ```
 
-Verify: `python3 unified-integration/scripts/registry.py stats` should
-report the new skill count for the `anthropic-skills` source, and
-`bash unified-integration/scripts/link-skills.sh --status` should still
-show the curated set linked.
+### 3.2 claude-mem (Node.js, vendored)
 
-### 3.1 headroom (Rust)
+claude-mem ships as a vendored source tree; AgentEnhancements uses its
+concepts (SQLite memory, summarization) through its own parameterized-SQL
+hooks and does not build or run the claude-mem daemon. Refreshing the
+vendor is a §2.2 procedure; there is no per-update `npm run build` step in
+this repository.
 
-```bash
-# Check current version
-/root/agent-enhancements/headroom/target/release/headroom --version
-
-# Update
-cd /root/agent-enhancements/headroom
-git fetch origin
-git log --oneline HEAD..origin/main  # Check what's new
-git pull origin main
-cargo build --release
-
-# Verify
-/root/agent-enhancements/headroom/target/release/headroom --version
-
-# Test compression
-echo "test" | /root/agent-enhancements/unified-integration/compression/compress.sh auto claude-code
-```
-
-### 3.2 claude-mem (Node.js)
+### 3.3 ECC (Node.js, vendored — test suite only)
 
 ```bash
-# Check current version
-cd /root/agent-enhancements/claude-mem && npm list
-
-# Update
-cd /root/agent-enhancements/claude-mem
-git fetch origin
-git log --oneline HEAD..origin/main
-git pull origin main
-npm install
-npm run build
-
-# Verify plugin paths exist
-ls /root/agent-enhancements/claude-mem/.claude-plugin
-ls /root/agent-enhancements/claude-mem/.codex-plugin
-# ... etc
-```
-
-### 3.3 ECC (Node.js - for tests)
-
-```bash
-cd /root/agent-enhancements/ECC
-git fetch origin
-git log --oneline HEAD..origin/main
-git pull origin main
-npm install
-
-# Run tests
+cd ECC && npm install --no-audit --no-fund && npm run build:opencode
 node tests/run-all.js
 ```
 
 ---
 
-## 4. Updating Setup Script
-
-### 4.1 From Git
+## 4. Updating This Repository
 
 ```bash
-cd /root/agent-enhancements
+cd <repo>
 git fetch origin
-git log --oneline HEAD..origin/main  # Review changes
-git pull origin main
-
-# Re-run setup to apply any changes
-/root/agent-enhancements/unified-integration/setup.sh
+git log --oneline HEAD..origin/master
+git pull --ff-only origin master
+./unified-integration/setup.sh
 ```
 
-### 4.2 Verify Setup Script Changes
-
-```bash
-# Check for breaking changes
-grep -n "BREAKING\|breaking\|major" /root/agent-enhancements/unified-integration/setup.sh
-
-# Verify syntax
-bash -n /root/agent-enhancements/unified-integration/setup.sh
-python3 -m py_compile /root/agent-enhancements/unified-integration/scripts/*.py
-```
+Verify: `bash -n unified-integration/setup.sh` and
+`python3 -m py_compile unified-integration/scripts/*.py`.
 
 ---
 
 ## 5. Updating Agent CLIs
 
-Each agent has its own update mechanism:
-
-### 5.1 Claude Code
-```bash
-# Usually auto-updates, or:
-claude --version
-# Check releases at: https://github.com/anthropics/claude-code/releases
-```
-
-### 5.2 Codex
-```bash
-codex --version
-# Update via: npm update -g @openai/codex (if npm-based)
-```
-
-### 5.3 OpenCode
-```bash
-opencode --version
-# Check: https://github.com/opencode-ai/opencode/releases
-```
-
-### 5.4 Cursor
-```bash
-# Auto-updates via app
-cursor --version
-```
-
-### 5.5 Gemini CLI
-```bash
-gemini --version
-# Update: npm update -g @google/gemini-cli
-```
-
-### 5.6 Windsurf
-```bash
-# Auto-updates via app
-windsurf --version
-```
-
-### 5.7 GitHub Copilot
-```bash
-gh extension upgrade copilot
-gh copilot --version
-```
-
-### 5.8 Kiro
-```bash
-kiro --version
-# Check: https://github.com/kiro-ai/kiro/releases
-```
+Each agent updates itself (Claude Code auto-update, Cursor/Windsurf app
+updates, `npm update -g` for Codex/Gemini CLI, `gh extension upgrade
+copilot`, Kiro app updates). AgentEnhancements configuration survives CLI
+updates because all activation files are marker-guarded or merged
+non-destructively — re-run `setup.sh` only after an AE release.
 
 ---
 
 ## 6. Post-Update Verification Checklist
 
-After ANY update, run these checks:
-
 ### 6.1 Core System
 - [ ] `bash -n unified-integration/setup.sh` - Syntax OK
 - [ ] `python3 -m py_compile unified-integration/scripts/*.py` - Python OK
-- [ ] `unified-integration/memory/init-memory.sh` - Memory DB OK
-- [ ] `unified-integration/compression/compress.sh auto claude-code < /dev/null` - Compression OK
+- [ ] `python3 unified-integration/scripts/memory.py claude-code list` - Memory OK
 
 ### 6.2 Skills
-- [ ] `ls unified-integration/skills/all-skills.json` - Index exists
-- [ ] `python3 -c "import json; d=json.load(open('unified-integration/skills/all-skills.json')); print(d['total_skills'])"` - Count > 3000
+- [ ] `python3 unified-integration/scripts/registry.py stats` - Registry builds
 - [ ] `python3 unified-integration/scripts/load-skills.py claude-code "test"` - Skills load
 
-### 6.3 Agent Configs
-- [ ] `ls ~/.claude/CLAUDE.md ~/.claude/settings.json` - Claude config exists
-- [ ] `ls ~/.codex/config.yaml` - Codex config exists
-- [ ] `ls ~/.config/opencode/config.json` - OpenCode config exists
-- [ ] `ls ~/.cursor/settings.json` - Cursor config exists
-- [ ] `ls ~/.gemini/config.yaml` - Gemini config exists
-- [ ] `ls ~/.windsurf/config.yaml` - Windsurf config exists
-- [ ] `ls ~/.config/github-copilot/config.yaml` - Copilot config exists
-- [ ] `ls ~/.kiro/config.yaml` - Kiro config exists
+### 6.3 Agent Configs (paths actually written by setup.sh)
+- [ ] Claude Code: `~/.claude/settings.json` (merged) + `~/.claude/CLAUDE.md` (marker)
+- [ ] Codex: `~/.codex/AGENTS.md` (marker) + `~/.codex/config.toml` (MCP)
+- [ ] OpenCode: `~/.config/opencode/opencode.json[c]` + `AGENTS.md`
+- [ ] Cursor: `~/.cursor/rules/agent-enhancements.mdc`
+- [ ] Gemini: `~/.gemini/GEMINI.md` (reference config.yaml)
+- [ ] Windsurf: `~/.codeium/windsurf/rules/agent-enhancements.md`
+- [ ] Copilot/Kiro: reference configs only (`~/.config/github-copilot/config.yaml`, `~/.kiro/config.yaml`)
 
-### 6.4 Agent Launch
-- [ ] `unified-integration/launch-agent.sh claude-code --version` - Launches
-- [ ] `unified-integration/launch-agent.sh codex --version` - Launches
-- [ ] `unified-integration/launch-agent.sh opencode --version` - Launches
-
-### 6.5 Tests
-- [ ] `cd ECC && node tests/run-all.js` - All pass
+### 6.4 Tests
+- [ ] `python3 unified-integration/tests/run-tests.py` - All pass
+- [ ] `cd ECC && node tests/run-all.js` - Baseline unchanged
 
 ---
 
 ## 7. Rollback Procedures
 
-### 7.1 Rollback Skill Update
+### 7.1 Rollback a re-vendor
+
+Vendored directories have no git history of their own — the rollback IS the
+previous commit of this repository:
+
 ```bash
-# If skill update broke something
-cd /root/agent-enhancements/agentic-awesome-skills
-git log --oneline -5  # Find previous commit
-git checkout <previous-commit-hash>
-# Repeat for other sources if needed
-/root/agent-enhancements/unified-integration/setup.sh
+cd <repo>
+git log --oneline -- <vendored-dir>          # find the previous vendor commit
+git checkout <previous-commit> -- <vendored-dir>
+./unified-integration/setup.sh
 ```
 
-### 7.2 Rollback headroom
-```bash
-cd /root/agent-enhancements/headroom
-git log --oneline -5
-git checkout <previous-commit-hash>
-cargo build --release
-```
+### 7.2 Full Rollback
 
-### 7.3 Rollback claude-mem
 ```bash
-cd /root/agent-enhancements/claude-mem
-git log --oneline -5
-git checkout <previous-commit-hash>
-npm install && npm run build
-```
-
-### 7.4 Full Rollback (Nuclear)
-```bash
-# 1. Restore agent configs from backup
-rm -rf ~/.claude ~/.codex ~/.config/opencode ~/.cursor ~/.gemini ~/.windsurf ~/.config/github-copilot ~/.kiro
-cp -r ~/.claude.backup ~/.claude
-cp -r ~/.codex.backup ~/.codex
-# ... etc
-
-# 2. Reset project to known good commit
-cd /root/agent-enhancements
-git log --oneline -10
+# 1. Roll this repository back
 git checkout <known-good-commit>
 
-# 3. Re-run setup
-/root/agent-enhancements/unified-integration/setup.sh
+# 2. Re-run setup (marker-guarded merges converge to the old state)
+./unified-integration/setup.sh
+
+# 3. Per-file backups written during merges live next to each target as
+#    <file>.backup.<timestamp> (0600) - restore them if a merge went wrong.
 ```
 
 ---
 
-## 8. Scheduled Maintenance
-
-### 8.1 Monthly (Automate with Cron)
-```bash
-# Add to crontab: 0 2 1 * * /root/agent-enhancements/unified-integration/update-skills.sh >> /var/log/agent-enhancements-update.log 2>&1
-
-# Or use systemd timer:
-# /etc/systemd/system/agent-enhancements-update.service
-# /etc/systemd/system/agent-enhancements-update.timer
-```
-
-### 8.2 Quarterly
-- [ ] Update headroom to latest Rust edition
-- [ ] Update claude-mem dependencies
-- [ ] Update ECC dependencies
-- [ ] Review agent CLI versions
-- [ ] Run full test suite
-- [ ] Update documentation if needed
-
-### 8.3 Annually
-- [ ] Review CONTRACT.md for relevance
-- [ ] Audit all dependencies for security
-- [ ] Performance benchmark
-- [ ] Architecture review
-
----
-
-## 9. Automated Update Pipeline (CI/CD)
-
-### 9.1 GitHub Actions Example
-```yaml
-# .github/workflows/update-skills.yml
-name: Monthly Skill Update
-on:
-  schedule:
-    - cron: '0 2 1 * *'  # Monthly 2 AM
-  workflow_dispatch: {}
-
-jobs:
-  update:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update skills
-        run: |
-          cd /root/agent-enhancements
-          ./unified-integration/update-skills.sh
-      - name: Run tests
-        run: |
-          cd ECC && node tests/run-all.js
-      - name: Create PR
-        uses: peter-evans/create-pull-request@v5
-        with:
-          title: "chore(skills): monthly update from upstream"
-          body: "Automated monthly skill source update"
-```
-
----
-
-## 10. Troubleshooting Updates
+## 8. Troubleshooting Updates
 
 | Issue | Solution |
 |-------|----------|
-| Git pull fails | Check network, credentials, resolve conflicts manually |
+| "Not a git repository ... skipping" in update-skills.sh | Expected for vendored sources — use §2.2 re-vendor |
 | Cargo build fails | Update Rust: `rustup update`, check Cargo.toml |
-| NPM install fails | Clear cache: `npm cache clean --force`, check Node version |
-| Tests fail after update | Check CHANGELOG.md for breaking changes, adapt code |
-| Skill count dropped | Upstream removed skills - verify with git log |
-| Agent config not updated | Re-run setup.sh manually |
-| Memory DB locked | Kill processes: `lsof ~/.agent-memory/memory.db` |
-
----
-
-## 11. Version Compatibility Matrix
-
-| Component | Min Version | Current | Notes |
-|-----------|-------------|---------|-------|
-| bash | 4.0 | 5.x | |
-| python3 | 3.8 | 3.11+ | |
-| sqlite3 | 3.30 | 3.40+ | |
-| rust | 1.70 | 1.75+ | For headroom |
-| node | 18 | 20+ | For claude-mem, ECC |
-| git | 2.30 | 2.40+ | |
-
----
-
-## 12. Support
-
-For update issues:
-1. Check this guide
-2. Run diagnostic commands in TROUBLESHOOTING.md
-3. Check CHANGELOG.md for breaking changes
-4. Report with: component, version, error, steps to reproduce
-
----
-
-**End of Updating Guide**
+| Tests fail after update | Compare against the baseline in `docs/audit/TEST_RESULTS.md` |
+| Skill count dropped | Diff the vendored source vs upstream before/after re-vendor |
+| Agent config not updated | Re-run setup.sh; check marker blocks were not hand-edited |
+| Memory DB locked | Kill stale hooks: `lsof ~/.agent-memory/memory.db` |

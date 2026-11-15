@@ -80,7 +80,7 @@ and skill-index schemas are unchanged.
    passed to the index builder through a record file - never interpolated
    into code.
 3b. **build_registry** - regenerates `skills/agent-registry.json` from the
-   fresh index plus `plugin-catalog/` (21 plugins) and the MCP roadmap
+   fresh index plus `plugin-catalog/` (40 plugins) and the MCP roadmap
    (38 servers) and the built-in capabilities. Non-fatal on failure; the
    committed registry remains a fallback.
 4. **setup_memory** - writes `memory/config.yaml`, `init-memory.sh` and the

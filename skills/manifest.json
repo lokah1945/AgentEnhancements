@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "description": "Modular skill tree index. Each entry is a self-contained directory under skills/<category>/<slug>/ containing SKILL.md + manifest.json. Backed by symlinks into plugin-catalog/.",
+  "description": "Modular skill tree index. Each entry is a self-contained directory under skills/<category>/<slug>/ containing SKILL.md + manifest.json. The tree is generated at install time (scripts/scaffold_modular_skills.sh) and is not committed.",
   "total_plugins": 40,
   "categories": [
     "code",

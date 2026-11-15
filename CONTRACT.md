@@ -1,8 +1,8 @@
 # AgentEnhancements Development Contract
 
 **Project**: AgentEnhancements  
-**Version**: 2.1  
-**Effective Date**: 2026-11-01  
+**Version**: 2.2  
+**Effective Date**: 2026-11-15  
 **Status**: BINDING - All agents MUST comply
 
 ---
@@ -29,9 +29,9 @@ This contract establishes mandatory rules for ALL AI agents (Claude Code, Codex,
 - All agents consume the same unified skills registry
 
 ### 2.3 Updateability First
-- All external sources tracked as git submodules or documented remotes
-- Update script (`unified-integration/update-skills.sh`) is the ONLY way to refresh skills
-- No manual copying of skill files - always through aggregation pipeline
+- All external sources are **vendored full copies** (no submodules) with the upstream repository and license documented per directory (root `LICENSE` notice, `docs/LICENSE_AUDIT.md`)
+- Update script (`unified-integration/update-skills.sh`) refreshes the aggregation/registry from the on-disk tree; moving a vendored source to a new upstream version is a deliberate **re-vendor procedure** (review, commit, re-run setup) — see `docs/UPDATING.md` §2.2
+- No manual copying of skill files into the registry - always through the aggregation pipeline
 
 ### 2.4 Full Auditability & Change Tracking (MANDATORY)
 - **Every modification MUST be traceable to a specific agent and session**
@@ -134,14 +134,15 @@ This contract establishes mandatory rules for ALL AI agents (Claude Code, Codex,
 7. Push branch, create PR
 ```
 
-### 5.2 Skill Update Flow (Monthly / On Demand)
+### 5.2 Skill Update Flow (On Demand)
 ```
-1. Run: ./unified-integration/update-skills.sh
-2. Review changes in unified-integration/skills/
-3. Run: ./unified-integration/setup.sh
-4. Verify all agent configs regenerated correctly
-5. Commit: chore(skills): update from upstream sources
-6. Push
+1. Run: ./unified-integration/update-skills.sh   (re-aggregates from the vendored tree)
+2. To move to a NEW upstream version: follow the re-vendor procedure in docs/UPDATING.md §2.2
+3. Review changes in unified-integration/skills/
+4. Run: ./unified-integration/setup.sh
+5. Verify all agent configs regenerated correctly
+6. Commit: chore(skills): update from upstream sources
+7. Push
 ```
 
 ### 5.3 Emergency Hotfix Flow
@@ -205,7 +206,30 @@ docs/
 
 ## 8. Configuration Contract
 
-### 8.1 Environment Variables (Immutable Interface)
+### 8.1 Capability status contract (two dimensions)
+
+Every capability in the ecosystem (skill, plugin, MCP server, built-in) carries
+TWO independent status dimensions. One must never be inherited from the other,
+nor from a parent entry:
+
+| Dimension | Where it lives | Values | Meaning |
+|-----------|----------------|--------|---------|
+| **Implementation status** | Manifest field `status` (plugin-catalog, mcp-servers.json) — static, hand-maintained, validated by `catalog-validate.py` | `to-integrate`, `integrated` (vendored + wired + tested), `integrated-ready` (guide + routing shipped; upstream not vendored — user installs it), `deprecated`; MCP roadmap: `built`, `to-install` | How far the AE-side artifact is implemented |
+| **Runtime readiness** | Computed at runtime per host/provider — never stored in manifests | visible/hidden via `api_config.server_state()` reasons: `local_tools_available`, `configured`, `not_configured`, `missing_credentials`, `runtime_not_configured`, `executable_not_installed`, `disabled`, `disabled_by_default`; skills: linked via `link-skills.sh --status` | Whether the capability can actually be invoked right now, by this user, on this host |
+
+Rules:
+- Readiness is recomputed from live state (files, credentials, config) — it is
+  never cached across an auth/permission revocation, and never claimed from a
+  manifest. `registry.py usable_entries` and the MCP gateway both filter on it.
+- A parent's status (e.g. a plugin family or plugin catalog entry) never
+  implies the status of its children (e.g. sub-skills, suggested MCP servers).
+- Capabilities that are not ready may be listed WITH their diagnosis
+  (`api_config.status()`, `registry.py map`) but must not be offered as
+  healthy callable tools.
+- Documentation may not present reference config files as native activation,
+  nor a `to-install` roadmap entry as an installed server.
+
+### 8.2 Environment Variables (Immutable Interface)
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `AGENT_ENHANCEMENTS_BASE_DIR` | Project root | `/root/agent-enhancements` |
@@ -215,7 +239,7 @@ docs/
 
 **Agents MUST NOT** introduce new required env vars without updating `docs/CONFIGURATION.md` and this contract.
 
-### 8.2 File Paths (Canonical)
+### 8.3 File Paths (Canonical)
 ```
 unified-integration/
 ├── setup.sh                    # MAIN ENTRY POINT
@@ -278,6 +302,7 @@ unified-integration/
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 2.2 | 2026-11-15 | ZCode (audit remediation session) | §2.3/§5.2 rewritten to match the vendoring reality (re-vendor procedure, no submodule pulls); new §8.1 capability status contract (implementation vs runtime readiness dimensions) |
 | 2.1 | 2026-11-01 | System | Added mandatory agent traceability (R205-R208), renamed project to AgentEnhancements |
 | 2.0 | 2026-11-01 | System | Initial contract - replaces ad-hoc rules |
 | 1.0 | 2026-10-15 | System | Implicit conventions (now formalized) |

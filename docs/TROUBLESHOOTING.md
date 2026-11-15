@@ -133,3 +133,10 @@ owner must resolve the lock in GitHub Settings, Billing and licensing, or
 contact GitHub Support if the billing page shows no problem to resolve.
 After the lock is cleared, rerun the workflow and inspect the actual step
 results. Local test results do not establish that GitHub Actions is green.
+
+**MCP regression fails to import `mcp.server.fastmcp`**
+Run the tests using the interpreter returned by
+`bash unified-integration/scripts/setup-mcp.sh --prepare`. The canonical
+requirements target MCP SDK 1.x. A separate, unconstrained SDK installation
+can select MCP 2.x, whose server API differs. Health checks and regression
+tests must use the same prepared runtime.

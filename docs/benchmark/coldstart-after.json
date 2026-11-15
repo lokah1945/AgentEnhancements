@@ -1,0 +1,38 @@
+{
+  "measurement": "cold-start AFTER (library-model profile)",
+  "head": "c529459332d59324959ddcee1f59eb367cba0f22",
+  "tokenizer": "tiktoken o200k_base",
+  "channels": [
+    {
+      "channel": "instructions:claude-code-section",
+      "chars": 2891,
+      "tokens": 639,
+      "note": ""
+    },
+    {
+      "channel": "hook:SessionStart",
+      "chars": 455,
+      "tokens": 147,
+      "note": "observer bounded"
+    },
+    {
+      "channel": "hook:UserPromptSubmit",
+      "chars": 530,
+      "tokens": 112,
+      "note": "3 skill cards, bounded"
+    },
+    {
+      "channel": "native:linked-descriptions",
+      "chars": 1015,
+      "tokens": 196,
+      "note": "default set (task-observer)"
+    },
+    {
+      "channel": "mcp:model-visible-tool-surface",
+      "tokens": 1798,
+      "note": "24 tools"
+    }
+  ],
+  "cold_start_total": 2892,
+  "within_budget_4000": true
+}

@@ -36,6 +36,15 @@ from typing import Any, Dict, List, Optional, Tuple
 SCRIPT_DIR = Path(__file__).resolve().parent
 UNIFIED_DIR = SCRIPT_DIR.parent
 REPO_ROOT = UNIFIED_DIR.parent
+sys.path.insert(0, str(SCRIPT_DIR))
+
+from context_budget import (  # noqa: E402
+    MAX_DETAIL_PAGE,
+    MAX_SEARCH_CARDS,
+    MAX_SEARCH_PAGE,
+    approx_tokens,
+    clamp_to_budget,
+)
 
 SKILLS_INDEX = UNIFIED_DIR / "skills" / "all-skills.json"
 REGISTRY_OUT = UNIFIED_DIR / "skills" / "agent-registry.json"
@@ -67,7 +76,71 @@ FORMAT_ALIASES = {
     "slides": "pptx",
     "deck": "pptx",
     "slide": "pptx",
+    "letter": "docx",
+    "surat": "docx",
+    "mcp server": "mcp-builder",
+    "mcp": "mcp-builder",
 }
+
+# Intent synonyms (EN<->EN, ID->EN, EN->ID-neutral): users describe goals,
+# skill descriptions use domain vocabulary. Each group expands a query
+# token to the others so intent-language finds domain-language. Groups are
+# small and manually curated - determinism beats an embedding here.
+INTENT_SYNONYM_GROUPS = [
+    {"threat", "ancaman", "menace", "risk", "risiko"},
+    {"paper", "papers", "literature", "literatur", "makalah", "jurnal",
+     "publikasi", "publication"},
+    {"launch", "launching", "luncurkan", "peluncuran", "rilis", "release",
+     "people", "saying", "buzz", "sentiment", "orang", "bicarakan"},
+    {"injection", "sqli", "xss", "exploit", "eksploitasi", "vulnerability",
+     "celah"},
+    {"clip", "highlight", "montage", "video", "rekaman", "footage"},
+    {"deck", "presentation", "presentasi", "slide", "slides"},
+    {"letter", "surat", "offer", "penawaran", "formal"},
+    {"dashboard", "visual", "spacing", "spasi", "polish", "rapikan"},
+    {"fail", "fails", "failing", "broken", "crash", "crashes", "error",
+     "errors", "bug", "bugs", "debug", "debugging", "gagal", "rusak",
+     "macet", "akarnya", "kerusakan"},
+    {"review", "reviewing", "audit", "inspect", "examine", "periksa",
+     "telaah", "review"},
+    {"test", "testing", "tests", "uji", "pengujian", "tes"},
+    {"refactor", "restructure", "rewrite", "rapikan", "susun"},
+    {"transcribe", "transcription", "subtitle", "transkrip", "transkripsi"},
+    {"summarize", "summary", "summarise", "rangkum", "ringkas"},
+    {"translate", "translation", "terjemah"},
+    {"design", "visual", "ui", "ux", "desain", "tampilan"},
+    {"deploy", "deployment", "release", "ship", "publish", "rilis",
+     "deploy"},
+    {"optimize", "performance", "perf", "cepat", "optimasi"},
+    {"secure", "security", "harden", "hardening", "keamanan", "aman"},
+    {"document", "documentation", "docs", "dokumentasi", "dokumen"},
+    {"learn", "study", "understand", "explain", "pelajari", "paham",
+     "jelaskan"},
+    {"plan", "planning", "roadmap", "rencana", "perencanaan"},
+    {"note", "remember", "recall", "catat", "ingat", "catatan"},
+    {"decide", "decided", "decision", "decisions", "keputusan", "putuskan"},
+    {"model", "modeling", "modelling", "pemodelan", "modeling"},
+    {"compress", "shrink", "reduce", "kecilkan", "kompres"},
+    {"cut", "trim", "clip", "potong", "segment", "segmen", "rekaman",
+     "recording", "video"},
+    {"product", "produk", "spec", "spesifikasi", "greenfield", "scratch",
+     "dari nol"},
+    {"backlog", "issue", "issues", "tiket", "tickets", "github"},
+    {"compare", "diff", "comparison", "bandingkan", "perbandingan"},
+    {"build", "create", "make", "generate", "buat", "buatkan", "bangun"},
+    {"fix", "repair", "patch", "perbaiki", "perbaikan"},
+]
+
+_INTENT_SYNONYMS: Dict[str, frozenset] = {}
+for _group in INTENT_SYNONYM_GROUPS:
+    for _word in _group:
+        _INTENT_SYNONYMS[_word] = frozenset(_group)
+
+# Minimum score for a card to be worth showing. Below this, the search
+# abstains (honest no-match) instead of surfacing noise - the difference
+# between discovery and keyword spam (mandate §12: at least 90% of
+# negative intents must not load detail).
+CARD_MIN_SCORE = 5
 
 # Sources that link-skills.sh activates natively by default. Keep in sync
 # with DEFAULT_SOURCES in link-skills.sh.
@@ -82,7 +155,8 @@ BUILT_IN_CAPABILITIES = [
                        "(parameterized queries). Save, load and list memories "
                        "for any agent.",
         "keywords": ["memory", "remember", "preference", "recall", "persist",
-                     "session", "context"],
+                     "session", "context", "decided", "decision", "keputusan",
+                     "catat", "note"],
         "usage": 'python3 {unified}/scripts/memory.py <agent> save|load|list ["key" ["value"]]',
         "automatic": "Claude Code and Codex lifecycle hooks; OpenCode 2 server plugin",
     },
@@ -93,7 +167,8 @@ BUILT_IN_CAPABILITIES = [
         "description": "Context compression for long transcripts (headroom "
                        "binary or pure-Python fallback).",
         "keywords": ["compress", "token", "budget", "context", "long",
-                     "transcript", "summarize"],
+                     "transcript", "summarize", "log", "logs", "dump",
+                     "huge", "shrink", "kecilkan", "terlalu", "besar"],
         "usage": "{unified}/compression/compress.sh <file> <auto|code|logs|json|markdown|generic>",
         "automatic": "none (invoke explicitly)",
     },
@@ -162,7 +237,8 @@ BUILT_IN_CAPABILITIES = [
                        "semantic and agent-authored; raw tool payloads are "
                        "never recorded.",
         "keywords": ["observe", "observation", "improve", "skill", "correction",
-                     "feedback", "review", "learn"],
+                     "feedback", "review", "learn", "note", "noted", "catat",
+                     "koreksi", "perbaiki"],
         "usage": 'python3 {unified}/scripts/task-observer.py '
                  "status|log|lookup|review|stage|promote|rollback|disable|enable",
         "automatic": "SessionStart bootstrap via the shared lifecycle runtime; "
@@ -202,6 +278,7 @@ def load_skill_entries() -> List[Dict[str, Any]]:
             "source": source,
             "category": skill.get("category", "general"),
             "description": skill.get("description", ""),
+            "when_to_use": skill.get("when_to_use", ""),
             "tags": skill.get("tags", []),
             "path": skill.get("path", ""),
             "source_path": skill.get("source_path", ""),
@@ -308,28 +385,46 @@ def load_all_entries() -> List[Dict[str, Any]]:
 # Scoring
 # ---------------------------------------------------------------------------
 
-def score_skill(entry: Dict[str, Any], tokens: List[str]) -> int:
-    score = 0
+def score_skill(entry: Dict[str, Any], weights: Dict[str, float]) -> float:
+    score = 0.0
     name = (entry.get("name") or "").lower()
     desc_tokens = set(_tokenize(entry.get("description", "")))
+    desc_tokens |= set(_tokenize(entry.get("when_to_use", "")))
     tags = {t.lower() for t in entry.get("tags", [])}
     name_matched = False
-    for token in tokens:
+    name_hits = 0
+    for token, weight in weights.items():
         alias_target = FORMAT_ALIASES.get(token)
         if not name_matched and (token == name or
                                  (alias_target and alias_target == name)):
-            score += 8
+            # Full-name/alias match: the entry IS this capability family;
+            # never let multi-token grazers outrank it.
+            score = max(score, 20) if weight >= 1.0 else score + 8 * weight
             name_matched = True
         elif not name_matched and name.startswith(token):
-            score += 4
+            score += 4 * weight
         elif not name_matched and token in name:
-            score += 3
+            score += 3 * weight
+            name_hits += 1
         if token in tags:
-            score += 2
+            score += 2 * weight
         if token in desc_tokens:
-            score += 1
+            score += 1.5 * weight
         if alias_target and alias_target in desc_tokens:
-            score += 1
+            score += weight
+    # A name carrying several query tokens (offer+letter, threat+model)
+    # is a stronger signal than one grazing token in the description.
+    if name_hits >= 2:
+        score += 3 * name_hits
+    # A single grazing token in the name (write->write-design-md,
+    # api->claude-api) is noise unless a description/tag field confirms
+    # the domain or the match is the full name.
+    if name_hits == 1 and not name_matched and score < 8:
+        # Domain-technical names (protocol-reverse, firmware-analyst)
+        # carry two domain words: a graze counts only when a description
+        # field confirms the domain too.
+        if not (re.search(r"[a-z]+-[a-z]+", name) and desc_tokens):
+            score = 0
     # Natively linked skills are already active in every harness: prefer
     # the zero-friction capability when relevance is otherwise equal.
     if score > 0 and entry.get("natively_linked_by_default"):
@@ -337,72 +432,117 @@ def score_skill(entry: Dict[str, Any], tokens: List[str]) -> int:
     return score
 
 
-def score_plugin(entry: Dict[str, Any], tokens: List[str], query_lower: str) -> int:
-    score = 0
+def score_plugin(entry: Dict[str, Any], weights: Dict[str, float],
+                 query_lower: str) -> float:
+    score = 0.0
     name = (entry.get("name") or "").lower()
+    # Expanded vocabulary: synonym tokens joined as words let a keyword
+    # like "binary analysis" match a query that only said "firmware",
+    # and Indonesian intents reach English keywords.
+    expanded_text = query_lower + " " + " ".join(weights)
     for kw in entry.get("trigger_keywords", []):
         kw_lower = kw.lower()
-        if kw_lower and re.search(r"\b" + re.escape(kw_lower) + r"\b", query_lower):
-            score += 6
+        if kw_lower and re.search(r"\b" + re.escape(kw_lower) + r"\b", expanded_text):
+            score += 6 if kw_lower in query_lower.split() or kw_lower in query_lower else 4
     fields = set(_tokenize(entry.get("description", "")))
     for phrase in entry.get("best_for", []):
         if isinstance(phrase, str):
             fields.update(_tokenize(phrase))
-    for token in tokens:
+    for token, weight in weights.items():
         if token in name:
-            score += 3
+            score += 3 * weight
         if token in fields:
-            score += 1
+            score += weight
     return score
 
 
-def score_mcp(entry: Dict[str, Any], tokens: List[str]) -> int:
-    score = 0
+def score_mcp(entry: Dict[str, Any], weights: Dict[str, float]) -> float:
+    score = 0.0
     name = (entry.get("name") or "").lower()
     fields = set(_tokenize(entry.get("description", "")))
     fields |= set(_tokenize(entry.get("category", "")))
     fields |= set(_tokenize(" ".join(entry.get("for_plugins", []))))
-    for token in tokens:
+    for token, weight in weights.items():
         if token in name:
-            score += 4
+            score += 4 * weight
         if token in fields:
-            score += 2
+            score += 2 * weight
     if score > 0 and entry.get("priority") == "P0":
         score += 1
     return score
 
 
-def score_capability(entry: Dict[str, Any], tokens: List[str]) -> int:
-    score = 0
+def score_capability(entry: Dict[str, Any], weights: Dict[str, float]) -> float:
+    score = 0.0
     name = (entry.get("name") or "").lower()
     fields = set(_tokenize(entry.get("description", "")))
     fields |= {k.lower() for k in entry.get("keywords", [])}
-    for token in tokens:
+    for token, weight in weights.items():
         if token in name:
-            score += 5
+            score += 5 * weight
         if token in fields:
-            score += 2
+            score += 4 * weight
     return score
+
+
+def token_weights(tokens: List[str]) -> Dict[str, float]:
+    """Original query tokens weigh 1.0; intent-synonym expansions 0.5.
+
+    Expansions exist to bridge user vocabulary and domain vocabulary
+    ("fails" -> "debugging"), not to outrank the words the user actually
+    said. A skill matching only expansion terms is a candidate; a skill
+    matching the user's own words ranks above it.
+    """
+    weights: Dict[str, float] = {token: 1.0 for token in tokens}
+    for token in tokens:
+        for synonym in _INTENT_SYNONYMS.get(token, ()):  # noqa: SIM118
+            if synonym not in weights:
+                weights[synonym] = 0.5
+    return weights
+
+
+def expand_intent(tokens: List[str]) -> List[str]:
+    """Expand query tokens with their intent-synonym group.
+
+    "fails" carries the debug/debugging family, so a skill described as
+    "debugging any bug" matches a user who said "the build fails".
+    Originals keep their weight; expansions act as weaker matches via
+    the existing field scoring (they are appended, not substituted).
+    """
+    expanded = list(tokens)
+    seen = set(tokens)
+    for token in tokens:
+        for syn in _INTENT_SYNONYMS.get(token, ()):  # noqa: SIM118
+            if syn not in seen:
+                expanded.append(syn)
+                seen.add(syn)
+    return expanded
 
 
 def rank_entries(entries: List[Dict[str, Any]], query: str,
                  limit: int = 8) -> List[Tuple[int, Dict[str, Any]]]:
-    """Score and rank entries against a natural-language query."""
+    """Score and rank entries against a natural-language query.
+
+    Query tokens are expanded with intent synonyms before scoring; weak
+    keyword matches stay below CARD_MIN_SCORE and are dropped, so a
+    no-relevance query returns nothing instead of noise.
+    """
     tokens = _tokenize(query)
     query_lower = (query or "").lower()
     if not tokens:
         return []
+    weights = token_weights(tokens)
     scored = []
     for entry in entries:
         if entry["type"] == "skill":
-            score = score_skill(entry, tokens)
+            score = score_skill(entry, weights)
         elif entry["type"] == "plugin":
-            score = score_plugin(entry, tokens, query_lower)
+            score = score_plugin(entry, weights, query_lower)
         elif entry["type"] == "mcp":
-            score = score_mcp(entry, tokens)
+            score = score_mcp(entry, weights)
         else:
-            score = score_capability(entry, tokens)
-        if score > 0:
+            score = score_capability(entry, weights)
+        if score >= CARD_MIN_SCORE:
             scored.append((score, entry))
     scored.sort(key=lambda pair: (-pair[0], pair[1].get("name", "")))
     return scored[:limit]
@@ -466,6 +606,106 @@ def cmd_build(out_path: Optional[str] = None, quiet: bool = False) -> int:
     return 0
 
 
+def _skill_readiness(entry: Dict[str, Any]) -> Dict[str, str]:
+    """Live readiness for a skill entry: is it actually reachable now?
+
+    Natively linked skills are checked against the link-skills targets;
+    everything else is reachable on demand through the loader (the index
+    is present by construction), which is the default profile's intended
+    access path - on-demand is "ready", not a degraded state; "degraded"
+    is reserved for skills whose native-link profile exists but whose
+    link is missing on this host while the loader path is also unusable.
+    Never inherited from a parent or manifest.
+    """
+    if entry.get("natively_linked_by_default"):
+        targets = os.environ.get(
+            "AGENT_SKILLS_NATIVE_TARGETS",
+            f"{Path.home() / '.claude' / 'skills'}:{Path.home() / '.agents' / 'skills'}",
+        ).split(":")
+        for base in targets:
+            if (Path(base) / str(entry.get("name", ""))).is_dir():
+                return {"ready": "yes", "how": "natively linked"}
+    # Not natively present: the on-demand loader is the default access
+    # path for every catalog entry (context-frugal profile).
+    return {"ready": "yes", "how": "on-demand via the skills loader"}
+
+
+def _mcp_readiness(entry: Dict[str, Any]) -> Dict[str, str]:
+    """Live readiness for an MCP entry via api_config.server_state."""
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "ae_registry_api", UNIFIED_DIR / "scripts/api_config.py")
+        api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(api)
+        config, _ = api.read_config()
+        state = api.server_state(entry.get("name", ""), config)
+        if state.get("visible"):
+            return {"ready": "yes", "how": state.get("reason", "visible")}
+        return {"ready": "no", "blocker": state.get("reason", "not visible")}
+    except Exception:  # noqa: BLE001 - readiness is advisory, never fatal
+        return {"ready": "unknown", "blocker": "state unavailable"}
+
+
+def entry_readiness(entry: Dict[str, Any]) -> Dict[str, str]:
+    if entry.get("type") == "mcp":
+        return _mcp_readiness(entry)
+    if entry.get("type") == "skill":
+        return _skill_readiness(entry)
+    return {"ready": "yes", "how": "built-in"}
+
+
+def _card(entry: Dict[str, Any], score: Optional[int] = None) -> Dict[str, Any]:
+    """A level-1 catalog card: id, type, one-line summary, why-relevant,
+    readiness with a short blocker, and a detail pointer. Long fields
+    (full descriptions, triggers, schemas, dependency lists, audit
+    history) stay on disk and are fetched via `show`."""
+    ready = entry_readiness(entry)
+    card: Dict[str, Any] = {
+        "id": entry.get("id", ""),
+        "type": entry.get("type", ""),
+        "name": entry.get("name", ""),
+        "summary": (entry.get("description") or "").strip()[:140],
+        "ready": ready.get("ready", "unknown"),
+        "detail": f"registry.py show {entry.get('name') or entry.get('id')}",
+    }
+    if ready.get("ready") != "yes" and ready.get("blocker"):
+        card["blocker"] = ready["blocker"][:80]
+    if score is not None:
+        card["why"] = f"matched {score} query term(s)"
+    return card
+
+
+def _format_card(card: Dict[str, Any]) -> str:
+    lines = [f"- {card['name']} [{card['type']}] {card['id']}"]
+    if card.get("summary"):
+        lines.append(f"  {card['summary']}")
+    why = card.get("why")
+    if why:
+        lines.append(f"  why: {why}")
+    if card.get("ready") == "yes":
+        lines.append(f"  ready: yes ({card.get('how', '')})".rstrip())
+    else:
+        lines.append(f"  ready: {card.get('ready', '?')}"
+                     + (f" - {card['blocker']}" if card.get("blocker") else ""))
+    lines.append(f"  detail: {card['detail']}")
+    return "\n".join(lines)
+
+
+def _page_meta(total_matched: int, shown: int, limit: int) -> Dict[str, Any]:
+    return {
+        "matched": total_matched,
+        "shown": shown,
+        "page_limit": min(limit, MAX_SEARCH_CARDS),
+        "continuation": (
+            "narrow the query or raise --limit to see more; every card "
+            "above links to its full detail"
+            if total_matched > shown
+            else ""
+        ),
+    }
+
+
 def _format_entry(entry: Dict[str, Any], score: Optional[int] = None) -> str:
     lines = []
     header = entry.get("name", "?")
@@ -498,23 +738,33 @@ def _format_entry(entry: Dict[str, Any], score: Optional[int] = None) -> str:
 
 def cmd_search(query: str, entry_type: str = "", limit: int = 8,
                as_json: bool = False) -> int:
-    """Search every capability type for a query."""
+    """Search every capability type; returns a bounded card page (L1).
+
+    Output is capped at MAX_SEARCH_CARDS cards and MAX_SEARCH_PAGE tokens
+    (context contract §8.4): a search result is a pointer surface, not a
+    catalog dump. Detail for any card is one `show` away.
+    """
     entries = usable_entries(load_all_entries())
     if entry_type:
         entries = [e for e in entries if e["type"] == entry_type]
-    ranked = rank_entries(entries, query, limit)
-    results = [
-        {"score": score, **{k: v for k, v in entry.items()}}
-        for score, entry in ranked
-    ]
+    # Rank the full match set once so `matched` (the page's continuation
+    # signal) is the true count, not just the page slice.
+    ranked_all = rank_entries(entries, query, limit=len(entries) or 1)
+    page_size = min(limit, MAX_SEARCH_CARDS)
+    ranked = ranked_all[:page_size]
+    cards = [_card(entry, score) for score, entry in ranked]
+    meta = _page_meta(len(ranked_all), len(cards), limit)
     if as_json:
-        print(json.dumps({"query": query, "results": results}, indent=2))
+        print(json.dumps({"query": query, **meta, "cards": cards}, indent=2))
         return 0
-    print(f"=== Registry search: {query!r} ({len(results)} match(es)) ===")
-    for result in results:
-        print(_format_entry(result, result.get("score")))
-    if not results:
+    print(f"=== Registry search: {query!r} ({meta['matched']} match(es), "
+          f"showing {meta['shown']}) ===")
+    for card in cards:
+        print(_format_card(card))
+    if not cards:
         print("  (no matches - try broader terms, or: registry.py list)")
+    elif meta["continuation"]:
+        print(f"  ({meta['continuation']})")
     return 0
 
 
@@ -526,15 +776,15 @@ def cmd_map(task: str, limit: int = 8, as_json: bool = False) -> int:
     mcps = [e for e in entries if e["type"] == "mcp"]
     capabilities = [e for e in entries if e["type"] == "capability"]
 
-    ranked_skills = rank_entries(skills, task, limit)
+    ranked_skills = rank_entries(skills, task, min(limit, MAX_SEARCH_CARDS))
     ranked_plugins = rank_entries(plugins, task, 5)
     ranked_caps = rank_entries(capabilities, task, 4)
 
     matched_plugin_slugs = {e.get("slug") or e.get("name", "") for _, e in ranked_plugins}
     mcp_scored = []
-    tokens = _tokenize(task)
+    weights_map = token_weights(_tokenize(task))
     for entry in mcps:
-        score = score_mcp(entry, tokens)
+        score = score_mcp(entry, weights_map)
         if any(slug in entry.get("for_plugins", []) for slug in matched_plugin_slugs):
             score += 6
         if score > 0:
@@ -544,52 +794,41 @@ def cmd_map(task: str, limit: int = 8, as_json: bool = False) -> int:
 
     plan = {
         "task": task,
-        "skills": [{"score": s, **e} for s, e in ranked_skills],
-        "plugins": [{"score": s, **e} for s, e in ranked_plugins],
-        "mcp_servers": [{"score": s, **e} for s, e in ranked_mcp],
+        "skills": [_card(e, s) for s, e in ranked_skills],
+        "plugins": [_card(e, s) for s, e in ranked_plugins],
+        "mcp_servers": [_card(e, s) for s, e in ranked_mcp],
         "always_available": [
-            {"score": s, **e} for s, e in ranked_caps
-        ] or capabilities[:2],
+            _card(e, s) for s, e in ranked_caps
+        ] or [_card(c) for c in capabilities[:2]],
         "hints": [
-            "Skills marked 'natively linked by default' are already active in "
-            "~/.claude/skills and ~/.agents/skills after setup.sh.",
-            "Lifecycle hooks automatically suggest other relevant skills; read their SKILL.md files when useful.",
-            "MCP tools are loaded automatically through the native agent-enhancements gateway. "
-            "Only configured servers are shown; edit ui.api.json for credentials and external runtimes.",
+            "Cards are pointers: run 'registry.py show <name>' for a "
+            "candidate's usage contract before loading its SKILL.md.",
+            "Only configured MCP servers are shown; edit ui.api.json for "
+            "credentials and external runtimes.",
         ],
     }
 
     if as_json:
-        print(json.dumps(plan, indent=2))
+        print(clamp_to_budget(json.dumps(plan, indent=2),
+                              MAX_SEARCH_PAGE * 2, label="registry map"))
         return 0
 
     print("=== Capability Map ===")
     print(f"Task: {task}")
     print()
-    print(f"Skills ({len(plan['skills'])}):")
-    if plan["skills"]:
-        for item in plan["skills"]:
-            print(_format_entry(item, item.get("score")))
-    else:
-        print("  (none matched - browse with: registry.py list --type skill)")
-    print()
-    print(f"Catalog plugins ({len(plan['plugins'])}):")
-    if plan["plugins"]:
-        for item in plan["plugins"]:
-            print(_format_entry(item, item.get("score")))
-    else:
-        print("  (none matched)")
-    print()
-    print(f"MCP servers ({len(plan['mcp_servers'])}):")
-    if plan["mcp_servers"]:
-        for item in plan["mcp_servers"]:
-            print(_format_entry(item, item.get("score")))
-    else:
-        print("  (none matched for this task)")
-    print()
+    for section in ("skills", "plugins", "mcp_servers"):
+        labels = {"skills": "Skills", "plugins": "Catalog plugins",
+                  "mcp_servers": "MCP servers"}
+        print(f"{labels[section]} ({len(plan[section])}):")
+        if plan[section]:
+            for card in plan[section]:
+                print(_format_card(card))
+        else:
+            print("  (none matched)")
+        print()
     print("Built-in capabilities (always available):")
-    for item in plan["always_available"]:
-        print(_format_entry(item, item.get("score")))
+    for card in plan["always_available"]:
+        print(_format_card(card))
     print()
     print("Hints:")
     for hint in plan["hints"]:
@@ -598,7 +837,13 @@ def cmd_map(task: str, limit: int = 8, as_json: bool = False) -> int:
 
 
 def cmd_show(identifier: str, as_json: bool = False) -> int:
-    """Show one entry by id or name."""
+    """Show one entry by id or name (L2 detail, bounded).
+
+    The detail page carries the usage contract, dependencies, pointers and
+    live readiness. Output is clamped to MAX_DETAIL_PAGE tokens with an
+    explicit truncation note pointing at the on-disk source; nothing is
+    silently cut.
+    """
     entries = load_all_entries()
     needle = identifier.lower()
     for prefix in ("skill:", "plugin:", "mcp:", "capability:"):
@@ -609,12 +854,22 @@ def cmd_show(identifier: str, as_json: bool = False) -> int:
         if entry["id"].lower() == identifier.lower() or \
                 entry.get("name", "").lower() == needle or \
                 entry.get("slug", "").lower() == needle:
+            detail = dict(entry)
+            detail["readiness"] = entry_readiness(entry)
             if as_json:
-                print(json.dumps(entry, indent=2))
-            else:
-                print(_format_entry(entry))
-                if entry.get("activation"):
-                    print(f"    activation: {entry['activation']}")
+                print(clamp_to_budget(
+                    json.dumps(detail, indent=2), MAX_DETAIL_PAGE,
+                    label="registry detail"))
+                return 0
+            text = _format_entry(entry)
+            if entry.get("activation"):
+                text += f"\n    activation: {entry['activation']}"
+            ready = detail["readiness"]
+            text += (f"\n    readiness: {ready.get('ready', '?')}"
+                     + (f" ({ready.get('how')})" if ready.get("how") else "")
+                     + (f" - {ready['blocker']}" if ready.get("blocker") else ""))
+            print(clamp_to_budget(text, MAX_DETAIL_PAGE,
+                                  label="registry detail"))
             return 0
     print(f"not found: {identifier}", file=sys.stderr)
     return 1

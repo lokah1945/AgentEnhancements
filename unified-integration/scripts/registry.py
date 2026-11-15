@@ -142,6 +142,29 @@ for _group in INTENT_SYNONYM_GROUPS:
 # negative intents must not load detail).
 CARD_MIN_SCORE = 5
 
+# Verbs that appear in thousands of skill descriptions. Alone, they name
+# generic actions, not capabilities ("write a haiku", "translate good
+# morning"); a query whose original tokens are all in this set abstains
+# rather than emitting a noise card. With any domain noun present, the
+# query searches normally.
+GENERIC_ACTION_WORDS = frozenset("""
+write writing writes summarize summarise summary translate translation
+create creating make making build building generate generating learn
+learning explain explaining recommend recommending suggest name naming
+say saying tell telling ask asking know knowing find finding get getting
+buat buatkan bangun tulis rangkum terjemah jelaskan sarankan cari tahu
+sebut mengapa kenapa apa siapa kapan dimana berapa banyak sedikit
+""".split())
+
+# Formatting/layout nouns name document anatomy, not domains: alone they
+# cannot trigger the hyphenated-name phrase bonus ("paragraph"-optimizer
+# for "summarize the plot of Hamlet in one paragraph").
+LAYOUT_NOUNS = frozenset("""
+paragraph paragraphs page pages line lines word words sentence sentences
+chapter chapters plot story text file folder list item table row column
+halaman paragraf baris kata kalimat bab teks berkas folder daftar tabel
+""".split())
+
 # Sources that link-skills.sh activates natively by default. Keep in sync
 # with DEFAULT_SOURCES in link-skills.sh.
 DEFAULT_NATIVE_SOURCES = ("anthropic-skills", "replica-skill", "task-observer")
@@ -393,7 +416,17 @@ def score_skill(entry: Dict[str, Any], weights: Dict[str, float]) -> float:
     tags = {t.lower() for t in entry.get("tags", [])}
     name_matched = False
     name_hits = 0
+    generic_confirmed = False
     for token, weight in weights.items():
+        # Generic action verbs never graze a name: "write" must not rank
+        # write-design-md, "translate" must not rank visa-doc-translate.
+        # They confirm a domain match at most ONCE total (desc and
+        # when_to_use are one field set), never accumulate synonyms.
+        if token in GENERIC_ACTION_WORDS:
+            if not generic_confirmed and token in desc_tokens:
+                score += 0.5 * weight
+                generic_confirmed = True
+            continue
         alias_target = FORMAT_ALIASES.get(token)
         if not name_matched and (token == name or
                                  (alias_target and alias_target == name)):
@@ -404,8 +437,11 @@ def score_skill(entry: Dict[str, Any], weights: Dict[str, float]) -> float:
         elif not name_matched and name.startswith(token):
             score += 4 * weight
         elif not name_matched and token in name:
-            score += 3 * weight
-            name_hits += 1
+            # Word-boundary only: "rain" must not graze "constraint".
+            parts = name.split("-")
+            if any(token == part or token in part.split() for part in parts):
+                score += 3 * weight
+                name_hits += 1
         if token in tags:
             score += 2 * weight
         if token in desc_tokens:
@@ -416,6 +452,22 @@ def score_skill(entry: Dict[str, Any], weights: Dict[str, float]) -> float:
     # is a stronger signal than one grazing token in the description.
     if name_hits >= 2:
         score += 3 * name_hits
+    # Domain-technical hyphenated names (protocol-reverse): one domain
+    # word in the name plus the SAME domain confirmed in the entry's
+    # description is a phrase match, not a graze. The confirming token
+    # must differ from the name-grazing token (agency-customer-service
+    # grazing "service" must not qualify via an unrelated desc word).
+    elif name_hits == 1 and "-" in name:
+        grazing = next(
+            (t for t, w in weights.items()
+             if w >= 1.0 and t in name and t not in LAYOUT_NOUNS), None
+        )
+        if grazing and any(
+            token in desc_tokens
+            for token, weight in weights.items()
+            if weight >= 1.0 and token != grazing
+        ):
+            score += 4
     # A single grazing token in the name (write->write-design-md,
     # api->claude-api) is noise unless a description/tag field confirms
     # the domain or the match is the full name.
@@ -466,7 +518,9 @@ def score_mcp(entry: Dict[str, Any], weights: Dict[str, float]) -> float:
         if token in name:
             score += 4 * weight
         if token in fields:
-            score += 2 * weight
+            # MCP entries have short keyword fields; a synonym hit is a
+            # strong enough signal to clear the card threshold.
+            score += 4 * weight
     if score > 0 and entry.get("priority") == "P0":
         score += 1
     return score
@@ -532,6 +586,11 @@ def rank_entries(entries: List[Dict[str, Any]], query: str,
     if not tokens:
         return []
     weights = token_weights(tokens)
+    # Generic-only queries abstain: chit-chat and small talk must not
+    # produce capability cards (negative suppression target >= 90%).
+    originals = [t for t, w in weights.items() if w >= 1.0]
+    if originals and all(t in GENERIC_ACTION_WORDS for t in originals):
+        return []
     scored = []
     for entry in entries:
         if entry["type"] == "skill":

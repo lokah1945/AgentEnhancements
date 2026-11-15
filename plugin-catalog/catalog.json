@@ -175,7 +175,11 @@
         "last 30 days",
         "news",
         "trends",
-        "fresh"
+        "fresh",
+        "launch",
+        "people are saying",
+        "buzz",
+        "what people are saying"
       ],
       "mcp_servers": [
         "brave-search-mcp",
@@ -203,7 +207,9 @@
         "binary analysis",
         "analisis binary",
         "apk analysis",
-        "how does this app work"
+        "how does this app work",
+        "what protocol does",
+        "firmware"
       ],
       "mcp_servers": [],
       "source_url": "https://github.com/morluto/rea",

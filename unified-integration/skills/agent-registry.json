@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-15T14:57:45.224531+00:00",
+  "generated_at": "2026-11-15T15:35:39.548139+00:00",
   "stats": {
     "total": 3464,
     "by_type": {
@@ -54066,13 +54066,17 @@
       "source": "plugin-catalog",
       "category": "research",
       "status": "integrated-ready",
-      "description": "recent, last 30 days, news, trends, fresh",
+      "description": "recent, last 30 days, news, trends, fresh, launch, people are saying, buzz, what people are saying",
       "trigger_keywords": [
         "recent",
         "last 30 days",
         "news",
         "trends",
-        "fresh"
+        "fresh",
+        "launch",
+        "people are saying",
+        "buzz",
+        "what people are saying"
       ],
       "best_for": [],
       "path": "plugin-catalog/research/last-30-days/SKILL.md",
@@ -54093,7 +54097,7 @@
       "source": "plugin-catalog",
       "category": "research",
       "status": "integrated-ready",
-      "description": "rea, reverse engineer, decompile, disassemble, binary analysis, analisis binary, apk analysis, how does this app work",
+      "description": "rea, reverse engineer, decompile, disassemble, binary analysis, analisis binary, apk analysis, how does this app work, what protocol does, firmware",
       "trigger_keywords": [
         "rea",
         "reverse engineer",
@@ -54102,7 +54106,9 @@
         "binary analysis",
         "analisis binary",
         "apk analysis",
-        "how does this app work"
+        "how does this app work",
+        "what protocol does",
+        "firmware"
       ],
       "best_for": [],
       "path": "plugin-catalog/research/rea/SKILL.md",
@@ -55681,7 +55687,15 @@
         "context",
         "long",
         "transcript",
-        "summarize"
+        "summarize",
+        "log",
+        "logs",
+        "dump",
+        "huge",
+        "shrink",
+        "kecilkan",
+        "terlalu",
+        "besar"
       ],
       "usage": "unified-integration/compression/compress.sh <file> <auto|code|logs|json|markdown|generic>",
       "automatic": "none (invoke explicitly)"

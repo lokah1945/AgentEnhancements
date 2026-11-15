@@ -1,31 +1,13 @@
 {
   "positives": 41,
   "negatives": 10,
-  "recall_at_5_tuning": 0.9393939393939394,
-  "recall_at_5_holdout": 0.875,
-  "recall_at_5_all": 0.926829268292683,
-  "negative_suppression": 0.6,
+  "recall_at_5_tuning": 0.9696969696969697,
+  "recall_at_5_holdout": 1.0,
+  "recall_at_5_all": 0.975609756097561,
+  "negative_suppression": 0.9,
   "target_recall": 0.95,
   "target_negative": 0.9,
   "misses": [
-    {
-      "intent": "summarize what people are saying about this launch",
-      "labels": [
-        "mcp:google-news-mcp",
-        "plugin:last-30-days",
-        "skill:competitor-summary-report-creator",
-        "skill:last30days",
-        "skill:launcher"
-      ],
-      "top5": [
-        "capability:launcher",
-        "skill:replica-launch",
-        "skill:pro-launch",
-        "skill:launch-check",
-        "skill:people-data"
-      ],
-      "hit": false
-    },
     {
       "intent": "potong klip 30 detik dari rekaman ini",
       "labels": [
@@ -33,53 +15,16 @@
         "mcp:video-mcp",
         "plugin:openmontage"
       ],
-      "top5": [
-        "skill:homelab-vlan-segmentation"
-      ],
-      "hit": false
-    },
-    {
-      "intent": "what protocol does this firmware binary speak",
-      "labels": [
-        "plugin:rea",
-        "skill:reverse-engineer"
-      ],
-      "top5": [
-        "skill:protocol-reverse",
-        "skill:binary-diff",
-        "skill:firmware-analyst",
-        "skill:firmware-pentest"
-      ],
+      "top5": [],
       "hit": false
     }
   ],
   "negative_fires": [
     {
-      "intent": "write a haiku about rain",
-      "top5": [
-        "skill:write-design-md"
-      ],
-      "abstained": false
-    },
-    {
       "intent": "summarize the plot of Hamlet in one paragraph",
       "top5": [
-        "skill:claude-api",
-        "skill:paragraph-keyword-optimizer"
-      ],
-      "abstained": false
-    },
-    {
-      "intent": "translate good morning to Japanese",
-      "top5": [
-        "skill:visa-doc-translate"
-      ],
-      "abstained": false
-    },
-    {
-      "intent": "berapa jarak bumi ke bulan",
-      "top5": [
-        "skill:replica-backend"
+        "skill:paragraph-keyword-optimizer",
+        "skill:claude-api"
       ],
       "abstained": false
     }

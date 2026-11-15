@@ -1,6 +1,6 @@
 {
   "measurement": "cold-start AFTER (library-model profile)",
-  "head": "c529459332d59324959ddcee1f59eb367cba0f22",
+  "head": "e08210970902b3fc0d930af77f71a658f3bfb627",
   "tokenizer": "tiktoken o200k_base",
   "channels": [
     {
@@ -12,7 +12,7 @@
     {
       "channel": "hook:SessionStart",
       "chars": 455,
-      "tokens": 147,
+      "tokens": 143,
       "note": "observer bounded"
     },
     {
@@ -33,6 +33,6 @@
       "note": "24 tools"
     }
   ],
-  "cold_start_total": 2892,
+  "cold_start_total": 2888,
   "within_budget_4000": true
 }

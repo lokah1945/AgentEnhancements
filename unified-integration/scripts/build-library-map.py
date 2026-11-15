@@ -177,6 +177,13 @@ itself does not grow when the catalog grows).
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--text-out", default=None,
+                        help="also write the rendered L0 card to this path")
+    parser.add_argument("--json-out", default=None,
+                        help="write the JSON map here instead of the default")
+    parser.add_argument("--quiet", action="store_true")
+    args = parser.parse_args()
     index = load_index()
     try:
         registry_meta = json.loads(REGISTRY.read_text(encoding="utf-8"))
@@ -203,12 +210,22 @@ def main() -> int:
         )
         return 1
 
-    out_json = OUT_JSON
+    out_json = Path(args.json_out) if args.json_out else OUT_JSON
     out_json.parent.mkdir(parents=True, exist_ok=True)
+    # The rendered text IS the L0 card an agent reads via `cat`; persist
+    # it inside the JSON so one file serves machines and agents alike.
     out_json.write_text(
-        json.dumps({**data, "bootstrap_tokens_approx": cost}, indent=2) + "\n",
+        json.dumps(
+            {**data, "bootstrap_tokens_approx": cost, "rendered": text},
+            indent=2,
+        )
+        + "\n",
         encoding="utf-8",
     )
+    if args.text_out:
+        text_path = Path(args.text_out)
+        text_path.parent.mkdir(parents=True, exist_ok=True)
+        text_path.write_text(text, encoding="utf-8")
     print(f"library map: {cost} tokens (budget {MAX_BOOTSTRAP}) -> {out_json}")
     print(f"rendered text: {len(text)} chars")
     return 0

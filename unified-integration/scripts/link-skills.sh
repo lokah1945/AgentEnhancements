@@ -207,13 +207,25 @@ audit_install() {
             log_warn "   the default profile links only the ambient task-observer)."
             if [ "$migrate" = "yes" ]; then
                 log_info "  migrating: unlinking all but the default set..."
-                local keep
-                for keep in $(resolve_skills sources "$DEFAULT_SOURCES"); do
-                    local kname
-                    kname="${keep%%$'\t'*}"
-                    local dst="$target/$kname"
-                    [ -L "$dst" ] && mv "$dst" "$target/.ae-keep-$kname" 2>/dev/null || true
-                done
+                # Park each default-set link under a dot-prefixed name the
+                # removal glob cannot see. A park failure (slot conflict,
+                # mv error) LEAVES the link in place with a warning rather
+                # than letting the removal loop unlink a default skill.
+                local keep_line kname dst
+                while IFS=$'\t' read -r kname _keepcat; do
+                    [ -n "$kname" ] || continue
+                    dst="$target/$kname"
+                    if [ -L "$dst" ]; then
+                        if [ -e "$target/.ae-keep-$kname" ] && [ ! -L "$target/.ae-keep-$kname" ]; then
+                            log_warn "  keep slot conflict at .ae-keep-$kname; leaving $kname in place"
+                            continue
+                        fi
+                        if ! mv "$dst" "$target/.ae-keep-$kname"; then
+                            log_warn "  could not park $kname; leaving it in place"
+                            continue
+                        fi
+                    fi
+                done < <(resolve_skills sources "$DEFAULT_SOURCES")
                 local entry2
                 for entry2 in "$target"/*; do
                     [ -L "$entry2" ] || continue
@@ -229,7 +241,11 @@ audit_install() {
                     local base
                     base="$(basename "$keep2")"
                     base="${base#.ae-keep-}"
-                    mv "$keep2" "$target/$base" 2>/dev/null || true
+                    if [ -e "$target/$base" ] || [ -L "$target/$base" ]; then
+                        log_warn "  conflict restoring $base; kept at $keep2"
+                        continue
+                    fi
+                    mv "$keep2" "$target/$base" || log_warn "  restore failed: $keep2"
                 done
                 log_info "  migrated: default set kept, others unlinked"
             else

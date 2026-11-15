@@ -60,6 +60,8 @@ _DENYLIST = [
 _DENYLIST_PYTHON = _DENYLIST + [
     re.compile(r"shutil\.rmtree\(\s*['\"](/|/(?:boot|etc|usr|var|home|root))"),
     re.compile(r"os\.(?:removedirs|unlink)\(\s*['\"]/"),
+    # shell-outs embedding a root wipe: os.system("rm -rf /"), subprocess("rm -rf /")
+    re.compile(r"rm\s+(-[a-zA-Z]*\s+)*-?[rf]{1,2}[a-zA-Z]*\s+/['\"]"),
 ]
 
 _TASKS: dict[str, dict] = {}

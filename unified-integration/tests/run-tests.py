@@ -32,6 +32,7 @@ for mod in [
     "test_native_automation",
     "test_api_config",
     "test_task_observer",
+    "test_audit_remediation",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))
 

@@ -31,10 +31,13 @@ UNIFIED_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(cd "$UNIFIED_DIR/.." && pwd)}"
 SKILLS_DIR="${AGENT_SKILLS_DIR:-$UNIFIED_DIR/skills}"
 
-# Sources linked by default: the official Anthropic skills plus the
-# app-cloning pipeline. Production-grade, well-scoped, and together small
-# enough to keep per-session skill metadata cheap for every harness.
-DEFAULT_SOURCES="anthropic-skills replica-skill"
+# Sources linked by default: the official Anthropic skills, the
+# app-cloning pipeline, and the task-observer meta-skill (ambient
+# observation of skill usage; its activation rides the lifecycle runtime,
+# the native link only makes the bundle discoverable). Production-grade,
+# well-scoped, and together small enough to keep per-session skill
+# metadata cheap for every harness.
+DEFAULT_SOURCES="anthropic-skills replica-skill task-observer"
 
 QUIET=0
 

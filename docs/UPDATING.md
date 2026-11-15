@@ -83,7 +83,7 @@ done
 
 ## 3. Updating Core Dependencies
 
-### 3.0 anthropic-skills and replica-skill (vendored skill suites)
+### 3.0 Vendored skill suites (anthropic-skills, replica-skill, task-observer)
 
 Both are vendored copies (no `.git`), so `update-skills.sh` skips them with
 a warning. Refresh them by re-vendoring:
@@ -98,6 +98,14 @@ rm -rf "$AGENT_ENHANCEMENTS_BASE_DIR/anthropic-skills/.git"   # keep the vendor 
 
 # replica-skill: same procedure from https://github.com/Jakeschincariol/replica-skill
 # (keep the original LICENSE file that ships with it)
+
+# task-observer (CC-BY-4.0) is PINNED: never refresh to a new HEAD silently.
+# 1. clone https://github.com/rebelytics/one-skill-to-rule-them-all at a reviewed commit
+# 2. copy ONLY the runtime bundle files listed in task-observer/VENDORED.json
+#    (SKILL.md, references/, scripts/, LICENSE, guides) into task-observer/
+# 3. update task-observer/VENDORED.md + VENDORED.json (new commit, version, checksums)
+# 4. diff, run the integration tests, then re-aggregate
+# Details: docs/TASK_OBSERVER.md ("Update / provenance")
 
 # Then re-aggregate, rebuild the registry and re-link native skills:
 cd "$AGENT_ENHANCEMENTS_BASE_DIR" && ./unified-integration/setup.sh

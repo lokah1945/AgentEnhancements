@@ -34,6 +34,7 @@ AgentEnhancements/
 │   ├── compression/         # headroom wrapper + config
 │   ├── scripts/             # load-skills.py, memory.py, compress.py,
 │   │                        # registry.py, link-skills.sh, dispatch.sh,
+│   │                        # task-observer.py (observer host adapter),
 │   │                        # catalog tooling (validate/wire/test/consent/audit)
 │   └── tests/               # regression suite (python3 tests/run-tests.py)
 ├── agentic-awesome-skills/  # vendored (skills, primary source)
@@ -45,6 +46,7 @@ AgentEnhancements/
 ├── plugin-catalog/          # curated external plugin sources (40) + MCP roadmap
 ├── ponytail/                # vendored
 ├── replica-skill/           # vendored (11 app-cloning sub-skills)
+├── task-observer/           # vendored (ambient skill-observation meta-skill, CC-BY-4.0, pinned)
 ├── superpowers/             # vendored
 └── system-prompts-and-models-of-ai-tools/  # vendored (prompt sources)
 ```
@@ -53,8 +55,10 @@ AgentEnhancements/
 
 Claude Code and Codex pass native JSON events to `scripts/runtime.py`.
 OpenCode 2 loads `opencode-plugin/index.js` and bridges its prompt/context/idle
-hooks to the same runtime. Startup recalls notes; prompt events suggest relevant
-skills; stop/idle events persist summaries. No launcher or manual skill command
+hooks to the same runtime. Startup recalls notes, bootstraps the Task
+Observer workspace and injects a bounded observer context (status, open
+observations); prompt events suggest relevant skills; stop/idle events
+persist summaries. No launcher or manual skill command
 is needed. Native compaction remains under each CLI's control. The memory DB
 and skill-index schemas are unchanged.
 
@@ -67,7 +71,7 @@ and skill-index schemas are unchanged.
 2. **setup_prompts** - copies per-agent prompt files from
    `system-prompts-and-models-of-ai-tools/` into `prompts/` (bash globstar
    is required for the recursive globs) and writes the universal prompt.
-3. **aggregate_skills** - walks `skills/` of the seven skill sources (agency-agents is division-nested, so each division directory is scanned in turn), parses
+3. **aggregate_skills** - walks `skills/` of the eight skill sources (agency-agents is division-nested, so each division directory is scanned in turn; task-observer is a root-layout source whose SKILL.md sits at the source root and is aggregated as a single skill), parses
    SKILL.md frontmatter (re-parsed from file so YAML block scalars become
    real descriptions), copies each skill directory into `by-category/`
    and `by-agent/` (idempotently: targets are removed before copy), and
@@ -93,7 +97,7 @@ and skill-index schemas are unchanged.
    migrates legacy flat entries. Its prompt hook waits for the managed MCP
    connection before the first model request captures available tools.
 6b. **link_native_skills** - runs `scripts/link-skills.sh` to symlink the
-   curated set (anthropic-skills + replica-skill) into `~/.claude/skills/`
+   curated set (anthropic-skills + replica-skill + task-observer) into `~/.claude/skills/`
    and `~/.agents/skills/`, making those skills auto-discoverable at
    runtime by every Agent Skills compatible harness. Ownership-safe and
    non-fatal.
@@ -110,7 +114,8 @@ templates inside `setup.sh` and the committed files must stay byte-identical
 {
   "version": "1.1",
   "sources": ["agentic-awesome-skills", "ECC", "Ponytail", "Superpowers",
-               "replica-skill", "anthropic-skills", "agency-agents"],
+               "replica-skill", "anthropic-skills", "agency-agents",
+               "task-observer"],
   "skills": [
     {
       "name": "example-skill",
@@ -125,7 +130,7 @@ templates inside `setup.sh` and the committed files must stay byte-identical
       "source_path": "ECC/skills/example-skill/SKILL.md"
     }
   ],
-  "total_skills": 3377,
+  "total_skills": 3378,
   "categories": {"security": 268, "...": 0},
   "agents_supported": ["claude-code", "codex", "cursor", "gemini-cli",
                         "opencode", "copilot", "windsurf", "kiro"],

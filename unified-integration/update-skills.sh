@@ -111,6 +111,15 @@ main() {
         log_warn "agency-agents: vendored copy (no .git) - update manually via re-vendor + re-convert"
     fi
 
+    # task-observer is vendored (not a git checkout). Update deliberately:
+    # never move silently to a new upstream HEAD. Pin, diff, review, then
+    # re-vendor per docs/UPDATING.md; the pin and checksums live in
+    # task-observer/VENDORED.json (upstream:
+    # https://github.com/rebelytics/one-skill-to-rule-them-all, CC-BY-4.0).
+    if [ -d "$BASE_DIR/task-observer" ] && [ ! -d "$BASE_DIR/task-observer/.git" ]; then
+        log_warn "task-observer: vendored copy (no .git) - update manually via re-vendor (see task-observer/VENDORED.md); keep the pin and checksums in sync"
+    fi
+
     # Re-run skills aggregation
     log_info "Re-aggregating skills..."
     # Draining setup through head terminated it with SIGPIPE after 20

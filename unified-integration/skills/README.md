@@ -11,6 +11,9 @@ This directory contains aggregated skills from multiple sources:
    xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
 7. **agency-agents** - 283 AI-persona skills from The Agency (18 divisions,
    converted to Agent Skills format by scripts/convert_agency_agents.py)
+8. **task-observer** - vendored ambient skill-observation meta-skill
+   (rebelytics/one-skill-to-rule-them-all, CC-BY-4.0, pinned; root-layout
+   source: one skill bundle whose SKILL.md sits at the source root)
 
 ## Structure
 

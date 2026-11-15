@@ -77,6 +77,7 @@ catalog tests without a reconnect command. No CLI permissions are bypassed.
 | `AGENT_ENHANCEMENTS_BASE_DIR` | Project root | repository root detected from the running script's location |
 | `AGENT_ENHANCEMENTS_UNIFIED_DIR` | Integration directory (launcher only) | `<BASE_DIR>/unified-integration` |
 | `AGENT_MEMORY_ROOT` | Memory storage | `~/.agent-memory` |
+| `TASK_OBSERVER_WORKSPACE` | Task Observer observation workspace root (absolute path; default `$AGENT_MEMORY_ROOT/task-observer`). See [TASK_OBSERVER.md](TASK_OBSERVER.md) | `$AGENT_MEMORY_ROOT/task-observer` |
 | `AGENT_SKILLS_DIR` | Skills registry | `<BASE_DIR>/unified-integration/skills` |
 | `HEADROOM_BIN` | Standalone compression binary | auto-detect: repo build, then `PATH` |
 | `AGENT_ENHANCEMENTS_BUILD_HEADROOM` | Optional Rust build during setup/update | `0`; set `1` to build |

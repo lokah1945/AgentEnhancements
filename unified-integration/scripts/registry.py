@@ -71,7 +71,7 @@ FORMAT_ALIASES = {
 
 # Sources that link-skills.sh activates natively by default. Keep in sync
 # with DEFAULT_SOURCES in link-skills.sh.
-DEFAULT_NATIVE_SOURCES = ("anthropic-skills", "replica-skill")
+DEFAULT_NATIVE_SOURCES = ("anthropic-skills", "replica-skill", "task-observer")
 
 BUILT_IN_CAPABILITIES = [
     {
@@ -149,6 +149,24 @@ BUILT_IN_CAPABILITIES = [
                      "what", "which"],
         "usage": 'python3 {unified}/scripts/registry.py map "<task description>"',
         "automatic": "referenced from every agent instruction file",
+    },
+    {
+        "id": "capability:task-observer",
+        "type": "capability",
+        "name": "task-observer",
+        "description": "Ambient skill-usage observation (vendored "
+                       "rebelytics/one-skill-to-rule-them-all, CC-BY-4.0): "
+                       "logs user corrections and methodology evidence to a "
+                       "persistent workspace, reviews them, and stages skill "
+                       "updates for explicit approval. Observations are "
+                       "semantic and agent-authored; raw tool payloads are "
+                       "never recorded.",
+        "keywords": ["observe", "observation", "improve", "skill", "correction",
+                     "feedback", "review", "learn"],
+        "usage": 'python3 {unified}/scripts/task-observer.py '
+                 "status|log|lookup|review|stage|promote|rollback|disable|enable",
+        "automatic": "SessionStart bootstrap via the shared lifecycle runtime; "
+                     "bundle natively linked by default",
     },
 ]
 

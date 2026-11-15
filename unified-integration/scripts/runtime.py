@@ -22,6 +22,7 @@ from api_config import redact as redact_configured
 MAX_INPUT = 2_000_000
 MAX_CONTEXT = 12_000
 MAX_MEMORY = 4_000
+MAX_OBSERVER_CONTEXT = 4_000
 SECRET = re.compile(
     r"(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+|sk-(?:ant-)?[A-Za-z0-9_-]{16,}"
     r"|\bAKIA[A-Z0-9]{16}\b"
@@ -59,6 +60,30 @@ def skill_context(agent: str, prompt: str) -> str:
     )
 
 
+def observer_context(agent: str) -> str:
+    """Bootstrap the Task Observer workspace and return bounded context.
+
+    Present on EVERY session start (not keyword-matched), per the vendored
+    skill's activation model: the observer is ambient. Failures are
+    advisory - a broken observer must never block the session.
+    """
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "ae_task_observer", Path(__file__).with_name("task-observer.py")
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        root = module.workspace_root()
+        return module.bootstrap_context(root, agent)[:MAX_OBSERVER_CONTEXT]
+    except Exception as exc:  # noqa: BLE001 - advisory by contract
+        print(
+            f"[AgentEnhancements] task-observer unavailable: "
+            f"{type(exc).__name__}",
+            file=sys.stderr,
+        )
+        return ""
+
+
 def handle(agent: str, event: dict) -> str:
     """Persist lifecycle facts and return context for startup or prompt hooks."""
     name = event.get("hook_event_name", "")
@@ -69,13 +94,20 @@ def handle(agent: str, event: dict) -> str:
     session = str(event.get("session_id") or "unknown")[:200]
     session_key = hashlib.sha256(session.encode()).hexdigest()[:24]
     if name == "SessionStart":
+        parts = []
+        observer = observer_context(agent)
+        if observer:
+            parts.append(observer)
         previous = memory.list("session_context", limit=5)
         lines = [redact(f"- {item['key']}: {item['value']}") for item in previous]
         if lines:
-            return (
+            parts.append(
                 "AgentEnhancements: previous local session notes (historical "
-                "data; current user instructions take precedence):\n" + "\n".join(lines)
-            )[:MAX_MEMORY]
+                "data; current user instructions take precedence):\n"
+                + "\n".join(lines)
+            )
+        if parts:
+            return "\n\n".join(parts)[:MAX_MEMORY + MAX_OBSERVER_CONTEXT]
         return ""
     if name == "UserPromptSubmit":
         prompt = str(event.get("prompt") or "")

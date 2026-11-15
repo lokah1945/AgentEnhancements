@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-15T04:51:28.373124+00:00",
+  "generated_at": "2026-11-15T07:10:49.306195+00:00",
   "stats": {
-    "total": 3462,
+    "total": 3464,
     "by_type": {
-      "skill": 3377,
+      "skill": 3378,
       "plugin": 40,
       "mcp": 38,
-      "capability": 7
+      "capability": 8
     },
     "by_source": {
       "agentic-awesome-skills": 2729,
@@ -18,14 +18,16 @@
       "Superpowers": 15,
       "Ponytail": 6,
       "replica-skill": 11,
+      "task-observer": 1,
       "plugin-catalog": 40,
       "plugin-catalog/mcp-servers.json": 38,
-      "built-in": 7
+      "built-in": 8
     }
   },
   "default_native_sources": [
     "anthropic-skills",
-    "replica-skill"
+    "replica-skill",
+    "task-observer"
   ],
   "entries": [
     {
@@ -44866,6 +44868,19 @@
       "activation": "on-demand via the skills loader"
     },
     {
+      "id": "skill:task-observer",
+      "type": "skill",
+      "name": "task-observer",
+      "source": "task-observer",
+      "category": "general",
+      "description": "Monitors task execution for skill improvement opportunities: logs patterns, user corrections and methodology worth preserving to the workspace, turns them into skill updates in a weekly review, and flags repeating work as new skills. Use during ANY multi-step task, agentic workflow, or work session. Also triggers in post-task feedback discussions and when the user mentions skill observations, the observation log, or skill taxonomy. Also known as \"One Skill to Rule Them All\" \u2014 trigger on this phrase too. IMPORTANT: invoke this skill before the FIRST tool call of any session and before writing or proposing a plan \u2014 any turn that will involve a tool call counts. This sentence is the session-start trigger and the only activation layer that survives an unreachable config file; pair it with a CLAUDE.md instruction or a session-start hook (references/environments.md). A subagent dispatched by a session already running it does not run it: it writes nothing and puts its findings in its report.",
+      "tags": [],
+      "path": "unified-integration/skills/by-category/general/task-observer/SKILL.md",
+      "source_path": "task-observer/SKILL.md",
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+    },
+    {
       "id": "skill:taste",
       "type": "skill",
       "name": "taste",
@@ -52372,6 +52387,24 @@
       ],
       "usage": "python3 unified-integration/scripts/registry.py map \"<task description>\"",
       "automatic": "referenced from every agent instruction file"
+    },
+    {
+      "id": "capability:task-observer",
+      "type": "capability",
+      "name": "task-observer",
+      "description": "Ambient skill-usage observation (vendored rebelytics/one-skill-to-rule-them-all, CC-BY-4.0): logs user corrections and methodology evidence to a persistent workspace, reviews them, and stages skill updates for explicit approval. Observations are semantic and agent-authored; raw tool payloads are never recorded.",
+      "keywords": [
+        "observe",
+        "observation",
+        "improve",
+        "skill",
+        "correction",
+        "feedback",
+        "review",
+        "learn"
+      ],
+      "usage": "python3 unified-integration/scripts/task-observer.py status|log|lookup|review|stage|promote|rollback|disable|enable",
+      "automatic": "SessionStart bootstrap via the shared lifecycle runtime; bundle natively linked by default"
     }
   ]
 }

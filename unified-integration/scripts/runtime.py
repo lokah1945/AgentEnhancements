@@ -171,7 +171,7 @@ def handle(agent: str, event: dict) -> str:
 def main() -> None:
     """Accept Claude/Codex JSON, or return plain text for the OpenCode bridge."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("agent", choices=["claude-code", "codex", "opencode"])
+    parser.add_argument("agent", choices=["claude-code", "codex", "opencode", "hermes"])
     parser.add_argument("--text", action="store_true")
     args = parser.parse_args()
     try:

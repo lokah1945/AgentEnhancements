@@ -8,7 +8,7 @@ Plugins: **4**
 |------|------|--------|-------------|--------|
 | [`anthropic-skills`](./anthropic-skills/) | Anthropic Skills | vendored | filesystem-mcp, pdf-mcp, vision-mcp | `anthropics/skills` |
 | [`humanizer`](./humanizer/) | Humanizer | integrated-ready | style-mcp, grammar-mcp | `blader/humanizer` |
-| [`hyperframes`](./hyperframes/) | Hyperframes | integrated-ready | heygen-mcp, elevenlabs-mcp, voice-clone-mcp | `heygen-com/hyperframes` |
+| [`hyperframes`](./hyperframes/) | Hyperframes | integrated-ready | heygen-mcp, elevenlabs-mcp | `heygen-com/hyperframes` |
 | [`openmontage`](./openmontage/) | OpenMontage | integrated-ready | ffmpeg-mcp, video-mcp | `calesthio/OpenMontage` |
 
 ## Files in each plugin directory

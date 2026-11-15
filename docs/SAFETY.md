@@ -1,7 +1,7 @@
 ---
 title: Safety and Compliance Guide
-version: 1.0
-last_updated: 2026-11-13
+version: 1.1
+last_updated: 2026-11-15
 audience: all agents and maintainers
 ---
 
@@ -9,7 +9,29 @@ audience: all agents and maintainers
 
 Panduan keamanan dan kepatuhan untuk operasi sensitif. **Wajib dibaca**
 sebelum menggunakan skill: `hyperframes`, `openmontage`, `replica-skill`
-(launch/deploy), atau operasi yang melibatkan data personal.
+(launch/deploy), `rea` (rekayasa balik), atau operasi yang melibatkan data
+personal.
+
+## 0. task-router-mcp: eksekusi arbitrer (opt-in)
+
+`task-router-mcp` menjalankan payload bash/python apa pun dengan hak dan
+lingkungan user Anda (login shell, jaringan penuh). Ia setara dengan shell
+agent itu sendiri — **bukan sandbox**. Denylist internal hanya menolak pola
+destruktif yang jelas (`rm -rf /`, `mkfs`, dd ke disk, fork bomb, shutdown)
+dan kini berlaku juga untuk payload python (termasuk `shutil.rmtree("/")`);
+pola lain lolos. Karena tool ini diekspos ke model via gateway MCP,
+prompt-injection dari konten pihak ketiga dapat mencoba memanggilnya.
+
+Karena itu sejak 2026-11-15:
+
+- **Default: disembunyikan** (`api_config.DEFAULT_DISABLED`). Gateway, registry
+  discovery, dan `status()` tidak menawarkannya sampai user opt-in.
+- **Opt-in eksplisit**: set `"task-router-mcp": {"enabled": true}` di
+  `ui.api.json` (lihat template `unified-integration/config/ui.api.example.json`).
+- Server tetap bisa diuji langsung via `setup-mcp.sh --check` (stdio) meski
+  disembunyikan dari gateway.
+- Mitigasi utama tetap approval per-tool di host CLI (Claude Code/Codex);
+  jangan menonaktifkan kontrol izin host demi "memperlancar" tool ini.
 
 ## 1. Consent Gate (Voice Cloning & Personalized Video)
 
@@ -62,6 +84,11 @@ Retention audit: minimum 12 bulan. Tidak ada auto-purge audit.
 - Tidak share data ke third-party tanpa consent.
 - Dokumen sensitif (medis/legal/keuangan): model lokal bila ada; jangan pakai
   MCP cloud public.
+- **vision-mcp `describe` mengunggah gambar** (base64) ke
+  `api.openai.com` (atau `OPENAI_BASE_URL`) saat `OPENAI_API_KEY` diisi di
+  `ui.api.json`. Tanpa key, tool ini tersembunyi dari gateway. Jangan
+  mengirim gambar sensitif (dokumen, wajah, layar berisi data pribadi) bila
+  Anda tidak menyetujui pemrosesan di server OpenAI; gunakan alat lokal.
 
 ## 4. Clean-Room Discipline (replica-skill)
 

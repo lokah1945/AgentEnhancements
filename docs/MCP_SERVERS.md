@@ -19,6 +19,11 @@ API key; embeddings/vision memiliki bagian lokal yang tetap tersedia. Matriks
 di bawah adalah katalog dependency upstream, bukan bukti seluruh layanannya
 sudah terpasang atau dapat dipanggil tanpa credential.
 
+**Opt-in khusus**: `task-router-mcp` menjalankan payload bash/python arbitrer
+(setara shell agent, bukan sandbox) sehingga **disembunyikan secara default**;
+aktifkan eksplisit via `"task-router-mcp": {"enabled": true}` di `ui.api.json`
+(lihat docs/SAFETY.md §0). Semua server lain tetap mengikuti aturan di atas.
+
 ## Distribusi prioritas
 
 | Prioritas | Jumlah | Arti |
@@ -39,9 +44,9 @@ sudah terpasang atau dapat dipanggil tanpa credential.
 | agent-reach | brave-search-mcp | tavily-mcp, exa-mcp, firecrawl-mcp |
 | understand-anything | wikipedia-mcp | arxiv-mcp, embeddings-mcp |
 | last-30-days | brave-search-mcp | newsapi-mcp, google-news-mcp |
-| rea | task-router-mcp, memory-mcp | — |
-| gstack | llm-cache-mcp | tokenizer-mcp |
-| caveman | tokenizer-mcp | — |
+| rea | rea MCP server (upstream morluto/rea, install sendiri) | — |
+| gstack | — | — |
+| caveman | — | — |
 | gsd | task-router-mcp, memory-mcp | github-issues-mcp |
 | bmad-method | memory-mcp | github-issues-mcp, linear-mcp |
 | ui-ux-pro-max | figma-mcp | browser-tools-mcp, storybook-mcp |
@@ -50,7 +55,7 @@ sudah terpasang atau dapat dipanggil tanpa credential.
 | diagram-design | mermaid-mcp | excalidraw-mcp |
 | anthropic-skills | filesystem-mcp | pdf-mcp, vision-mcp |
 | openmontage | ffmpeg-mcp | video-mcp |
-| hyperframes | heygen-mcp, elevenlabs-mcp | voice-clone-mcp |
+| hyperframes | heygen-mcp, elevenlabs-mcp | — |
 | humanizer | style-mcp | grammar-mcp |
 
 ## Matriks: MCP ke Plugin (reverse)
@@ -58,8 +63,8 @@ sudah terpasang atau dapat dipanggil tanpa credential.
 | MCP server | Dipakai oleh |
 |------------|--------------|
 | filesystem-mcp | anthropic-skills + semua (baseline) |
-| memory-mcp | rea, gsd, bmad-method, anthropic-skills |
-| brave-search-mcp | agent-reach, last-30-days, rea, understand-anything |
+| memory-mcp | gsd, bmad-method, anthropic-skills |
+| brave-search-mcp | agent-reach, last-30-days, understand-anything |
 | browser-tools-mcp | agent-skills-addyosmani, impeccable, ui-ux-pro-max, replica-skill |
 | vision-mcp | anthropic-skills, impeccable, replica-skill |
 | typescript-language-server-mcp | mattpocock-skills, agent-skills-addyosmani |
@@ -71,7 +76,7 @@ sudah terpasang atau dapat dipanggil tanpa credential.
 | mermaid-mcp / excalidraw-mcp | diagram-design |
 | google-slides-mcp / office-mcp / image-search-mcp | ppt-master, diagram-design |
 | ffmpeg-mcp / video-mcp | openmontage |
-| heygen-mcp / elevenlabs-mcp / voice-clone-mcp | hyperframes, openmontage |
+| heygen-mcp / elevenlabs-mcp | hyperframes, openmontage |
 | style-mcp / grammar-mcp | humanizer |
 
 ## Instalasi native

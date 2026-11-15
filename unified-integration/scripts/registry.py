@@ -441,6 +441,22 @@ def cmd_build(out_path: Optional[str] = None, quiet: bool = False) -> int:
     }
     target = Path(out_path) if out_path else REGISTRY_OUT
     target.parent.mkdir(parents=True, exist_ok=True)
+    # Audit AE-14: do not rewrite the committed registry when only the
+    # generated_at timestamp would change - that dirties the working tree
+    # on every setup run without altering any capability data.
+    try:
+        previous = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        previous = None
+    if isinstance(previous, dict):
+        previous_core = {k: v for k, v in previous.items() if k != "generated_at"}
+        registry_core = {k: v for k, v in registry.items() if k != "generated_at"}
+        if previous_core == registry_core:
+            if not quiet:
+                print(f"Registry unchanged ({len(entries)} entries); timestamp preserved")
+                print(f"  skills={by_type.get('skill', 0)} plugins={by_type.get('plugin', 0)} "
+                      f"mcp={by_type.get('mcp', 0)} capabilities={by_type.get('capability', 0)}")
+            return 0
     with open(target, "w", encoding="utf-8") as f:
         json.dump(registry, f, indent=2)
     if not quiet:

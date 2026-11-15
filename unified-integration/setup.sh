@@ -5,10 +5,22 @@
 set -euo pipefail
 
 # Piped one-line installs need the complete repository, not only this script.
+# AGENT_ENHANCEMENTS_REF pins the exact branch/tag/commit (audit AE-11: the
+# one-liner previously cloned an unpinned master and silently ran a stale
+# checkout on re-runs). An existing checkout is fast-forwarded, never reset.
 if [ -z "${BASH_SOURCE[0]:-}" ]; then
     INSTALL_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$HOME/.local/share/AgentEnhancements}"
+    AE_REF="${AGENT_ENHANCEMENTS_REF:-}"
     if [ ! -f "$INSTALL_DIR/unified-integration/setup.sh" ]; then
         git clone https://github.com/lokah1945/AgentEnhancements.git "$INSTALL_DIR"
+        if [ -n "$AE_REF" ]; then
+            git -C "$INSTALL_DIR" checkout --quiet "$AE_REF" ||
+                echo "[agent-enhancements] ref '$AE_REF' not found; keeping default branch" >&2
+        fi
+    elif [ -d "$INSTALL_DIR/.git" ]; then
+        if ! git -C "$INSTALL_DIR" pull --ff-only --quiet origin "${AE_REF:-master}" 2>/dev/null; then
+            echo "[agent-enhancements] could not fast-forward $INSTALL_DIR to ${AE_REF:-master}; running the existing copy" >&2
+        fi
     fi
     exec bash "$INSTALL_DIR/unified-integration/setup.sh" "$@"
 fi
@@ -864,10 +876,27 @@ unified = {
     'last_updated': datetime.now(timezone.utc).isoformat()
 }
 
-with open(out_path, 'w', encoding='utf-8') as f:
-    json.dump(unified, f, indent=2)
-
-print(f'Unified skills index created with {len(skills)} skills')
+# Audit AE-14: rewriting the committed index with only a new timestamp
+# dirties the working tree on every setup run. When nothing but the
+# timestamp would change, keep the previous file byte-for-byte.
+try:
+    with open(out_path, encoding='utf-8') as f:
+        previous = json.load(f)
+except (OSError, ValueError):
+    previous = None
+if isinstance(previous, dict):
+    previous_core = {k: v for k, v in previous.items() if k != 'last_updated'}
+    unified_core = {k: v for k, v in unified.items() if k != 'last_updated'}
+    if previous_core == unified_core:
+        print(f'Unified skills index unchanged ({len(skills)} skills); timestamp preserved')
+    else:
+        with open(out_path, 'w', encoding='utf-8') as f:
+            json.dump(unified, f, indent=2)
+        print(f'Unified skills index created with {len(skills)} skills')
+else:
+    with open(out_path, 'w', encoding='utf-8') as f:
+        json.dump(unified, f, indent=2)
+    print(f'Unified skills index created with {len(skills)} skills')
 "
 
     # Clean up temp file
@@ -985,7 +1014,9 @@ EOF
 MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}"
 mkdir -p "$MEMORY_ROOT"/{projects,global,sessions,skills}
 
-# Create SQLite database for structured memory
+# Create SQLite database for structured memory when the sqlite3 CLI is
+# available. Without it, the Python hooks create the same schema on first
+# use - report that honestly instead of claiming initialization (AE-16).
 if command -v sqlite3 &> /dev/null; then
     sqlite3 "$MEMORY_ROOT/memory.db" << 'SQL'
 CREATE TABLE IF NOT EXISTS memories (
@@ -1007,9 +1038,12 @@ CREATE INDEX IF NOT EXISTS idx_agent_project ON memories(agent, project);
 CREATE INDEX IF NOT EXISTS idx_type ON memories(memory_type);
 CREATE INDEX IF NOT EXISTS idx_expires ON memories(expires_at);
 SQL
+    echo "Memory system initialized at $MEMORY_ROOT (schema created)"
+elif [ -f "$MEMORY_ROOT/memory.db" ]; then
+    echo "Memory storage ready at $MEMORY_ROOT (database exists; schema maintained by the Python hooks)"
+else
+    echo "Memory directories created at $MEMORY_ROOT; the SQLite database will be created by the Python hooks on first use (sqlite3 CLI not installed)"
 fi
-
-echo "Memory system initialized at $MEMORY_ROOT"
 EOF
     chmod +x "$MEMORY_DIR/init-memory.sh"
 
@@ -1399,68 +1433,6 @@ create_agent_configs() {
     log_success "Agent configurations merged"
 }
 
-# Merge JSON configs using Python - replace hooks, preserve other keys
-merge_json_config() {
-    local target_file="$1"
-    local enhancement_json="$2"
-    local backup_file="${target_file}.backup.$(date +%s)"
-
-    if [ ! -f "$target_file" ]; then
-        # No existing config - write enhancement directly
-        echo "$enhancement_json" > "$target_file"
-        log_info "Created new config: $target_file"
-        return
-    fi
-
-    # Backup original
-    cp "$target_file" "$backup_file"
-    log_info "Backed up existing config to $backup_file"
-
-    # Merge using Python - replace hooks key, preserve other keys.
-    # Paths and payload are passed via environment variables so that
-    # JSON escape sequences (\") survive intact: routing them through a
-    # Python string literal stripped the backslashes and produced invalid
-    # JSON. It also removes any injection risk from file paths.
-    # A malformed pre-existing config must not abort the whole setup:
-    # on failure the backup is restored and the remaining agents are
-    # still configured.
-    if ! TARGET_FILE="$target_file" ENHANCEMENT_JSON="$enhancement_json" \
-    python3 -c "
-import json
-import os
-import sys
-
-target = os.environ['TARGET_FILE']
-
-with open(target, 'r') as f:
-    existing = json.load(f)
-
-enhancement = json.loads(os.environ['ENHANCEMENT_JSON'])
-
-# For hooks, replace entirely. For other keys, deep merge.
-def merge_configs(base, update):
-    for key, value in update.items():
-        if key == 'hooks':
-            # Replace hooks entirely (don't merge lists)
-            base[key] = value
-        elif key in base and isinstance(base[key], dict) and isinstance(value, dict):
-            merge_configs(base[key], value)
-        else:
-            # New key or non-dict - add/update
-            base[key] = value
-
-merge_configs(existing, enhancement)
-
-with open(target, 'w') as f:
-    json.dump(existing, f, indent=2)
-"; then
-        cp "$backup_file" "$target_file"
-        log_error "Merge failed for $target_file (existing file not valid JSON?) - original restored, skipping this agent"
-        return 0
-    fi
-    log_success "Merged enhancement into $target_file (hooks replaced, other keys preserved)"
-}
-
 # Merge a marker-guarded markdown section into an AGENTS.md-style file
 # (used for Codex and OpenCode global instructions). Content outside the
 # markers is always preserved, so user-maintained instructions survive
@@ -1517,7 +1489,6 @@ if merged != existing:
 merge_yaml_config() {
     local target_file="$1"
     local enhancement_yaml="$2"
-    local backup_file="${target_file}.backup.$(date +%s)"
 
     if [ ! -f "$target_file" ]; then
         echo "$enhancement_yaml" > "$target_file"
@@ -1525,23 +1496,22 @@ merge_yaml_config() {
         return
     fi
 
-    cp "$target_file" "$backup_file"
-    log_info "Backed up existing config to $backup_file"
-
     if ! python3 -c "import yaml" 2>/dev/null; then
         log_warn "PyYAML is not installed - skipping YAML merge for $target_file (pip install pyyaml)"
         return 0
     fi
 
-    if ! TARGET_FILE="$target_file" ENHANCEMENT_YAML="$enhancement_yaml" \
+    # Audit AE-17: compute the merge first and back up only when the result
+    # actually differs from the existing file. The previous unconditional
+    # backup accumulated a new .backup.<timestamp> on every setup run even
+    # when the merged content was byte-identical.
+    local merged
+    if ! merged=$(TARGET_FILE="$target_file" ENHANCEMENT_YAML="$enhancement_yaml" \
     python3 -c "
 import os
-import sys
 import yaml
 
-target = os.environ['TARGET_FILE']
-
-with open(target, 'r') as f:
+with open(os.environ['TARGET_FILE'], 'r') as f:
     existing = yaml.safe_load(f) or {}
 
 enhancement = yaml.safe_load(os.environ['ENHANCEMENT_YAML'])
@@ -1559,14 +1529,22 @@ def merge_configs(base, update):
             base[key] = value
 
 merge_configs(existing, enhancement)
-
-with open(target, 'w') as f:
-    yaml.dump(existing, f, default_flow_style=False, sort_keys=False)
-"; then
-        cp "$backup_file" "$target_file"
-        log_error "Merge failed for $target_file (existing file not valid YAML?) - original restored, skipping this agent"
+print(yaml.dump(existing, default_flow_style=False, sort_keys=False))
+"); then
+        log_error "Merge failed for $target_file (existing file not valid YAML?) - original kept, skipping this agent"
         return 0
     fi
+
+    if [ "$merged" = "$(cat "$target_file")" ]; then
+        log_info "Config unchanged after merge: $target_file"
+        return 0
+    fi
+
+    local backup_file="${target_file}.backup.$(date +%s)"
+    cp "$target_file" "$backup_file"
+    chmod 600 "$backup_file" 2>/dev/null || true
+    log_info "Backed up existing config to $backup_file"
+    printf '%s\n' "$merged" > "$target_file"
     log_success "Merged enhancement into $target_file (hooks replaced, other keys preserved)"
 }
 
@@ -1917,8 +1895,18 @@ esac
 EOF
     chmod +x "$UNIFIED_DIR/launch-agent.sh"
 
-    # Create symlink for easy access (if we have permission)
-    ln -sf "$UNIFIED_DIR/launch-agent.sh" /usr/local/bin/agent-enhanced 2>/dev/null || true
+    # Audit AE-18: writing outside $HOME must be opt-in. A silent
+    # /usr/local/bin symlink surprised users (and quietly no-ops when the
+    # directory is root-owned). Set INSTALL_SYSTEM_LAUNCHER=1 to create it.
+    if [ "${INSTALL_SYSTEM_LAUNCHER:-0}" = "1" ]; then
+        if ln -sf "$UNIFIED_DIR/launch-agent.sh" /usr/local/bin/agent-enhanced 2>/dev/null; then
+            log_info "System launcher linked: /usr/local/bin/agent-enhanced"
+        else
+            log_warn "Could not write /usr/local/bin/agent-enhanced (permission denied) - use $UNIFIED_DIR/launch-agent.sh"
+        fi
+    else
+        log_info "Launcher: $UNIFIED_DIR/launch-agent.sh (set INSTALL_SYSTEM_LAUNCHER=1 to also link /usr/local/bin/agent-enhanced)"
+    fi
 
     log_success "Universal launcher created at $UNIFIED_DIR/launch-agent.sh"
 }

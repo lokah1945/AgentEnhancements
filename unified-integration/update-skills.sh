@@ -138,12 +138,10 @@ main() {
         fi
     fi
 
-    # Rebuild claude-mem if updated
-    if [ -d "$BASE_DIR/claude-mem/.git" ] && [ -f "$BASE_DIR/claude-mem/package.json" ]; then
-        log_info "Rebuilding claude-mem..."
-        (cd "$BASE_DIR/claude-mem" && npm run build 2>&1 | tail -5) || log_warn "claude-mem: rebuild failed"
-        log_success "claude-mem rebuild attempted"
-    fi
+    # claude-mem is vendored without .git (like every source here), so a
+    # post-update npm build can never apply; the dead branch was removed
+    # (audit AE-20). If a future re-vendor ships build artifacts that need
+    # refreshing, do it as part of the documented re-vendor procedure.
 
     echo ""
     echo "========================================"

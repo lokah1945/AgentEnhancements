@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "description": "Modular skill tree index. Each entry is a self-contained directory under skills/<category>/<slug>/ containing SKILL.md + manifest.json. Backed by symlinks into plugin-catalog/.",
+  "description": "Modular skill tree index. Each entry is a self-contained directory under skills/<category>/<slug>/ containing SKILL.md + manifest.json. The tree is generated at install time (scripts/scaffold_modular_skills.sh) and is not committed.",
   "total_plugins": 40,
   "categories": [
     "code",
@@ -73,7 +73,7 @@
       "skill_md": "skills/code/mattpocock-skills/SKILL.md",
       "manifest": "skills/code/mattpocock-skills/manifest.json",
       "mcp_servers": [
-        "typescript-language-server",
+        "typescript-language-server-mcp",
         "eslint-mcp"
       ],
       "trigger_keywords": [
@@ -188,24 +188,25 @@
     {
       "id": "research-rea",
       "slug": "rea",
-      "name": "REA (Reasoning + Acting)",
+      "name": "REA (Reverse Engineer Anything)",
       "category": "research",
       "status": "integrated-ready",
       "vendored": false,
       "source_url": "https://github.com/morluto/rea",
-      "source_license": "MIT (verify on upstream)",
+      "source_license": "MIT",
       "path": "skills/research/rea",
       "skill_md": "skills/research/rea/SKILL.md",
       "manifest": "skills/research/rea/manifest.json",
-      "mcp_servers": [
-        "task-router-mcp",
-        "memory-mcp"
-      ],
+      "mcp_servers": [],
       "trigger_keywords": [
         "rea",
-        "reasoning",
-        "reflection",
-        "multi-step"
+        "reverse engineer",
+        "decompile",
+        "disassemble",
+        "binary analysis",
+        "analisis binary",
+        "apk analysis",
+        "how does this app work"
       ]
     },
     {
@@ -270,9 +271,7 @@
       "path": "skills/tokens-optimization/caveman",
       "skill_md": "skills/tokens-optimization/caveman/SKILL.md",
       "manifest": "skills/tokens-optimization/caveman/manifest.json",
-      "mcp_servers": [
-        "tokenizer-mcp"
-      ],
+      "mcp_servers": [],
       "trigger_keywords": [
         "caveman",
         "minimize",
@@ -316,10 +315,7 @@
       "path": "skills/tokens-optimization/gstack",
       "skill_md": "skills/tokens-optimization/gstack/SKILL.md",
       "manifest": "skills/tokens-optimization/gstack/manifest.json",
-      "mcp_servers": [
-        "llm-cache-mcp",
-        "tokenizer-mcp"
-      ],
+      "mcp_servers": [],
       "trigger_keywords": [
         "token",
         "compress",
@@ -497,8 +493,7 @@
       "manifest": "skills/multimedia-writing/hyperframes/manifest.json",
       "mcp_servers": [
         "heygen-mcp",
-        "elevenlabs-mcp",
-        "voice-clone-mcp"
+        "elevenlabs-mcp"
       ],
       "trigger_keywords": [
         "avatar",

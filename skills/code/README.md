@@ -8,7 +8,7 @@ Plugins: **4**
 |------|------|--------|-------------|--------|
 | [`agent-skills-addyosmani`](./agent-skills-addyosmani/) | Agent Skills (Addy Osmani) | integrated-ready | browser-tools-mcp, lighthouse-mcp, pa11y-mcp | `addyosmani/agent-skills` |
 | [`karpathy-skills`](./karpathy-skills/) | Andrej Karpathy Skills | integrated-ready | jupyter-mcp, python-repl-mcp | `multica-ai/andrej-karpathy-skills` |
-| [`mattpocock-skills`](./mattpocock-skills/) | Matt Pocock Skills | integrated-ready | typescript-language-server, eslint-mcp | `mattpocock/skills` |
+| [`mattpocock-skills`](./mattpocock-skills/) | Matt Pocock Skills | integrated-ready | typescript-language-server-mcp, eslint-mcp | `mattpocock/skills` |
 | [`replica-skill`](./replica-skill/) | Replica Skill (11 sub-skills) | vendored | browser-tools-mcp, vision-mcp | `Jakeschincariol/replica-skill` |
 
 ## Files in each plugin directory

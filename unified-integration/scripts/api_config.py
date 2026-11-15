@@ -30,6 +30,11 @@ BUILTINS = (
     "video-mcp",
     "style-mcp",
 )
+# Built-in servers that stay hidden until the user opts in. task-router
+# executes arbitrary bash/python payloads - equivalent to the agent's own
+# shell - so exposing it to the model must be an explicit user choice
+# (docs/SAFETY.md). Setting "enabled": true in ui.api.json overrides this.
+DEFAULT_DISABLED = frozenset({"task-router-mcp"})
 
 
 def config_path() -> Path:
@@ -147,8 +152,12 @@ def server_state(name: str, config: dict | None = None) -> dict:
     else:
         error = None
     settings = config.get("mcp", {}).get(name, {})
-    if settings.get("enabled", True) is False:
-        return {"visible": False, "reason": "disabled"}
+    enabled_by_default = name not in DEFAULT_DISABLED
+    if settings.get("enabled", enabled_by_default) is False:
+        reason = (
+            "disabled" if "enabled" in settings else "disabled_by_default"
+        )
+        return {"visible": False, "reason": reason}
     # Built-in local tools remain useful during a partial/invalid JSON edit.
     if name in BUILTINS:
         return {"visible": True, "reason": "local_tools_available"}

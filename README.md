@@ -9,7 +9,7 @@ AgentEnhancements brings together 9 complementary projects (plus a plugin catalo
 - **3,378 specialized skills/agents** in the unified index (see `unified-integration/skills/all-skills.json` for the live count), including the **19 official Anthropic skills** (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...) and **283 AI personas from The Agency** (agency-agents), plus the pinned **task-observer** meta-skill (ambient skill-usage observation, [docs/TASK_OBSERVER.md](docs/TASK_OBSERVER.md))
 - **Capability registry** mapping every skill, catalog plugin and MCP server in one queryable index (`registry.py map "<task>"`)
 - **Native runtime activation**: one install links a curated skill set into `~/.claude/skills/` and `~/.agents/skills/`, so Agent Skills compatible harnesses discover them automatically
-- **Plugin catalog** with 40 curated external plugin sources (code, research, tokens, design, multimedia, agency personas)
+- **Plugin catalog** with 40 curated external plugin entries from 22 unique upstream repositories (code, research, tokens, design, multimedia, and 19 The Agency division packs)
 - **Context compression & memory management** for long-running sessions
 - **System prompts** sourced from the vendored `system-prompts-and-models-of-ai-tools` collection
 - **Unified configuration** that works across all major AI coding assistants
@@ -73,7 +73,7 @@ The setup script will:
 1. Detect your installed AI coding assistants (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Windsurf, Copilot, Kiro)
 2. Aggregate skills from all sources into the unified registry (3,378 skills from 8 sources, official Anthropic copies winning name collisions) and regenerate `all-skills.json`
 3. Build the capability registry (`agent-registry.json`: skills + 40 plugins + 38 MCP servers + built-ins)
-4. Configure system prompts for each detected tool from the vendored prompt collection
+4. Copy reference system-prompt files into `unified-integration/prompts/` (reference material — no agent is forced to load them; the written instruction files tell agents how to use the catalog)
 5. Set up memory persistence (parameterized-SQL Python hooks)
 6. Enable context compression (headroom binary if available, pure-Python fallback otherwise)
 7. Configure Claude Code hooks for automatic memory save, and write activation files for every other agent
@@ -140,7 +140,7 @@ AgentEnhancements/
 │   ├── mcp-servers/               # 9 in-house MCP servers (embeddings, task-router,
 │   │                              # ffmpeg, vision, graphrag, arxiv, google-news,
 │   │                              # video, style) + smoke_test + mcp.json template
-│   └── tests/                     # Regression test suite (149 tests)
+│   └── tests/                     # Regression test suite (236 tests)
 │
 ├── skills/                        # Modular plugin tree (6 categories, 40 plugins)
 │   ├── manifest.json              # Aggregator index (committed)
@@ -189,7 +189,7 @@ The on-disk registry (`skills/by-category/`, `skills/by-agent/`) is generated wh
 
 ### Modular plugin tree (`skills/`)
 
-The 40 cataloged plugins are exposed as a self-contained modular tree at `skills/<category>/<slug>/` (each dir holds `SKILL.md` + `manifest.json`). The tree is generated from `plugin-catalog/catalog.json` - never edited by hand:
+The 40 cataloged plugins are exposed as a self-contained modular tree at `skills/<category>/<slug>/` (each dir holds `SKILL.md` + `manifest.json`). The per-plugin directories are **generated at install time** (symlinks into `plugin-catalog/`, gitignored); only `skills/manifest.json` and the READMEs are committed. The tree is generated from `plugin-catalog/catalog.json` - never edited by hand:
 
 ```bash
 bash scripts/scaffold_modular_skills.sh     # build/rebuild the tree
@@ -262,33 +262,29 @@ Memory is stored in `~/.agent-memory/memory.db` (override with `AGENT_MEMORY_ROO
 
 ## Context Compression (headroom)
 
-Automatic token budget management for long conversations:
+The compression story is deliberately modest — this project does **not** hook automatic context compression into any agent:
 
-- **Budget**: 200,000 tokens
-- **Trigger**: 75% utilization (150k tokens)
-- **Compression**: Summarizes old context, preserves recent + critical info
-- **Fallback**: pure-Python/stream compression when the Rust binary is not built
-- **Proxy Mode**: Works as transparent proxy for any AI API
+- **Agents keep their native context management.** The instruction files written by setup tell each agent to use its CLI's built-in automatic context compaction.
+- **Manual utility**: `unified-integration/compression/compress.sh` processes an individual transcript file on demand (mode selection, 50k-character truncation safety), with the vendored Rust `headroom` binary used when built and a pure-Python fallback otherwise.
+- `unified-integration/compression/config.yaml` (budget 200k, trigger 75%) is a **reference template** — no shipped code consumes it automatically today.
+- **Proxy Mode**: if you build headroom from source you can run it as a transparent proxy for any AI API; AgentEnhancements does not enable or configure this for you.
 
 ```bash
-# Compress a transcript
+# Compress a transcript manually
 unified-integration/compression/compress.sh session.log auto
 
-# Build headroom from source (optional; setup falls back gracefully)
+# Build headroom from source (optional)
 cd headroom && cargo build --release
 
-# Start headroom proxy
+# Start headroom proxy (manual, not configured by setup)
 headroom proxy --port 8080 --target https://api.anthropic.com
-
-# Use with any client
-export ANTHROPIC_BASE_URL=http://localhost:8080
 ```
 
 ---
 
 ## System Prompts
 
-Prompt files in `unified-integration/prompts/` are refreshed from the vendored collection at setup time when a source exists:
+Prompt files in `unified-integration/prompts/` are **reference copies** refreshed from the vendored collection at setup time when a source exists. They are not injected into any agent automatically — the per-agent activation files (see the [Agent Activation Matrix](#agent-activation-matrix)) tell each agent how to discover skills, memory and compression on demand:
 
 | Tool | Prompt File |
 |------|-------------|
@@ -345,7 +341,7 @@ bash unified-integration/scripts/mcp-test.sh --priority P0
 ## Testing & Validation
 
 ```bash
-# Integration-layer regression suite (149 tests)
+# Integration-layer regression suite (236 tests)
 python3 unified-integration/tests/run-tests.py
 
 # Plugin catalog validation (40 manifests)
@@ -371,26 +367,29 @@ All agents working on this repository must follow `CONTRACT.md` (conventional co
 
 ### Referenced Projects (Upstream)
 
-| Project | Repository | License |
-|---------|------------|---------|
-| agentic-awesome-skills | [Original Repo](https://github.com/agentic-awesome/agentic-awesome-skills) | MIT |
-| anthropic-skills | [Original Repo](https://github.com/anthropics/skills) | Apache-2.0 (per-skill LICENSE.txt) |
-| claude-mem | [Original Repo](https://github.com/claude-mem/claude-mem) | MIT |
-| ECC | [Original Repo](https://github.com/ecc-project/ecc) | MIT |
-| headroom | [Original Repo](https://github.com/headroom/headroom) | MIT/Apache-2.0 |
-| ponytail | [Original Repo](https://github.com/ponytail/ponytail) | MIT |
-| superpowers | [Original Repo](https://github.com/superpowers/superpowers) | MIT |
-| system-prompts-and-models-of-ai-tools | [Original Repo](https://github.com/system-prompts/system-prompts-and-models-of-ai-tools) | CC-BY-4.0 |
-| replica-skill | [Original Repo](https://github.com/Jakeschincariol/replica-skill) | MIT |
-| agency-agents | [Original Repo](https://github.com/msitarzewski/agency-agents) | MIT |
+Vendored copies keep their own upstream licenses (see the root `LICENSE` notice and `docs/LICENSE_AUDIT.md`); the MIT grant covers only the integration layer authored in this repository.
 
-> **Note**: This repository contains copies of the above projects for unified distribution. They are **not forks** — they are vendored dependencies. For changes to individual projects, please contribute upstream.
+| Project | Upstream repository | License |
+|---------|---------------------|---------|
+| agentic-awesome-skills | [sickn33/agentic-awesome-skills](https://github.com/sickn33/agentic-awesome-skills) | MIT (code) + CC-BY-4.0 (content, `LICENSE-CONTENT`) |
+| anthropic-skills | [anthropics/skills](https://github.com/anthropics/skills) | Apache-2.0 (per-skill LICENSE.txt) |
+| claude-mem | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | Apache-2.0 (+ NOTICE) |
+| ECC | [affaan-m/ECC](https://github.com/affaan-m/ECC) | MIT |
+| headroom | [headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom) | Apache-2.0 (+ NOTICE) |
+| ponytail | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | MIT |
+| superpowers | [obra/superpowers](https://github.com/obra/superpowers) | MIT |
+| system-prompts-and-models-of-ai-tools | [x1xhlol/system-prompts-and-models-of-ai-tools](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools) | GPL-3.0 |
+| replica-skill | [Jakeschincariol/replica-skill](https://github.com/Jakeschincariol/replica-skill) | MIT |
+| agency-agents | [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents) | MIT |
+| task-observer | [rebelytics/one-skill-to-rule-them-all](https://github.com/rebelytics/one-skill-to-rule-them-all) | CC-BY-4.0 (pinned: `task-observer/VENDORED.json`) |
+
+> **Note**: This repository contains vendored copies of the above projects for unified distribution. They are **not forks** — they are vendored dependencies. For changes to individual projects, please contribute upstream.
 
 ---
 
 ## License
 
-This aggregation is released under **MIT License**. Individual projects retain their original licenses (see table above and `docs/LICENSE_AUDIT.md`).
+The **integration layer authored in this repository** (unified-integration/, plugin-catalog/, scripts/, docs/) is released under the **MIT License** (see `LICENSE`). The vendored project directories keep their own upstream licenses — including Apache-2.0 (claude-mem, headroom, anthropic-skills), GPL-3.0 (system-prompts-and-models-of-ai-tools), and CC-BY-4.0 (task-observer, agentic-awesome-skills content) — which take precedence inside those directories. The full per-directory matrix lives in `docs/LICENSE_AUDIT.md`.
 
 ---
 

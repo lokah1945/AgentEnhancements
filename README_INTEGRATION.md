@@ -9,7 +9,7 @@
 
 `AgentEnhancements` is a **single integration layer that unifies 40 external
 skill repositories** (6 categories) plus a setup pipeline that provisions
-8 AI-agent CLIs (Claude Code, Codex CLI, Cursor, Continue, Gemini CLI,
+8 AI-agent CLIs (Claude Code, Codex CLI, Cursor, Gemini CLI,
 GitHub Copilot CLI, Kiro, OpenCode, Windsurf) from one source of truth.
 
 The repo does **not** reinvent skills — it catalogs, normalizes, and installs
@@ -81,12 +81,12 @@ AgentEnhancements/
 │
 ├── plugin-catalog/                     # canonical catalog + per-plugin manifests
 │   ├── catalog.json                    # 40 plugins, 6 categories, upstream URLs
-│   ├── mcp-servers.json                # 36 MCP servers, P0/P1/P2 priority
+│   ├── mcp-servers.json                # 38 MCP servers, P0/P1/P2 priority
 │   ├── code/, research/, ...           # original SKILL.md + manifest sources
 │   └── README.md
 │
 ├── unified-integration/                # installation pipeline
-│   ├── setup.sh                        # 2,542-line installer (8 agent CLIs)
+│   ├── setup.sh                        # 2,492-line installer (8 agent CLIs)
 │   ├── update-skills.sh                # registry re-builder
 │   ├── mcp-servers/                    # 9 in-house MCP servers + installer template
 │   ├── scripts/setup-mcp.sh            # MCP config installer for 6 agent CLIs
@@ -103,7 +103,7 @@ AgentEnhancements/
 │   ├── hooks/                          # 16 hook scripts
 │   ├── memory/, compression/           # cross-session state
 │   ├── scripts/                        # 11 utility scripts
-│   └── tests/                          # 149 tests (77 + 12 audit + 21 tree + 39 MCP)
+│   └── tests/                          # 236 tests (17 regression modules)
 │
 ├── vendored upstream projects (frozen)
 │   ├── anthropic-skills/               # github.com/anthropics/skills (19 sub-skills)
@@ -145,7 +145,7 @@ The architecture is **three layered caches** with strict one-way data flow:
 3. **Installed registry layer** (`unified-integration/skills/`) — the
    **machine-indexed view** consumed by `setup.sh` to install into 8 agent
    CLIs. Aggregated from all sources (catalog + vendored projects) by
-   `update-skills.sh` → `all-skills.json` (3,094 skills total).
+   `update-skills.sh` → `all-skills.json` (3,378 skills total from 8 sources).
 
 Data flow: **catalog → skills tree → unified-integration → agent CLIs**.
 Never edit the upper layers directly; regenerate from below.
@@ -169,14 +169,14 @@ Never edit the upper layers directly; regenerate from below.
 | `agent-reach` | Deep multi-source research with citation tracking | brave-search-mcp, tavily-mcp, exa-mcp, firecrawl-mcp |
 | `understand-anything` | Feynman-style concept explanation for onboarding | wikipedia-mcp, arxiv-mcp, embeddings-mcp |
 | `last-30-days` | Fresh-trend monitoring (last 30 days of news / releases) | brave-search-mcp, newsapi-mcp, google-news-mcp |
-| `rea` | Reasoning + Acting loop with reflection for multi-step problems | task-router-mcp, memory-mcp |
+| `rea` | Reverse Engineer Anything — analyze how apps/binaries work (upstream `morluto/rea` MCP server, install separately) | rea MCP server (upstream) |
 
 #### Tokens / Optimization (`skills/tokens-optimization/`)
 
 | Plugin | Purpose | MCP servers needed |
 |--------|---------|---------------------|
-| `gstack` | Token budgeting, cache strategy, context compression | llm-cache-mcp, tokenizer-mcp |
-| `caveman` | Aggressive shorthand compression for token reduction | tokenizer-mcp |
+| `gstack` | Token budgeting, cache strategy, context compression | — |
+| `caveman` | Aggressive shorthand compression for token reduction | — |
 | `gsd` | Atomic parallel checklist execution (Get Shit Done) | task-router-mcp, memory-mcp |
 | `bmad-method` | Multi-persona agile (PM/SM/Dev/Architect) build orchestrator | linear-mcp, github-issues-mcp, memory-mcp |
 
@@ -195,7 +195,7 @@ Never edit the upper layers directly; regenerate from below.
 |--------|---------|---------------------|
 | `anthropic-skills` | Office docs (.docx/.pdf/.pptx/.xlsx), MCP server authoring, skill creator, webapp testing — **19 sub-skills vendored** | filesystem-mcp, pdf-mcp, vision-mcp |
 | `openmontage` | Non-linear video editing via ffmpeg for shorts / montages | ffmpeg-mcp, video-mcp |
-| `hyperframes` | Personalized talking-head video (consent-gated) | heygen-mcp, elevenlabs-mcp, voice-clone-mcp |
+| `hyperframes` | Personalized talking-head video (consent-gated) | heygen-mcp, elevenlabs-mcp |
 | `humanizer` | Remove AI-isms from generated text, naturalize tone | style-mcp, grammar-mcp |
 
 #### Agency Personas (`skills/agency/`)
@@ -247,14 +247,15 @@ vendored into the repo root (their source code, not just manifests):
 | `agentic-awesome-skills/` | awesome-list fork | Curated skill index, used as discovery source |
 | `claude-mem/` | github.com/crystalsta/claudemem | Cross-session memory hooks |
 | `headroom/` | github.com/withspectrum/headroom | Context-window optimization primitives |
-| `ponytail/` | github.com/wayfair/ponytail | Prompt rewriting + rewriting patterns |
-| `superpowers/` | github.com/jesusprubio/superpowers | Agent capability library |
-| `system-prompts-and-models-of-ai-tools/` | leaked prompt archive | Reference for prompt engineering |
-| `ECC/` | Engineering Coding Conventions | Lint rules + skill specs for code quality |
+| `ponytail/` | github.com/DietrichGebert/ponytail | Skills framework + hooks (MIT) |
+| `superpowers/` | github.com/obra/superpowers | Developer productivity skills (MIT) |
+| `system-prompts-and-models-of-ai-tools/` | github.com/x1xhlol/system-prompts-and-models-of-ai-tools | Reference prompts (GPL-3.0) |
+| `ECC/` | github.com/affaan-m/ECC | Enhanced Claude Code configuration (MIT) |
 
-These contribute ~3,356 additional skills (on top of the 40 cataloged) to the
-aggregated `all-skills.json` registry, bringing the **total installed skill
-count to 3,378**.
+The vendored projects feed the aggregation pipeline: 2,729 (AAS) + 314 (ECC)
++ 283 (Agency) + 19 (Anthropic) + 15 (Superpowers) + 11 (Replica) + 6 (Ponytail)
++ 1 (task-observer) bring the **total indexed skill count to 3,378** in
+`all-skills.json`.
 
 ## 4. The setup pipeline
 
@@ -277,8 +278,9 @@ it merges rather than overwrites user customizations (post-H-1 audit fix).
 
 ## 5. Quality posture
 
-- **149 tests** in `unified-integration/tests/` (77 original + 12 audit
-  hardening + 21 modular-tree + 39 MCP-server). All passing.
+- **236 tests** in `unified-integration/tests/` (17 regression modules
+  covering setup, memory, MCP, routing, native activation, task observer).
+  All passing.
 - **Static checks**: `bash -n`, `py_compile`, JSON schema validation —
   enforced in CI.
 - **End-to-end setup** verified against 8 stub agent CLIs in an isolated

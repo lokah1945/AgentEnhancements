@@ -1,8 +1,10 @@
 # AgentEnhancements — Centralized System Prompt / Cursor Rules
 
-> This file is loaded automatically by Cursor and by any agent CLI provisioned
-> through `unified-integration/setup.sh` (it is symlinked into `~/.cursor/`,
-> `~/.claude/`, `~/.codex/`, `~/.continue/`, etc.).
+> This file is the repository's centralized reference prompt (Karpathy +
+> Anthropic best practices). It is **not automatically loaded by any agent**:
+> Cursor reads `~/.cursor/rules/agent-enhancements.mdc` (written by
+> `unified-integration/setup.sh`), and the other CLIs each get their own
+> native activation file — see the Agent Activation Matrix in `README.md`.
 >
 > The rules below are **distilled from two vendored skill sources**:
 > - `plugin-catalog/code/karpathy-skills/SKILL.md` (Andrej Karpathy's
@@ -203,8 +205,8 @@ When building a new MCP server (see `docs/MCP_INTEGRATION_CHECKLIST.md`):
 
 - **Never modify vendored upstream code** in place (`anthropic-skills/`,
   `replica-skill/`, `ECC/`, etc.). If a bug exists upstream, file an issue
-  upstream; if a patch is urgent, fork into `unified-integration/patches/`
-  and document in `docs/PATCHES.md`.
+  upstream; the vendored copy stays pristine until the next documented
+  re-vendor (see `docs/UPDATING.md`).
 - This policy was confirmed during the 2026-11 audit (ECC test failures are
   upstream issues; we do not patch them locally).
 
@@ -262,12 +264,12 @@ When building a new MCP server (see `docs/MCP_INTEGRATION_CHECKLIST.md`):
 
 ## 7. Pointers
 
-- Modular skill tree: `skills/<category>/<slug>/SKILL.md`
+- Modular skill tree: `skills/<category>/<slug>/SKILL.md` (generated at install by `scripts/scaffold_modular_skills.sh`)
 - Catalog: `plugin-catalog/catalog.json`
 - MCP roadmap: `plugin-catalog/mcp-servers.json`
 - MCP build checklist: `docs/MCP_INTEGRATION_CHECKLIST.md`
 - Setup pipeline: `unified-integration/setup.sh`
-- Test suite: `unified-integration/tests/` (149 tests)
+- Test suite: `unified-integration/tests/` (236 tests)
 - Audit report: `docs/audit/E2E_AUDIT_2026-11.md`
 - Contribution contract: `CONTRACT.md` (§12.3 commit message format)
 

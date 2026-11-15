@@ -47,8 +47,8 @@ jobs:
               echo "::error file=$f::invalid JSON"
               status=1
             fi
-          done < <(find unified-integration scripts plugin-catalog -name '*.json' -print0 
-                   -not -path '*/node_modules/*')
+          done < <(find unified-integration scripts plugin-catalog -name '*.json' \
+                   -not -path '*/node_modules/*' -print0)
           # also validate the committed modular-tree index
           python3 -m json.tool skills/manifest.json > /dev/null || {
             echo "::error file=skills/manifest.json::invalid JSON"; exit 1; }
@@ -119,6 +119,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - name: Install and verify ECC command-line tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ripgrep jq
+          rg --version
+          printf 'ecc-pcre2-probe\n' | rg --pcre2 -- '^ecc-pcre2-probe$'
+          jq --version
       - name: Install ECC dependencies
         run: npm install --no-audit --no-fund
         working-directory: ECC
@@ -126,7 +133,12 @@ jobs:
         run: npm run build:opencode
         working-directory: ECC
       - name: Run ECC tests
-        run: ECC_TEST_JOBS=8 node tests/run-all.js
+        run: |
+          # Follow ECC's own CI: suites that move shared build artifacts or
+          # assert timing budgets must run outside the parallel worker pool.
+          ECC_TEST_SERIAL=$(grep -rlE --include='*.test.js' 'build-opencode|\.backup-|dist\.backup|time budget' tests | sed 's#^tests/##' | sort | paste -sd, -)
+          export ECC_TEST_SERIAL
+          ECC_TEST_JOBS=4 node tests/run-all.js
         working-directory: ECC
 
   mcp-servers:

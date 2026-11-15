@@ -7,6 +7,43 @@ audience: all
 
 # Changelog
 
+## 2026-11-15 (later) — Audit remediation closure (19/22 findings closed)
+
+Five-commit remediation on `fix/audit-remediation-2026-11-15` from
+`a88efe65`; full report: `docs/audit/REMEDIATION_CLOSURE_2026-11-15.md`.
+
+- **Catalog integrity**: 5 dangling catalog->roadmap MCP refs repaired
+  (typescript-language-server-mcp rename; tokenizer/llm-cache/voice-clone
+  removed); nexus sub_skills now point at real vendored files;
+  `catalog-validate.py` validates catalog<->roadmap cross-refs,
+  index<->manifest sync and sub_skill paths; `catalog-test.sh` reads
+  categories from catalog.json (agency covered; `nexus` exits 0).
+- **REA identity corrected** to the real upstream: morluto/rea is
+  "Reverse Engineer Anything" (binary/app analysis MCP server, MIT,
+  verified) — manifest/SKILL/guides/index/routing rewritten; dispatch
+  fallback now honestly abstains to ordinary tools; generic "investigate"
+  routes to understand-anything (ROUTER_POLICY 1.2).
+- **Security**: task-router-mcp hidden by default (opt-in via ui.api.json,
+  SAFETY.md 1.2 section 0), destructive-pattern denylist extended to
+  python payloads incl. quoted shell-outs; vision-mcp image upload to
+  OpenAI documented (SAFETY/ENV_VARS/MCP_SERVERS).
+- **Setup hygiene**: idempotent index/registry writes (timestamp
+  preserved when content unchanged - verified live), backup-on-change
+  only, opt-in INSTALL_SYSTEM_LAUNCHER, AGENT_ENHANCEMENTS_REF pinning +
+  ff-only refresh for piped installs, honest init-memory messages, dead
+  merge_json_config + impossible claude-mem rebuild removed, mcp-test.sh
+  --prepare side effect removed.
+- **Docs/licenses**: root LICENSE (MIT owned layer + NOTICE for 11 vendored
+  dirs), README license table corrected from in-tree metadata
+  (claude-mem Apache-2.0, system-prompts GPL-3.0, headroom Apache-2.0,
+  AAS MIT+CC-BY-4.0), LICENSE_AUDIT v2.0 covers vendored dirs; stale
+  numbers swept (149->249 tests, 21->40 plugins, 36->38 MCP, 3,094->3,378
+  skills, Continue removed); UPDATING.md v2.1 re-vendor reality;
+  CONTRACT v2.2 (vendoring + two-dimension capability status contract).
+- **Tests**: new test_audit_remediation module; suite 235 -> 249, all
+  passing locally; task-router gateway exposure 36 -> 31 tools until
+  opt-in.
+
 ## 2026-11-15 — Integrate Task Observer (task-observer) ambient skill-usage observation
 
 - Vendored `task-observer/` from

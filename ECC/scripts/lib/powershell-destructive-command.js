@@ -360,24 +360,29 @@ function readBalancedGroup(input, openingIndex, open, close) {
  * clauses, and common script-block-consuming commands execute their bodies.
  */
 function currentClause(prefix) {
-  const clauseStart = Math.max(
-    prefix.lastIndexOf(';'),
-    prefix.lastIndexOf('\n'),
-    prefix.lastIndexOf('\r')
-  );
-  return prefix.slice(clauseStart + 1).trim();
+  // Every caller receives the clause context maintained by
+  // appendContainerContext, which already consumes statement boundaries and
+  // folds whitespace. Re-scanning its bounded prefix at every sibling
+  // container makes large executable inputs needlessly expensive.
+  return prefix.trim();
 }
 
 function invokesContainerResult(prefix, options = {}) {
   const clause = currentClause(prefix);
   const pipelineStart = clause.lastIndexOf('|');
   const pipelineCommand = clause.slice(pipelineStart + 1).trim();
+  // These suffix checks keep the unanchored patterns below from repeatedly
+  // walking long clause contexts that cannot possibly match them.
+  // The parameter names end in n/d/r/t/l/s/k, or an optional colon; keep
+  // that guard in sync with the parameter-name pattern below.
+  const lastChar = clause.slice(-1).toLowerCase();
+  const methodTail = clause.slice(-7).toLowerCase();
   const isForeachLoopHeader = Boolean(options.groupingExpression) &&
     pipelineStart === -1 &&
     /^foreach$/i.test(pipelineCommand);
-  return /(?:^|\s)(?:&|\.)\s*$/.test(clause) ||
-    /\.\s*(?:foreach|where)\s*$/i.test(clause) ||
-    /-(?:action|begin|command|end|expression|filter|initializationscript|parallel|process|scriptblock)(?:\s*:\s*)?$/i.test(clause) ||
+  return ((lastChar === '&' || lastChar === '.') && /(?:^|\s)(?:&|\.)\s*$/.test(clause)) ||
+    ((methodTail.endsWith('foreach') || methodTail.endsWith('where')) && /\.\s*(?:foreach|where)\s*$/i.test(clause)) ||
+    ('ndrtlsk:'.includes(lastChar) && /-(?:action|begin|command|end|expression|filter|initializationscript|parallel|process|scriptblock)(?:\s*:\s*)?$/i.test(clause)) ||
     (!isForeachLoopHeader &&
       /^(?:(?:[\w.-]+\\)?(?:foreach-object|where-object|foreach|where|invoke-command|start-job|measure-command)|%|\?)(?:\s|$)/i.test(pipelineCommand));
 }
@@ -804,9 +809,12 @@ function consumeContainerInertChar(scan, index) {
 }
 
 function containerDescriptor(input, index, flags) {
-  const { isSubexpression, isArrayExpression, isScriptBlock } = flags;
+  const { isSubexpression, isArrayExpression, isGroupingExpression, isScriptBlock } = flags;
   return {
-    ...flags,
+    isSubexpression,
+    isArrayExpression,
+    isGroupingExpression,
+    isScriptBlock,
     isHashtable: isScriptBlock && input[index - 1] === '@',
     openingIndex: isSubexpression || isArrayExpression ? index + 1 : index,
     open: isScriptBlock ? '{' : '(',
@@ -847,6 +855,7 @@ function readContainerOpener(scan, index) {
 
 function queueCreatedScriptBlock(scan, group, clause, invokedAfter) {
   const { options } = scan;
+  if (clause.slice(-6).toLowerCase() !== 'create') return;
   const createsScriptBlock = /\[\s*(?:system\.management\.automation\.)?scriptblock\s*\]\s*::\s*create\s*$/i.test(clause);
   if (!createsScriptBlock || !(invokedAfter || options.executeBareScriptBlocks)) return;
   const scalarReference = variableReference(group.body);
@@ -1255,6 +1264,7 @@ function createScanState() {
 }
 
 function collectStaticScalarAssignments(input, state) {
+  if (!input.includes('$')) return;
   const variable = String.raw`(\$\{[^}]+\}|\$(?:[A-Za-z_][\w-]*:)?[A-Za-z_][\w-]*(?:\[[^\]]+\]|\.[A-Za-z_][\w-]*)*)`;
   const firstReferences = new Map();
   const referencePattern = new RegExp(variable, 'g');
@@ -1750,6 +1760,7 @@ function scanStartProcess(tokens, depth, findings, analysis, scanState) {
 
 function isAssignmentTarget(value) {
   const variable = String(value || '');
+  if (!variable.startsWith('$') && !variable.startsWith('[')) return false;
   const oneTarget = String.raw`(?:\$\{[^}]+\}|\$(?:[A-Za-z_][\w-]*:)?[A-Za-z_][\w-]*(?:\[[^\]]+\]|\.[A-Za-z_][\w-]*)*)`;
   return new RegExp(`^(?:\\[[^\\]]+\\])?${oneTarget}(?:,${oneTarget})*$`).test(variable);
 }

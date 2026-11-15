@@ -1,11 +1,52 @@
 ---
 title: Changelog
-version: 1.3
+version: 1.4
 last_updated: 2026-11-15
 audience: all
 ---
 
 # Changelog
+
+## 2026-11-15 — Integrate Task Observer (task-observer) ambient skill-usage observation
+
+- Vendored `task-observer/` from
+  `github.com/rebelytics/one-skill-to-rule-them-all` (CC-BY-4.0, © Eoghan Henn
+  and contributors), pinned at `d61bc31f7857948710a947673c0e373bef4ed3d0`
+  (skill version 3.10.0); provenance + checksums in
+  `task-observer/VENDORED.md` / `VENDORED.json`. The upstream optional
+  Claude-Code plugin, marketplace metadata and CI templates are excluded —
+  activation goes through the shared runtime, as with every other capability.
+- `setup.sh` `process_skills_source` now handles **root-layout sources**
+  (SKILL.md at the source root) — task-observer is aggregated as a single
+  skill through the same pipeline (3,377 -> 3,378 skills, new source
+  `task-observer`); scan stays one level deep so `references/` and `scripts/`
+  never register as separate skills.
+- New `unified-integration/scripts/task-observer.py` host adapter: status /
+  enable / disable (persisted marker, survives setup re-runs), workspace
+  bootstrap (upstream four-artefact layout), structured observation logging
+  through the upstream helper (validated header, id derivation, collision
+  guards, atomic claims), per-skill lookup, read-only review, staging with
+  PROPOSAL.md provenance (base commit, candidate + source digests), stale
+  candidate refusal, validator-gated promotion to the canonical source with
+  rollback backups, and secret redaction before persist.
+- `scripts/runtime.py` bootstraps the observer workspace and injects a
+  bounded context on every `SessionStart` (not keyword-matched) for
+  Claude Code, Codex and OpenCode; observer failures stay advisory.
+- Default native curated set: anthropic-skills + replica-skill +
+  **task-observer** (31 skills); registry gains the `capability:task-observer`
+  entry (7 -> 8 built-in capabilities).
+- `update-skills.sh` warns that task-observer is vendored + pinned; the
+  refresh procedure is documented (never silent to a new upstream HEAD).
+- Tests: `unified-integration/tests/test_task_observer.py` (38 tests:
+  aggregation, linking, bootstrap, observations, no-signal, cross-session,
+  concurrency, redaction, injection-inertness, spaced paths, staging,
+  promotion, rollback, stale refusal, disable/enable, error recovery,
+  upstream-guard preservation). Suite: 223 tests OK.
+- Docs: new `docs/TASK_OBSERVER.md` (usage, capability matrix with honest
+  evidence levels, staging/promotion flow, privacy, reproducible demo);
+  README.md, README_INTEGRATION.md, docs/SKILLS.md, docs/ARCHITECTURE.md,
+  docs/CONFIGURATION.md (`TASK_OBSERVER_WORKSPACE`), docs/UPDATING.md,
+  docs/AGENTS.md updated.
 
 ## 2026-11-15 — Integrate The Agency (agency-agents) persona collection
 

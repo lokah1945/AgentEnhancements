@@ -91,7 +91,7 @@ AgentEnhancements/
 │   ├── mcp-servers/                    # 9 in-house MCP servers + installer template
 │   ├── scripts/setup-mcp.sh            # MCP config installer for 6 agent CLIs
 │   ├── skills/
-│   │   ├── all-skills.json             # 3,377 skills aggregated registry
+│   │   ├── all-skills.json             # 3,378 skills aggregated registry
 │   │   ├── agent-registry.json         # per-agent install mapping
 │   │   ├── by-category/                # 10 functional categories
 │   │   └── by-agent/                   # per-agent file lists
@@ -254,7 +254,7 @@ vendored into the repo root (their source code, not just manifests):
 
 These contribute ~3,356 additional skills (on top of the 40 cataloged) to the
 aggregated `all-skills.json` registry, bringing the **total installed skill
-count to 3,377**.
+count to 3,378**.
 
 ## 4. The setup pipeline
 
@@ -264,7 +264,7 @@ count to 3,377**.
 │   ↓ (scaffold_modular_skills.sh)                                   │
 │ skills/<cat>/<slug>/SKILL.md + manifest.json                       │
 │   ↓ (update-skills.sh, scans all SKILL.md)                         │
-│ unified-integration/skills/all-skills.json  (3,377 skills)         │
+│ unified-integration/skills/all-skills.json  (3,378 skills)         │
 │   ↓ (setup.sh, per-agent dispatch)                                 │
 │ ~/.claude/CLAUDE.md      ~/.codex/AGENTS.md      ~/.cursor/...     │
 │ ~/.continue/config.json  ~/.gemini/...           ~/.kiro/...       │

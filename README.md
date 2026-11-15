@@ -6,7 +6,7 @@ A unified integration platform that aggregates essential AI agent skills, tools,
 
 AgentEnhancements brings together 9 complementary projects (plus a plugin catalog and three vendored skill suites) that enhance AI coding agents (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Copilot, Windsurf, Kiro) with:
 
-- **3,377 specialized skills/agents** in the unified index (see `unified-integration/skills/all-skills.json` for the live count), including the **19 official Anthropic skills** (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...) and **283 AI personas from The Agency** (agency-agents)
+- **3,378 specialized skills/agents** in the unified index (see `unified-integration/skills/all-skills.json` for the live count), including the **19 official Anthropic skills** (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...) and **283 AI personas from The Agency** (agency-agents), plus the pinned **task-observer** meta-skill (ambient skill-usage observation, [docs/TASK_OBSERVER.md](docs/TASK_OBSERVER.md))
 - **Capability registry** mapping every skill, catalog plugin and MCP server in one queryable index (`registry.py map "<task>"`)
 - **Native runtime activation**: one install links a curated skill set into `~/.claude/skills/` and `~/.agents/skills/`, so Agent Skills compatible harnesses discover them automatically
 - **Plugin catalog** with 40 curated external plugin sources (code, research, tokens, design, multimedia, agency personas)
@@ -71,13 +71,13 @@ cd AgentEnhancements
 
 The setup script will:
 1. Detect your installed AI coding assistants (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Windsurf, Copilot, Kiro)
-2. Aggregate skills from all sources into the unified registry (3,377 skills from 7 sources, official Anthropic copies winning name collisions) and regenerate `all-skills.json`
+2. Aggregate skills from all sources into the unified registry (3,378 skills from 8 sources, official Anthropic copies winning name collisions) and regenerate `all-skills.json`
 3. Build the capability registry (`agent-registry.json`: skills + 40 plugins + 38 MCP servers + built-ins)
 4. Configure system prompts for each detected tool from the vendored prompt collection
 5. Set up memory persistence (parameterized-SQL Python hooks)
 6. Enable context compression (headroom binary if available, pure-Python fallback otherwise)
 7. Configure Claude Code hooks for automatic memory save, and write activation files for every other agent
-8. Link the curated skill set (anthropic-skills + replica-skill) into `~/.claude/skills/` and `~/.agents/skills/` for native runtime auto-discovery
+8. Link the curated skill set (anthropic-skills + replica-skill + task-observer) into `~/.claude/skills/` and `~/.agents/skills/` for native runtime auto-discovery
 
 Re-run `setup.sh` any time; it is idempotent (non-destructive config merges, marker-guarded instruction files).
 
@@ -97,7 +97,7 @@ What gets configured per agent when `setup.sh` detects it:
 | **Windsurf** | `~/.codeium/windsurf/rules/agent-enhancements.md` | Global rule with catalog, memory and compression usage |
 | **GitHub Copilot** | `~/.config/github-copilot/config.yaml` (reference) | Reference configuration; use via the launcher |
 | **Kiro** | `~/.kiro/config.yaml` (reference) | Reference configuration; use via the launcher |
-| **All Agent Skills harnesses** | links in `~/.agents/skills/` (cross-agent standard) | Curated set (anthropic-skills 19 + replica-skill 11) auto-discovered at runtime |
+| **All Agent Skills harnesses** | links in `~/.agents/skills/` (cross-agent standard) | Curated set (anthropic-skills 19 + replica-skill 11 + task-observer 1) auto-discovered at runtime |
 
 Notes:
 - Marker-guarded files (`<!-- agent-enhancements:begin/end -->`) preserve your personal instructions across re-runs.
@@ -158,6 +158,7 @@ AgentEnhancements/
 ├── docs/ENV_VARS.md              # Every API key / env var: source + rotation policy
 ├── anthropic-skills/              # 19 official Anthropic skills (vendored, Apache-2.0)
 ├── replica-skill/                 # 11 vendored app-cloning sub-skills
+├── task-observer/                 # vendored ambient skill-observation meta-skill (CC-BY-4.0, pinned; docs/TASK_OBSERVER.md)
 ├── agency-agents/                 # 283 The Agency personas (vendored, MIT) + NEXUS playbooks
 ├── agentic-awesome-skills/        # 2,781 vendored skills
 ├── claude-mem/                    # Memory persistence layer (vendored)
@@ -172,7 +173,7 @@ AgentEnhancements/
 
 ## Skills Catalog
 
-The unified index (`unified-integration/skills/all-skills.json`) currently contains **3,377 unique skills** aggregated from 7 sources (the index is keyed by name; the official anthropic-skills version wins collisions with third-party copies):
+The unified index (`unified-integration/skills/all-skills.json`) currently contains **3,378 unique skills** aggregated from 8 sources (the index is keyed by name; the official anthropic-skills version wins collisions with third-party copies):
 
 | Source | Skills |
 |--------|--------|
@@ -212,7 +213,7 @@ python3 unified-integration/scripts/registry.py show docx
 python3 unified-integration/scripts/registry.py stats
 ```
 
-Scoring understands format families ("word" -> docx, "excel" -> xlsx, "powerpoint" -> pptx) and stop words in English and Indonesian, so `map "buat dokumen word laporan keuangan"` returns the official `docx` skill first. The registry (`skills/agent-registry.json`) is rebuilt by `setup.sh` and covers 3,377 skills + 40 plugins + 38 MCP servers + 7 built-in capabilities.
+Scoring understands format families ("word" -> docx, "excel" -> xlsx, "powerpoint" -> pptx) and stop words in English and Indonesian, so `map "buat dokumen word laporan keuangan"` returns the official `docx` skill first. The registry (`skills/agent-registry.json`) is rebuilt by `setup.sh` and covers 3,378 skills + 40 plugins + 38 MCP servers + 8 built-in capabilities.
 
 ### Using Skills
 

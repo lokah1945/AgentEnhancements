@@ -89,7 +89,11 @@ class RuntimeTests(unittest.TestCase):
         self.event(
             "UserPromptSubmit", project="first/repo", prompt="private project note"
         )
-        self.assertEqual(self.event("SessionStart", project="second/repo"), {})
+        output = self.event("SessionStart", project="second/repo")
+        context = output.get("hookSpecificOutput", {}).get("additionalContext", "")
+        # The observer bootstrap may be present (it is session-scoped), but
+        # the other project's memory notes must never leak into it.
+        self.assertNotIn("private project note", context)
 
     def test_tool_input_and_output_are_never_stored(self):
         self.event(
@@ -125,7 +129,11 @@ class RuntimeTests(unittest.TestCase):
         self.event("UserPromptSubmit", prompt="expired note")
         with sqlite3.connect(self.memory / "memory.db") as conn:
             conn.execute("UPDATE memories SET expires_at='2000-01-01 00:00:00'")
-        self.assertEqual(self.event("SessionStart"), {})
+        output = self.event("SessionStart")
+        context = output.get("hookSpecificOutput", {}).get("additionalContext", "")
+        # Expired memory notes are gone; the observer bootstrap is
+        # session-scoped and may still be present.
+        self.assertNotIn("expired note", context)
 
 
 class UpdateFlowTests(unittest.TestCase):

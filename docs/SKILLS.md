@@ -18,6 +18,7 @@ audience: users, contributors
 | replica-skill | `replica-skill/` | 11 app-cloning sub-skills (repo-root layout) |
 | agency-agents | `agency-agents/skills/` | 283 The Agency personas in 18 division subdirectories (converted from the vendored upstream by `scripts/convert_agency_agents.py`); names are prefixed `agency-` so they never collide |
 | anthropic-skills | `anthropic-skills/skills/` | 19 official Anthropic skills (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...); processed LAST so the official version wins name collisions |
+| task-observer | `task-observer/` | the ambient skill-observation meta-skill (rebelytics/one-skill-to-rule-them-all, CC-BY-4.0, pinned; see [TASK_OBSERVER.md](TASK_OBSERVER.md)); **root-layout source**: its SKILL.md sits at the source root and is aggregated as a single skill |
 
 ## SKILL.md frontmatter
 
@@ -69,7 +70,7 @@ compatible harnesses read automatically:
 - `~/.claude/skills/` - Claude Code personal skills
 - `~/.agents/skills/` - cross-agent Agent Skills standard (agentskills.io)
 
-Default curated set: **anthropic-skills (19) + replica-skill (11)**.
+Default curated set: **anthropic-skills (19) + replica-skill (11) + task-observer (1)**.
 
 ```bash
 bash unified-integration/scripts/link-skills.sh                    # default set
@@ -86,9 +87,9 @@ user-owned directories, files and foreign symlinks are never touched.
 ## Using skills
 
 After setup, normal natural-language tasks trigger native discovery and prompt
-routing automatically in Claude Code, current Codex and OpenCode 2. The 30-skill
+routing automatically in Claude Code, current Codex and OpenCode 2. The 31-skill
 curated set supplies native metadata; prompt-time routing searches the complete
-3,377-skill catalog without injecting all descriptions into every request.
+3,378-skill catalog without injecting all descriptions into every request.
 Matching is lexical with a small English/Indonesian alias set, so recommendations
 are guidance, not a guarantee that every task will select the ideal skill.
 Agent aliases such as `Codex`/`codex-cli` are normalized during matching; tools

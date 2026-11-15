@@ -398,6 +398,9 @@ This directory contains aggregated skills from multiple sources:
    xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
 7. **agency-agents** - 283 AI-persona skills from The Agency (18 divisions,
    converted to Agent Skills format by scripts/convert_agency_agents.py)
+8. **task-observer** - vendored ambient skill-observation meta-skill
+   (rebelytics/one-skill-to-rule-them-all, CC-BY-4.0, pinned; root-layout
+   source: one skill bundle whose SKILL.md sits at the source root)
 
 ## Structure
 
@@ -469,7 +472,13 @@ EOF
 
         log_info "Processing $source_name skills from $source_dir..."
 
-        # Find all skill directories (directories containing SKILL.md)
+        # Find all skill directories (directories containing SKILL.md).
+        # A source whose SKILL.md sits at the ROOT of the source directory
+        # (task-observer vendors its whole repository as one skill bundle)
+        # is aggregated as a single skill: the source directory itself is
+        # prepended to the scan, since find -mindepth 1 cannot return it.
+        # The scan stays targeted one level deep, so bundle subdirectories
+        # (references/, scripts/) are never registered as separate skills.
         while IFS= read -r -d '' skill_dir; do
             if [ -f "$skill_dir/SKILL.md" ]; then
                 skill_name=$(get_skill_name "$skill_dir/SKILL.md")
@@ -547,6 +556,61 @@ EOF
             fi
         done < <(find "$source_dir" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
 
+        # Root-layout source: SKILL.md at the source root is itself the
+        # one skill this source ships (task-observer). This branch mirrors
+        # the loop body above (same metadata record and copy path, so the
+        # index schema is unchanged): keep the two in sync when editing
+        # the registration steps above.
+        if [ -f "$source_dir/SKILL.md" ]; then
+            skill_dir="$source_dir"
+            skill_name=$(get_skill_name "$skill_dir/SKILL.md")
+            skill_category=$(get_skill_category "$skill_dir/SKILL.md")
+            skill_description=$(get_skill_description "$skill_dir/SKILL.md")
+            skill_risk=$(get_skill_risk "$skill_dir/SKILL.md")
+            skill_tags=$(get_skill_tags "$skill_dir/SKILL.md")
+            skill_tools=$(get_skill_tools "$skill_dir/SKILL.md")
+
+            case "$skill_category" in
+                security|architecture|testing|refactoring|code-review|documentation|devops|ai-ml|productivity)
+                    ;;
+                *)
+                    skill_category="general"
+                    ;;
+            esac
+
+            skill_name="${skill_name//\//-}"
+            if [ -z "$skill_name" ] || [ "$skill_name" = "." ] || [ "$skill_name" = ".." ]; then
+                log_warn "Skipping skill with invalid name '${skill_name}' in $skill_dir"
+            else
+                target_dir="$SKILLS_DIR/by-category/$skill_category/$skill_name"
+                mkdir -p "$(dirname "$target_dir")"
+                rm -rf "$target_dir"
+                cp -r "$skill_dir" "$target_dir" 2>/dev/null || true
+
+                while IFS= read -r tool; do
+                    if [ -n "$tool" ]; then
+                        case "$tool" in
+                            claude-code|codex|cursor|gemini-cli|opencode|copilot|windsurf|kiro)
+                                agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
+                                mkdir -p "$(dirname "$agent_target_dir")"
+                                rm -rf "$agent_target_dir"
+                                cp -r "$skill_dir" "$agent_target_dir" 2>/dev/null || true
+                                ;;
+                            *)
+                                ;;
+                        esac
+                    fi
+                done <<< "$skill_tools"
+
+                printf '%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s\x1e' \
+                    "$skill_name" "$skill_category" "$skill_description" \
+                    "$skill_risk" "$source_name" "$skill_tags" "$skill_tools" \
+                    "$skill_dir/SKILL.md" \
+                    >> "$SKILLS_META"
+                skills_count=$((skills_count + 1))
+            fi
+        fi
+
         log_success "$source_name: processed $skills_count skills"
     }
 
@@ -597,6 +661,15 @@ EOF
             [ -d "$agency_div" ] || continue
             process_skills_source "agency-agents" "$agency_div"
         done
+    fi
+
+    # Process skills from task-observer (vendored): one skill bundle whose
+    # SKILL.md sits at the repository root (root-layout source, handled by
+    # the root-SKILL.md branch of process_skills_source). Aggregated LAST
+    # so the vendored copy wins any name collision, mirroring the
+    # anthropic-skills precedence rule.
+    if [ -d "$BASE_DIR/task-observer" ]; then
+        process_skills_source "task-observer" "$BASE_DIR/task-observer"
     fi
 
     # Create final unified skills index with metadata.
@@ -755,8 +828,9 @@ for record in content.split('\x1e'):
 
 # Later sources win name collisions, mirroring the by-directory overwrite
 # semantics in process_skills_source (aggregation order: agentic, ECC,
-# Ponytail, Superpowers, replica-skill, anthropic-skills - so the official
-# Anthropic version replaces third-party copies of the same skill name).
+# Ponytail, Superpowers, replica-skill, anthropic-skills, agency-agents,
+# task-observer - so the official Anthropic version replaces third-party
+# copies, and the pinned task-observer bundle wins any same-name collision).
 skills = list(skills_by_name.values())
 # Deterministic output: sort by skill name so the committed index changes
 # only when content changes, not when readdir order differs between

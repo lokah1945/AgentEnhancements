@@ -7,7 +7,8 @@
     "agency-agents",
     "Superpowers",
     "Ponytail",
-    "replica-skill"
+    "replica-skill",
+    "task-observer"
   ],
   "skills": [
     {
@@ -46846,6 +46847,18 @@
       "source_path": "agentic-awesome-skills/skills/task-intelligence/SKILL.md"
     },
     {
+      "name": "task-observer",
+      "category": "general",
+      "description": "Monitors task execution for skill improvement opportunities: logs patterns, user corrections and methodology worth preserving to the workspace, turns them into skill updates in a weekly review, and flags repeating work as new skills. Use during ANY multi-step task, agentic workflow, or work session. Also triggers in post-task feedback discussions and when the user mentions skill observations, the observation log, or skill taxonomy. Also known as \"One Skill to Rule Them All\" \u2014 trigger on this phrase too. IMPORTANT: invoke this skill before the FIRST tool call of any session and before writing or proposing a plan \u2014 any turn that will involve a tool call counts. This sentence is the session-start trigger and the only activation layer that survives an unreachable config file; pair it with a CLAUDE.md instruction or a session-start hook (references/environments.md). A subagent dispatched by a session already running it does not run it: it writes nothing and puts its findings in its report.",
+      "risk": "safe",
+      "source": "task-observer",
+      "tags": [],
+      "tools": [],
+      "when_to_use": "Monitors task execution for skill improvement opportunities: logs patterns, user corrections and methodology worth preserving to the workspace, turns them into skill updates in a weekly review, and flags repeating work as new skills. Use during ANY multi-step task, agentic workflow, or work session. Also triggers in post-task feedback discussions and when the user mentions skill observations, the observation log, or skill taxonomy. Also known as \"One Skill to Rule Them All\" \u2014 trigger on this phrase too. IMPORTANT: invoke this skill before the FIRST tool call of any session and before writing or proposing a plan \u2014 any turn that will involve a tool call counts. This sentence is the session-start trigger and the only activation layer that survives an unreachable config file; pair it with a CLAUDE.md instruction or a session-start hook (references/environments.md). A subagent dispatched by a session already running it does not run it: it writes nothing and puts its findings in its report.",
+      "path": "unified-integration/skills/by-category/general/task-observer/SKILL.md",
+      "source_path": "task-observer/SKILL.md"
+    },
+    {
       "name": "taste",
       "category": "general",
       "description": "Creative-direction layer for music videos and short-form edits in the angelcore / cloud-trance / hyperpop family \u2014 a named-genre aesthetic vocabulary, mood + color + light system, beat-synced editing grammar, and a pipeline chaining ECC's video skills from b-roll generation to distribution. Use when a video must feel intentional rather than merely functional \u2014 music videos, fancams, moodboard-driven reels, or giving AI-generated b-roll a coherent visual direction.",
@@ -52628,9 +52641,9 @@
       "source_path": "agentic-awesome-skills/skills/zustand-store-ts/SKILL.md"
     }
   ],
-  "total_skills": 3377,
+  "total_skills": 3378,
   "categories": {
-    "general": 2858,
+    "general": 2859,
     "security": 162,
     "productivity": 196,
     "testing": 25,
@@ -52692,5 +52705,5 @@
     "weaviate": 2,
     "nextjs": 1
   },
-  "last_updated": "2026-11-15T04:51:28.251961+00:00"
+  "last_updated": "2026-11-15T07:10:49.164412+00:00"
 }

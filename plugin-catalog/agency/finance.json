@@ -1,0 +1,91 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-finance",
+  "name": "The Agency — Finance Division (5 personas)",
+  "slug": "finance",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "5 persona keuangan dari The Agency (agency-agents) — keuangan: pembukuan GAAP, analisis keuangan, FP&A, riset investasi, strategi pajak. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "keuangan: pembukuan GAAP, analisis keuangan, FP&A, riset investasi, strategi pajak",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "bookkeeper",
+    "financial analyst",
+    "fpa",
+    "investment research",
+    "tax strategy"
+  ],
+  "best_for": [
+    "pembukuan dan month-end close",
+    "modeling keuangan dan forecast",
+    "riset investasi dan strategi pajak"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "finance-bookkeeper-controller",
+      "role": "Bookkeeper & Controller"
+    },
+    {
+      "slug": "finance-financial-analyst",
+      "role": "Financial Analyst"
+    },
+    {
+      "slug": "finance-fpa-analyst",
+      "role": "FP&A Analyst"
+    },
+    {
+      "slug": "finance-investment-researcher",
+      "role": "Investment Researcher"
+    },
+    {
+      "slug": "finance-tax-strategist",
+      "role": "Tax Strategist"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/finance/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/finance/finance-bookkeeper-controller/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/finance/finance-financial-analyst/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/finance/finance-fpa-analyst/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/finance/finance-investment-researcher/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/finance/finance-tax-strategist/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

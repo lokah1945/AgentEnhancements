@@ -1,0 +1,99 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-support",
+  "name": "The Agency — Support Division (6 personas)",
+  "slug": "support",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "6 persona operasional pendukung dari The Agency (agency-agents) — operasional pendukung: dukungan pelanggan, analitik, pelacakan keuangan, kepatuhan hukum, ringkasan eksekutif, infrastruktur. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "operasional pendukung: dukungan pelanggan, analitik, pelacakan keuangan, kepatuhan hukum, ringkasan eksekutif, infrastruktur",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "customer support",
+    "analytics",
+    "finance tracker",
+    "legal compliance",
+    "executive summary"
+  ],
+  "best_for": [
+    "operasi dukungan pelanggan",
+    "dashboard analitik dan KPI",
+    "ringkasan eksekutif C-suite"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "support-analytics-reporter",
+      "role": "Analytics Reporter"
+    },
+    {
+      "slug": "support-executive-summary-generator",
+      "role": "Executive Summary Generator"
+    },
+    {
+      "slug": "support-finance-tracker",
+      "role": "Finance Tracker"
+    },
+    {
+      "slug": "support-infrastructure-maintainer",
+      "role": "Infrastructure Maintainer"
+    },
+    {
+      "slug": "support-legal-compliance-checker",
+      "role": "Legal Compliance Checker"
+    },
+    {
+      "slug": "support-support-responder",
+      "role": "Support Responder"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/support/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/support/support-analytics-reporter/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/support/support-executive-summary-generator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/support/support-finance-tracker/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/support/support-infrastructure-maintainer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/support/support-legal-compliance-checker/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/support/support-support-responder/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

@@ -41,7 +41,8 @@ AgentEnhancements/
 ├── claude-mem/              # vendored
 ├── ECC/                     # vendored
 ├── headroom/                # vendored (Rust)
-├── plugin-catalog/          # curated external plugin sources (21) + MCP roadmap
+├── agency-agents/           # vendored (283 The Agency personas + NEXUS playbooks)
+├── plugin-catalog/          # curated external plugin sources (40) + MCP roadmap
 ├── ponytail/                # vendored
 ├── replica-skill/           # vendored (11 app-cloning sub-skills)
 ├── superpowers/             # vendored
@@ -66,7 +67,7 @@ and skill-index schemas are unchanged.
 2. **setup_prompts** - copies per-agent prompt files from
    `system-prompts-and-models-of-ai-tools/` into `prompts/` (bash globstar
    is required for the recursive globs) and writes the universal prompt.
-3. **aggregate_skills** - walks `skills/` of the six skill sources, parses
+3. **aggregate_skills** - walks `skills/` of the seven skill sources (agency-agents is division-nested, so each division directory is scanned in turn), parses
    SKILL.md frontmatter (re-parsed from file so YAML block scalars become
    real descriptions), copies each skill directory into `by-category/`
    and `by-agent/` (idempotently: targets are removed before copy), and
@@ -109,7 +110,7 @@ templates inside `setup.sh` and the committed files must stay byte-identical
 {
   "version": "1.1",
   "sources": ["agentic-awesome-skills", "ECC", "Ponytail", "Superpowers",
-               "replica-skill", "anthropic-skills"],
+               "replica-skill", "anthropic-skills", "agency-agents"],
   "skills": [
     {
       "name": "example-skill",
@@ -124,7 +125,7 @@ templates inside `setup.sh` and the committed files must stay byte-identical
       "source_path": "ECC/skills/example-skill/SKILL.md"
     }
   ],
-  "total_skills": 3094,
+  "total_skills": 3377,
   "categories": {"security": 268, "...": 0},
   "agents_supported": ["claude-code", "codex", "cursor", "gemini-cli",
                         "opencode", "copilot", "windsurf", "kiro"],
@@ -139,7 +140,7 @@ additive `path` / `source_path` fields for capability mapping.
 ## Capability registry (`agent-registry.json`)
 
 Built by `scripts/registry.py` from three inputs plus static descriptors:
-the skills index, `plugin-catalog/catalog.json` (21 plugins) and
+the skills index, `plugin-catalog/catalog.json` (40 plugins) and
 `plugin-catalog/mcp-servers.json` (38 MCP servers), plus 7 built-in
 capabilities (memory, compression, loader, dispatcher, native linking,
 launcher, the registry itself). Every entry carries `id`, `type`, `name`,

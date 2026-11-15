@@ -1,0 +1,147 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-security",
+  "name": "The Agency — Security Division (12 personas)",
+  "slug": "security",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "12 persona keamanan dari The Agency (agency-agents) — keamanan: arsitektur security, appsec, pentest, cloud security, DFIR, threat intel/detection, SecOps, kepatuhan, blockchain, AI-code audit. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "keamanan: arsitektur security, appsec, pentest, cloud security, DFIR, threat intel/detection, SecOps, kepatuhan, blockchain, AI-code audit",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "threat model",
+    "penetration test",
+    "incident response",
+    "siem",
+    "appsec"
+  ],
+  "best_for": [
+    "arsitektur keamanan dan threat modeling",
+    "pentest otorisasi dan DFIR",
+    "audit kepatuhan SOC 2/ISO 27001"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "security-ai-generated-code-auditor",
+      "role": "AI-Generated Code Security Auditor"
+    },
+    {
+      "slug": "security-appsec-engineer",
+      "role": "Application Security Engineer"
+    },
+    {
+      "slug": "security-architect",
+      "role": "Security Architect"
+    },
+    {
+      "slug": "security-blockchain-security-auditor",
+      "role": "Blockchain Security Auditor"
+    },
+    {
+      "slug": "security-cloud-security-architect",
+      "role": "Cloud Security Architect"
+    },
+    {
+      "slug": "security-compliance-auditor",
+      "role": "Compliance Auditor"
+    },
+    {
+      "slug": "security-incident-responder",
+      "role": "Incident Responder"
+    },
+    {
+      "slug": "security-penetration-tester",
+      "role": "Penetration Tester"
+    },
+    {
+      "slug": "security-secrets-credential-engineer",
+      "role": "Secrets & Credential Hygiene Engineer"
+    },
+    {
+      "slug": "security-senior-secops",
+      "role": "Senior SecOps Engineer"
+    },
+    {
+      "slug": "security-threat-detection-engineer",
+      "role": "Threat Detection Engineer"
+    },
+    {
+      "slug": "security-threat-intelligence-analyst",
+      "role": "Threat Intelligence Analyst"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/security/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/security/security-ai-generated-code-auditor/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-appsec-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-blockchain-security-auditor/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-cloud-security-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-compliance-auditor/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-incident-responder/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-penetration-tester/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-secrets-credential-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-senior-secops/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-threat-detection-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/security/security-threat-intelligence-analyst/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

@@ -1,0 +1,348 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-marketing",
+  "name": "The Agency — Marketing Division (37 personas)",
+  "slug": "marketing",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "37 persona pemasaran & growth dari The Agency (agency-agents) — pertumbuhan dan pemasaran: growth hacking, konten, platform sosial (global + Tiongkok), SEO/AEO, podcast, PR. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "pertumbuhan dan pemasaran: growth hacking, konten, platform sosial (global + Tiongkok), SEO/AEO, podcast, PR",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "growth",
+    "content creator",
+    "seo",
+    "social media",
+    "tiktok",
+    "email marketing"
+  ],
+  "best_for": [
+    "growth experiment dan akuisisi user",
+    "strategi konten multi-platform",
+    "SEO/AEO dan social media"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "marketing-aeo-foundations",
+      "role": "AEO Foundations Architect"
+    },
+    {
+      "slug": "marketing-agentic-search-optimizer",
+      "role": "Agentic Search Optimizer"
+    },
+    {
+      "slug": "marketing-ai-citation-strategist",
+      "role": "AI Citation Strategist"
+    },
+    {
+      "slug": "marketing-app-store-optimizer",
+      "role": "App Store Optimizer"
+    },
+    {
+      "slug": "marketing-baidu-seo-specialist",
+      "role": "Baidu SEO Specialist"
+    },
+    {
+      "slug": "marketing-bilibili-content-strategist",
+      "role": "Bilibili Content Strategist"
+    },
+    {
+      "slug": "marketing-book-co-author",
+      "role": "Book Co-Author"
+    },
+    {
+      "slug": "marketing-carousel-growth-engine",
+      "role": "Carousel Growth Engine"
+    },
+    {
+      "slug": "marketing-china-ecommerce-operator",
+      "role": "China E-Commerce Operator"
+    },
+    {
+      "slug": "marketing-china-market-localization-strategist",
+      "role": "China Market Localization Strategist"
+    },
+    {
+      "slug": "marketing-content-creator",
+      "role": "Content Creator"
+    },
+    {
+      "slug": "marketing-cross-border-ecommerce",
+      "role": "Cross-Border E-Commerce Specialist"
+    },
+    {
+      "slug": "marketing-developer-community-builder",
+      "role": "Developer Community Builder"
+    },
+    {
+      "slug": "marketing-douyin-strategist",
+      "role": "Douyin Strategist"
+    },
+    {
+      "slug": "marketing-email-strategist",
+      "role": "Email Marketing Strategist"
+    },
+    {
+      "slug": "marketing-global-podcast-strategist",
+      "role": "Global Podcast Strategist"
+    },
+    {
+      "slug": "marketing-growth-hacker",
+      "role": "Growth Hacker"
+    },
+    {
+      "slug": "marketing-instagram-curator",
+      "role": "Instagram Curator"
+    },
+    {
+      "slug": "marketing-kuaishou-strategist",
+      "role": "Kuaishou Strategist"
+    },
+    {
+      "slug": "marketing-linkedin-content-creator",
+      "role": "LinkedIn Content Creator"
+    },
+    {
+      "slug": "marketing-livestream-commerce-coach",
+      "role": "Livestream Commerce Coach"
+    },
+    {
+      "slug": "marketing-multi-platform-publisher",
+      "role": "Multi-Platform Publisher"
+    },
+    {
+      "slug": "marketing-podcast-strategist",
+      "role": "Podcast Strategist"
+    },
+    {
+      "slug": "marketing-pr-communications-manager",
+      "role": "PR & Communications Manager"
+    },
+    {
+      "slug": "marketing-private-domain-operator",
+      "role": "Private Domain Operator"
+    },
+    {
+      "slug": "marketing-reddit-community-builder",
+      "role": "Reddit Community Builder"
+    },
+    {
+      "slug": "marketing-seo-specialist",
+      "role": "SEO Specialist"
+    },
+    {
+      "slug": "marketing-short-video-editing-coach",
+      "role": "Short-Video Editing Coach"
+    },
+    {
+      "slug": "marketing-social-media-strategist",
+      "role": "Social Media Strategist"
+    },
+    {
+      "slug": "marketing-tiktok-strategist",
+      "role": "TikTok Strategist"
+    },
+    {
+      "slug": "marketing-twitter-engager",
+      "role": "Twitter Engager"
+    },
+    {
+      "slug": "marketing-video-optimization-specialist",
+      "role": "Video Optimization Specialist"
+    },
+    {
+      "slug": "marketing-wechat-official-account",
+      "role": "WeChat Official Account Manager"
+    },
+    {
+      "slug": "marketing-weibo-strategist",
+      "role": "Weibo Strategist"
+    },
+    {
+      "slug": "marketing-x-twitter-intelligence-analyst",
+      "role": "X/Twitter Intelligence Analyst"
+    },
+    {
+      "slug": "marketing-xiaohongshu-specialist",
+      "role": "Xiaohongshu Specialist"
+    },
+    {
+      "slug": "marketing-zhihu-strategist",
+      "role": "Zhihu Strategist"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/marketing/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-aeo-foundations/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-agentic-search-optimizer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-ai-citation-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-app-store-optimizer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-baidu-seo-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-bilibili-content-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-book-co-author/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-carousel-growth-engine/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-china-ecommerce-operator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-china-market-localization-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-content-creator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-cross-border-ecommerce/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-developer-community-builder/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-douyin-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-email-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-global-podcast-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-growth-hacker/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-instagram-curator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-kuaishou-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-linkedin-content-creator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-livestream-commerce-coach/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-multi-platform-publisher/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-podcast-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-pr-communications-manager/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-private-domain-operator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-reddit-community-builder/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-seo-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-short-video-editing-coach/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-social-media-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-tiktok-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-twitter-engager/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-video-optimization-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-wechat-official-account/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-weibo-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-x-twitter-intelligence-analyst/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-xiaohongshu-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/marketing/marketing-zhihu-strategist/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

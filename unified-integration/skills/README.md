@@ -9,6 +9,8 @@ This directory contains aggregated skills from multiple sources:
 5. **replica-skill** - 11 app-cloning sub-skills
 6. **anthropic-skills** - 19 official Anthropic skills (docx, pdf, pptx,
    xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
+7. **agency-agents** - 283 AI-persona skills from The Agency (18 divisions,
+   converted to Agent Skills format by scripts/convert_agency_agents.py)
 
 ## Structure
 

@@ -19,6 +19,7 @@ CAT_LABELS = {
     "tokens-optimization": "Tokens / Optimization",
     "design": "Design",
     "multimedia-writing": "Multimedia / Writing",
+    "agency": "Agency Personas",
 }
 
 CAT_BLURBS = {
@@ -27,6 +28,7 @@ CAT_BLURBS = {
     "tokens-optimization": "Token / context budget skills: compression, agile persona dispatch, atomic parallel execution.",
     "design": "Design skills: UI/UX tokens, visual polish, slide narrative, diagramming.",
     "multimedia-writing": "Multimedia + writing skills: office docs, video montage, talking-head avatars, AI-ism removal.",
+    "agency": "AI-persona packs from The Agency (agency-agents): 283 specialist personas across 18 divisions plus the NEXUS orchestration playbooks.",
 }
 
 def main() -> None:

@@ -1,0 +1,580 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-engineering",
+  "name": "The Agency — Engineering Division (66 personas)",
+  "slug": "engineering",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "66 persona rekayasa perangkat lunak dari The Agency (agency-agents) — rekayasa perangkat lunak: frontend, backend, mobile, AI/ML, DevOps, SRE, database, review, i18n, pembayaran. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "rekayasa perangkat lunak: frontend, backend, mobile, AI/ML, DevOps, SRE, database, review, i18n, pembayaran",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "frontend developer",
+    "backend architect",
+    "devops",
+    "code review",
+    "sre",
+    "database"
+  ],
+  "best_for": [
+    "implementasi fitur engineering end-to-end",
+    "arsitektur sistem dan API",
+    "review kode dan optimasi"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "engineering-ai-data-remediation-engineer",
+      "role": "AI Data Remediation Engineer"
+    },
+    {
+      "slug": "engineering-ai-engineer",
+      "role": "AI Engineer"
+    },
+    {
+      "slug": "engineering-api-platform-engineer",
+      "role": "API Platform Engineer"
+    },
+    {
+      "slug": "engineering-ats-validator-architect",
+      "role": "ATS Validator Architect"
+    },
+    {
+      "slug": "engineering-autonomous-optimization-architect",
+      "role": "Autonomous Optimization Architect"
+    },
+    {
+      "slug": "engineering-backend-architect",
+      "role": "Backend Architect"
+    },
+    {
+      "slug": "engineering-china-network-engineer",
+      "role": "China Network Engineer"
+    },
+    {
+      "slug": "engineering-cms-developer",
+      "role": "CMS Developer"
+    },
+    {
+      "slug": "engineering-code-reviewer",
+      "role": "Code Reviewer"
+    },
+    {
+      "slug": "engineering-codebase-onboarding-engineer",
+      "role": "Codebase Onboarding Engineer"
+    },
+    {
+      "slug": "engineering-data-engineer",
+      "role": "Data Engineer"
+    },
+    {
+      "slug": "engineering-data-visualization-engineer",
+      "role": "Data Visualization Engineer"
+    },
+    {
+      "slug": "engineering-database-optimizer",
+      "role": "Database Optimizer"
+    },
+    {
+      "slug": "engineering-database-reliability-engineer",
+      "role": "Database Reliability Engineer"
+    },
+    {
+      "slug": "engineering-desktop-app-engineer",
+      "role": "Desktop App Engineer"
+    },
+    {
+      "slug": "engineering-developer-tooling-engineer",
+      "role": "Developer Tooling Engineer"
+    },
+    {
+      "slug": "engineering-devops-automator",
+      "role": "DevOps Automator"
+    },
+    {
+      "slug": "engineering-drupal-performance",
+      "role": "Drupal Performance Engineer"
+    },
+    {
+      "slug": "engineering-drupal-shopping-cart",
+      "role": "Drupal Shopping Cart Engineer"
+    },
+    {
+      "slug": "engineering-electrical-engineer",
+      "role": "Electrical Engineer"
+    },
+    {
+      "slug": "engineering-email-intelligence-engineer",
+      "role": "Email Intelligence Engineer"
+    },
+    {
+      "slug": "engineering-embedded-firmware-engineer",
+      "role": "Embedded Firmware Engineer"
+    },
+    {
+      "slug": "engineering-feishu-integration-developer",
+      "role": "Feishu Integration Developer"
+    },
+    {
+      "slug": "engineering-filament-optimization-specialist",
+      "role": "Filament Optimization Specialist"
+    },
+    {
+      "slug": "engineering-finops-engineer",
+      "role": "FinOps Engineer"
+    },
+    {
+      "slug": "engineering-frontend-developer",
+      "role": "Frontend Developer"
+    },
+    {
+      "slug": "engineering-gaussdb-expert",
+      "role": "GaussDB Expert Engineer"
+    },
+    {
+      "slug": "engineering-git-workflow-master",
+      "role": "Git Workflow Master"
+    },
+    {
+      "slug": "engineering-i18n-engineer",
+      "role": "Internationalization Engineer"
+    },
+    {
+      "slug": "engineering-identity-access-engineer",
+      "role": "Identity & Access Engineer"
+    },
+    {
+      "slug": "engineering-incident-response-commander",
+      "role": "Incident Response Commander"
+    },
+    {
+      "slug": "engineering-iot-fleet-engineer",
+      "role": "IoT Fleet Engineer"
+    },
+    {
+      "slug": "engineering-it-service-manager",
+      "role": "IT Service Manager"
+    },
+    {
+      "slug": "engineering-knowledge-graph-engineer",
+      "role": "Knowledge Graph Engineer"
+    },
+    {
+      "slug": "engineering-llm-post-training-engineer",
+      "role": "LLM Post-Training Engineer"
+    },
+    {
+      "slug": "engineering-minimal-change-engineer",
+      "role": "Minimal Change Engineer"
+    },
+    {
+      "slug": "engineering-mobile-app-builder",
+      "role": "Mobile App Builder"
+    },
+    {
+      "slug": "engineering-mobile-release-engineer",
+      "role": "Mobile Release Engineer"
+    },
+    {
+      "slug": "engineering-multi-agent-systems-architect",
+      "role": "Multi-Agent Systems Architect"
+    },
+    {
+      "slug": "engineering-network-engineer",
+      "role": "Network Engineer"
+    },
+    {
+      "slug": "engineering-orgscript-engineer",
+      "role": "OrgScript Engineer"
+    },
+    {
+      "slug": "engineering-payments-billing-engineer",
+      "role": "Payments & Billing Engineer"
+    },
+    {
+      "slug": "engineering-pdf-engine-architect",
+      "role": "PDF Engine Architect"
+    },
+    {
+      "slug": "engineering-platform-engineer",
+      "role": "Platform Engineer"
+    },
+    {
+      "slug": "engineering-privacy-engineer",
+      "role": "Privacy Engineer"
+    },
+    {
+      "slug": "engineering-prompt-engineer",
+      "role": "Prompt Engineer"
+    },
+    {
+      "slug": "engineering-rag-pipeline-engineer",
+      "role": "RAG Pipeline Engineer"
+    },
+    {
+      "slug": "engineering-rapid-prototyper",
+      "role": "Rapid Prototyper"
+    },
+    {
+      "slug": "engineering-realtime-collaboration-engineer",
+      "role": "Realtime Collaboration Engineer"
+    },
+    {
+      "slug": "engineering-rust-refactoring-specialist",
+      "role": "Rust Refactoring Specialist"
+    },
+    {
+      "slug": "engineering-search-relevance-engineer",
+      "role": "Search Relevance Engineer"
+    },
+    {
+      "slug": "engineering-section-508-specialist",
+      "role": "Section 508 Accessibility Specialist"
+    },
+    {
+      "slug": "engineering-senior-developer",
+      "role": "Senior Developer"
+    },
+    {
+      "slug": "engineering-servicenow-developer-mentor",
+      "role": "ServiceNow Developer & Mentor"
+    },
+    {
+      "slug": "engineering-software-architect",
+      "role": "Software Architect"
+    },
+    {
+      "slug": "engineering-solidity-smart-contract-engineer",
+      "role": "Solidity Smart Contract Engineer"
+    },
+    {
+      "slug": "engineering-sre",
+      "role": "SRE (Site Reliability Engineer)"
+    },
+    {
+      "slug": "engineering-technical-writer",
+      "role": "Technical Writer"
+    },
+    {
+      "slug": "engineering-universal-document-compiler",
+      "role": "Universal Document Compiler"
+    },
+    {
+      "slug": "engineering-uswds-developer",
+      "role": "USWDS Developer"
+    },
+    {
+      "slug": "engineering-video-streaming-engineer",
+      "role": "Video Streaming Engineer"
+    },
+    {
+      "slug": "engineering-voice-ai-integration-engineer",
+      "role": "Voice AI Integration Engineer"
+    },
+    {
+      "slug": "engineering-webassembly-engineer",
+      "role": "WebAssembly Engineer"
+    },
+    {
+      "slug": "engineering-wechat-mini-program-developer",
+      "role": "WeChat Mini Program Developer"
+    },
+    {
+      "slug": "engineering-wordpress-performance",
+      "role": "WordPress Performance Engineer"
+    },
+    {
+      "slug": "engineering-wordpress-shopping-cart",
+      "role": "WordPress Shopping Cart Engineer"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/engineering/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-ai-data-remediation-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-ai-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-api-platform-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-ats-validator-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-autonomous-optimization-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-backend-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-china-network-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-cms-developer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-code-reviewer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-codebase-onboarding-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-data-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-data-visualization-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-database-optimizer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-database-reliability-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-desktop-app-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-developer-tooling-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-devops-automator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-drupal-performance/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-drupal-shopping-cart/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-electrical-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-email-intelligence-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-embedded-firmware-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-feishu-integration-developer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-filament-optimization-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-finops-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-frontend-developer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-gaussdb-expert/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-git-workflow-master/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-i18n-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-identity-access-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-incident-response-commander/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-iot-fleet-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-it-service-manager/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-knowledge-graph-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-llm-post-training-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-minimal-change-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-mobile-app-builder/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-mobile-release-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-multi-agent-systems-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-network-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-orgscript-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-payments-billing-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-pdf-engine-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-platform-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-privacy-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-prompt-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-rag-pipeline-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-rapid-prototyper/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-realtime-collaboration-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-rust-refactoring-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-search-relevance-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-section-508-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-senior-developer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-servicenow-developer-mentor/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-software-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-solidity-smart-contract-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-sre/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-technical-writer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-universal-document-compiler/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-uswds-developer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-video-streaming-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-voice-ai-integration-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-webassembly-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-wechat-mini-program-developer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-wordpress-performance/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/engineering/engineering-wordpress-shopping-cart/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

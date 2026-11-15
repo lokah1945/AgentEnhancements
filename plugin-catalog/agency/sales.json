@@ -1,0 +1,123 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-sales",
+  "name": "The Agency — Sales Division (9 personas)",
+  "slug": "sales",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "9 persona penjualan dari The Agency (agency-agents) — penjualan: outbound strategis, discovery coaching, MEDDPICC, sales engineering, proposal, pipeline, coaching. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "penjualan: outbound strategis, discovery coaching, MEDDPICC, sales engineering, proposal, pipeline, coaching",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "outbound",
+    "discovery call",
+    "meddpicc",
+    "proposal",
+    "pipeline"
+  ],
+  "best_for": [
+    "prospeksi signal-based",
+    "kualifikasi deal MEDDPICC",
+    "respons RFP dan proposal"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "sales-account-strategist",
+      "role": "Account Strategist"
+    },
+    {
+      "slug": "sales-coach",
+      "role": "Sales Coach"
+    },
+    {
+      "slug": "sales-deal-strategist",
+      "role": "Deal Strategist"
+    },
+    {
+      "slug": "sales-discovery-coach",
+      "role": "Discovery Coach"
+    },
+    {
+      "slug": "sales-engineer",
+      "role": "Sales Engineer"
+    },
+    {
+      "slug": "sales-offer-lead-gen-strategist",
+      "role": "Offer & Lead Gen Strategist"
+    },
+    {
+      "slug": "sales-outbound-strategist",
+      "role": "Outbound Strategist"
+    },
+    {
+      "slug": "sales-pipeline-analyst",
+      "role": "Pipeline Analyst"
+    },
+    {
+      "slug": "sales-proposal-strategist",
+      "role": "Proposal Strategist"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/sales/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/sales/sales-account-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/sales/sales-coach/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/sales/sales-deal-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/sales/sales-discovery-coach/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/sales/sales-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/sales/sales-offer-lead-gen-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/sales/sales-outbound-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/sales/sales-pipeline-analyst/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/sales/sales-proposal-strategist/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

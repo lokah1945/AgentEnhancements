@@ -4,12 +4,12 @@ A unified integration platform that aggregates essential AI agent skills, tools,
 
 ## Overview
 
-AgentEnhancements brings together 8 complementary projects (plus a plugin catalog and two vendored skill suites) that enhance AI coding agents (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Copilot, Windsurf, Kiro) with:
+AgentEnhancements brings together 9 complementary projects (plus a plugin catalog and three vendored skill suites) that enhance AI coding agents (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Copilot, Windsurf, Kiro) with:
 
-- **3,094 specialized skills/agents** in the unified index (see `unified-integration/skills/all-skills.json` for the live count), including the **19 official Anthropic skills** (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
+- **3,377 specialized skills/agents** in the unified index (see `unified-integration/skills/all-skills.json` for the live count), including the **19 official Anthropic skills** (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...) and **283 AI personas from The Agency** (agency-agents)
 - **Capability registry** mapping every skill, catalog plugin and MCP server in one queryable index (`registry.py map "<task>"`)
 - **Native runtime activation**: one install links a curated skill set into `~/.claude/skills/` and `~/.agents/skills/`, so Agent Skills compatible harnesses discover them automatically
-- **Plugin catalog** with 21 curated external plugin sources (code, research, tokens, design, multimedia)
+- **Plugin catalog** with 40 curated external plugin sources (code, research, tokens, design, multimedia, agency personas)
 - **Context compression & memory management** for long-running sessions
 - **System prompts** sourced from the vendored `system-prompts-and-models-of-ai-tools` collection
 - **Unified configuration** that works across all major AI coding assistants
@@ -29,10 +29,11 @@ AgentEnhancements brings together 8 complementary projects (plus a plugin catalo
 | **[superpowers](./superpowers)** | Developer productivity skills collection | 15 skill categories, automated workflows, team sharing |
 | **[system-prompts-and-models-of-ai-tools](./system-prompts-and-models-of-ai-tools)** | Reference system prompts from 25+ AI tools | Anthropic, Cursor, Windsurf, Copilot, Devin, and more |
 | **[replica-skill](./replica-skill)** | 11 Claude skills that clone any app (clean-room) | recon, architect, design, build, backend, test, diff, entrepreneur, brand, launch, deploy |
+| **[agency-agents](./agency-agents)** | The Agency: 283 AI specialist personas across 18 divisions (vendored, MIT) | engineering, design, security, testing, marketing, sales, finance, GIS, game-dev + NEXUS orchestration playbooks |
 
-### Plugin Catalog (21 external sources)
+### Plugin Catalog (40 external sources)
 
-The `plugin-catalog/` directory documents 21 curated external plugin sources with manifests, integration guides (SKILL.md), and an MCP server roadmap. See `docs/QUICKSTART.md` for a 5-minute tour.
+The `plugin-catalog/` directory documents 40 curated external plugin sources with manifests, integration guides (SKILL.md), and an MCP server roadmap. See `docs/QUICKSTART.md` for a 5-minute tour.
 
 | Category | Plugins |
 |----------|---------|
@@ -41,6 +42,7 @@ The `plugin-catalog/` directory documents 21 curated external plugin sources wit
 | **tokens-optimization** (4) | [GStack](https://github.com/garrytan/gstack), [Caveman](https://github.com/JuliusBrussee/Caveman), [GSD (Get Shit Done)](https://github.com/gsd-build/get-shit-done), [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) |
 | **design** (4) | [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill), [Impeccable](https://github.com/pbakaus/impeccable), [PPT Master](https://github.com/hugohe3/ppt-master), [Diagram Design](https://github.com/cathrynlavery/diagram-design) |
 | **multimedia-writing** (4) | [Anthropic Skills](https://github.com/anthropics/skills), [OpenMontage](https://github.com/calesthio/OpenMontage), [Hyperframes](https://github.com/heygen-com/hyperframes), [Humanizer](https://github.com/blader/humanizer) |
+| **agency** (19) | [The Agency](https://github.com/msitarzewski/agency-agents) division packs (vendored): academic, design, engineering, finance, game-development, gis, healthcare, marketing, paid-media, product, project-management, research, sales, security, spatial-computing, specialized, support, testing + NEXUS orchestration playbooks |
 
 Catalog tooling: `catalog-validate.py` (validate), `catalog-wire.sh` (wire to registry), `catalog-test.sh` (smoke test), `dispatch.sh` (orchestrator routing), `mcp-test.sh` (MCP checks), `consent-gate.sh` + `audit-trail.sh` (safety). All in `unified-integration/scripts/`.
 
@@ -69,8 +71,8 @@ cd AgentEnhancements
 
 The setup script will:
 1. Detect your installed AI coding assistants (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Windsurf, Copilot, Kiro)
-2. Aggregate skills from all sources into the unified registry (3,094 skills from 6 sources, official Anthropic copies winning name collisions) and regenerate `all-skills.json`
-3. Build the capability registry (`agent-registry.json`: skills + 21 plugins + 38 MCP servers + built-ins)
+2. Aggregate skills from all sources into the unified registry (3,377 skills from 7 sources, official Anthropic copies winning name collisions) and regenerate `all-skills.json`
+3. Build the capability registry (`agent-registry.json`: skills + 40 plugins + 38 MCP servers + built-ins)
 4. Configure system prompts for each detected tool from the vendored prompt collection
 5. Set up memory persistence (parameterized-SQL Python hooks)
 6. Enable context compression (headroom binary if available, pure-Python fallback otherwise)
@@ -140,7 +142,7 @@ AgentEnhancements/
 │   │                              # video, style) + smoke_test + mcp.json template
 │   └── tests/                     # Regression test suite (149 tests)
 │
-├── skills/                        # Modular plugin tree (5 categories, 21 plugins)
+├── skills/                        # Modular plugin tree (6 categories, 40 plugins)
 │   ├── manifest.json              # Aggregator index (committed)
 │   ├── README.md                  # Tree architecture + coverage
 │   ├── code/                      # 4 plugins: TS rigor, minimal ML, perf, replica
@@ -149,13 +151,14 @@ AgentEnhancements/
 │   ├── design/                    # 4 plugins: tokens, polish, slides, diagrams
 │   └── multimedia-writing/        # 4 plugins: docs, video, avatars, humanize
 │                                  # (per-plugin dirs are generated: bash scripts/scaffold_modular_skills.sh)
-├── plugin-catalog/                # 21 curated external plugin sources (canonical manifests)
+├── plugin-catalog/                # 40 curated external plugin sources (canonical manifests)
 ├── scripts/                       # Repo-level generators (scaffold_modular_skills.sh,
 │                                  #  generate_skills_index.py)
 ├── docs/MCP_INTEGRATION_CHECKLIST.md  # Step-by-step MCP server build plan (38 servers)
 ├── docs/ENV_VARS.md              # Every API key / env var: source + rotation policy
 ├── anthropic-skills/              # 19 official Anthropic skills (vendored, Apache-2.0)
 ├── replica-skill/                 # 11 vendored app-cloning sub-skills
+├── agency-agents/                 # 283 The Agency personas (vendored, MIT) + NEXUS playbooks
 ├── agentic-awesome-skills/        # 2,781 vendored skills
 ├── claude-mem/                    # Memory persistence layer (vendored)
 ├── ECC/                           # Enhanced Claude Code config (vendored)
@@ -169,7 +172,7 @@ AgentEnhancements/
 
 ## Skills Catalog
 
-The unified index (`unified-integration/skills/all-skills.json`) currently contains **3,094 unique skills** aggregated from 6 sources (the index is keyed by name; the official anthropic-skills version wins collisions with third-party copies):
+The unified index (`unified-integration/skills/all-skills.json`) currently contains **3,377 unique skills** aggregated from 7 sources (the index is keyed by name; the official anthropic-skills version wins collisions with third-party copies):
 
 | Source | Skills |
 |--------|--------|
@@ -179,12 +182,13 @@ The unified index (`unified-integration/skills/all-skills.json`) currently conta
 | replica-skill | 11 |
 | anthropic-skills (official) | 19 |
 | Ponytail | 6 |
+| agency-agents (The Agency personas) | 283 |
 
 The on-disk registry (`skills/by-category/`, `skills/by-agent/`) is generated when you run `setup.sh`.
 
 ### Modular plugin tree (`skills/`)
 
-The 21 cataloged plugins are exposed as a self-contained modular tree at `skills/<category>/<slug>/` (each dir holds `SKILL.md` + `manifest.json`). The tree is generated from `plugin-catalog/catalog.json` - never edited by hand:
+The 40 cataloged plugins are exposed as a self-contained modular tree at `skills/<category>/<slug>/` (each dir holds `SKILL.md` + `manifest.json`). The tree is generated from `plugin-catalog/catalog.json` - never edited by hand:
 
 ```bash
 bash scripts/scaffold_modular_skills.sh     # build/rebuild the tree
@@ -208,7 +212,7 @@ python3 unified-integration/scripts/registry.py show docx
 python3 unified-integration/scripts/registry.py stats
 ```
 
-Scoring understands format families ("word" -> docx, "excel" -> xlsx, "powerpoint" -> pptx) and stop words in English and Indonesian, so `map "buat dokumen word laporan keuangan"` returns the official `docx` skill first. The registry (`skills/agent-registry.json`) is rebuilt by `setup.sh` and covers 3,094 skills + 21 plugins + 38 MCP servers + 7 built-in capabilities.
+Scoring understands format families ("word" -> docx, "excel" -> xlsx, "powerpoint" -> pptx) and stop words in English and Indonesian, so `map "buat dokumen word laporan keuangan"` returns the official `docx` skill first. The registry (`skills/agent-registry.json`) is rebuilt by `setup.sh` and covers 3,377 skills + 40 plugins + 38 MCP servers + 7 built-in capabilities.
 
 ### Using Skills
 
@@ -343,7 +347,7 @@ bash unified-integration/scripts/mcp-test.sh --priority P0
 # Integration-layer regression suite (149 tests)
 python3 unified-integration/tests/run-tests.py
 
-# Plugin catalog validation (21 manifests)
+# Plugin catalog validation (40 manifests)
 python3 unified-integration/scripts/catalog-validate.py --root .
 
 # Vendored ECC suite (contract-mandated)
@@ -377,6 +381,7 @@ All agents working on this repository must follow `CONTRACT.md` (conventional co
 | superpowers | [Original Repo](https://github.com/superpowers/superpowers) | MIT |
 | system-prompts-and-models-of-ai-tools | [Original Repo](https://github.com/system-prompts/system-prompts-and-models-of-ai-tools) | CC-BY-4.0 |
 | replica-skill | [Original Repo](https://github.com/Jakeschincariol/replica-skill) | MIT |
+| agency-agents | [Original Repo](https://github.com/msitarzewski/agency-agents) | MIT |
 
 > **Note**: This repository contains copies of the above projects for unified distribution. They are **not forks** — they are vendored dependencies. For changes to individual projects, please contribute upstream.
 

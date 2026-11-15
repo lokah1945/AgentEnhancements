@@ -1,0 +1,99 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-academic",
+  "name": "The Agency — Academic Division (6 personas)",
+  "slug": "academic",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "6 persona worldbuilding akademik dari The Agency (agency-agents) — worldbuilding akademik: antropologi, geografi, sejarah, narratologi, psikologi, statistika. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "worldbuilding akademik: antropologi, geografi, sejarah, narratologi, psikologi, statistika",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "worldbuilding",
+    "narrative design",
+    "story structure",
+    "cultural systems",
+    "statistical analysis"
+  ],
+  "best_for": [
+    "desain dunia fiksi yang koheren",
+    "analisis naratif berbasis teori",
+    "riset akademik untuk konten"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "academic-anthropologist",
+      "role": "Anthropologist"
+    },
+    {
+      "slug": "academic-geographer",
+      "role": "Geographer"
+    },
+    {
+      "slug": "academic-historian",
+      "role": "Historian"
+    },
+    {
+      "slug": "academic-narratologist",
+      "role": "Narratologist"
+    },
+    {
+      "slug": "academic-psychologist",
+      "role": "Psychologist"
+    },
+    {
+      "slug": "academic-statistician",
+      "role": "Statistician"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/academic/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/academic/academic-anthropologist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/academic/academic-geographer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/academic/academic-historian/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/academic/academic-narratologist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/academic/academic-psychologist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/academic/academic-statistician/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

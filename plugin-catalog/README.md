@@ -1,6 +1,6 @@
 # AgentEnhancements — Skills Catalog v2
 
-Katalog plugin eksternal yang terintegrasi dengan repo. Berdampingan dengan `unified-integration/skills/by-category/` (registry hasil agregasi). Total **21 plugin sources** — 19 berupa manifest remote + 2 di-vendor penuh (replica-skill 11 sub-skill; anthropic-skills 19 skill resmi, Apache-2.0).
+Katalog plugin eksternal yang terintegrasi dengan repo. Berdampingan dengan `unified-integration/skills/by-category/` (registry hasil agregasi). Total **40 plugin sources** — 20 berupa manifest remote + 21 di-vendor penuh (replica-skill 11 sub-skill; anthropic-skills 19 skill resmi, Apache-2.0; agency-agents 283 persona dalam 19 pack).
 
 ## Struktur
 
@@ -10,7 +10,8 @@ skills/
 ├── research/              # 5 plugins: Graphify, Agent-Reach, Understand Anything, Last 30 Days, REA
 ├── tokens-optimization/   # 4 plugins: GStack, Caveman, GSD, BMAD Method
 ├── design/                # 4 plugins: UI UX Pro Max, Impeccable, PPT Master, Diagram Design
-└── multimedia-writing/    # 4 plugins: Anthropic, OpenMontage, Hyperframes, Humanizer
+├── multimedia-writing/    # 4 plugins: Anthropic, OpenMontage, Hyperframes, Humanizer
+└── agency/                # 19 packs: 18 divisi The Agency + NEXUS (vendored, 283 persona)
 
 File pendukung: `catalog.json` (index katalog), `mcp-servers.json` (roadmap MCP per plugin).
 ```

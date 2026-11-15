@@ -1,0 +1,107 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-project-management",
+  "name": "The Agency — Project Management Division (7 personas)",
+  "slug": "project-management",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "7 persona manajemen proyek dari The Agency (agency-agents) — manajemen proyek: producer, shepherd, operasional studio, tracker eksperimen, scoping, Jira, notulen. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "manajemen proyek: producer, shepherd, operasional studio, tracker eksperimen, scoping, Jira, notulen",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "project manager",
+    "sprint planning",
+    "jira",
+    "meeting notes",
+    "scoping"
+  ],
+  "best_for": [
+    "koordinasi proyek lintas fungsi",
+    "konversi spesifikasi jadi tugas",
+    "ringkasan rapat terstruktur"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "project-management-experiment-tracker",
+      "role": "Experiment Tracker"
+    },
+    {
+      "slug": "project-management-jira-workflow-steward",
+      "role": "Jira Workflow Steward"
+    },
+    {
+      "slug": "project-management-meeting-notes-specialist",
+      "role": "Meeting Notes Specialist"
+    },
+    {
+      "slug": "project-management-project-shepherd",
+      "role": "Project Shepherd"
+    },
+    {
+      "slug": "project-management-studio-operations",
+      "role": "Studio Operations"
+    },
+    {
+      "slug": "project-management-studio-producer",
+      "role": "Studio Producer"
+    },
+    {
+      "slug": "project-manager-senior",
+      "role": "Senior Project Manager"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/project-management/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/project-management/project-management-experiment-tracker/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/project-management/project-management-jira-workflow-steward/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/project-management/project-management-meeting-notes-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/project-management/project-management-project-shepherd/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/project-management/project-management-studio-operations/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/project-management/project-management-studio-producer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/project-management/project-manager-senior/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

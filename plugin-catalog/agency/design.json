@@ -1,0 +1,131 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-design",
+  "name": "The Agency — Design Division (10 personas)",
+  "slug": "design",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "10 persona desain produk dari The Agency (agency-agents) — desain produk: UI, riset UX, arsitektur UX, brand, storytelling visual, whimsy, persona walkthrough. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "desain produk: UI, riset UX, arsitektur UX, brand, storytelling visual, whimsy, persona walkthrough",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "ui designer",
+    "ux research",
+    "design system",
+    "brand identity",
+    "visual storytelling"
+  ],
+  "best_for": [
+    "desain UI/UX dan design system",
+    "riset pengguna dan walkthrough persona",
+    "branding dan konsistensi visual"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "design-brand-guardian",
+      "role": "Brand Guardian"
+    },
+    {
+      "slug": "design-image-prompt-engineer",
+      "role": "Image Prompt Engineer"
+    },
+    {
+      "slug": "design-inclusive-visuals-specialist",
+      "role": "Inclusive Visuals Specialist"
+    },
+    {
+      "slug": "design-persona-walkthrough",
+      "role": "Persona Walkthrough Specialist"
+    },
+    {
+      "slug": "design-ui-designer",
+      "role": "UI Designer"
+    },
+    {
+      "slug": "design-ui-finish-gate-reviewer",
+      "role": "UI Finish-Gate Reviewer"
+    },
+    {
+      "slug": "design-ux-architect",
+      "role": "UX Architect"
+    },
+    {
+      "slug": "design-ux-researcher",
+      "role": "UX Researcher"
+    },
+    {
+      "slug": "design-visual-storyteller",
+      "role": "Visual Storyteller"
+    },
+    {
+      "slug": "design-whimsy-injector",
+      "role": "Whimsy Injector"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/design/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/design/design-brand-guardian/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/design/design-image-prompt-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/design/design-inclusive-visuals-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/design/design-persona-walkthrough/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/design/design-ui-designer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/design/design-ui-finish-gate-reviewer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/design/design-ux-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/design/design-ux-researcher/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/design/design-visual-storyteller/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/design/design-whimsy-injector/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-paid-media",
+  "name": "The Agency — Paid Media Division (7 personas)",
+  "slug": "paid-media",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "7 persona media berbayar dari The Agency (agency-agents) — media berbayar: PPC, audit akun 200+ poin, tracking & measurement, programmatic, paid social, creative. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "media berbayar: PPC, audit akun 200+ poin, tracking & measurement, programmatic, paid social, creative",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "ppc",
+    "google ads",
+    "paid social",
+    "conversion tracking",
+    "ad creative"
+  ],
+  "best_for": [
+    "audit dan scaling akun iklan",
+    "tracking konversi GTM/GA4",
+    "creative testing iklan"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "paid-media-auditor",
+      "role": "Paid Media Auditor"
+    },
+    {
+      "slug": "paid-media-creative-strategist",
+      "role": "Ad Creative Strategist"
+    },
+    {
+      "slug": "paid-media-paid-social-strategist",
+      "role": "Paid Social Strategist"
+    },
+    {
+      "slug": "paid-media-ppc-strategist",
+      "role": "PPC Campaign Strategist"
+    },
+    {
+      "slug": "paid-media-programmatic-buyer",
+      "role": "Programmatic & Display Buyer"
+    },
+    {
+      "slug": "paid-media-search-query-analyst",
+      "role": "Search Query Analyst"
+    },
+    {
+      "slug": "paid-media-tracking-specialist",
+      "role": "Tracking & Measurement Specialist"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/paid-media/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/paid-media/paid-media-auditor/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/paid-media/paid-media-creative-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/paid-media/paid-media-paid-social-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/paid-media/paid-media-ppc-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/paid-media/paid-media-programmatic-buyer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/paid-media/paid-media-search-query-analyst/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/paid-media/paid-media-tracking-specialist/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

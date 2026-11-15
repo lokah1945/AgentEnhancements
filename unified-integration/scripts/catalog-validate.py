@@ -24,6 +24,7 @@ EXPECTED_FIELDS: Set[str] = {
 }
 VALID_CATEGORIES: List[str] = [
     "code", "research", "tokens-optimization", "design", "multimedia-writing",
+    "agency",
 ]
 VALID_STATUS: Set[str] = {"to-integrate", "integrated", "integrated-ready", "deprecated"}
 EXPECTED_PLUGINS: Dict[str, Set[str]] = {
@@ -32,6 +33,12 @@ EXPECTED_PLUGINS: Dict[str, Set[str]] = {
     "tokens-optimization": {"gstack", "caveman", "gsd", "bmad-method"},
     "design": {"ui-ux-pro-max", "impeccable", "ppt-master", "diagram-design"},
     "multimedia-writing": {"anthropic-skills", "openmontage", "hyperframes", "humanizer"},
+    "agency": {
+        "academic", "design", "engineering", "finance", "game-development",
+        "gis", "healthcare", "marketing", "paid-media", "product",
+        "project-management", "research", "sales", "security",
+        "spatial-computing", "specialized", "support", "testing", "nexus",
+    },
 }
 
 

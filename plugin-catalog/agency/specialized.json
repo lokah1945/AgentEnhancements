@@ -1,0 +1,524 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-specialized",
+  "name": "The Agency — Specialized Division (59 personas)",
+  "slug": "specialized",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "59 persona spesialis lintas domain dari The Agency (agency-agents) — spesialis lintas domain: orkestrator multi-agen, MCP builder, generator dokumen, layanan legal/HR/medis/keuangan, penerjemah, dan 40+ lainnya. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "spesialis lintas domain: orkestrator multi-agen, MCP builder, generator dokumen, layanan legal/HR/medis/keuangan, penerjemah, dan 40+ lainnya",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "mcp builder",
+    "orchestrator",
+    "translation",
+    "customer service",
+    "legal review",
+    "recruitment"
+  ],
+  "best_for": [
+    "kebutuhan lintas domain yang butuh spesialis",
+    "persona operasional (HR, legal, dukungan)",
+    "tooling MCP dan orkestrasi multi-agen"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "accounts-payable-agent",
+      "role": "Accounts Payable Agent"
+    },
+    {
+      "slug": "agentic-identity-trust",
+      "role": "Agentic Identity & Trust Architect"
+    },
+    {
+      "slug": "agents-orchestrator",
+      "role": "Agents Orchestrator"
+    },
+    {
+      "slug": "automation-governance-architect",
+      "role": "Automation Governance Architect"
+    },
+    {
+      "slug": "business-strategist",
+      "role": "Business Strategist"
+    },
+    {
+      "slug": "change-management-consultant",
+      "role": "Change Management Consultant"
+    },
+    {
+      "slug": "chief-financial-officer",
+      "role": "Chief Financial Officer"
+    },
+    {
+      "slug": "corporate-training-designer",
+      "role": "Corporate Training Designer"
+    },
+    {
+      "slug": "customer-service",
+      "role": "Customer Service"
+    },
+    {
+      "slug": "customer-success-manager",
+      "role": "Customer Success Manager"
+    },
+    {
+      "slug": "data-consolidation-agent",
+      "role": "Data Consolidation Agent"
+    },
+    {
+      "slug": "data-privacy-officer",
+      "role": "Data Privacy Officer"
+    },
+    {
+      "slug": "esg-sustainability-officer",
+      "role": "ESG & Sustainability Officer"
+    },
+    {
+      "slug": "government-digital-presales-consultant",
+      "role": "Government Digital Presales Consultant"
+    },
+    {
+      "slug": "grant-writer",
+      "role": "Grant Writer"
+    },
+    {
+      "slug": "healthcare-aging-parent-care-companion",
+      "role": "Aging Parent Care Companion"
+    },
+    {
+      "slug": "healthcare-customer-service",
+      "role": "Healthcare Customer Service"
+    },
+    {
+      "slug": "healthcare-marketing-compliance",
+      "role": "Healthcare Marketing Compliance Specialist"
+    },
+    {
+      "slug": "hospitality-guest-services",
+      "role": "Hospitality Guest Services"
+    },
+    {
+      "slug": "hr-onboarding",
+      "role": "HR Onboarding"
+    },
+    {
+      "slug": "identity-graph-operator",
+      "role": "Identity Graph Operator"
+    },
+    {
+      "slug": "language-translator",
+      "role": "Language Translator"
+    },
+    {
+      "slug": "legal-billing-time-tracking",
+      "role": "Legal Billing & Time Tracking"
+    },
+    {
+      "slug": "legal-client-intake",
+      "role": "Legal Client Intake"
+    },
+    {
+      "slug": "legal-document-review",
+      "role": "Legal Document Review"
+    },
+    {
+      "slug": "loan-officer-assistant",
+      "role": "Loan Officer Assistant"
+    },
+    {
+      "slug": "lsp-index-engineer",
+      "role": "LSP/Index Engineer"
+    },
+    {
+      "slug": "ma-integration-manager",
+      "role": "M&A Integration Manager"
+    },
+    {
+      "slug": "medical-billing-coding-specialist",
+      "role": "Medical Billing & Coding Specialist"
+    },
+    {
+      "slug": "operations-manager",
+      "role": "Operations Manager"
+    },
+    {
+      "slug": "organizational-psychologist",
+      "role": "Organizational Psychologist"
+    },
+    {
+      "slug": "personal-growth-mentor",
+      "role": "Personal Growth Mentor"
+    },
+    {
+      "slug": "real-estate-buyer-seller",
+      "role": "Real Estate Buyer & Seller"
+    },
+    {
+      "slug": "recruitment-specialist",
+      "role": "Recruitment Specialist"
+    },
+    {
+      "slug": "report-distribution-agent",
+      "role": "Report Distribution Agent"
+    },
+    {
+      "slug": "resume-tailor",
+      "role": "Resume Tailor"
+    },
+    {
+      "slug": "retail-customer-returns",
+      "role": "Retail Customer Returns"
+    },
+    {
+      "slug": "sales-data-extraction-agent",
+      "role": "Sales Data Extraction Agent"
+    },
+    {
+      "slug": "sales-outreach",
+      "role": "Sales Outreach"
+    },
+    {
+      "slug": "specialized-chief-of-staff",
+      "role": "Chief of Staff"
+    },
+    {
+      "slug": "specialized-civil-engineer",
+      "role": "Civil Engineer"
+    },
+    {
+      "slug": "specialized-codebase-archaeologist",
+      "role": "Codebase Archaeologist"
+    },
+    {
+      "slug": "specialized-cultural-intelligence-strategist",
+      "role": "Cultural Intelligence Strategist"
+    },
+    {
+      "slug": "specialized-developer-advocate",
+      "role": "Developer Advocate"
+    },
+    {
+      "slug": "specialized-document-generator",
+      "role": "Document Generator"
+    },
+    {
+      "slug": "specialized-fedramp-rmf-compliance",
+      "role": "FedRAMP & RMF Compliance Engineer"
+    },
+    {
+      "slug": "specialized-focus-music-architect",
+      "role": "Focus Music Architect"
+    },
+    {
+      "slug": "specialized-french-consulting-market",
+      "role": "French Consulting Market Navigator"
+    },
+    {
+      "slug": "specialized-korean-business-navigator",
+      "role": "Korean Business Navigator"
+    },
+    {
+      "slug": "specialized-master-plan-architect",
+      "role": "Master Plan Architect"
+    },
+    {
+      "slug": "specialized-mcp-builder",
+      "role": "MCP Builder"
+    },
+    {
+      "slug": "specialized-model-qa",
+      "role": "Model QA Specialist"
+    },
+    {
+      "slug": "specialized-pricing-analyst",
+      "role": "Pricing Analyst"
+    },
+    {
+      "slug": "specialized-salesforce-architect",
+      "role": "Salesforce Architect"
+    },
+    {
+      "slug": "specialized-strategy-duel-agent",
+      "role": "Strategy Duel Agent"
+    },
+    {
+      "slug": "specialized-workflow-architect",
+      "role": "Workflow Architect"
+    },
+    {
+      "slug": "study-abroad-advisor",
+      "role": "Study Abroad Advisor"
+    },
+    {
+      "slug": "supply-chain-strategist",
+      "role": "Supply Chain Strategist"
+    },
+    {
+      "slug": "zk-steward",
+      "role": "ZK Steward"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/specialized/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/specialized/accounts-payable-agent/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/agentic-identity-trust/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/agents-orchestrator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/automation-governance-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/business-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/change-management-consultant/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/chief-financial-officer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/corporate-training-designer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/customer-service/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/customer-success-manager/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/data-consolidation-agent/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/data-privacy-officer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/esg-sustainability-officer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/government-digital-presales-consultant/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/grant-writer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/healthcare-aging-parent-care-companion/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/healthcare-customer-service/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/healthcare-marketing-compliance/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/hospitality-guest-services/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/hr-onboarding/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/identity-graph-operator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/language-translator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/legal-billing-time-tracking/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/legal-client-intake/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/legal-document-review/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/loan-officer-assistant/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/lsp-index-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/ma-integration-manager/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/medical-billing-coding-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/operations-manager/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/organizational-psychologist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/personal-growth-mentor/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/real-estate-buyer-seller/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/recruitment-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/report-distribution-agent/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/resume-tailor/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/retail-customer-returns/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/sales-data-extraction-agent/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/sales-outreach/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-chief-of-staff/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-civil-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-codebase-archaeologist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-cultural-intelligence-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-developer-advocate/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-document-generator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-fedramp-rmf-compliance/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-focus-music-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-french-consulting-market/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-korean-business-navigator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-master-plan-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-mcp-builder/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-model-qa/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-pricing-analyst/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-salesforce-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-strategy-duel-agent/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/specialized-workflow-architect/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/study-abroad-advisor/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/supply-chain-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/specialized/zk-steward/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

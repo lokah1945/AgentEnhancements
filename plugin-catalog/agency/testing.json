@@ -1,0 +1,123 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-testing",
+  "name": "The Agency — Testing Division (9 personas)",
+  "slug": "testing",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "9 persona pengujian dari The Agency (agency-agents) — pengujian: evidence collector, reality checker, analisis hasil test, benchmark performa, API tester, tool evaluator, a11y audit, otomasi. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "pengujian: evidence collector, reality checker, analisis hasil test, benchmark performa, API tester, tool evaluator, a11y audit, otomasi",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "qa",
+    "test automation",
+    "performance testing",
+    "api testing",
+    "accessibility audit"
+  ],
+  "best_for": [
+    "QA berbasis bukti dan quality gate",
+    "suite E2E Playwright/Cypress",
+    "benchmarks dan analisis hasil test"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "testing-accessibility-auditor",
+      "role": "Accessibility Auditor"
+    },
+    {
+      "slug": "testing-api-tester",
+      "role": "API Tester"
+    },
+    {
+      "slug": "testing-evidence-collector",
+      "role": "Evidence Collector"
+    },
+    {
+      "slug": "testing-performance-benchmarker",
+      "role": "Performance Benchmarker"
+    },
+    {
+      "slug": "testing-reality-checker",
+      "role": "Reality Checker"
+    },
+    {
+      "slug": "testing-test-automation-engineer",
+      "role": "Test Automation Engineer"
+    },
+    {
+      "slug": "testing-test-results-analyzer",
+      "role": "Test Results Analyzer"
+    },
+    {
+      "slug": "testing-tool-evaluator",
+      "role": "Tool Evaluator"
+    },
+    {
+      "slug": "testing-workflow-optimizer",
+      "role": "Workflow Optimizer"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/testing/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/testing/testing-accessibility-auditor/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/testing/testing-api-tester/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/testing/testing-evidence-collector/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/testing/testing-performance-benchmarker/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/testing/testing-reality-checker/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/testing/testing-test-automation-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/testing/testing-test-results-analyzer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/testing/testing-tool-evaluator/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/testing/testing-workflow-optimizer/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

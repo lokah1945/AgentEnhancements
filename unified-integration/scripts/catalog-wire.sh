@@ -24,7 +24,7 @@ wire_catalog() {
     fi
 
     log_info "Wiring plugin-catalog ke $REGISTRY_DIR ..."
-    local categories=(code research tokens-optimization design multimedia-writing)
+    local categories=(code research tokens-optimization design multimedia-writing agency)
     local count=0
 
     for category in "${categories[@]}"; do

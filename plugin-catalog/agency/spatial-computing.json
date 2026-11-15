@@ -1,0 +1,100 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-spatial-computing",
+  "name": "The Agency — Spatial Computing Division (6 personas)",
+  "slug": "spatial-computing",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "6 persona komputasi spasial dari The Agency (agency-agents) — komputasi spasial: XR interface, visionOS, Metal, WebXR, kontrol kokpit, integrasi terminal. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "komputasi spasial: XR interface, visionOS, Metal, WebXR, kontrol kokpit, integrasi terminal",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "visionos",
+    "webxr",
+    "ar",
+    "vr",
+    "spatial ui",
+    "metal"
+  ],
+  "best_for": [
+    "aplikasi Apple Vision Pro",
+    "pengalaman WebXR berbasis browser",
+    "desain antarmuka spasial"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "macos-spatial-metal-engineer",
+      "role": "macOS Spatial/Metal Engineer"
+    },
+    {
+      "slug": "terminal-integration-specialist",
+      "role": "Terminal Integration Specialist"
+    },
+    {
+      "slug": "visionos-spatial-engineer",
+      "role": "visionOS Spatial Engineer"
+    },
+    {
+      "slug": "xr-cockpit-interaction-specialist",
+      "role": "XR Cockpit Interaction Specialist"
+    },
+    {
+      "slug": "xr-immersive-developer",
+      "role": "XR Immersive Developer"
+    },
+    {
+      "slug": "xr-interface-architect",
+      "role": "XR Interface Architect"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/spatial-computing/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/spatial-computing/macos-spatial-metal-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/spatial-computing/terminal-integration-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/spatial-computing/visionos-spatial-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/spatial-computing/xr-cockpit-interaction-specialist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/spatial-computing/xr-immersive-developer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/spatial-computing/xr-interface-architect/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

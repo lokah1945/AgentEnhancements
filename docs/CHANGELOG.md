@@ -7,6 +7,25 @@ audience: all
 
 # Changelog
 
+## 2026-11-15 — Integrate The Agency (agency-agents) persona collection
+
+- Vendored `agency-agents/` from `github.com/msitarzewski/agency-agents` (MIT):
+  283 specialist personas across 18 divisions plus the NEXUS orchestration
+  playbooks (`strategy/`).
+- Added `scripts/convert_agency_agents.py`: converts every persona into Agent
+  Skills format at `agency-agents/skills/<division>/<slug>/SKILL.md` (frontmatter
+  `name/category/description/risk/tags/tools`, names prefixed `agency-`).
+- Added `scripts/gen_agency_catalog.py`: generates the 19 `plugin-catalog/agency/`
+  manifests + integration guides (18 divisions + `nexus`) and registers them in
+  `plugin-catalog/catalog.json` under the new `agency` category (21 -> 40 plugins).
+- `setup.sh` aggregates the converted personas into the unified index
+  (3,094 -> 3,377 skills, +283; new source `agency-agents`); each division
+  directory is scanned separately because the tree is division-nested.
+- `dispatch.sh` routes persona intents to the 19 agency packs; `catalog-wire.sh`
+  and the modular tree scaffold cover the new `agency` category.
+- Docs updated: README.md, README_INTEGRATION.md, docs/SKILLS.md,
+  docs/ARCHITECTURE.md, .cursorrules, plugin-catalog/README.md.
+
 ## 2026-11-15 — Keep credential centralization within MCP scope
 
 - Removed Claude auth migration, the project key helper and all agent/provider

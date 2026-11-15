@@ -103,6 +103,14 @@ main() {
         log_warn "anthropic-skills: vendored copy (no .git) - update manually via re-vendor"
     fi
 
+    # agency-agents is vendored (not a git checkout). Re-vendor from
+    # https://github.com/msitarzewski/agency-agents, then re-run the
+    # converter so agency-agents/skills/ matches the upstream personas:
+    #   python3 scripts/convert_agency_agents.py && python3 scripts/gen_agency_catalog.py
+    if [ -d "$BASE_DIR/agency-agents" ] && [ ! -d "$BASE_DIR/agency-agents/.git" ]; then
+        log_warn "agency-agents: vendored copy (no .git) - update manually via re-vendor + re-convert"
+    fi
+
     # Re-run skills aggregation
     log_info "Re-aggregating skills..."
     # Draining setup through head terminated it with SIGPIPE after 20

@@ -59,6 +59,20 @@ classify() {
     if echo "$lc" | grep -qE '(avatar|talking head|personalized video|voice clone|lip.?sync)'; then echo "hyperframes"; return; fi
     if echo "$lc" | grep -qE '(humanize|ai-ism|terlalu ai|terlalu kaku)'; then echo "humanizer"; return; fi
 
+    # Agency division packs (vendored agency-agents, category "agency")
+    if echo "$lc" | grep -qE '(nexus|multi-agent pipeline|orchestrat|orkestrasi)'; then echo "nexus"; return; fi
+    if echo "$lc" | grep -qE '(threat model|pentest|penetration|incident response|siem|appsec|dfir)'; then echo "security"; return; fi
+    if echo "$lc" | grep -qE '(playwright|cypress|e2e test|performance test|load test|accessibility audit)'; then echo "testing"; return; fi
+    if echo "$lc" | grep -qE '(frontend|backend architect|devops|sre|code review|database optim)'; then echo "engineering"; return; fi
+    if echo "$lc" | grep -qE '(ppc|google ads|paid social|ad campaign|conversion tracking)'; then echo "paid-media"; return; fi
+    if echo "$lc" | grep -qE '(growth hack|content calendar|seo audit|social media strategy|tiktok|xiaohongshu)'; then echo "marketing"; return; fi
+    if echo "$lc" | grep -qE '(prd|sprint priorit|product roadmap|user feedback)'; then echo "product"; return; fi
+    if echo "$lc" | grep -qE '(discovery call|meddpicc|outbound|sales pipeline|rfp)'; then echo "sales"; return; fi
+    if echo "$lc" | grep -qE '(ui design|ux research|brand identity|design system)'; then echo "design"; return; fi
+    if echo "$lc" | grep -qE '(gis|arcgis|maplibre|spatial data|geospasial)'; then echo "gis"; return; fi
+    if echo "$lc" | grep -qE '(unity|unreal|godot|roblox|game design|game economy)'; then echo "game-development"; return; fi
+    if echo "$lc" | grep -qE '(visionos|webxr|spatial computing|vision pro)'; then echo "spatial-computing"; return; fi
+
     # Fallback default
     echo "rea"
 }
@@ -66,7 +80,7 @@ classify() {
 find_guide() {
     local slug="$1"
     local category
-    for category in code research tokens-optimization design multimedia-writing; do
+    for category in code research tokens-optimization design multimedia-writing agency; do
         local candidate="$CATALOG_DIR/$category/$slug/SKILL.md"
         if [ -f "$candidate" ]; then
             echo "$candidate"

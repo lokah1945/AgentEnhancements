@@ -1,0 +1,72 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-healthcare",
+  "name": "The Agency — Healthcare Division (3 personas)",
+  "slug": "healthcare",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "3 persona kesehatan teregulasi dari The Agency (agency-agents) — kesehatan teregulasi: standar bukti klinis, sistem kesehatan kedaulatan, strategi inovasi. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "kesehatan teregulasi: standar bukti klinis, sistem kesehatan kedaulatan, strategi inovasi",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "clinical evidence",
+    "healthcare compliance",
+    "sovereign health"
+  ],
+  "best_for": [
+    "klaim klinis yang kredibel",
+    "strategi health-tech teregulasi"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "healthcare-clinical-evidence-agent",
+      "role": "Clinical Evidence Agent"
+    },
+    {
+      "slug": "healthcare-innovation-strategist",
+      "role": "Healthcare Innovation Strategist"
+    },
+    {
+      "slug": "healthcare-sovereign-health-systems-agent",
+      "role": "Sovereign Health Systems Agent"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/healthcare/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/healthcare/healthcare-clinical-evidence-agent/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/healthcare/healthcare-innovation-strategist/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/healthcare/healthcare-sovereign-health-systems-agent/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

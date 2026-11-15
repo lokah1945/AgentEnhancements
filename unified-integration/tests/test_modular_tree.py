@@ -1,7 +1,7 @@
 """Modular skills tree regression tests.
 
 Covers the /skills/ scaffold introduced in the v2 integration round:
-- T-1: catalog.json integrity (21 plugins, 5 categories, unique ids/slugs,
+- T-1: catalog.json integrity (40 plugins, 6 categories, unique ids/slugs,
        every manifest_path and guide_path resolves).
 - T-2: skills/manifest.json stays in sync with plugin-catalog/catalog.json
        (regenerate with scripts/generate_skills_index.py when it drifts).
@@ -39,6 +39,7 @@ CATEGORIES = [
     "tokens-optimization",
     "design",
     "multimedia-writing",
+    "agency",
 ]
 
 
@@ -54,8 +55,8 @@ class TestCatalogIntegrity(unittest.TestCase):
         cls.catalog = _load(CATALOG_PATH)
 
     def test_plugin_count(self):
-        self.assertEqual(self.catalog["total_plugins"], 21)
-        self.assertEqual(len(self.catalog["skills"]), 21)
+        self.assertEqual(self.catalog["total_plugins"], 40)
+        self.assertEqual(len(self.catalog["skills"]), 40)
 
     def test_categories_complete(self):
         self.assertEqual(set(self.catalog["categories"]), set(CATEGORIES))
@@ -88,7 +89,7 @@ class TestCatalogIntegrity(unittest.TestCase):
 
     def test_category_counts(self):
         counts = {"code": 4, "research": 5, "tokens-optimization": 4,
-                  "design": 4, "multimedia-writing": 4}
+                  "design": 4, "multimedia-writing": 4, "agency": 19}
         for entry in self.catalog["skills"]:
             counts[entry["category"]] -= 1
         self.assertEqual(
@@ -207,8 +208,8 @@ class TestMcpServerManifest(unittest.TestCase):
 
     def test_description_mentions_plugin_count(self):
         desc = self.mcp.get("description", "")
-        self.assertIn("21 plugin", desc,
-                      "description must reference the 21-plugin catalog")
+        self.assertIn("40 plugin", desc,
+                      "description must reference the 40-plugin catalog")
 
     def test_for_plugins_reference_catalog_slugs(self):
         slugs = {s["slug"] for s in self.catalog["skills"]} | {"all"}
@@ -270,7 +271,7 @@ class TestIntegrationReadmeCoverage(unittest.TestCase):
     def test_declares_accurate_totals(self):
         doc = README_INTEGRATION.read_text()
         self.assertIn("17 / 17", doc)
-        self.assertIn("**21 plugins**", doc)
+        self.assertIn("**40 plugins**", doc)
         self.assertIn("38 MCP servers", doc)
 
 

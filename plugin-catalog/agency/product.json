@@ -1,0 +1,99 @@
+{
+  "$schema": "https://agentenhancements.dev/schema/skill-manifest.v1.json",
+  "id": "agency-product",
+  "name": "The Agency — Product Division (6 personas)",
+  "slug": "product",
+  "category": "agency",
+  "version": "1.0.0",
+  "status": "integrated-ready",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/msitarzewski/agency-agents",
+    "license": "MIT",
+    "license_verified": true,
+    "vendored": true,
+    "vendor_path": "agency-agents/"
+  },
+  "description": "6 persona manajemen produk dari The Agency (agency-agents) — manajemen produk: prioritisasi sprint, riset tren, sintesis feedback, DX, nudge perilaku, PRD. Setiap persona membawa identitas, misi, deliverable, dan success metrics yang siap dipakai.",
+  "capabilities": [
+    "manajemen produk: prioritisasi sprint, riset tren, sintesis feedback, DX, nudge perilaku, PRD",
+    "persona ber-frontmatter (name, description, color, emoji, vibe)",
+    "workflow + deliverable + success metrics per persona"
+  ],
+  "tools_required": [
+    "read_file",
+    "write_file",
+    "edit_file",
+    "bash (opsional)"
+  ],
+  "mcp_servers_suggested": [],
+  "trigger_keywords": [
+    "product manager",
+    "prioritization",
+    "user feedback",
+    "dx engineer",
+    "roadmap"
+  ],
+  "best_for": [
+    "discovery dan PRD",
+    "prioritisasi backlog sprint",
+    "analisis feedback pengguna"
+  ],
+  "integration_notes": "Di-vendor penuh di agency-agents/ (MIT, by msitarzewski). 283 persona dikonversi ke format Agent Skills oleh scripts/convert_agency_agents.py ke agency-agents/skills/ lalu diagregasi setup.sh ke unified index dengan prefix nama 'agency-'. NEXUS playbook ada di agency-agents/strategy/ (tidak dikonversi; dibaca langsung sebagai dokumen orkestrasi). Seluruh persona adalah panduan perilaku (prompt), bukan executable; tidak ada tool berbahaya. Persona keamanan tetap butuh otorisasi eksplisit untuk aktivitas ofensif (lihat docs/SAFETY.md).",
+  "sub_skills": [
+    {
+      "slug": "product-behavioral-nudge-engine",
+      "role": "Behavioral Nudge Engine"
+    },
+    {
+      "slug": "product-dx-engineer",
+      "role": "DX Engineer"
+    },
+    {
+      "slug": "product-feedback-synthesizer",
+      "role": "Feedback Synthesizer"
+    },
+    {
+      "slug": "product-manager",
+      "role": "Product Manager"
+    },
+    {
+      "slug": "product-sprint-prioritizer",
+      "role": "Sprint Prioritizer"
+    },
+    {
+      "slug": "product-trend-researcher",
+      "role": "Trend Researcher"
+    }
+  ],
+  "skill_files": [
+    {
+      "path": "plugin-catalog/agency/product/SKILL.md",
+      "type": "integration-guide"
+    },
+    {
+      "path": "agency-agents/skills/product/product-behavioral-nudge-engine/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/product/product-dx-engineer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/product/product-feedback-synthesizer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/product/product-manager/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/product/product-sprint-prioritizer/SKILL.md",
+      "type": "upstream-skill"
+    },
+    {
+      "path": "agency-agents/skills/product/product-trend-researcher/SKILL.md",
+      "type": "upstream-skill"
+    }
+  ]
+}

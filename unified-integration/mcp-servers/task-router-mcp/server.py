@@ -10,7 +10,9 @@ a status (queued/running/done/failed/cancelled), captured stdout/stderr
 tails and an exit code.
 
 Safety: commands matching an obvious-destructive denylist are refused
-(best-effort guard, documented as such - not a sandbox).
+(best-effort guard, documented as such - not a sandbox). The same guard
+applies to python payloads. The gateway keeps this server hidden until the
+user opts in via ui.api.json (see docs/SAFETY.md).
 """
 from __future__ import annotations
 
@@ -52,6 +54,13 @@ _DENYLIST = [
     re.compile(r">\s*/dev/sd[a-z]"),
     re.compile(r"\bshutdown\b|\breboot\b"),
 ]
+# Python payloads can express the same accidents without a shell: apply the
+# shared denylist to the code text (also catches os.system/subprocess shells
+# embedding a denylisted command) plus python-specific root-wipe spellings.
+_DENYLIST_PYTHON = _DENYLIST + [
+    re.compile(r"shutil\.rmtree\(\s*['\"](/|/(?:boot|etc|usr|var|home|root))"),
+    re.compile(r"os\.(?:removedirs|unlink)\(\s*['\"]/"),
+]
 
 _TASKS: dict[str, dict] = {}
 _WORKSPACES: dict[str, str] = {}
@@ -60,8 +69,9 @@ _LOCK = threading.RLock()
 _POOL = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
 
-def _refused(command: str) -> str | None:
-    for pattern in _DENYLIST:
+def _refused(command: str, python: bool = False) -> str | None:
+    patterns = _DENYLIST_PYTHON if python else _DENYLIST
+    for pattern in patterns:
         if pattern.search(command):
             return pattern.pattern
     return None
@@ -174,14 +184,13 @@ def dispatch(kind: str, command: str | None = None, code: str | None = None,
         return {"error": f"{kind} task requires a non-empty "
                          f"{'command' if kind == 'bash' else 'code'} string"}
     effective_timeout = min(max(timeout or DEFAULT_TIMEOUT, 1), MAX_TIMEOUT)
-    if kind == "bash":
-        matched = _refused(payload)
-        if matched:
-            return {
-                "error": "command refused by the destructive-pattern guard",
-                "hint": f"matched denylist pattern {matched!r}; run risky "
-                        f"operations manually, not through task-router",
-            }
+    matched = _refused(payload, python=(kind == "python"))
+    if matched:
+        return {
+            "error": "command refused by the destructive-pattern guard",
+            "hint": f"matched denylist pattern {matched!r}; run risky "
+                    f"operations manually, not through task-router",
+        }
     task_id = f"task-{uuid.uuid4().hex[:12]}"
     spec = {"kind": kind, "timeout": effective_timeout}
     if kind == "bash":

@@ -265,9 +265,10 @@
       "env": {}
     },
     "task-router-mcp": {
-      "enabled": true,
+      "enabled": false,
       "required": [],
-      "optional": []
+      "optional": [],
+      "note": "Opt-in: executes arbitrary bash/python payloads with user privileges (docs/SAFETY.md). Set enabled=true to expose it to the model."
     },
     "github-issues-mcp": {
       "enabled": true,

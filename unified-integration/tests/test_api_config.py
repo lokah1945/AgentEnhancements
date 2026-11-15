@@ -107,8 +107,11 @@ class ConfigurationTests(unittest.TestCase):
             )
             visible = registry.usable_entries(registry.load_mcp_entries())
             names = {e["name"] for e in visible}
-            self.assertEqual(len(names), 8)
+            # 8 built-ins minus style-mcp (disabled here) minus task-router
+            # (hidden by default: opt-in only, api_config.DEFAULT_DISABLED).
+            self.assertEqual(len(names), 7)
             self.assertNotIn("style-mcp", names)
+            self.assertNotIn("task-router-mcp", names)
             self.assertNotIn("brave-search-mcp", names)
 
     def test_invalid_embedding_backend_cannot_trigger_network(self):

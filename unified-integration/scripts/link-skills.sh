@@ -32,13 +32,16 @@ BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(cd "$UNIFIED_DIR/.." && pwd)}"
 SKILLS_DIR="${AGENT_SKILLS_DIR:-$UNIFIED_DIR/skills}"
 
 # Sources linked by default (context-frugal profile, CONTRACT.md §8.4):
-# only task-observer is ambient - its activation rides the lifecycle
+# task-observer is ambient - its activation rides the lifecycle
 # runtime, so the native link is what makes the bundle discoverable.
+# Superpowers provides the core workflow discipline (using-superpowers,
+# systematic-debugging, brainstorming, etc.) that makes the catalog
+# usable - without it, agents don't know to check for skills first.
 # Everything else in the 3.3k-skill catalog stays fully reachable
 # through the on-demand discovery surface (lifecycle hook suggestions
 # + registry.py search/map/show), so the default native metadata cost
-# stays tiny without hiding any capability.
-DEFAULT_SOURCES="task-observer"
+# stays bounded while ensuring the process framework is present.
+DEFAULT_SOURCES="task-observer Superpowers"
 
 # Curated sets a user may request explicitly (--set curated):
 # well-scoped sources with bounded per-session metadata cost (~3.5k

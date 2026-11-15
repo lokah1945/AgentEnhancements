@@ -190,6 +190,7 @@ def install(agent: str, *, mcp_only: bool = False) -> None:
         path = config_dir / "opencode.jsonc"
         if not path.exists():
             path = config_dir / "opencode.json"
+        original_text = path.read_text(encoding="utf-8") if path.exists() else ""
         doc = read_json(path)
         doc.setdefault("$schema", "https://opencode.ai/config.json")
         converted = {
@@ -242,6 +243,18 @@ def install(agent: str, *, mcp_only: bool = False) -> None:
             if plugin not in plugins:
                 plugins.append(plugin)
         write_json(path, doc)
+        # Audit AE-15: JSON serialization drops user comments from JSONC
+        # files. The untouched original is preserved in the 0600 backup;
+        # say so instead of letting the change pass silently.
+        if path.suffix == ".jsonc" and (
+            "//" in original_text or "/*" in original_text
+        ):
+            print(
+                f"[native] opencode: note - comments in {path.name} were "
+                "dropped by the JSON rewrite; the original file was backed "
+                "up next to it (mode 0600)",
+                file=sys.stderr,
+            )
     print(
         f"[native] {agent}: configured"
         + (" MCP" if mcp_only else " hooks/plugin + MCP")

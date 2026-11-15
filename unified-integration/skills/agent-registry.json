@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-15T07:10:49.306195+00:00",
+  "generated_at": "2026-11-15T13:15:32.663975+00:00",
   "stats": {
     "total": 3464,
     "by_type": {
@@ -50593,7 +50593,7 @@
       "source_url": "https://github.com/mattpocock/skills",
       "vendored": false,
       "mcp_servers": [
-        "typescript-language-server",
+        "typescript-language-server-mcp",
         "eslint-mcp"
       ],
       "activation": "load the SKILL.md integration guide on demand"
@@ -50710,26 +50710,27 @@
     {
       "id": "plugin:rea",
       "type": "plugin",
-      "name": "REA (Reasoning + Acting)",
+      "name": "REA (Reverse Engineer Anything)",
       "slug": "rea",
       "source": "plugin-catalog",
       "category": "research",
       "status": "integrated-ready",
-      "description": "rea, reasoning, reflection, multi-step",
+      "description": "rea, reverse engineer, decompile, disassemble, binary analysis, analisis binary, apk analysis, how does this app work",
       "trigger_keywords": [
         "rea",
-        "reasoning",
-        "reflection",
-        "multi-step"
+        "reverse engineer",
+        "decompile",
+        "disassemble",
+        "binary analysis",
+        "analisis binary",
+        "apk analysis",
+        "how does this app work"
       ],
       "best_for": [],
       "path": "plugin-catalog/research/rea/SKILL.md",
       "source_url": "https://github.com/morluto/rea",
       "vendored": false,
-      "mcp_servers": [
-        "task-router-mcp",
-        "memory-mcp"
-      ],
+      "mcp_servers": [],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -50805,9 +50806,7 @@
       "path": "plugin-catalog/tokens-optimization/caveman/SKILL.md",
       "source_url": "https://github.com/JuliusBrussee/Caveman",
       "vendored": false,
-      "mcp_servers": [
-        "tokenizer-mcp"
-      ],
+      "mcp_servers": [],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -50856,10 +50855,7 @@
       "path": "plugin-catalog/tokens-optimization/gstack/SKILL.md",
       "source_url": "https://github.com/garrytan/gstack",
       "vendored": false,
-      "mcp_servers": [
-        "llm-cache-mcp",
-        "tokenizer-mcp"
-      ],
+      "mcp_servers": [],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -51050,8 +51046,7 @@
       "vendored": false,
       "mcp_servers": [
         "heygen-mcp",
-        "elevenlabs-mcp",
-        "voice-clone-mcp"
+        "elevenlabs-mcp"
       ],
       "activation": "load the SKILL.md integration guide on demand"
     },

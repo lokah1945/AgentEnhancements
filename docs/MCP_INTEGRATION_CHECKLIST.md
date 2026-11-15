@@ -1,7 +1,14 @@
+---
+title: MCP Integration Checklist
+version: 1.1
+last_updated: 2026-11-15
+audience: platform engineers
+---
+
 # MCP Integration Checklist — Finalizing the AgentEnhancements Merger
 
 > Step-by-step build plan for the **38 MCP servers** required to activate all
-> 21 plugins in `plugin-catalog/catalog.json`. Numbers below are computed from
+> 40 plugins in `plugin-catalog/catalog.json`. Numbers below are computed from
 > `plugin-catalog/mcp-servers.json` (run `python3 -c` snippet at the bottom to
 > re-derive).
 >
@@ -16,13 +23,13 @@
 
 ## 0. Pre-flight (do this before anything else)
 
-- [ ] **0.1** Confirm `plugin-catalog/catalog.json` lists **21 plugins** and
+- [ ] **0.1** Confirm `plugin-catalog/catalog.json` lists **40 plugins** and
       `plugin-catalog/mcp-servers.json` lists **38 servers**.
       ```bash
       python3 -c "import json; c=json.load(open('plugin-catalog/catalog.json')); m=json.load(open('plugin-catalog/mcp-servers.json')); print('plugins',len(c['skills']),'servers',len(m['servers']))"
       ```
       Note: `mcp-servers.json` description still says "20 plugin" — fix that
-      string to "21 plugin" in a separate commit.
+      string to "40 plugins" in a separate commit.
 - [ ] **0.2** Provision a secrets vault (1Password CLI / `pass` / `direnv`).
       The catalog requires **20 distinct env vars**; never hard-code any.
 - [x] **0.3** Python 3.11+ env for the 9 in-house servers (BUILT; needs
@@ -38,7 +45,7 @@
       ```
 - [ ] **0.5** Create the MCP config dir each agent CLI reads from
       (`~/.config/mcp/servers.json` is the conventional path; Cursor,
-      Claude Code, Continue each have their own — `setup.sh` handles the
+      Claude Code, Codex each have their own — `setup.sh` handles the
       symlink normalization).
 
 ---

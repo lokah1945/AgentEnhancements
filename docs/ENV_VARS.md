@@ -1,3 +1,10 @@
+---
+title: Environment Variables Reference
+version: 1.1
+last_updated: 2026-11-15
+audience: users, maintainers
+---
+
 # Environment Variables Reference
 
 Every secret / config knob the MCP roadmap and the in-house servers use,

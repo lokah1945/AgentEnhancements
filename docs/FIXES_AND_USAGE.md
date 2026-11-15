@@ -1,3 +1,10 @@
+---
+title: Fixes and Usage Notes
+version: 1.1
+last_updated: 2026-11-15
+audience: users, maintainers
+---
+
 # AgentEnhancements - Fixes and Usage Guide
 
 ## Overview

@@ -1,0 +1,57 @@
+MIT License
+
+Copyright (c) 2026 AgentEnhancements contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+NOTICE — scope of this license and vendored third-party content
+--------------------------------------------------------------------------------
+
+The MIT grant above covers the AgentEnhancements integration layer authored
+in this repository: unified-integration/, plugin-catalog/, scripts/, skills/
+generated index, docs/, and the repository-level configuration files.
+
+The following directories are VENDORED COPIES of third-party projects and are
+distributed under their own upstream licenses, which take precedence over the
+MIT grant above for anything inside those directories:
+
+| Directory | Upstream | License |
+|-----------|----------|---------|
+| agentic-awesome-skills/ | https://github.com/sickn33/agentic-awesome-skills | MIT (code) + CC-BY-4.0 (non-code content, see LICENSE-CONTENT) |
+| anthropic-skills/ | https://github.com/anthropics/skills | Apache-2.0 (per-skill LICENSE.txt) |
+| claude-mem/ | https://github.com/thedotmack/claude-mem | Apache-2.0 (+ NOTICE with attribution requirements) |
+| ECC/ | https://github.com/affaan-m/ECC | MIT |
+| headroom/ | https://github.com/headroomlabs-ai/headroom | Apache-2.0 (+ NOTICE) |
+| ponytail/ | https://github.com/DietrichGebert/ponytail | MIT |
+| superpowers/ | https://github.com/obra/superpowers | MIT |
+| system-prompts-and-models-of-ai-tools/ | https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools | GPL-3.0 |
+| replica-skill/ | https://github.com/Jakeschincariol/replica-skill | MIT |
+| agency-agents/ | https://github.com/msitarzewski/agency-agents | MIT |
+| task-observer/ | https://github.com/rebelytics/one-skill-to-rule-them-all | CC-BY-4.0 (pinned, see task-observer/VENDORED.json) |
+
+Notes for redistributors:
+
+- system-prompts-and-models-of-ai-tools is GPL-3.0. Anyone distributing that
+  directory (or substantial parts of it) must comply with GPL-3.0, including
+  source availability for the collection. The prompts themselves may also be
+  subject to the terms of service of the products they were extracted from;
+  see docs/audit/AGENTENHANCEMENTS_E2E_AUDIT_2026-11-15.md (AE-03).
+- claude-mem is Apache-2.0: keep its NOTICE file when redistributing.
+- Per-file license and attribution details: docs/LICENSE_AUDIT.md.

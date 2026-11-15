@@ -20,7 +20,7 @@ Legenda: [ ] belum · [x] selesai · [~] partial · [!] blocked
 - [x] agency-agents terdaftar di pipeline agregasi setup.sh + update-skills.sh
 - [x] 21 manifest JSON (20 remote + 1 vendored replica-skill)
 - [x] 21 SKILL.md panduan integrasi (replica-skill termasuk)
-- [x] `plugin-catalog/catalog.json` index (21 plugin, terpisah dari unified index)
+- [x] `plugin-catalog/catalog.json` index (40 plugin, terpisah dari unified index)
 - [x] `plugin-catalog/mcp-servers.json` roadmap (38 server, replica-skill terdaftar)
 - [x] `unified-integration/prompts/consolidated-system-prompt.txt`
 - [x] Docs: QUICKSTART, COOKBOOK, SAFETY, ADR, MCP_SERVERS, LICENSE_AUDIT, ROUTER_POLICY, CHANGELOG
@@ -43,7 +43,7 @@ Legenda: [ ] belum · [x] selesai · [~] partial · [!] blocked
   - [ ] 11 sub-skill replica muncul di `unified-integration/skills/by-category/general/`
   - [ ] unified index (all-skills.json) bertambah 11 entri source "replica-skill"
   - [ ] total_skills bertambah dari 2884 ke 2895
-- [ ] `bash unified-integration/scripts/catalog-test.sh <slug>` pass untuk 21 plugin
+- [ ] `bash unified-integration/scripts/catalog-test.sh <slug>` pass untuk 40 plugin
 - [ ] `python3 unified-integration/scripts/catalog-validate.py --root .` ALL PASSED
 
 ## FASE 3 — Orchestrator Activation

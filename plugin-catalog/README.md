@@ -1,6 +1,6 @@
 # AgentEnhancements — Skills Catalog v2
 
-Katalog plugin eksternal yang terintegrasi dengan repo. Berdampingan dengan `unified-integration/skills/by-category/` (registry hasil agregasi). Total **40 plugin sources** — 20 berupa manifest remote + 21 di-vendor penuh (replica-skill 11 sub-skill; anthropic-skills 19 skill resmi, Apache-2.0; agency-agents 283 persona dalam 19 pack).
+Katalog plugin eksternal yang terintegrasi dengan repo. Berdampingan dengan `unified-integration/skills/by-category/` (registry hasil agregasi). Total **40 plugin entries dari 22 upstream unik** — 19 berupa manifest+guide remote + 21 di-vendor penuh (replica-skill 11 sub-skill; anthropic-skills 19 skill resmi, Apache-2.0; agency-agents 283 persona dalam 19 pack).
 
 ## Struktur
 

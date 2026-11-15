@@ -46,11 +46,13 @@ BUILT = [
 
 
 def setUpModule():
-    """Never let owner credentials turn a regression test into a paid call."""
+    """Keep credentials and generated MCP state separate from the user's data."""
     global _api_directory, _api_environment
     _api_directory = tempfile.TemporaryDirectory()
     _api_environment = patch.dict(__import__("os").environ, {
-        "AGENT_ENHANCEMENTS_API_FILE": str(Path(_api_directory.name) / "no-credentials.json")})
+        "AGENT_ENHANCEMENTS_API_FILE": str(Path(_api_directory.name) / "no-credentials.json"),
+        "AGENT_MEMORY_ROOT": str(Path(_api_directory.name) / "memory"),
+    })
     _api_environment.start()
 
 

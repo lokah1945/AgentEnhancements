@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
-version: 1.3
-last_updated: 2026-11-14
+version: 1.4
+last_updated: 2026-11-15
 audience: users
 ---
 
@@ -98,10 +98,17 @@ is always available. This utility is separate from native CLI compaction.
 
 ## Tests
 
-Run the regression suite with:
+After merging a new skill source, run `bash unified-integration/setup.sh` to
+rebuild the generated registry directories. The committed index alone does
+not populate `by-category/`; an older local registry can therefore miss a
+new default native link even when the index lists it.
+
+Run the regression suite with the prepared runtime so the MCP dependencies
+are available:
 
 ```bash
-python3 unified-integration/tests/run-tests.py
+runtime_python="$(bash unified-integration/scripts/setup-mcp.sh --prepare)"
+"$runtime_python" unified-integration/tests/run-tests.py
 ```
 
 and the ECC suite (required before commits, CONTRACT §5.1) with:
@@ -109,3 +116,20 @@ and the ECC suite (required before commits, CONTRACT §5.1) with:
 ```bash
 cd ECC && node tests/run-all.js
 ```
+
+For parallel ECC runs, use the configuration in the root CI workflow: four
+workers, with suites that modify shared build directories or assert timing
+budgets scheduled serially after the worker pool. This follows ECC's own
+workflow and keeps every suite enabled.
+The workflow also installs jq and ripgrep, and verifies PCRE2 support before
+running ECC's scanner tests.
+
+## GitHub Actions
+
+**Jobs fail before any step starts, with no downloadable logs**
+Read the check-run annotations. An account billing lock can reject every job
+before a runner is assigned, including jobs in a public repository. The account
+owner must resolve the lock in GitHub Settings, Billing and licensing, or
+contact GitHub Support if the billing page shows no problem to resolve.
+After the lock is cleared, rerun the workflow and inspect the actual step
+results. Local test results do not establish that GitHub Actions is green.

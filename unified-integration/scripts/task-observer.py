@@ -203,8 +203,6 @@ def status(root: Path) -> Dict[str, Any]:
         info["state"] = "not installed"
     elif info["disabled"]:
         info["state"] = "disabled"
-    elif not info["workspace_exists"]:
-        info["state"] = "ready (workspace created on first session)"
     elif unreadable:
         info["state"] = "degraded (unreadable log entries)"
     else:

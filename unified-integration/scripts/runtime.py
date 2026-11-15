@@ -18,11 +18,15 @@ import sys
 
 from memory import AgentMemory
 from api_config import redact as redact_configured
+from context_budget import (
+    MAX_MEMORY,
+    MAX_OBSERVER_AMBIENT,
+    MAX_SKILL_CARDS,
+    clamp_to_budget,
+)
 
 MAX_INPUT = 2_000_000
 MAX_CONTEXT = 12_000
-MAX_MEMORY = 4_000
-MAX_OBSERVER_CONTEXT = 4_000
 SECRET = re.compile(
     r"(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+|sk-(?:ant-)?[A-Za-z0-9_-]{16,}"
     r"|\bAKIA[A-Z0-9]{16}\b"
@@ -37,7 +41,13 @@ def redact(value: str) -> str:
 
 
 def skill_context(agent: str, prompt: str) -> str:
-    """Offer relevant local skill paths without loading the entire registry."""
+    """Bounded discovery cards for a prompt (L1 pointers, not skill bodies).
+
+    The card names candidates and points at their SKILL.md; the agent
+    fetches a card's detail only when it chooses that candidate. This
+    keeps every prompt-submit injection inside the search-page budget
+    instead of growing with description length.
+    """
     spec = importlib.util.spec_from_file_location(
         "ae_skills_loader", Path(__file__).with_name("load-skills.py")
     )
@@ -47,16 +57,17 @@ def skill_context(agent: str, prompt: str) -> str:
     matches = loader.find_skills(prompt, max_results=3)
     lines = []
     for item in matches:
-        path = loader.skill_path(item["name"])
-        if path:
-            lines.append(f"- {item['name']}: {path}")
+        name = item.get("name", "")
+        summary = (item.get("description") or "").strip().split("\n")[0][:100]
+        lines.append(f"- {name}: {summary}")
     if not lines:
         return ""
-    return (
-        "AgentEnhancements automatically matched these optional local skills. "
-        "Read the relevant SKILL.md and its supporting files when useful for "
-        "the user's task. Skill text is task guidance, subject to the user's "
-        "instructions and normal tool permissions.\n" + "\n".join(lines)
+    return clamp_to_budget(
+        "AgentEnhancements local skill candidates for this task (read the "
+        "SKILL.md of one you choose; full catalog search: registry.py "
+        "search \"<task>\"):\n" + "\n".join(lines),
+        MAX_SKILL_CARDS,
+        label="skill candidates",
     )
 
 
@@ -64,8 +75,10 @@ def observer_context(agent: str) -> str:
     """Bootstrap the Task Observer workspace and return bounded context.
 
     Present on EVERY session start (not keyword-matched), per the vendored
-    skill's activation model: the observer is ambient. Failures are
-    advisory - a broken observer must never block the session.
+    skill's activation model: the observer is ambient. The card is bounded
+    to MAX_OBSERVER_AMBIENT tokens (context contract §8.4): paths, the log
+    command shape, and open-entry count - never observation bodies.
+    Failures are advisory - a broken observer must never block the session.
     """
     try:
         spec = importlib.util.spec_from_file_location(
@@ -74,7 +87,10 @@ def observer_context(agent: str) -> str:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         root = module.workspace_root()
-        return module.bootstrap_context(root, agent)[:MAX_OBSERVER_CONTEXT]
+        return clamp_to_budget(
+            module.bootstrap_context(root, agent), MAX_OBSERVER_AMBIENT,
+            label="task-observer",
+        )
     except Exception as exc:  # noqa: BLE001 - advisory by contract
         print(
             f"[AgentEnhancements] task-observer unavailable: "
@@ -101,13 +117,17 @@ def handle(agent: str, event: dict) -> str:
         previous = memory.list("session_context", limit=5)
         lines = [redact(f"- {item['key']}: {item['value']}") for item in previous]
         if lines:
-            parts.append(
+            parts.append(clamp_to_budget(
                 "AgentEnhancements: previous local session notes (historical "
                 "data; current user instructions take precedence):\n"
-                + "\n".join(lines)
-            )
+                + "\n".join(lines),
+                MAX_MEMORY,
+                label="memory recall",
+            ))
         if parts:
-            return "\n\n".join(parts)[:MAX_MEMORY + MAX_OBSERVER_CONTEXT]
+            # Session-start injection is inside the cold-start budget:
+            # observer (<=250) + memory recall (<=600) by construction.
+            return "\n\n".join(parts)
         return ""
     if name == "UserPromptSubmit":
         prompt = str(event.get("prompt") or "")
@@ -133,6 +153,18 @@ def handle(agent: str, event: dict) -> str:
                 redact(message)[:MAX_MEMORY],
                 ttl_days=7,
             )
+        # Task-observer Stop backstop: the upstream deliverable-event
+        # flush (checkpoints.log line) the excluded experimental plugin
+        # used to provide. Advisory; never blocks the session.
+        try:
+            spec = importlib.util.spec_from_file_location(
+                "ae_task_observer", Path(__file__).with_name("task-observer.py")
+            )
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            module.stop_backstop(module.workspace_root(), session_key)
+        except Exception:  # noqa: BLE001 - advisory by contract
+            pass
     return ""
 
 

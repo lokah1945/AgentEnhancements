@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-15T15:35:39.548139+00:00",
+  "generated_at": "2026-11-16T10:41:50.033382+00:00",
   "stats": {
     "total": 3464,
     "by_type": {
@@ -54114,7 +54114,12 @@
       "path": "plugin-catalog/research/rea/SKILL.md",
       "source_url": "https://github.com/morluto/rea",
       "vendored": false,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "brave-search-mcp",
+        "tavily-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54190,7 +54195,10 @@
       "path": "plugin-catalog/tokens-optimization/caveman/SKILL.md",
       "source_url": "https://github.com/JuliusBrussee/Caveman",
       "vendored": false,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "style-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54239,7 +54247,9 @@
       "path": "plugin-catalog/tokens-optimization/gstack/SKILL.md",
       "source_url": "https://github.com/garrytan/gstack",
       "vendored": false,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54480,7 +54490,11 @@
       "path": "plugin-catalog/agency/academic/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54503,7 +54517,11 @@
       "path": "plugin-catalog/agency/design/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54527,7 +54545,11 @@
       "path": "plugin-catalog/agency/engineering/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54550,7 +54572,11 @@
       "path": "plugin-catalog/agency/finance/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54574,7 +54600,11 @@
       "path": "plugin-catalog/agency/game-development/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54598,7 +54628,11 @@
       "path": "plugin-catalog/agency/gis/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54619,7 +54653,11 @@
       "path": "plugin-catalog/agency/healthcare/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54643,7 +54681,11 @@
       "path": "plugin-catalog/agency/marketing/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54666,7 +54708,11 @@
       "path": "plugin-catalog/agency/paid-media/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54689,7 +54735,11 @@
       "path": "plugin-catalog/agency/product/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54712,7 +54762,11 @@
       "path": "plugin-catalog/agency/project-management/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54734,7 +54788,11 @@
       "path": "plugin-catalog/agency/research/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54757,7 +54815,11 @@
       "path": "plugin-catalog/agency/sales/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54780,7 +54842,11 @@
       "path": "plugin-catalog/agency/security/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54804,7 +54870,11 @@
       "path": "plugin-catalog/agency/spatial-computing/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54828,7 +54898,11 @@
       "path": "plugin-catalog/agency/specialized/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54851,7 +54925,11 @@
       "path": "plugin-catalog/agency/support/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54874,7 +54952,11 @@
       "path": "plugin-catalog/agency/testing/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {
@@ -54897,7 +54979,11 @@
       "path": "plugin-catalog/agency/nexus/SKILL.md",
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "vendored": true,
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "activation": "load the SKILL.md integration guide on demand"
     },
     {

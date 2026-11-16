@@ -31,7 +31,7 @@ if [ -f "$CATEGORIES_JSON" ]; then
     category_list=$(jq -r '.categories[]' "$CATEGORIES_JSON")
 else
     # Fallback: discover categories from the directory tree itself.
-    category_list=$(cd "$CATALOG_DIR" && ls -d */ 2>/dev/null | tr -d '/')
+    category_list=$(cd "$CATALOG_DIR" && find . -maxdepth 1 -type d -name '*' ! -name '.' -printf '%f\n' 2>/dev/null | sort)
 fi
 [ -z "$category_list" ] && category_list="code research tokens-optimization design multimedia-writing agency"
 for category in $category_list; do

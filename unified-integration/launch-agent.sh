@@ -20,7 +20,7 @@ AGENTS=()
 source "$UNIFIED_DIR/config/detected-agents.sh" 2>/dev/null || true
 
 # Validate agent
-if [[ ! " ${AGENTS[*]:-} " =~ " ${AGENT} " ]]; then
+if [[ ! " ${AGENTS[*]:-} " =~  ${AGENT}  ]]; then
     echo "Agent '$AGENT' not detected. Available: ${AGENTS[*]:-none}"
     echo "Run $UNIFIED_DIR/setup.sh to (re)detect installed agents."
     echo "Usage: $0 <agent> [args...]"

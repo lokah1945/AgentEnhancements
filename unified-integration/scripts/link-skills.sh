@@ -28,7 +28,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNIFIED_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(cd "$UNIFIED_DIR/.." && pwd)}"
 SKILLS_DIR="${AGENT_SKILLS_DIR:-$UNIFIED_DIR/skills}"
 
 # Sources linked by default (context-frugal profile, CONTRACT.md §8.4):
@@ -214,7 +213,7 @@ audit_install() {
                 # removal glob cannot see. A park failure (slot conflict,
                 # mv error) LEAVES the link in place with a warning rather
                 # than letting the removal loop unlink a default skill.
-                local keep_line kname dst
+                local kname dst
                 while IFS=$'\t' read -r kname _keepcat; do
                     [ -n "$kname" ] || continue
                     dst="$target/$kname"

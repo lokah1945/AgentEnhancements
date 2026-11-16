@@ -52,9 +52,11 @@ automatically at runtime:
 | Target | Read by |
 | -------- | --------- |
 | `~/.claude/skills/` | Claude Code (personal skills, auto-discovered) |
+| `~/.codex/skills/` | Codex (native skills directory) |
+| `~/.config/opencode/skills/` | OpenCode (native skills directory) |
 | `~/.agents/skills/` | cross-agent Agent Skills standard (agentskills.io) |
 
-The default links **task-observer** and the 15 **Superpowers** workflow skills.
+The default links **task-observer** and the 15 **Superpowers** workflow skills (16 total).
 Other capabilities are discovered on demand through the library map and registry.
 `link-skills.sh --set curated` explicitly selects the 31-skill collection
 (anthropic-skills, replica-skill and task-observer). Extend or remove links with
@@ -62,6 +64,8 @@ Other capabilities are discovered on demand through the library map and registry
 
 Claude Code can additionally consume the upstream marketplace:
 `/plugin marketplace add anthropics/skills` (vendored at `anthropic-skills/`).
+
+**Skill discovery is flexible**: default 8 skill cards per prompt, configurable via `AE_MAX_SKILL_CARDS` env var. Agents decide which skills to actually read/use from the suggestions.
 
 ## Per-agent notes
 
@@ -81,16 +85,18 @@ the host agent's model-provider authentication.
 ### Codex CLI 0.167.2 (verified)
 
 Setup merges MCP servers into `~/.codex/config.toml`, lifecycle hooks into
-`~/.codex/hooks.json`, and instructions into `~/.codex/AGENTS.md`.
-`CODEX_HOME` is respected. Current Codex supports lifecycle hooks. New or
-changed hooks require review through `/hooks`; after trust is recorded,
-ordinary `codex` startup activates them automatically. Setup never bypasses
-hook trust or tool permissions. A disabled hooks feature or managed policy
-can prevent activation. Older Codex versions are not covered by this check.
-Codex 0.169.0 was also tested in an isolated installation. Both versions retain
-the MCP tool catalog within a turn; credential revocation is enforced by the
-gateway even when the client still displays a cached name. Newly added tools
-may require a fresh session. See [configuration](CONFIGURATION.md).
+`~/.codex/hooks.json`, instructions into `~/.codex/AGENTS.md`, and **native
+skills** into `~/.codex/skills/`. `CODEX_HOME` is respected. Current Codex
+supports lifecycle hooks. New or changed hooks require review through `/hooks`;
+after trust is recorded, ordinary `codex` startup activates them automatically.
+Setup never bypasses hook trust or tool permissions. A disabled hooks feature
+or managed policy can prevent activation. Older Codex versions are not covered
+by this check. Codex 0.169.0 was also tested in an isolated installation. Both
+versions retain the MCP tool catalog within a turn; credential revocation is
+enforced by the gateway even when the client still displays a cached name.
+Newly added tools may require a fresh session. See [configuration](CONFIGURATION.md).
+
+**Full native integration**: 5/5 lifecycle hooks (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop), 16 native skills, MCP gateway, memory persistence, and compression — equivalent to Claude Code.
 
 ### OpenCode 2.3.0 (verified; 2.2.5 also tested)
 
@@ -98,6 +104,7 @@ Setup edits the existing `~/.config/opencode/opencode.jsonc`, or creates
 `opencode.json` if JSONC is absent. Personal instructions, plugins, providers
 and MCP entries are preserved. JSONC comments remain in the timestamped backup;
 the merged document is serialized as JSON. `XDG_CONFIG_HOME` is respected.
+**Native skills** are linked into `~/.config/opencode/skills/`.
 
 The local `unified-integration/opencode-plugin` server plugin handles prompt
 routing, context injection and session notes through OpenCode 2 lifecycle
@@ -112,6 +119,8 @@ connection to settle so the first model request includes its tools.
 OpenCode 1 plugin APIs differ and
 are not supported by this adapter.
 Setup checks the installed version before changing the OpenCode configuration.
+
+**Full native integration**: lifecycle hooks, 16 native skills, MCP gateway, memory persistence, and compression — equivalent to Claude Code.
 
 ### Hermes Agent (native profiles)
 

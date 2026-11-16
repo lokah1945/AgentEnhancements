@@ -75,6 +75,18 @@ privileges. It is **hidden by default** and must be enabled explicitly in
 | `NEWSAPI_KEY` | newsapi-mcp (P2) | <https://newsapi.org> |
 | `LANGUAGE_TOOL_URL` | grammar-mcp (P2) | self-host: `docker run -p 8010:8010 languagetool/languagetool` → `http://localhost:8010` |
 
+## AgentEnhancements Integration Variables
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `AGENT_ENHANCEMENTS_BASE_DIR` | Project root | auto-detected from setup.sh location |
+| `AGENT_MEMORY_ROOT` | Memory storage | `~/.agent-memory` |
+| `AGENT_SKILLS_DIR` | Skills registry | `$BASE_DIR/unified-integration/skills` |
+| `HEADROOM_BIN` | Compression binary | auto-detect (repo build, then PATH) |
+| `AE_MAX_SKILL_CARDS` | Max skill cards per prompt | `8` (configurable) |
+| `AGENT_ENHANCEMENTS_BUILD_HEADROOM` | Build headroom by default | `1` (set to `0` to skip) |
+| `AGENT_SKILLS_NATIVE_TARGETS` | Skill link targets (colon-separated) | `~/.claude/skills:~/.agents/skills:~/.codex/skills:~/.config/opencode/skills` |
+
 ## Recommended provisioning
 
 ```bash

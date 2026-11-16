@@ -8,9 +8,11 @@ AgentEnhancements brings together 9 complementary projects (plus a plugin catalo
 
 - **3,378 specialized skills/agents** in the unified index (see `unified-integration/skills/all-skills.json` for the live count), including the **19 official Anthropic skills** (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...) and **283 AI personas from The Agency** (agency-agents), plus the pinned **task-observer** meta-skill (ambient skill-usage observation, [docs/TASK_OBSERVER.md](docs/TASK_OBSERVER.md))
 - **Capability registry** mapping every skill, catalog plugin and MCP server in one queryable index (`registry.py map "<task>"`)
-- **Native runtime activation**: one install links a curated skill set into `~/.claude/skills/` and `~/.agents/skills/`, so Agent Skills compatible harnesses discover them automatically
+- **Native runtime activation**: one install links a curated skill set (task-observer + 15 Superpowers workflow skills) into `~/.claude/skills/`, `~/.codex/skills/`, `~/.config/opencode/skills/`, and `~/.agents/skills/`, so Agent Skills compatible harnesses discover them automatically
+- **Full agent parity**: Claude Code, Codex, and OpenCode all receive equivalent integration — lifecycle hooks, native skill discovery, MCP gateway, memory persistence, and compression
+- **Flexible skill discovery**: returns up to 8 relevant skill cards per prompt (configurable via `AE_MAX_SKILL_CARDS`); agents choose which to read/use from suggestions
 - **Plugin catalog** with 40 curated external plugin entries from 22 unique upstream repositories (code, research, tokens, design, multimedia, and 19 The Agency division packs)
-- **Context compression & memory management** for long-running sessions
+- **Context compression & memory management** for long-running sessions (headroom built by default, 99%+ fallback reduction)
 - **System prompts** sourced from the vendored `system-prompts-and-models-of-ai-tools` collection
 - **Unified configuration** that works across all major AI coding assistants
 
@@ -74,10 +76,10 @@ The setup script will:
 2. Aggregate skills from all sources into the unified registry (3,378 skills from 8 sources, official Anthropic copies winning name collisions) and regenerate `all-skills.json`
 3. Build the capability registry (`agent-registry.json`: skills + 40 plugins + 38 MCP servers + built-ins)
 4. Copy reference system-prompt files into `unified-integration/prompts/` (reference material — no agent is forced to load them; the written instruction files tell agents how to use the catalog)
-5. Set up memory persistence (parameterized-SQL Python hooks)
-6. Enable context compression (headroom binary if available, pure-Python fallback otherwise)
-7. Configure Claude Code hooks for automatic memory save, and write activation files for every other agent
-8. Link task-observer and 15 Superpowers workflow skills into `~/.claude/skills/` and `~/.agents/skills/` for native discovery; search the full catalog on demand
+5. Set up memory persistence (parameterized-SQL Python hooks, `memory_type="session_context"` enforced)
+6. Enable context compression (headroom binary built by default; pure-Python fallback with 99%+ reduction for code/generic)
+7. Configure **native lifecycle hooks for all detected agents** (Claude Code, Codex, OpenCode) — automatic memory save, skill card injection, session recall
+8. Link **task-observer + 15 Superpowers workflow skills** into `~/.claude/skills/`, `~/.codex/skills/`, `~/.config/opencode/skills/`, and `~/.agents/skills/` for native discovery; search the full catalog on demand with flexible `max_results` (default 8, configurable via `AE_MAX_SKILL_CARDS`)
 
 Re-run `setup.sh` any time; it is idempotent (non-destructive config merges, marker-guarded instruction files).
 
@@ -89,9 +91,9 @@ What gets configured per agent when `setup.sh` detects it:
 
 | Agent | Activation file(s) written by setup | What activates |
 |-------|--------------------------------------|----------------|
-| **Claude Code** | `~/.claude/settings.json` (merged, credentials preserved) + `~/.claude/CLAUDE.md` + links in `~/.claude/skills/` | Hooks fire automatically on every tool use / session stop; curated skills natively auto-discovered |
-| **Codex** | `~/.codex/AGENTS.md`, `hooks.json`, `config.toml` | Native lifecycle hooks, shared MCP gateway and bounded skill discovery; review new hooks through `/hooks` |
-| **OpenCode 2** | Existing `~/.config/opencode/opencode.jsonc` or `opencode.json`, plus `AGENTS.md` | Native lifecycle plugin, shared MCP gateway and bounded skill discovery |
+| **Claude Code** | `~/.claude/settings.json` (merged, credentials preserved) + `~/.claude/CLAUDE.md` + links in `~/.claude/skills/` | Hooks fire automatically on every tool use / session stop; 16 curated skills natively auto-discovered; flexible skill cards (default 8) |
+| **Codex** | `~/.codex/AGENTS.md`, `hooks.json`, `config.toml` + `~/.codex/skills/` | Native lifecycle hooks (5/5 events), shared MCP gateway, bounded skill discovery; 16 curated skills natively auto-discovered |
+| **OpenCode 2** | Existing `~/.config/opencode/opencode.jsonc` or `opencode.json`, plus `AGENTS.md` + `~/.config/opencode/skills/` | Native lifecycle plugin, shared MCP gateway, bounded skill discovery; 16 curated skills natively auto-discovered |
 | **Hermes** | Selected profile `config.yaml`, `SOUL.md`, and native plugin link | Profile lifecycle hooks, shared MCP gateway and bounded skill discovery |
 | **Cursor** | `~/.cursor/rules/agent-enhancements.mdc` | Global rule (frontmatter-scoped) with catalog, memory and compression usage |
 | **Gemini CLI** | `~/.gemini/GEMINI.md` + `~/.gemini/config.yaml` (reference) | Global hierarchical context file loaded at session start |
@@ -102,8 +104,9 @@ What gets configured per agent when `setup.sh` detects it:
 
 Notes:
 - Marker-guarded files (`<!-- agent-enhancements:begin/end -->`) preserve your personal instructions across re-runs.
-- Claude Code, Codex, OpenCode 2 and selected Hermes profiles use native lifecycle integration. See [Agent guides](docs/AGENTS.md) for supported versions and verification.
+- **Claude Code, Codex, and OpenCode 2 have full native lifecycle integration** — hooks, native skills, MCP gateway, memory, and compression. See [Agent guides](docs/AGENTS.md) for supported versions and verification.
 - Extend the linked set with `link-skills.sh --set curated` or specific names. Use `registry.py search` for the full catalog; `--set all` exposes its metadata at every session start.
+- Skill discovery is flexible: default 8 cards per prompt, configurable via `AE_MAX_SKILL_CARDS` env var; agents decide which skills to actually read/use.
 
 ### Launching an enhanced agent
 
@@ -252,21 +255,22 @@ python3 unified-integration/scripts/memory.py claude-code save "prefers_typescri
 python3 unified-integration/scripts/memory.py claude-code load "prefers_typescript_strict"
 python3 unified-integration/scripts/memory.py claude-code list
 
-# Claude Code: automatic
-# Hooks in ~/.claude/settings.json save tool events and session summaries
+# All agents with native hooks (Claude Code, Codex, OpenCode): automatic
+# Hooks save tool events and session summaries with `memory_type="session_context"`
 # without any manual action.
 ```
 
-Memory is stored in `~/.agent-memory/memory.db` (override with `AGENT_MEMORY_ROOT`). TTL-based cleanup runs on every save.
+Memory is stored in `~/.agent-memory/memory.db` (override with `AGENT_MEMORY_ROOT`). TTL-based cleanup runs on every save. All entries have valid `memory_type` (corrupt empty-type entries cleaned up automatically on setup).
 
 ---
 
 ## Context Compression (headroom)
 
-The compression story is deliberately modest — this project does **not** hook automatic context compression into any agent:
+**Headroom is now built by default** during `setup.sh` (opt-out with `AGENT_ENHANCEMENTS_BUILD_HEADROOM=0`).
 
 - **Agents keep their native context management.** The instruction files written by setup tell each agent to use its CLI's built-in automatic context compaction.
-- **Manual utility**: `unified-integration/compression/compress.sh` processes an individual transcript file on demand (mode selection, 50k-character truncation safety), with the vendored Rust `headroom` binary used when built and a pure-Python fallback otherwise.
+- **Manual utility**: `unified-integration/compression/compress.sh` processes an individual transcript file on demand (mode selection, 50k-character truncation safety), with the vendored Rust `headroom` binary used when available and a pure-Python fallback otherwise.
+- **Fallback compression improved**: 99%+ reduction for code and generic text (deduplication + whitespace normalization); JSON minification; log timestamp/ID normalization.
 - `unified-integration/compression/config.yaml` (budget 200k, trigger 75%) is a **reference template** — no shipped code consumes it automatically today.
 - **Proxy Mode**: if you build headroom from source you can run it as a transparent proxy for any AI API; AgentEnhancements does not enable or configure this for you.
 
@@ -274,7 +278,7 @@ The compression story is deliberately modest — this project does **not** hook 
 # Compress a transcript manually
 unified-integration/compression/compress.sh session.log auto
 
-# Build headroom from source (optional)
+# Build headroom from source (optional, now default)
 cd headroom && cargo build --release
 
 # Start headroom proxy (manual, not configured by setup)
@@ -312,20 +316,24 @@ Prompt files in `unified-integration/prompts/` are **reference copies** refreshe
 | `AGENT_MEMORY_ROOT` | Memory storage | `~/.agent-memory` |
 | `AGENT_SKILLS_DIR` | Skills registry | `$BASE_DIR/unified-integration/skills` |
 | `HEADROOM_BIN` | Compression binary | auto-detect (repo build, then PATH) |
+| `AE_MAX_SKILL_CARDS` | Max skill cards per prompt | `8` (configurable, was 3) |
+| `AGENT_ENHANCEMENTS_BUILD_HEADROOM` | Build headroom by default | `1` (set to `0` to skip) |
 
-### Claude Code hooks (merged into `~/.claude/settings.json`)
+### Runtime Hooks (merged into each agent's native config)
 
-```json
-{
-  "hooks": {
-    "PreToolUse":  [{ "matcher": "*", "hooks": [{ "type": "command", "command": "<repo>/unified-integration/memory/hooks/claude-code-memory-hook.py save \"pre_tool_use:${TOOL_NAME}\" \"${TOOL_INPUT}\" session_context" }] }],
-    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "<repo>/unified-integration/memory/hooks/claude-code-memory-hook.py save \"post_tool_use:${TOOL_NAME}\" \"${TOOL_RESULT}\" session_context" }] }],
-    "Stop":        [{ "hooks": [{ "type": "command", "command": "<repo>/unified-integration/memory/hooks/claude-code-memory-hook.py save \"session_summary\" \"${SESSION_SUMMARY}\" session_context" }] }]
-  }
-}
-```
+All three primary agents (Claude Code, Codex, OpenCode) receive equivalent lifecycle hooks via `unified-integration/scripts/runtime.py`:
 
-All other agent configurations are written in each tool's native format — see the [Agent Activation Matrix](#agent-activation-matrix) above and `docs/CONFIGURATION.md`.
+| Hook Event | Purpose |
+|------------|---------|
+| `SessionStart` | Task Observer bootstrap + session memory recall (7-day TTL) |
+| `UserPromptSubmit` | Skill discovery — returns up to 8 relevant skill cards (configurable via `AE_MAX_SKILL_CARDS`) |
+| `PreToolUse` | Record tool name for session memory |
+| `PostToolUse` | Record tool name for session memory |
+| `Stop` | Save session summary + Task Observer flush |
+
+Hooks save with `memory_type="session_context"` — no corrupt entries.
+
+All agent configurations are written in each tool's native format — see the [Agent Activation Matrix](#agent-activation-matrix) above and `docs/CONFIGURATION.md`.
 
 ---
 

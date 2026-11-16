@@ -138,13 +138,15 @@ class AggregationTests(TaskObserverTestCase):
 
 class NativeLinkingTests(TaskObserverTestCase):
     def test_task_observer_is_in_default_native_set(self):
-        linker = (UI_DIR / "scripts/link-skills.sh").read_text()
-        # Context-frugal default: the observer is the only ambient native
-        # skill; discovery covers the rest (CONTRACT.md §8.4).
-        self.assertIn('DEFAULT_SOURCES="task-observer"', linker)
-        self.assertIn('CURATED_SOURCES="anthropic-skills replica-skill task-observer"', linker)
-        registry = (UI_DIR / "scripts/registry.py").read_text()
-        self.assertIn('"task-observer")', registry)
+        target = self.root / "native-skills"
+        rc, _, err = run(
+            ["bash", str(UI_DIR / "scripts/link-skills.sh"), "--quiet"],
+            env={**self.env, "HOME": str(self.root),
+                 "AGENT_SKILLS_NATIVE_TARGETS": str(target)},
+        )
+        self.assertEqual(rc, 0, err)
+        self.assertTrue((target / "task-observer").is_symlink())
+        self.assertTrue((target / "task-observer/SKILL.md").is_file())
 
     def test_link_skips_user_owned_directory(self):
         home = self.root / "home"
@@ -224,6 +226,18 @@ class BootstrapTests(TaskObserverTestCase):
 
 class ObservationTests(TaskObserverTestCase):
     """Meaningful observations, no-signal, cross-session, replay, dedup."""
+
+    def test_target_and_proposed_skill_metadata_are_real_yaml_lists(self):
+        import yaml
+        rc, out, err = self.cli("log", "--title", "metadata fixture",
+            "--issue", "metadata must round-trip", "--principle", "preserve targets",
+            "--target-file", "unified-integration/scripts/runtime.py",
+            "--proposes-skill", "native-host-doctor")
+        self.assertEqual(rc, 0, err)
+        path = next((self.memory / "task-observer/skill-observations/observation-log").glob("[0-9]*.md"))
+        metadata = yaml.safe_load(path.read_text().split("---", 2)[1])
+        self.assertEqual(metadata["target_file"], ["unified-integration/scripts/runtime.py"])
+        self.assertEqual(metadata["proposes_skill"], ["native-host-doctor"])
 
     def test_synthetic_correction_creates_valid_entry(self):
         rc, out, err = self.log(

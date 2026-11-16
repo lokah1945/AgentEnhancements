@@ -20,6 +20,30 @@ exercise_tools = False
 api_config_path = None
 
 
+def openai_health(payload):
+    """Read the credential boolean from native or serialized MCP envelopes."""
+    if isinstance(payload, str):
+        try:
+            payload, _ = json.JSONDecoder().raw_decode(payload[payload.index("{"):])
+        except (ValueError, TypeError):
+            return None
+    if isinstance(payload, list):
+        for item in payload:
+            found = openai_health(item)
+            if found is not None:
+                return found
+    if isinstance(payload, dict):
+        backends = payload.get("backends")
+        if isinstance(backends, dict) and isinstance(backends.get("openai"), bool):
+            return backends["openai"]
+        for key in ("structuredContent", "embeddings-mcp", "backends", "content", "text"):
+            if key in payload:
+                found = openai_health(payload[key])
+                if found is not None:
+                    return found
+    return None
+
+
 class Mock(BaseHTTPRequestHandler):
     """Minimal Anthropic Messages and OpenAI Responses/Chat SSE fixture."""
 
@@ -75,10 +99,7 @@ class Mock(BaseHTTPRequestHandler):
                                 # report per backend; embeddings carries the
                                 # openai credential boolean. Older per-server
                                 # payloads had it at the top level.
-                                emb = data.get("embeddings-mcp", data)
-                                health_outputs.setdefault(self.path, {})[identity] = (
-                                    emb.get("backends", {}).get("openai")
-                                )
+                                health_outputs.setdefault(self.path, {})[identity] = openai_health(data)
                             except (ValueError, KeyError):
                                 pass
                     for child in item.values():
@@ -94,7 +115,7 @@ class Mock(BaseHTTPRequestHandler):
                 name = tool.get("name") or tool.get("function", {}).get("name", "")
                 if "embeddings" in name or "vision" in name:
                     declared.append(name)
-                if name == "ae_health":
+                if name == "ae_health" or name.endswith(("__ae_health", "_ae_health")):
                     health.append((name, namespace))
                 visit(
                     tool.get("tools", []),
@@ -528,10 +549,10 @@ def main() -> None:
             "-c",
             'model_provider="ae_fixture"',
             "-c",
-            "mcp_servers.rea.enabled=false",
-            "-c",
             "mcp_servers.agent-enhancements.env.AGENT_ENHANCEMENTS_API_FILE="
             + json.dumps(str(api_file)),
+            "-c",
+            'mcp_servers.agent-enhancements.tools.ae_health.approval_mode="auto"',
             "-c",
             f'model_providers.ae_fixture={{name="local fixture",base_url="{base}/v1",wire_api="responses"}}',
             "-m",

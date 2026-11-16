@@ -91,7 +91,7 @@ class ShippedScriptTests(unittest.TestCase):
 
     def test_agent_tool_whitelist_in_aggregation(self):
         src = (UI_DIR / "setup.sh").read_text()
-        self.assertIn("claude-code|codex|cursor|gemini-cli|opencode|copilot|windsurf|kiro)", src)
+        self.assertIn("claude-code|codex|cursor|gemini-cli|opencode|copilot|windsurf|kiro|hermes)", src)
 
     def test_gitignore_blocks_local_settings(self):
         gi = (REPO_DIR / ".gitignore").read_text()

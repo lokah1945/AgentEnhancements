@@ -1,7 +1,7 @@
 ---
 title: Configuration
-version: 1.5
-last_updated: 2026-11-15
+version: 1.6
+last_updated: 2026-11-16
 audience: users, maintainers
 ---
 
@@ -30,8 +30,8 @@ watches edits every 0.5 seconds and emits MCP tool-list notifications;
 every call rechecks credentials to reject stale cached tools immediately.
 Calls already sent to a provider cannot be withdrawn by clearing a key.
 
-Nine bundled servers provide 36 tools with all keys empty. GraphRAG is local
-and requires no API key. Embeddings default to deterministic local vectors;
+Nine bundled servers expose enabled local tools with all keys empty.
+GraphRAG is local and requires no API key. Embeddings default to local vectors;
 the `openai` backend is permitted only with `OPENAI_API_KEY`. Semantic
 `vision_describe` is hidden without that key; image comparison and OCR stay
 available. `OPENAI_BASE_URL` includes `/v1`; model names have separate fields.
@@ -73,7 +73,7 @@ catalog tests without a reconnect command. No CLI permissions are bypassed.
 ## Environment variables (immutable interface, CONTRACT §8.1)
 
 | Variable | Purpose | Default |
-|----------|---------|---------|
+| ---------- | --------- | --------- |
 | `AGENT_ENHANCEMENTS_BASE_DIR` | Project root | repository root detected from the running script's location |
 | `AGENT_ENHANCEMENTS_UNIFIED_DIR` | Integration directory (launcher only) | `<BASE_DIR>/unified-integration` |
 | `AGENT_MEMORY_ROOT` | Memory storage | `~/.agent-memory` |
@@ -86,6 +86,7 @@ catalog tests without a reconnect command. No CLI permissions are bypassed.
 | `CLAUDE_CONFIG_DIR` | Native Claude configuration directory | `~/.claude` |
 | `XDG_CONFIG_HOME` | OpenCode configuration parent | `~/.config` |
 | `XDG_DATA_HOME` | Isolated Python environment parent | `~/.local/share` |
+| `HERMES_HOME` | Hermes data root; selected profiles live below `profiles/` | `~/.hermes` |
 | `AGENT_COMPRESSION_CONFIG` | Compression config path | `<UNIFIED_DIR>/compression/config.yaml` |
 | `AGENT_PROMPTS_DIR` | Prompts directory | `<UNIFIED_DIR>/prompts` |
 | `AGENT_SKILLS_NATIVE_TARGETS` | Colon-separated native skill link targets (link-skills.sh) | `~/.claude/skills:$HOME/.agents/skills` |
@@ -96,14 +97,15 @@ checkout to live at a specific path (R003).
 
 ## Files written on your machine
 
-`setup.sh` merges hooks/instructions into each **detected** agent's own
+`setup.sh` merges hooks/instructions into each **selected, detected** agent's own
 native config and creates a timestamped backup next to it:
 
 | Agent | File (native format) |
-|-------|------|
+| ------- | ------ |
 | Claude Code | `~/.claude/settings.json`, `~/.claude/CLAUDE.md`, `~/.claude.json` (MCP), native skills |
 | Codex | `~/.codex/AGENTS.md`, `config.toml` (MCP), `hooks.json` |
 | OpenCode 2 | Existing `~/.config/opencode/opencode.jsonc` or `opencode.json`, plus `AGENTS.md` |
+| Hermes | Selected `~/.hermes/profiles/<name>/config.yaml`, `SOUL.md`, and `plugins/agent-enhancements` symlink |
 | Cursor | `~/.cursor/rules/agent-enhancements.mdc` |
 | Gemini CLI | `~/.gemini/GEMINI.md` + `~/.gemini/config.yaml` (reference) |
 | Windsurf | `~/.codeium/windsurf/rules/agent-enhancements.md` |
@@ -111,10 +113,16 @@ native config and creates a timestamped backup next to it:
 | Kiro | `~/.kiro/config.yaml` (reference) |
 | All agents | links in `~/.claude/skills/` and `~/.agents/skills/` (curated set) |
 
-The three native adapters preserve user hook handlers, MCP servers and array
+The four native adapters preserve user hook handlers, MCP servers and array
 entries. Managed handlers are replaced idempotently. Existing same-name user
 MCP servers are preserved. Native config writes are atomic and private, with
 backups on changes. Marker-guarded markdown preserves personal instructions.
+Managed gateway updates retain per-tool approvals, timeouts and custom
+environment entries, including OpenCode's disabled/codemode choices.
+Python aliases within the prepared venv produce the same
+hook and gateway commands, avoiding redundant backups and hook trust changes.
+An OpenCode 1 installation is refused before its native
+configuration is rewritten.
 Dependencies are installed in `${XDG_DATA_HOME:-~/.local/share}/agentenhancements/venv`;
 no global pip environment is modified. `requirements.txt` defines dependencies.
 Malformed native config aborts setup with an error instead of reporting success.
@@ -160,11 +168,21 @@ values in the reference YAML do not configure the CLI's compaction thresholds.
 
 `AGENT_SKILLS_NATIVE_TARGETS` (colon-separated) controls where
 `link-skills.sh` creates its symlinks. Only symlinks owned by the registry
-are managed; user data is never touched. The default curated set is
-anthropic-skills (19) + replica-skill (11).
+are managed; user data is never touched. The default links task-observer and
+15 Superpowers workflow skills, with native metadata inside its token budget.
+`--set curated` explicitly links anthropic-skills (19), replica-skill (11) and
+task-observer (1). The full library remains available through registry search.
 
 ## Machine-local state
 
 `unified-integration/config/detected-agents.sh` is **auto-generated** per
 machine by `setup.sh`; do not commit local modifications. `.claude/settings.local.json`
 and aggregation temp files are gitignored (see `.gitignore`).
+
+`${XDG_DATA_HOME:-~/.local/share}/agentenhancements/host-selection.json` stores
+an optional `agents` array and `hermes_profiles` array. Set them with
+`native-integration.py --select-agents claude-code,codex,opencode,hermes
+--profile ilma --profile master-chief`, using the prepared runtime.
+Setup filters detected agents through this saved selection; explicit
+`--agent` invocations still target the named adapter. Profile selection never
+recreates missing personas or imports credentials from another host.

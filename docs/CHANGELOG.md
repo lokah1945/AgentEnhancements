@@ -1,11 +1,32 @@
 ---
 title: Changelog
-version: 1.4
-last_updated: 2026-11-15
+version: 1.5
+last_updated: 2026-11-16
 audience: all
 ---
 
 # Changelog
+
+## 2026-11-16 — Native Hermes profiles and installation verification
+
+- Add a Hermes profile adapter and native lifecycle plugin using the shared
+  runtime/MCP gateway; persist selected hosts and profiles outside the checkout.
+- Preserve managed gateway approvals, timeouts and custom environment values;
+  stabilize venv command paths across Python aliases and check OpenCode 2 before
+  rewriting its configuration.
+- Keep an unchanged library map byte-identical across tokenizer/timestamp
+  differences while enforcing its current token budget.
+- Serialize observation targets and proposed skills as YAML lists.
+- Repair native CLI fixtures for absent optional MCP entries and native result
+  envelopes; add a native doctor and real Hermes CLI fixtures.
+- Include Superpowers in the bounded default native set and verify its metadata
+  budget; keep profile-aware Hermes root discovery consistent with the host.
+- Return a structured tool error when arXiv requests time out, and keep malformed
+  identifier tests entirely offline.
+- Preserve explicit OpenCode gateway disabled/codemode settings on reinstall.
+- Verify 265 integration tests, 8,289 ECC tests, 10 MCP protocol targets, five
+  native installations and five real provider responses. Detailed local
+  evidence: [native host verification](audit/NATIVE_HOSTS_E2E_2026-11-16.md).
 
 ## 2026-11-15 (later) — Audit remediation closure (19/22 findings closed)
 
@@ -147,13 +168,13 @@ Five-commit remediation on `fix/audit-remediation-2026-11-15` from
 - Account limitations and the local credential finding are documented in the
   [native automation audit](audit/NATIVE_AUTOMATION_AUDIT_2026-11-14.md).
 
-
 All notable changes to the owned integration layer of this repository.
 Vendored projects change upstream; see their own histories.
 
 ## [Unreleased] — 2026-11-13 — anthropic-skills all-in-one integration
 
 ### Added
+
 - **anthropic-skills vendored** (19 official Anthropic skills: docx, pdf,
   pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api,
   design & comms; Apache-2.0 per-skill LICENSE.txt). Aggregated through
@@ -178,6 +199,7 @@ Vendored projects change upstream; see their own histories.
   isolated HOME, dispatch routing table.
 
 ### Fixed
+
 - **Index frontmatter parsing**: YAML block scalars (`>-`) left 64 skills
   with a literal marker as their description (and one empty). The index
   builder now re-parses frontmatter from the file (PyYAML or built-in
@@ -193,6 +215,7 @@ Vendored projects change upstream; see their own histories.
   `vendored: true` with `vendored_path`.
 
 ### Changed
+
 - Index schema (additive, v1.0 -> v1.1): new `path` and `source_path`
   fields per skill for capability mapping; `sources` list derived from
   records instead of hardcoded.
@@ -203,6 +226,7 @@ Vendored projects change upstream; see their own histories.
 ## [Unreleased] — 2026-11-13 — Production readiness
 
 ### Fixed
+
 - **Merge**: `audit/deep-review` remediation (13 commits) merged into the
   master line; master had continued on the broken pipeline (all 21 findings
   of the 2026-11-01 audit were still live). Conflicts resolved to keep both
@@ -225,6 +249,7 @@ Vendored projects change upstream; see their own histories.
   `AgentEnhancements/master` (was `agent-enhancements/main` - 404).
 
 ### Changed
+
 - **Plugin catalog URLs**: 13 manifests + `catalog.json` + category READMEs
   updated with verified repository URLs (12 org-root-only placeholders, 3
   typos: `heygen-con`→`heygen-com`, `Egomex-AI`→`Egonex-AI`,
@@ -238,6 +263,7 @@ Vendored projects change upstream; see their own histories.
   run no longer dirties `git status`.
 
 ### Added
+
 - `docs/audit/PRODUCTION_READINESS_AUDIT.md` - end-to-end audit report
   (19 findings: 3 critical, 5 high, 6 medium, 5 low; all fixable ones
   remediated).
@@ -290,7 +316,8 @@ Vendored projects change upstream; see their own histories.
 - R001: tidak ada file *-fixed/*-new/*-v2 (patch di-rename: consolidated-system-prompt.txt)
 - R002: semua dokumentasi di docs/ dengan frontmatter (title, version,
   last_updated, audience)
-- 2.1: single setup script dipertahankan (wiring via catalog-wire.sh, bukan setup.sh baru)
+- 2.1: single setup script dipertahankan (wiring via catalog-wire.sh,
+  bukan setup.sh baru)
 - R304: unified index all-skills.json TIDAK diedit manual — hanya via pipeline
 - 2.2: .cursorrules manual TIDAK ditambahkan — rules masuk shared prompt source
 - R201/R202: conventional commits, satu perubahan logis per commit
@@ -305,13 +332,13 @@ Vendored projects change upstream; see their own histories.
 - catalog-test.sh replica-skill: PASS
 - dispatch.sh --dry-run: classify benar (clone app → replica-skill)
 
-
 All notable changes to the owned integration layer of this repository.
 Vendored projects change upstream; see their own histories.
 
 ## [2.1.1] - 2026-11-01 - Audit remediation
 
 ### Fixed
+
 - **setup.sh aborts on the first aggregated skill** - bash arithmetic
   post-increment from zero returns exit status 1 under `set -e`, so
   skills aggregation could never complete (audit F-25).
@@ -360,6 +387,7 @@ Vendored projects change upstream; see their own histories.
   skill counts aligned with the index (F-13).
 
 ### Changed
+
 - `all-skills.json` regenerated with the fixed pipeline (2,884 → 3,116
   skills; schema now includes `agent_skill_counts`).
 - `by-agent/` is populated only for the eight canonical agents; unknown
@@ -371,6 +399,7 @@ Vendored projects change upstream; see their own histories.
   quotes now survive).
 
 ### Added
+
 - Regression test suite: `unified-integration/tests/` (49 tests) covering
   compression, memory, the loader, hooks, index invariants, generator/artifact
   sync and setup policy checks.
@@ -382,6 +411,7 @@ Vendored projects change upstream; see their own histories.
 - `.gitignore` for machine-local state and temp artifacts.
 
 ### Removed
+
 - Committed temp file `.claude/settings.local.json.tmp.898491.d5c14c07c983`.
 
 ## [2.1.0] - 2026-11-01

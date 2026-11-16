@@ -52659,7 +52659,8 @@
     "opencode",
     "copilot",
     "windsurf",
-    "kiro"
+    "kiro",
+    "hermes"
   ],
   "agent_skill_counts": {
     "claude-code": 402,
@@ -52705,5 +52706,5 @@
     "weaviate": 2,
     "nextjs": 1
   },
-  "last_updated": "2026-11-15T07:10:49.164412+00:00"
+  "last_updated": "2026-11-15T19:51:01.829353+00:00"
 }

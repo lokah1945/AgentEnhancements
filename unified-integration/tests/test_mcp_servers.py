@@ -494,9 +494,20 @@ class TestNetworkServers(unittest.TestCase):
         cls.news = load_server("google-news-mcp")
 
     def test_arxiv_id_format_guard(self):
-        for bad in ("not-an-id", "../etc/passwd", "2401.0000"):
-            result = self.arxiv.TOOLS["fetch"](bad)
-            self.assertIn("error", result, bad)
+        # Four-digit identifiers pass the adapter's syntax check. A format
+        # guard fixture must be malformed and must never reach the network.
+        with patch.object(self.arxiv, "_fetch", side_effect=AssertionError("unexpected network call")):
+            for bad in ("not-an-id", "../etc/passwd", "2401.000"):
+                result = self.arxiv.TOOLS["fetch"](bad)
+                self.assertIn("error", result, bad)
+
+    def test_arxiv_request_timeout_returns_a_tool_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(self.arxiv, "CACHE_DIR", Path(directory)), patch.object(
+                self.arxiv.urllib.request, "urlopen", side_effect=TimeoutError("fixture timeout")
+            ):
+                result = self.arxiv.TOOLS["search"]("timeout fixture")
+        self.assertIn("timed out", result.get("error", "").lower())
 
     def test_arxiv_empty_query_rejected(self):
         self.assertIn("error", self.arxiv.TOOLS["search"]("  "))

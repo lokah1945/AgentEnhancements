@@ -1,7 +1,7 @@
 ---
 title: Internal APIs
-version: 1.5
-last_updated: 2026-11-15
+version: 1.6
+last_updated: 2026-11-16
 audience: maintainers, contributors
 ---
 
@@ -14,7 +14,7 @@ servers and built-in capabilities. Reads `all-skills.json`,
 `plugin-catalog/catalog.json` and `plugin-catalog/mcp-servers.json`.
 
 | Command | Description |
-|---------|-------------|
+| --------- | ------------- |
 | `build [--out PATH] [--quiet]` | Regenerate `skills/agent-registry.json` (skills + plugins + MCP + capabilities). Run automatically by `setup.sh` after aggregation. |
 | `map "<task>" [--limit N] [--json]` | Activation plan for a natural-language task: top skills (with paths and native-link status), matching plugins, relevant MCP servers, always-available capabilities and usage hints. |
 | `search "<query>" [--type T] [--limit N] [--json]` | Scored search across every entry type (or one type: `skill`, `plugin`, `mcp`, `capability`). |
@@ -65,8 +65,8 @@ at runtime (`~/.claude/skills`, `~/.agents/skills`; override with
 the unified registry are created, refreshed or removed.
 
 | Invocation | Effect |
-|-----------|--------|
-| `link-skills.sh [--quiet]` | Link the default curated set (anthropic-skills 19 + replica-skill 11 + task-observer 1) into every target. |
+| ----------- | -------- |
+| `link-skills.sh [--quiet]` | Link task-observer and 15 Superpowers workflow skills into every target. |
 | `link-skills.sh --set <source>` | Link every skill of one source. |
 | `link-skills.sh --set all` / `--all` | Link the entire catalog (heavy per-session metadata; warned). |
 | `link-skills.sh <name> [...]` | Link specific skills by name. |
@@ -88,7 +88,7 @@ Missing bundles report `state: "not installed"`, and disabled workspaces report
 (default: `<repo>/unified-integration/skills`).
 
 | Method | Description |
-|--------|-------------|
+| -------- | ------------- |
 | `find_skills(task_description, max_results=5) -> list[dict]` | Keyword-scored matching over `when_to_use` (+2), `tags` (+3), `description` (+1) and agent compatibility (+5). Returns the top entries from the index. |
 | `load_skill(skill_name) -> dict` | Loads a skill from disk. Supports both layouts: `by-category/<cat>/<name>/SKILL.md` (directory) and `by-category/<cat>/<name>.md` (flat), plus the equivalent `by-agent/<agent>/` paths. Returns `{frontmatter, body, file}` or `{raw, file}` when no frontmatter exists. |
 
@@ -100,7 +100,7 @@ CLI: `load-skills.py <agent> <task_description>`.
 `$AGENT_MEMORY_ROOT/memory.db` (default `~/.agent-memory`).
 
 | Method | Description |
-|--------|-------------|
+| -------- | ------------- |
 | `save(key, value, memory_type="session_context", metadata=None, ttl_days=None)` | Upsert (`INSERT OR REPLACE`). `expires_at` uses the SQLite format `YYYY-MM-DD HH:MM:SS` so expiry comparisons work. |
 | `load(key, memory_type="session_context") -> str or None` | Latest unexpired value for the key. |
 | `list(memory_type=None, limit=20) -> list[dict]` | Recent memories, values truncated to 200 chars for display. |
@@ -122,7 +122,7 @@ Python hook; **no SQL is executed from bash** (CONTRACT R101).
 from stdin. It has no model, network or SDK dependency.
 
 | Event | Action |
-|-------|--------|
+| ------- | -------- |
 | `SessionStart` | Restore recent unexpired notes for this agent and canonical project path |
 | `UserPromptSubmit` | Save a bounded task note and suggest up to three relevant local skill paths |
 | `PostToolUse` | Save only the tool name; raw inputs/outputs are never stored |

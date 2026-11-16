@@ -214,20 +214,31 @@ def main() -> int:
     out_json.parent.mkdir(parents=True, exist_ok=True)
     # The rendered text IS the L0 card an agent reads via `cat`; persist
     # it inside the JSON so one file serves machines and agents alike.
-    out_json.write_text(
-        json.dumps(
-            {**data, "bootstrap_tokens_approx": cost, "rendered": text},
-            indent=2,
-        )
-        + "\n",
-        encoding="utf-8",
+    document = {**data, "bootstrap_tokens_approx": cost, "rendered": text}
+    try:
+        previous = json.loads(out_json.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        previous = None
+    # Tokenizer availability is machine-specific; neither a new estimate
+    # nor a new timestamp changes the capability map. Still enforce the
+    # live budget above, while preserving the published artifact verbatim.
+    volatile = {"generated_at", "bootstrap_tokens_approx"}
+    unchanged = isinstance(previous, dict) and (
+        {key: value for key, value in previous.items() if key not in volatile}
+        == {key: value for key, value in document.items() if key not in volatile}
     )
+    if not unchanged:
+        out_json.write_text(
+            json.dumps(document, indent=2) + "\n", encoding="utf-8"
+        )
     if args.text_out:
         text_path = Path(args.text_out)
         text_path.parent.mkdir(parents=True, exist_ok=True)
-        text_path.write_text(text, encoding="utf-8")
-    print(f"library map: {cost} tokens (budget {MAX_BOOTSTRAP}) -> {out_json}")
-    print(f"rendered text: {len(text)} chars")
+        if not text_path.is_file() or text_path.read_text(encoding="utf-8") != text:
+            text_path.write_text(text, encoding="utf-8")
+    if not args.quiet:
+        print(f"library map: {cost} tokens (budget {MAX_BOOTSTRAP}) -> {out_json}")
+        print(f"rendered text: {len(text)} chars")
     return 0
 
 

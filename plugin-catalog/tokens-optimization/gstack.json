@@ -23,7 +23,9 @@
     "read_file",
     "write_file"
   ],
-  "mcp_servers_suggested": [],
+  "mcp_servers_suggested": [
+    "filesystem-mcp"
+  ],
   "trigger_keywords": [
     "token",
     "compress",

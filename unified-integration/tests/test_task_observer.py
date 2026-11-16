@@ -138,13 +138,15 @@ class AggregationTests(TaskObserverTestCase):
 
 class NativeLinkingTests(TaskObserverTestCase):
     def test_task_observer_is_in_default_native_set(self):
-        linker = (UI_DIR / "scripts/link-skills.sh").read_text()
-        # Context-frugal default: the observer is the only ambient native
-        # skill; discovery covers the rest (CONTRACT.md §8.4).
-        self.assertIn('DEFAULT_SOURCES="task-observer"', linker)
-        self.assertIn('CURATED_SOURCES="anthropic-skills replica-skill task-observer"', linker)
-        registry = (UI_DIR / "scripts/registry.py").read_text()
-        self.assertIn('"task-observer")', registry)
+        target = self.root / "native-skills"
+        rc, _, err = run(
+            ["bash", str(UI_DIR / "scripts/link-skills.sh"), "--quiet"],
+            env={**self.env, "HOME": str(self.root),
+                 "AGENT_SKILLS_NATIVE_TARGETS": str(target)},
+        )
+        self.assertEqual(rc, 0, err)
+        self.assertTrue((target / "task-observer").is_symlink())
+        self.assertTrue((target / "task-observer/SKILL.md").is_file())
 
     def test_link_skips_user_owned_directory(self):
         home = self.root / "home"

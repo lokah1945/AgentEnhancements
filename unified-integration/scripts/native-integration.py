@@ -134,6 +134,9 @@ def merge_servers(existing: dict, block: dict) -> None:
         # The managed command may change after an update; per-tool approvals,
         # timeouts and user environment entries are still the user's settings.
         merged = {**(old or {}), **cfg}
+        for field in ("disabled", "codemode"):
+            if old and field in old:
+                merged[field] = old[field]
         for field in ("env", "environment"):
             if field in cfg and old and isinstance(old.get(field), dict):
                 merged[field] = {**old[field], **cfg[field]}

@@ -242,6 +242,8 @@ def install(agent: str, *, mcp_only: bool = False, profiles: list[str] | None = 
             plugins = doc.setdefault("plugins", [])
             if plugin not in plugins:
                 plugins.append(plugin)
+            # Install runtime hooks for opencode
+            merge_hooks(doc, agent)
         write_json(path, doc)
         # Audit AE-15: JSON serialization drops user comments from JSONC
         # files. The untouched original is preserved in the 0600 backup;

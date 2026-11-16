@@ -68,9 +68,11 @@ Category normalization (anything else falls back to `general`):
 compatible harnesses read automatically:
 
 - `~/.claude/skills/` - Claude Code personal skills
+- `~/.codex/skills/` - Codex native skills
+- `~/.config/opencode/skills/` - OpenCode native skills
 - `~/.agents/skills/` - cross-agent Agent Skills standard (agentskills.io)
 
-Default set: **task-observer (1) + Superpowers (15)**. The optional
+Default set: **task-observer (1) + Superpowers (15)** = 16 skills. The optional
 `--set curated` collection selects anthropic-skills (19), replica-skill (11)
 and task-observer (1).
 
@@ -85,6 +87,8 @@ bash unified-integration/scripts/link-skills.sh --unlink [names]
 
 Only symlinks owned by the registry are created, refreshed or removed;
 user-owned directories, files and foreign symlinks are never touched.
+
+**Skill discovery is flexible**: default 8 skill cards per prompt, configurable via `AE_MAX_SKILL_CARDS` env var. Agents decide which skills to actually read/use from the suggestions.
 
 ## Using skills
 

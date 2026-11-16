@@ -69,7 +69,6 @@ def fallback_compress(content: str, mode: str) -> str:
         if content.strip().startswith(('{', '[')):
             try:
                 data = json.loads(content)
-                # Whitespace is removable; nulls and empty values are data.
                 return json.dumps(data, separators=(',', ':'), ensure_ascii=False)
             except:
                 pass
@@ -77,11 +76,9 @@ def fallback_compress(content: str, mode: str) -> str:
     if mode == "logs":
         # Detect log format
         if any(re.search(r'\b(ERROR|WARN|INFO|DEBUG|TRACE)\b', line) for line in lines[:50]):
-            # Keep only unique log lines, preserve first occurrence
             seen = set()
             unique = []
             for line in lines:
-                # Normalize timestamps/IDs
                 normalized = re.sub(r'\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}', 'TIMESTAMP', line)
                 normalized = re.sub(r'\b[0-9a-f]{8,}\b', 'ID', normalized)
                 if normalized not in seen:
@@ -89,8 +86,82 @@ def fallback_compress(content: str, mode: str) -> str:
                     unique.append(line)
             lines = unique
 
-    # Blank lines, whitespace and repeated code can have semantic meaning
-    # (multiline strings, YAML blocks, closing braces). Preserve them.
+    if mode == "code":
+        # Remove excessive blank lines (keep max 1 consecutive)
+        result = []
+        blank_count = 0
+        for line in lines:
+            if not line.strip():
+                blank_count += 1
+                if blank_count <= 1:
+                    result.append(line)
+            else:
+                blank_count = 0
+                result.append(line)
+        # Deduplicate consecutive identical non-blank lines
+        deduped = []
+        prev = None
+        for line in result:
+            if line != prev or line.strip() == "":
+                deduped.append(line)
+            prev = line
+        # Global deduplication of non-blank lines for repeating blocks
+        seen = set()
+        final = []
+        for line in deduped:
+            if not line.strip():
+                final.append(line)
+            elif line not in seen:
+                seen.add(line)
+                final.append(line)
+        lines = final
+
+    elif mode == "generic":
+        # Strategy 1: Line-based deduplication
+        if len(lines) > 1:
+            seen = set()
+            unique = []
+            for line in lines:
+                normalized = ' '.join(line.split())
+                if normalized not in seen and normalized:
+                    seen.add(normalized)
+                    unique.append(line)
+            result = '\n'.join(unique)
+            if len(result) < len(content) * 0.9:
+                lines = unique
+                # Good reduction, use it
+            else:
+                # Line dedup didn't help enough, try other strategies
+                lines = unique  # Still use deduped lines as base
+
+        # Strategy 2: Sentence-based deduplication (if not already reduced enough)
+        result = '\n'.join(lines)
+        if len(result) >= len(content) * 0.9:
+            sentences = re.split(r'(?<=[.!?])\s+', content)
+            if len(sentences) > 1:
+                seen = set()
+                unique = []
+                for s in sentences:
+                    normalized = ' '.join(s.split())
+                    if normalized not in seen and normalized:
+                        seen.add(normalized)
+                        unique.append(s)
+                result = ' '.join(unique)
+                if len(result) < len(content) * 0.9:
+                    return result
+
+        # Strategy 3: Find exact repeating pattern
+        result = '\n'.join(lines)
+        if len(result) >= len(content) * 0.9:
+            n = len(content)
+            for i in range(1, min(n // 2 + 1, 1000)):
+                if n % i == 0:
+                    unit = content[:i]
+                    if unit * (n // i) == content:
+                        return unit + " ... [repeated " + str(n // i) + " times]"
+
+        # Strategy 4: Fallback - use line-deduped result
+        lines = result.split('\n') if isinstance(result, str) else lines
 
     # Limit total size
     result = '\n'.join(lines)

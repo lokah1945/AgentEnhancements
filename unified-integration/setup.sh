@@ -1304,7 +1304,7 @@ setup_compression() {
     elif command -v headroom &> /dev/null; then
         log_success "headroom binary found in PATH"
         HEADROOM_CMD="headroom"
-    elif [ -f "$BASE_DIR/headroom/Cargo.toml" ] && [ "${AGENT_ENHANCEMENTS_BUILD_HEADROOM:-0}" = "1" ]; then
+    elif [ -f "$BASE_DIR/headroom/Cargo.toml" ] && [ "${AGENT_ENHANCEMENTS_BUILD_HEADROOM:-1}" = "1" ]; then
         if command -v cargo &> /dev/null; then
             log_info "Building headroom from source..."
             if (cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -20); then

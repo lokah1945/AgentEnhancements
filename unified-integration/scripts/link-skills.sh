@@ -343,7 +343,7 @@ done
 
 # Resolve link targets (colon-separated override supported)
 TARGETS=()
-IFS=':' read -r -a RAW_TARGETS <<< "${AGENT_SKILLS_NATIVE_TARGETS:-$HOME/.claude/skills:$HOME/.agents/skills}"
+IFS=':' read -r -a RAW_TARGETS <<< "${AGENT_SKILLS_NATIVE_TARGETS:-$HOME/.claude/skills:$HOME/.agents/skills:$HOME/.codex/skills:$HOME/.config/opencode/skills}"
 for t in "${RAW_TARGETS[@]}"; do
     [ -n "$t" ] && TARGETS+=("$t")
 done

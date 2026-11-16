@@ -1,0 +1,8 @@
+name: agent-enhancements
+version: "1.0.0"
+description: Bounded local skill discovery and shared session notes.
+provides:
+  hooks:
+    - pre_llm_call
+    - post_llm_call
+    - post_tool_call

@@ -49,6 +49,7 @@ case "$AGENT" in
     opencode)    exec opencode "$@" ;;
     cursor)      exec cursor "$@" ;;
     gemini-cli)  exec gemini "$@" ;;
+    hermes) exec "$AGENT" "$@" ;;
     windsurf)    exec windsurf "$@" ;;
     copilot)     exec gh copilot "$@" ;;
     kiro)        exec kiro "$@" ;;

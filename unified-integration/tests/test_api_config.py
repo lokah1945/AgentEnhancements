@@ -250,6 +250,9 @@ class GatewayTests(unittest.TestCase):
                     self.assertTrue(info.capabilities.tools.listChanged)
                     listing = await session.list_tools()
                     names = {t.name for t in listing.tools}
+                    health = next(t for t in listing.tools if t.name == "ae_health")
+                    self.assertTrue(health.annotations.readOnlyHint)
+                    self.assertFalse(health.annotations.destructiveHint)
                     self.assertNotIn("vision_describe", names)
                     self.assertIn("vision_compare", names)
                     self.assertIn("graphrag_query", names)

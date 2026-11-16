@@ -337,6 +337,10 @@ class Gateway:
                 "call (status, version, degraded reasons)."
             ),
             inputSchema={"type": "object", "properties": {}},
+            annotations=types.ToolAnnotations(
+                readOnlyHint=True, destructiveHint=False,
+                idempotentHint=True, openWorldHint=False,
+            ),
         )
 
     async def _run_health(self) -> types.CallToolResult:

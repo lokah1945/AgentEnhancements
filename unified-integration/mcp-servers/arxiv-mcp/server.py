@@ -67,6 +67,8 @@ def _fetch(url: str) -> str | dict:
     except urllib.error.URLError as exc:
         return {"error": f"cannot reach arXiv API: {exc.reason}",
                 "hint": "check network connectivity"}
+    except TimeoutError:
+        return {"error": "arXiv request timed out", "hint": "retry shortly"}
     _cache_put(key, body)
     return body
 

@@ -448,8 +448,11 @@ def log_observation(
         "status: open",
         f"type: {obs_type}",
         f"skill: [{', '.join(_safe_list(skill))}]",
-        "proposes_skill: [{', '.join(_safe_list(proposes_skill))}]",
-        "target_file: [{', '.join(_safe_list(target_file))}]",
+        f"proposes_skill: [{', '.join(_safe_list(proposes_skill))}]",
+        "target_file: " + json.dumps(
+            [redact(str(item).strip())[:500] for item in (target_file or [])
+             if str(item).strip()], ensure_ascii=False,
+        ),
         f"siblings_checked: {_yaml_quote(siblings_checked)}",
         f"area: {_yaml_quote(area)}",
         "date: __DATE__",

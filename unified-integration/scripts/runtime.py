@@ -142,6 +142,7 @@ def handle(agent: str, event: dict) -> str:
         memory.save(
             f"session:{session_key}:last_tool",
             tool,
+            memory_type="session_context",
             metadata={"event": name},
             ttl_days=7,
         )
@@ -151,6 +152,7 @@ def handle(agent: str, event: dict) -> str:
             memory.save(
                 f"session:{session_key}:summary",
                 redact(message)[:MAX_MEMORY],
+                memory_type="session_context",
                 ttl_days=7,
             )
         # Task-observer Stop backstop: the upstream deliverable-event

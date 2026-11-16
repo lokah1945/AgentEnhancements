@@ -26,7 +26,11 @@
     "edit_file",
     "bash (opsional)"
   ],
-  "mcp_servers_suggested": [],
+  "mcp_servers_suggested": [
+    "filesystem-mcp",
+    "memory-mcp",
+    "task-router-mcp"
+  ],
   "trigger_keywords": [
     "bookkeeper",
     "financial analyst",

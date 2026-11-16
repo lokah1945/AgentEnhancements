@@ -47,6 +47,9 @@ def skill_context(agent: str, prompt: str) -> str:
     fetches a card's detail only when it chooses that candidate. This
     keeps every prompt-submit injection inside the search-page budget
     instead of growing with description length.
+
+    max_results is configurable via AE_MAX_SKILL_CARDS env var (default 8).
+    The agent decides which skills to actually read/use from the suggestions.
     """
     spec = importlib.util.spec_from_file_location(
         "ae_skills_loader", Path(__file__).with_name("load-skills.py")
@@ -54,7 +57,8 @@ def skill_context(agent: str, prompt: str) -> str:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     loader = module.SkillsLoader(agent)
-    matches = loader.find_skills(prompt, max_results=3)
+    max_results = int(os.environ.get("AE_MAX_SKILL_CARDS", "8"))
+    matches = loader.find_skills(prompt, max_results=max_results)
     lines = []
     for item in matches:
         name = item.get("name", "")

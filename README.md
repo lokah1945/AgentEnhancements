@@ -4,7 +4,7 @@ A unified integration platform that aggregates essential AI agent skills, tools,
 
 ## Overview
 
-AgentEnhancements brings together 9 complementary projects (plus a plugin catalog and three vendored skill suites) that enhance AI coding agents (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Copilot, Windsurf, Kiro) with:
+AgentEnhancements brings together 9 complementary projects (plus a plugin catalog and three vendored skill suites) that enhance AI coding agents (Claude Code, Codex, OpenCode, Hermes, Cursor, Gemini CLI, Copilot, Windsurf, Kiro) with:
 
 - **3,378 specialized skills/agents** in the unified index (see `unified-integration/skills/all-skills.json` for the live count), including the **19 official Anthropic skills** (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...) and **283 AI personas from The Agency** (agency-agents), plus the pinned **task-observer** meta-skill (ambient skill-usage observation, [docs/TASK_OBSERVER.md](docs/TASK_OBSERVER.md))
 - **Capability registry** mapping every skill, catalog plugin and MCP server in one queryable index (`registry.py map "<task>"`)
@@ -70,14 +70,14 @@ cd AgentEnhancements
 ```
 
 The setup script will:
-1. Detect your installed AI coding assistants (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Windsurf, Copilot, Kiro)
+1. Detect your installed AI coding assistants (Claude Code, Codex, OpenCode, Hermes, Cursor, Gemini CLI, Windsurf, Copilot, Kiro), honoring a saved host selection
 2. Aggregate skills from all sources into the unified registry (3,378 skills from 8 sources, official Anthropic copies winning name collisions) and regenerate `all-skills.json`
 3. Build the capability registry (`agent-registry.json`: skills + 40 plugins + 38 MCP servers + built-ins)
 4. Copy reference system-prompt files into `unified-integration/prompts/` (reference material — no agent is forced to load them; the written instruction files tell agents how to use the catalog)
 5. Set up memory persistence (parameterized-SQL Python hooks)
 6. Enable context compression (headroom binary if available, pure-Python fallback otherwise)
 7. Configure Claude Code hooks for automatic memory save, and write activation files for every other agent
-8. Link the curated skill set (anthropic-skills + replica-skill + task-observer) into `~/.claude/skills/` and `~/.agents/skills/` for native runtime auto-discovery
+8. Link task-observer and 15 Superpowers workflow skills into `~/.claude/skills/` and `~/.agents/skills/` for native discovery; search the full catalog on demand
 
 Re-run `setup.sh` any time; it is idempotent (non-destructive config merges, marker-guarded instruction files).
 
@@ -90,19 +90,20 @@ What gets configured per agent when `setup.sh` detects it:
 | Agent | Activation file(s) written by setup | What activates |
 |-------|--------------------------------------|----------------|
 | **Claude Code** | `~/.claude/settings.json` (merged, credentials preserved) + `~/.claude/CLAUDE.md` + links in `~/.claude/skills/` | Hooks fire automatically on every tool use / session stop; curated skills natively auto-discovered |
-| **Codex** | `~/.codex/AGENTS.md` | Global instructions: skills catalog usage, memory and compression commands. Codex reads AGENTS.md at session start |
-| **OpenCode** | `~/.config/opencode/opencode.json` (schema-valid) + `~/.config/opencode/AGENTS.md` | Native skills discovery via the `skills` array (points at the aggregated registry) + instruction files via `instructions` |
+| **Codex** | `~/.codex/AGENTS.md`, `hooks.json`, `config.toml` | Native lifecycle hooks, shared MCP gateway and bounded skill discovery; review new hooks through `/hooks` |
+| **OpenCode 2** | Existing `~/.config/opencode/opencode.jsonc` or `opencode.json`, plus `AGENTS.md` | Native lifecycle plugin, shared MCP gateway and bounded skill discovery |
+| **Hermes** | Selected profile `config.yaml`, `SOUL.md`, and native plugin link | Profile lifecycle hooks, shared MCP gateway and bounded skill discovery |
 | **Cursor** | `~/.cursor/rules/agent-enhancements.mdc` | Global rule (frontmatter-scoped) with catalog, memory and compression usage |
 | **Gemini CLI** | `~/.gemini/GEMINI.md` + `~/.gemini/config.yaml` (reference) | Global hierarchical context file loaded at session start |
 | **Windsurf** | `~/.codeium/windsurf/rules/agent-enhancements.md` | Global rule with catalog, memory and compression usage |
 | **GitHub Copilot** | `~/.config/github-copilot/config.yaml` (reference) | Reference configuration; use via the launcher |
 | **Kiro** | `~/.kiro/config.yaml` (reference) | Reference configuration; use via the launcher |
-| **All Agent Skills harnesses** | links in `~/.agents/skills/` (cross-agent standard) | Curated set (anthropic-skills 19 + replica-skill 11 + task-observer 1) auto-discovered at runtime |
+| **All Agent Skills harnesses** | links in `~/.agents/skills/` (cross-agent standard) | Default workflow set: task-observer + 15 Superpowers skills |
 
 Notes:
 - Marker-guarded files (`<!-- agent-enhancements:begin/end -->`) preserve your personal instructions across re-runs.
-- Claude Code is the only agent with an automatic hook system; for all others, the written instructions tell the agent how to invoke memory/compression explicitly.
-- Extend the natively linked set any time: `bash unified-integration/scripts/link-skills.sh --set superpowers`, `link-skills.sh <skill-name>`, or `--set all` for the entire catalog (`--status` / `--unlink` to inspect or remove; user-owned entries are never touched).
+- Claude Code, Codex, OpenCode 2 and selected Hermes profiles use native lifecycle integration. See [Agent guides](docs/AGENTS.md) for supported versions and verification.
+- Extend the linked set with `link-skills.sh --set curated` or specific names. Use `registry.py search` for the full catalog; `--set all` exposes its metadata at every session start.
 
 ### Launching an enhanced agent
 

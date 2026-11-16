@@ -9,8 +9,8 @@
 
 `AgentEnhancements` is a **single integration layer that unifies 40 external
 skill repositories** (6 categories) plus a setup pipeline that provisions
-8 AI-agent CLIs (Claude Code, Codex CLI, Cursor, Gemini CLI,
-GitHub Copilot CLI, Kiro, OpenCode, Windsurf) from one source of truth.
+9 AI-agent CLIs (Claude Code, Codex CLI, Cursor, Gemini CLI,
+GitHub Copilot CLI, Kiro, OpenCode, Windsurf, Hermes) from one source of truth.
 
 The repo does **not** reinvent skills — it catalogs, normalizes, and installs
 them.
@@ -86,7 +86,7 @@ AgentEnhancements/
 │   └── README.md
 │
 ├── unified-integration/                # installation pipeline
-│   ├── setup.sh                        # 2,492-line installer (8 agent CLIs)
+│   ├── setup.sh                        # installer (9 agent CLIs)
 │   ├── update-skills.sh                # registry re-builder
 │   ├── mcp-servers/                    # 9 in-house MCP servers + installer template
 │   ├── scripts/setup-mcp.sh            # MCP config installer for 6 agent CLIs
@@ -143,7 +143,7 @@ The architecture is **three layered caches** with strict one-way data flow:
    `scripts/scaffold_modular_skills.sh`. Self-contained per-plugin dirs.
 
 3. **Installed registry layer** (`unified-integration/skills/`) — the
-   **machine-indexed view** consumed by `setup.sh` to install into 8 agent
+   **machine-indexed view** consumed by `setup.sh` to install into 9 agent
    CLIs. Aggregated from all sources (catalog + vendored projects) by
    `update-skills.sh` → `all-skills.json` (3,378 skills total from 8 sources).
 
@@ -278,9 +278,9 @@ it merges rather than overwrites user customizations (post-H-1 audit fix).
 
 ## 5. Quality posture
 
-- **236 tests** in `unified-integration/tests/` (17 regression modules
-  covering setup, memory, MCP, routing, native activation, task observer).
-  All passing.
+- **265 integration tests**, including 2 opt-in live network tests, plus
+  native CLI fixtures and installed-host checks. See the current
+  [verification report](docs/audit/NATIVE_HOSTS_E2E_2026-11-16.md).
 - **Static checks**: `bash -n`, `py_compile`, JSON schema validation —
   enforced in CI.
 - **End-to-end setup** verified against 8 stub agent CLIs in an isolated

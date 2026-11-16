@@ -1,7 +1,7 @@
 ---
 title: Skills
-version: 1.3
-last_updated: 2026-11-14
+version: 1.4
+last_updated: 2026-11-16
 audience: users, contributors
 ---
 
@@ -10,7 +10,7 @@ audience: users, contributors
 ## Sources
 
 | Source | Directory | Notes |
-|--------|-----------|-------|
+| -------- | ----------- | ------- |
 | agentic-awesome-skills | `agentic-awesome-skills/skills/` | primary source |
 | ECC | `ECC/skills/` | |
 | Ponytail | `ponytail/skills/` | |
@@ -60,7 +60,7 @@ Category normalization (anything else falls back to `general`):
   descriptions.
 - `by-agent/` is populated only for the canonical agents: `claude-code`,
   `codex`, `cursor`, `gemini-cli`, `opencode`, `copilot`, `windsurf`,
-  `kiro`.
+  `kiro`, `hermes`.
 
 ## Native activation (auto-discovery at runtime)
 
@@ -70,7 +70,9 @@ compatible harnesses read automatically:
 - `~/.claude/skills/` - Claude Code personal skills
 - `~/.agents/skills/` - cross-agent Agent Skills standard (agentskills.io)
 
-Default curated set: **anthropic-skills (19) + replica-skill (11) + task-observer (1)**.
+Default set: **task-observer (1) + Superpowers (15)**. The optional
+`--set curated` collection selects anthropic-skills (19), replica-skill (11)
+and task-observer (1).
 
 ```bash
 bash unified-integration/scripts/link-skills.sh                    # default set
@@ -87,8 +89,9 @@ user-owned directories, files and foreign symlinks are never touched.
 ## Using skills
 
 After setup, normal natural-language tasks trigger native discovery and prompt
-routing automatically in Claude Code, current Codex and OpenCode 2. The 31-skill
-curated set supplies native metadata; prompt-time routing searches the complete
+routing automatically in Claude Code, current Codex, OpenCode 2 and selected
+Hermes profiles. The default set supplies bounded workflow metadata;
+prompt-time routing searches the complete
 3,378-skill catalog without injecting all descriptions into every request.
 Matching is lexical with a small English/Indonesian alias set, so recommendations
 are guidance, not a guarantee that every task will select the ideal skill.
@@ -96,7 +99,6 @@ Agent aliases such as `Codex`/`codex-cli` are normalized during matching; tools
 such as `python` are not mistaken for incompatible agent names.
 
 The following commands are optional inspection/debugging utilities:
-
 
 ```bash
 # map a task to skills + plugins + MCP servers (recommended)

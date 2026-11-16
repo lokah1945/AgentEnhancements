@@ -105,7 +105,7 @@ and skill-index schemas are unchanged.
    migrates legacy flat entries. Its prompt hook waits for the managed MCP
    connection before the first model request captures available tools.
 6b. **link_native_skills** - runs `scripts/link-skills.sh` to symlink the
-   default ambient skill (task-observer) into `~/.claude/skills/`
+   default set (task-observer + 15 Superpowers skills) into `~/.claude/skills/`
    and `~/.agents/skills/`, making those skills auto-discoverable at
    runtime by every Agent Skills compatible harness. Ownership-safe and
    non-fatal.

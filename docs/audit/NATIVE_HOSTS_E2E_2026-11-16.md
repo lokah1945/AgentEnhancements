@@ -14,6 +14,10 @@ The machine was updated from GitHub to `ca06eb39`, then repaired on
 Hermes, with only the `ilma` and `master-chief` Hermes profiles. AGY and other
 Hermes profiles are outside this verification.
 
+Repository Git authentication was also repaired: the existing owner credential
+is selected locally for this checkout, while the global GitHub CLI account is
+preserved. Its repository push permission was verified before publication.
+
 ## Installed host results
 
 | Target | Installed CLI | Configured MCP + local tool | Native model response |
@@ -41,9 +45,12 @@ The installer itself preserves provider selection and authentication.
   summaries, plus the same MCP gateway as the other three hosts. Explicit
   profile selection preserves sibling personas and repairs a missing active
   default using an existing selected profile.
+  Root discovery also handles the profile-scoped `HERMES_HOME` exported by
+  native Hermes terminals; doctor supports both named and default homes.
 - Machine-local host selection persists across setup runs. Configuration
   writes are atomic, with private backups only when content changes. Managed
   gateway refreshes retain user timeouts, tool approvals and environment values.
+  Explicit OpenCode disabled/codemode settings are retained on reinstall.
 - OpenCode 1 is rejected before a V2 configuration is written. The installed
   OpenCode was upgraded from 1.17.14 to 2.3.0 with prior state backed up.
 - Interpreter aliases inside the prepared venv produce identical commands,
@@ -53,6 +60,11 @@ The installer itself preserves provider selection and authentication.
   still enforced before deciding whether to write.
 - Observation targets and proposed skill names now serialize as real YAML
   lists. Paths and spaces survive a write/read round trip.
+- The additional default-link change includes task-observer and 15 Superpowers
+  workflow skills. Their estimated native metadata remains below the 2,500-token
+  allocation; the full catalog remains available on demand.
+- ArXiv request timeouts return structured tool errors. Malformed-identifier
+  guard tests use genuinely malformed inputs and prohibit network calls.
 - Native CLI fixtures handle the clients' actual MCP result envelopes and
   tool-name prefixes. An absent optional `rea` server is no longer synthesized
   by a Codex override. Health is annotated as read-only; the fixture's explicit
@@ -62,7 +74,7 @@ The installer itself preserves provider selection and authentication.
 
 | Check | Result |
 | --- | --- |
-| Integration regressions | 262 unique tests passed: 260 in the standard run and 2 opt-in network tests |
+| Integration regressions | 265 unique tests passed: 263 in the standard run and 2 opt-in network tests |
 | ECC | 8,289 passed, 0 failed, across 456 files |
 | MCP protocol | 10/10 passed |
 | Installed native targets | 5/5 passed |
@@ -95,7 +107,7 @@ using the review skill's inline criteria. Configuration failure paths retain
 failed targets, explicit host permissions are preserved, plugin callbacks omit
 conversation histories/tool payloads, and subprocess timeouts/concurrency are
 bounded. The source changes stay in the owned integration layer. Generated
-artifacts match their setup templates. Changed documentation passes lint with
+artifacts match their setup templates. Updated `docs/` guides pass lint with
 the repository's YAML-title and compact-table conventions; new content was
 checked for credential patterns.
 

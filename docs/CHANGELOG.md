@@ -19,7 +19,12 @@ audience: all
 - Serialize observation targets and proposed skills as YAML lists.
 - Repair native CLI fixtures for absent optional MCP entries and native result
   envelopes; add a native doctor and real Hermes CLI fixtures.
-- Verify 262 integration tests, 8,289 ECC tests, 10 MCP protocol targets, five
+- Include Superpowers in the bounded default native set and verify its metadata
+  budget; keep profile-aware Hermes root discovery consistent with the host.
+- Return a structured tool error when arXiv requests time out, and keep malformed
+  identifier tests entirely offline.
+- Preserve explicit OpenCode gateway disabled/codemode settings on reinstall.
+- Verify 265 integration tests, 8,289 ECC tests, 10 MCP protocol targets, five
   native installations and five real provider responses. Detailed local
   evidence: [native host verification](audit/NATIVE_HOSTS_E2E_2026-11-16.md).
 

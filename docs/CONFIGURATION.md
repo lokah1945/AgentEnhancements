@@ -118,7 +118,8 @@ entries. Managed handlers are replaced idempotently. Existing same-name user
 MCP servers are preserved. Native config writes are atomic and private, with
 backups on changes. Marker-guarded markdown preserves personal instructions.
 Managed gateway updates retain per-tool approvals, timeouts and custom
-environment entries. Python aliases within the prepared venv produce the same
+environment entries, including OpenCode's disabled/codemode choices.
+Python aliases within the prepared venv produce the same
 hook and gateway commands, avoiding redundant backups and hook trust changes.
 An OpenCode 1 installation is refused before its native
 configuration is rewritten.
@@ -167,7 +168,8 @@ values in the reference YAML do not configure the CLI's compaction thresholds.
 
 `AGENT_SKILLS_NATIVE_TARGETS` (colon-separated) controls where
 `link-skills.sh` creates its symlinks. Only symlinks owned by the registry
-are managed; user data is never touched. The default links task-observer only.
+are managed; user data is never touched. The default links task-observer and
+15 Superpowers workflow skills, with native metadata inside its token budget.
 `--set curated` explicitly links anthropic-skills (19), replica-skill (11) and
 task-observer (1). The full library remains available through registry search.
 

@@ -54,8 +54,8 @@ automatically at runtime:
 | `~/.claude/skills/` | Claude Code (personal skills, auto-discovered) |
 | `~/.agents/skills/` | cross-agent Agent Skills standard (agentskills.io) |
 
-The default links only the ambient **task-observer** skill. Other capabilities
-are discovered on demand through the local library map and registry.
+The default links **task-observer** and the 15 **Superpowers** workflow skills.
+Other capabilities are discovered on demand through the library map and registry.
 `link-skills.sh --set curated` explicitly selects the 31-skill collection
 (anthropic-skills, replica-skill and task-observer). Extend or remove links with
 `unified-integration/scripts/link-skills.sh` (see [SKILLS.md](SKILLS.md)).
@@ -125,7 +125,8 @@ The plugin uses `pre_llm_call`, `post_llm_call` and `post_tool_call` to discover
 skills, recall notes and persist short task/session summaries. Conversation
 history and tool payloads are never forwarded to AE. Model providers, persona
 content and host approvals are preserved. `--mcp-only` installs only the gateway.
-`HERMES_HOME` is respected. If an existing `active_profile` points to a missing
+`HERMES_HOME` is respected, including setup from a terminal whose environment
+points at `<root>/profiles/<name>`. If `active_profile` points to a missing
 profile, setup repairs it using the saved explicit profile selection.
 
 Use `hermes -p ilma` or `hermes -p master-chief` normally. The installed Hermes

@@ -22,7 +22,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 from native_config import read_json
-from native_hermes import hermes_roots, host_selection_path
+from native_hermes import hermes_base, hermes_roots, host_selection_path
 
 UI = Path(__file__).resolve().parent.parent
 COMMANDS = {"claude-code": "claude", "codex": "codex",
@@ -48,7 +48,8 @@ def targets(agents: list[str]) -> list[tuple[str, Path, dict]]:
                         raise ValueError("Hermes lifecycle plugin is not active")
                 except (OSError, ValueError, AttributeError, yaml.YAMLError) as exc:
                     cfg = {"diagnosis": f"Hermes configuration unavailable ({type(exc).__name__})"}
-                result.append((f"hermes/{root.name}", path, cfg))
+                name = root.name if root.parent == hermes_base() / "profiles" else "default"
+                result.append((f"hermes/{name}", path, cfg))
             continue
         if agent == "claude-code":
             custom = os.environ.get("CLAUDE_CONFIG_DIR")
@@ -98,7 +99,7 @@ async def probe(label: str, path: Path, config: dict) -> dict:
             or str(UI / "mcp-servers/gateway.py") not in arguments):
         return {**row, "diagnosis": "Gateway command does not point to this installation"}
     host_args = [executable]
-    if agent == "hermes":
+    if agent == "hermes" and path.parent.parent == hermes_base() / "profiles":
         host_args.extend(["-p", path.parent.name])
     try:
         version = await asyncio.to_thread(subprocess.run, [*host_args, "--version"],

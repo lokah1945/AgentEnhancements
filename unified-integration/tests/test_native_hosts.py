@@ -23,6 +23,7 @@ class NativeHostTests(unittest.TestCase):
                     "XDG_CONFIG_HOME": str(self.home / ".config"),
                     "XDG_DATA_HOME": str(self.home / ".local/share"),
                     "HERMES_HOME": str(self.home / ".hermes"),
+                    "AGENT_MEMORY_ROOT": str(self.home / "memory"),
                     "AGENT_ENHANCEMENTS_API_FILE": str(self.home / "api.json")}
 
     def tearDown(self):
@@ -48,7 +49,10 @@ class NativeHostTests(unittest.TestCase):
         sibling = root / "profiles/untouched/config.yaml"
         original = sibling.read_bytes()
         self.install("hermes", "--profile", "ilma", "--profile", "master-chief")
-        self.install("hermes")  # selection survives the next ordinary setup
+        # Native Hermes terminals export the current profile as HERMES_HOME.
+        self.env["HERMES_HOME"] = str(root / "profiles/ilma")
+        (root / "active_profile").write_text("missing\n")
+        self.install("hermes")  # saved selection survives setup inside a profile
         self.assertEqual(sibling.read_bytes(), original)
         self.assertFalse((root / "config.yaml").exists())
         self.assertEqual((root / "active_profile").read_text().strip(), "ilma")
@@ -113,6 +117,33 @@ class NativeHostTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual({path: path.read_bytes() for path in paths}, original)
         self.assertEqual(set(folder.glob("*.backup.*")), backups)
+
+    def test_opencode_preserves_disabled_gateway_and_codemode(self):
+        path = self.home / ".config/opencode/opencode.jsonc"
+        path.parent.mkdir(parents=True)
+        path.write_text(json.dumps({"mcp": {"servers": {"agent-enhancements": {
+            "command": [sys.executable, str(UI_DIR / "mcp-servers/gateway.py")],
+            "disabled": True, "codemode": True,
+        }}}}))
+        self.install("opencode")
+        server = json.loads(path.read_text())["mcp"]["servers"]["agent-enhancements"]
+        self.assertTrue(server["disabled"])
+        self.assertTrue(server["codemode"])
+
+    def test_doctor_accepts_the_unprofiled_hermes_home(self):
+        binary = self.home / "bin/hermes"
+        binary.parent.mkdir()
+        binary.write_text('#!/bin/sh\n[ "$#" = 1 ] && [ "$1" = "--version" ] || exit 2\nprintf "Hermes fixture\\n"\n')
+        binary.chmod(0o700)
+        self.env["PATH"] = str(binary.parent) + os.pathsep + os.environ["PATH"]
+        self.install("hermes")
+        result = subprocess.run([sys.executable, str(UI_DIR / "scripts/doctor.py"),
+                                 "--agents", "hermes", "--json"], env=self.env,
+                                capture_output=True, text=True, timeout=45)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual((report["targets"], report["passed"]), (1, 1))
+        self.assertEqual(report["results"][0]["agent"], "hermes/default")
 
 
 class DoctorTests(unittest.TestCase):

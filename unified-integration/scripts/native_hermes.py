@@ -39,9 +39,24 @@ def host_selection_path() -> Path:
     return Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "agentenhancements/host-selection.json"
 
 
+def hermes_base() -> Path:
+    """Match Hermes root discovery even inside a profile's native terminal."""
+    default = Path.home() / ".hermes"
+    override = os.environ.get("HERMES_HOME")
+    if not override:
+        return default
+    path = Path(override).expanduser()
+    try:
+        path.resolve().relative_to(default.resolve())
+        return default
+    except ValueError:
+        pass
+    return path.parent.parent if path.parent.name == "profiles" else path
+
+
 def hermes_roots(profiles: list[str] | None = None, *, require_exists: bool = True) -> list[Path]:
     """Respect explicitly selected profiles without touching their siblings."""
-    root = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
+    root = hermes_base()
     if profiles is None:
         profiles = read_json(host_selection_path()).get("hermes_profiles")
     if profiles is not None:
@@ -62,7 +77,6 @@ def hermes_roots(profiles: list[str] | None = None, *, require_exists: bool = Tr
 def install_hermes(block: dict, merge_servers: Callable[[dict, dict], None], *, mcp_only: bool = False,
                    profiles: list[str] | None = None) -> None:
     """Install only selected profiles, preserving providers and identities."""
-    home = Path.home()
     note = instructions()
     selected = hermes_roots(profiles)
     for root in selected:
@@ -96,7 +110,7 @@ def install_hermes(block: dict, merge_servers: Callable[[dict, dict], None], *, 
         selection = read_json(host_selection_path())
         selection["hermes_profiles"] = list(dict.fromkeys(profiles))
         write_json(host_selection_path(), selection)
-    base = Path(os.environ.get("HERMES_HOME", home / ".hermes"))
+    base = hermes_base()
     active = base / "active_profile"
     if active.is_file():
         name = active.read_text(encoding="utf-8").strip()

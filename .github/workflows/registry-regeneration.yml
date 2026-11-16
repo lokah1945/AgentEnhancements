@@ -1,0 +1,85 @@
+name: Registry Regeneration
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - 'skills/**'
+      - 'plugin-catalog/**'
+      - 'agentic-awesome-skills/skills/**'
+      - 'anthropic-skills/skills/**'
+      - 'agency-agents/skills/**'
+      - 'unified-integration/scripts/build-library-map.py'
+      - 'unified-integration/scripts/registry.py'
+      - 'unified-integration/scripts/load-skills.py'
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'plugin-catalog/**'
+      - 'agentic-awesome-skills/skills/**'
+      - 'anthropic-skills/skills/**'
+      - 'agency-agents/skills/**'
+      - 'unified-integration/scripts/build-library-map.py'
+      - 'unified-integration/scripts/registry.py'
+      - 'unified-integration/scripts/load-skills.py'
+  workflow_dispatch:
+  schedule:
+    # Weekly on Monday 02:00 UTC
+    - cron: '0 2 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  regenerate-registry:
+    name: Regenerate Skill Registry
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Regenerate library map
+        run: |
+          python3 unified-integration/scripts/build-library-map.py
+          echo "library-map.json regenerated"
+
+      - name: Build capability registry
+        run: |
+          python3 unified-integration/scripts/registry.py build
+          echo "agent-registry.json and all-skills.json regenerated"
+
+      - name: Validate catalog
+        run: |
+          python3 unified-integration/scripts/catalog-validate.py
+
+      - name: Check for drift
+        run: |
+          if ! git diff --exit-code -- skills/library-map.json unified-integration/skills/agent-registry.json unified-integration/skills/all-skills.json; then
+            echo "::error::Registry files have drifted. Commit the regenerated files."
+            git diff -- skills/library-map.json unified-integration/skills/agent-registry.json unified-integration/skills/all-skills.json
+            exit 1
+          fi
+          echo "No drift detected - registry is up to date"
+
+      - name: Upload registry artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: registry-files
+          path: |
+            skills/library-map.json
+            unified-integration/skills/agent-registry.json
+            unified-integration/skills/all-skills.json
+          retention-days: 7

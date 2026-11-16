@@ -207,7 +207,7 @@ audit_install() {
             findings=$((findings + 1))
             log_warn "$target: $ours registry-owned links - full-catalog exposure"
             log_warn "  (native metadata for every linked skill enters each session;"
-            log_warn "   the default profile links only the ambient task-observer)."
+            log_warn "   the default profile links task-observer and Superpowers)."
             if [ "$migrate" = "yes" ]; then
                 log_info "  migrating: unlinking all but the default set..."
                 # Park each default-set link under a dot-prefixed name the

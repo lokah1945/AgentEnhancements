@@ -10,7 +10,7 @@ from pathlib import Path
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from helpers import UI_DIR, run
+from helpers import UI_DIR, load_module, run
 
 LINKER = UI_DIR / "scripts" / "link-skills.sh"
 # Registry state comes from the last setup.sh aggregation run (by-category
@@ -45,24 +45,36 @@ class LinkSkillsTests(unittest.TestCase):
         self.assertIn(".claude/skills", out)
         self.assertIn(".agents/skills", out)
 
-    def test_default_set_links_only_the_ambient_observer(self):
-        """Context-frugal default (CONTRACT.md §8.4): the ambient
-        task-observer is natively linked; everything else stays reachable
-        through on-demand discovery, not native metadata."""
+    def test_default_set_links_observer_and_workflow_skills_within_budget(self):
+        """Both native discovery targets expose the bounded workflow set."""
         if not self.registry_present:
             self.skipTest("by-category registry not built (run setup.sh)")
         code, out, err = self._link("--quiet")
         self.assertEqual(code, 0, err)
         claude = self.home_path / ".claude" / "skills"
         agents = self.home_path / ".agents" / "skills"
-        self.assertEqual(list(claude.iterdir()), [claude / "task-observer"])
-        self.assertEqual(list(agents.iterdir()), [agents / "task-observer"])
-        # The default link must resolve to a real SKILL.md.
-        target = claude / "task-observer"
-        self.assertTrue(target.is_symlink(), "task-observer not linked in .claude")
-        self.assertTrue((target / "SKILL.md").is_file(),
-                        "task-observer link does not resolve to a SKILL.md")
-        self.assertTrue((agents / "task-observer" / "SKILL.md").is_file())
+        expected = {
+            "task-observer", "brainstorming", "diagnosing-superpowers",
+            "dispatching-parallel-agents", "executing-plans",
+            "finishing-a-development-branch", "receiving-code-review",
+            "requesting-code-review", "subagent-driven-development",
+            "systematic-debugging", "test-driven-development",
+            "using-git-worktrees", "using-superpowers",
+            "verification-before-completion", "writing-plans", "writing-skills",
+        }
+        for target in (claude, agents):
+            self.assertEqual({path.name for path in target.iterdir()}, expected)
+            for name in expected:
+                self.assertTrue((target / name).is_symlink(), name)
+                self.assertTrue((target / name / "SKILL.md").is_file(), name)
+        import yaml
+        metadata = []
+        for name in sorted(expected):
+            path = claude / name / "SKILL.md"
+            header = yaml.safe_load(path.read_text().split("---", 2)[1])
+            metadata.append(f"{name}: {header['description']} ({path})")
+        budget = load_module("native_link_budget", UI_DIR / "scripts/context_budget.py")
+        self.assertLessEqual(budget.approx_tokens("\n".join(metadata)), 2500)
 
     def test_linking_is_idempotent(self):
         if not self.registry_present:

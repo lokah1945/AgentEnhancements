@@ -20,7 +20,7 @@ from typing import Any
 UI = Path(__file__).resolve().parent.parent
 ROOT = UI.parent
 TEMPLATE = UI / "config/ui.api.example.json"
-SEARCH_PROVIDERS_PATH = Path("/root/credential/search_providers.json")
+SEARCH_PROVIDERS_PATH = ROOT / "search_providers.json"
 
 # Round-robin state (in-memory, per-process)
 _search_rr_lock = threading.Lock()

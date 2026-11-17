@@ -49,3 +49,4 @@ unified-integration/opencode-plugin/node_modules/
 /ui.api.json
 /ui.api.json.*
 /.ui-api-*
+/search_providers.json

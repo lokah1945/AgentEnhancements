@@ -1,13 +1,13 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-17T12:49:29.304862+00:00",
+  "generated_at": "2026-11-17T13:43:02.984528+00:00",
   "stats": {
-    "total": 3463,
+    "total": 3465,
     "by_type": {
       "skill": 3378,
       "plugin": 40,
-      "mcp": 37,
+      "mcp": 39,
       "capability": 8
     },
     "by_source": {
@@ -20,7 +20,7 @@
       "replica-skill": 11,
       "task-observer": 1,
       "plugin-catalog": 40,
-      "plugin-catalog/mcp-servers.json": 37,
+      "plugin-catalog/mcp-servers.json": 39,
       "built-in": 8
     }
   },
@@ -54982,6 +54982,52 @@
         "task-router-mcp"
       ],
       "activation": "load the SKILL.md integration guide on demand"
+    },
+    {
+      "id": "mcp:you-mcp",
+      "type": "mcp",
+      "name": "you-mcp",
+      "source": "plugin-catalog/mcp-servers.json",
+      "priority": "P0",
+      "category": "search",
+      "description": "You.com AI search dengan summarization dan citations.",
+      "command": "npx -y you-mcp",
+      "env_required": [
+        "YOU_API_KEY"
+      ],
+      "env_optional": [],
+      "for_plugins": [
+        "agent-reach",
+        "last-30-days",
+        "rea",
+        "understand-anything"
+      ],
+      "status": "to-install",
+      "path": "plugin-catalog/mcp-servers.json",
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
+    },
+    {
+      "id": "mcp:serper-mcp",
+      "type": "mcp",
+      "name": "serper-mcp",
+      "source": "plugin-catalog/mcp-servers.json",
+      "priority": "P0",
+      "category": "search",
+      "description": "Google Search via Serper API - fast, reliable search results.",
+      "command": "npx -y serper-mcp",
+      "env_required": [
+        "SERPER_API_KEY"
+      ],
+      "env_optional": [],
+      "for_plugins": [
+        "agent-reach",
+        "last-30-days",
+        "rea",
+        "understand-anything"
+      ],
+      "status": "to-install",
+      "path": "plugin-catalog/mcp-servers.json",
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:tavily-mcp",

@@ -3,7 +3,7 @@ slug: agent-reach
 category: research
 version: 1.0.0
 status: integrated-ready
-mcp_servers: [brave-search-mcp, tavily-mcp, exa-mcp, firecrawl-mcp]
+mcp_servers: [you-mcp, serper-mcp, tavily-mcp, exa-mcp, firecrawl-mcp]
 trigger_keywords: [deep research, literature, sources, citation]
 ---
 
@@ -19,7 +19,7 @@ Framework deep-research multi-step: query expansion, source triage, claim cross-
 
 ## Prasyarat
 
-- MCP: `brave-search-mcp`, `tavily-mcp`, `exa-mcp`, `firecrawl-mcp`
+- MCP: `you-mcp`, `serper-mcp`, `tavily-mcp`, `exa-mcp`, `firecrawl-mcp`
 - Tools: `web_search`, `web_fetch`, `read_file`, `write_file`
 - Opsional: `embeddings-mcp` untuk deduplikasi semantik sumber
 

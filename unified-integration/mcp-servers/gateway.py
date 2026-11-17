@@ -134,10 +134,20 @@ class External:
         ]
         # MCP SDK supplies a minimal platform environment. Only references from
         # this backend are added; unrelated API keys are never forwarded.
-        env = {
-            name: value(ref, self.config)
-            for name, ref in self.settings.get("env", {}).items()
-        }
+        # For search providers, use round-robin to distribute load across keys.
+        env = {}
+        for name, ref in self.settings.get("env", {}).items():
+            # Search provider round-robin: TAVILY_API_KEY, EXA_API_KEY, SERPER_API_KEY, YOU_API_KEY
+            if ref in ("TAVILY_API_KEY", "EXA_API_KEY", "SERPER_API_KEY", "YOU_API_KEY"):
+                provider = ref.replace("_API_KEY", "").lower()
+                rr_key = get_search_provider_key(provider)
+                if rr_key:
+                    env[name] = rr_key
+                else:
+                    # Fallback to static value if round-robin unavailable
+                    env[name] = value(ref, self.config)
+            else:
+                env[name] = value(ref, self.config)
         params = StdioServerParameters(
             command=command[0], args=command[1:], env=env, cwd=str(ROOT)
         )

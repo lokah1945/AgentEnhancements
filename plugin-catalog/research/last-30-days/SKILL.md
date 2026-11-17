@@ -3,7 +3,7 @@ slug: last-30-days
 category: research
 version: 1.0.0
 status: integrated-ready
-mcp_servers: [brave-search-mcp, newsapi-mcp, google-news-mcp]
+mcp_servers: [you-mcp, serper-mcp, tavily-mcp, exa-mcp, newsapi-mcp, google-news-mcp]
 trigger_keywords: [recent, last 30 days, news, trends, fresh]
 ---
 
@@ -19,7 +19,7 @@ Window temporal research: ambil hanya sumber 30 hari terakhir untuk topik terten
 
 ## Prasyarat
 
-- MCP: `brave-search-mcp`, `newsapi-mcp`, `google-news-mcp`
+- MCP: `you-mcp`, `serper-mcp`, `tavily-mcp`, `exa-mcp`, `newsapi-mcp`, `google-news-mcp`
 - Tools: `web_search`, `web_fetch`
 - Opsional: cron job untuk auto-run
 
@@ -34,7 +34,7 @@ Window temporal research: ambil hanya sumber 30 hari terakhir untuk topik terten
 
 1. Tentukan topik + tanggal hari ini (UTC).
 2. Window: `[today-30d, today]`.
-3. Untuk tiap MCP search, pakai parameter date filter bila ada (NewsAPI `from`/`to`, Brave `freshness=pm`).
+3. Untuk tiap MCP search, pakai parameter date filter bila ada (NewsAPI `from`/`to`, Tavily `search_depth`, You.com `recency`, Serper `time_range`, Exa `start_published_date`/`end_published_date`, Google News `when`).
 4. Filter manual: parse `publishedAt` / `lastmod` di hasil.
 5. Deduplikasi berbasis URL + judul fuzzy match.
 6. Skor freshness: `score = recency * 0.5 + engagement * 0.3 + authority * 0.2`.

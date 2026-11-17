@@ -8,7 +8,6 @@
   },
   "api_keys": {
     "BING_IMAGE_API_KEY": "",
-    "BRAVE_API_KEY": "",
     "ELEVENLABS_API_KEY": "",
     "EXA_API_KEY": "",
     "FIGMA_TOKEN": "",
@@ -21,7 +20,9 @@
     "NEO4J_PASSWORD": "",
     "NEWSAPI_KEY": "",
     "OPENAI_API_KEY": "",
-    "TAVILY_API_KEY": ""
+    "SERPER_API_KEY": "",
+    "TAVILY_API_KEY": "",
+    "YOU_API_KEY": ""
   },
   "connections": {
     "GOOGLE_OAUTH_CLIENT_ID": "",
@@ -34,15 +35,34 @@
     "OPENAI_VISION_MODEL": "gpt-4o-mini"
   },
   "mcp": {
-    "brave-search-mcp": {
+    "serper-mcp": {
       "enabled": true,
       "required": [
-        "BRAVE_API_KEY"
+        "SERPER_API_KEY"
       ],
       "optional": [],
-      "command": [],
+      "command": [
+        "npx",
+        "-y",
+        "serper-mcp"
+      ],
       "env": {
-        "BRAVE_API_KEY": "BRAVE_API_KEY"
+        "SERPER_API_KEY": "SERPER_API_KEY"
+      }
+    },
+    "you-mcp": {
+      "enabled": true,
+      "required": [
+        "YOU_API_KEY"
+      ],
+      "optional": [],
+      "command": [
+        "npx",
+        "-y",
+        "you-mcp"
+      ],
+      "env": {
+        "YOU_API_KEY": "YOU_API_KEY"
       }
     },
     "tavily-mcp": {

@@ -1,6 +1,16 @@
 ---
 name: finishing-a-development-branch
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
+tools:
+  - claude-code
+  - codex
+  - cursor
+  - gemini-cli
+  - opencode
+  - copilot
+  - windsurf
+  - kiro
+  - hermes
 ---
 
 # Finishing a Development Branch

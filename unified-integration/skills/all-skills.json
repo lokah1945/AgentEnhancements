@@ -13891,7 +13891,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "You MUST use this before any creative work - creating features, building components, adding functionality, modifying behavior, or planning anything new, in software or out of it (a talk, a business, a renovation).",
       "path": "unified-integration/skills/by-category/general/brainstorming/SKILL.md",
       "source_path": "superpowers/skills/brainstorming/SKILL.md"
@@ -20397,7 +20407,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when a superpowers session went wrong and your human partner wants to know why \u2014 repeated work, ignored plans, stumbles, poor results, a skill that didn't fire, \"it took too long\", \"why is it so expensive\", \"what is it doing\" \u2014 or wants to build a bug report for the superpowers maintainers, for the current session or a past one identified by id or path, on any harness.",
       "path": "unified-integration/skills/by-category/general/diagnosing-superpowers/SKILL.md",
       "source_path": "superpowers/skills/diagnosing-superpowers/SKILL.md"
@@ -20550,7 +20570,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies",
       "path": "unified-integration/skills/by-category/general/dispatching-parallel-agents/SKILL.md",
       "source_path": "superpowers/skills/dispatching-parallel-agents/SKILL.md"
@@ -22423,7 +22453,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when executing an implementation plan in the current session as the implementer yourself \u2014 your human partner chose inline execution, or no subagent tool is available",
       "path": "unified-integration/skills/by-category/general/executing-plans/SKILL.md",
       "source_path": "superpowers/skills/executing-plans/SKILL.md"
@@ -23338,7 +23378,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when implementation is complete, all tests pass, and you need to decide how to integrate the work",
       "path": "unified-integration/skills/by-category/general/finishing-a-development-branch/SKILL.md",
       "source_path": "superpowers/skills/finishing-a-development-branch/SKILL.md"
@@ -40901,7 +40951,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation",
       "path": "unified-integration/skills/by-category/general/receiving-code-review/SKILL.md",
       "source_path": "superpowers/skills/receiving-code-review/SKILL.md"
@@ -41624,7 +41684,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when completing tasks, implementing major features, or before merging to verify work meets requirements",
       "path": "unified-integration/skills/by-category/general/requesting-code-review/SKILL.md",
       "source_path": "superpowers/skills/requesting-code-review/SKILL.md"
@@ -46222,7 +46292,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when executing implementation plans with independent tasks in the current session",
       "path": "unified-integration/skills/by-category/general/subagent-driven-development/SKILL.md",
       "source_path": "superpowers/skills/subagent-driven-development/SKILL.md"
@@ -46637,7 +46717,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes",
       "path": "unified-integration/skills/by-category/general/systematic-debugging/SKILL.md",
       "source_path": "superpowers/skills/systematic-debugging/SKILL.md"
@@ -47568,7 +47658,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when implementing any feature or bugfix, before writing implementation code",
       "path": "unified-integration/skills/by-category/general/test-driven-development/SKILL.md",
       "source_path": "superpowers/skills/test-driven-development/SKILL.md"
@@ -49695,7 +49795,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback",
       "path": "unified-integration/skills/by-category/general/using-git-worktrees/SKILL.md",
       "source_path": "superpowers/skills/using-git-worktrees/SKILL.md"
@@ -49754,7 +49864,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when starting any conversation - establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions",
       "path": "unified-integration/skills/by-category/general/using-superpowers/SKILL.md",
       "source_path": "superpowers/skills/using-superpowers/SKILL.md"
@@ -50076,7 +50196,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always",
       "path": "unified-integration/skills/by-category/general/verification-before-completion/SKILL.md",
       "source_path": "superpowers/skills/verification-before-completion/SKILL.md"
@@ -52000,7 +52130,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when you have a spec or requirements for a multi-step task, before touching code",
       "path": "unified-integration/skills/by-category/general/writing-plans/SKILL.md",
       "source_path": "superpowers/skills/writing-plans/SKILL.md"
@@ -52012,7 +52152,17 @@
       "risk": "safe",
       "source": "Superpowers",
       "tags": [],
-      "tools": [],
+      "tools": [
+        "claude-code",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "opencode",
+        "copilot",
+        "windsurf",
+        "kiro",
+        "hermes"
+      ],
       "when_to_use": "Use when creating new skills, editing existing skills, or verifying skills work before deployment",
       "path": "unified-integration/skills/by-category/general/writing-skills/SKILL.md",
       "source_path": "superpowers/skills/writing-skills/SKILL.md"
@@ -52663,24 +52813,25 @@
     "hermes"
   ],
   "agent_skill_counts": {
-    "claude-code": 402,
+    "claude-code": 417,
     "antigravity": 116,
-    "cursor": 772,
-    "gemini-cli": 362,
+    "cursor": 787,
+    "gemini-cli": 377,
     "codex-cli": 109,
     "claude": 442,
     "gemini": 344,
-    "codex": 712,
-    "opencode": 298,
-    "copilot": 316,
-    "windsurf": 302,
-    "kiro": 283,
+    "codex": 727,
+    "opencode": 313,
+    "copilot": 331,
+    "windsurf": 317,
+    "kiro": 298,
     "image-generation": 1,
     "gpt": 1,
     "llama": 1,
     "mistral": 1,
     "etc": 1,
     "playwright": 2,
+    "hermes": 17,
     "chrome-devtools-mcp": 1,
     "chrome": 1,
     "cline": 3,
@@ -52688,7 +52839,6 @@
     "Codex": 12,
     "Claude": 12,
     "openclaw": 2,
-    "hermes": 2,
     "git": 2,
     "python": 3,
     "rg": 2,
@@ -52706,5 +52856,5 @@
     "weaviate": 2,
     "nextjs": 1
   },
-  "last_updated": "2026-11-15T19:51:01.829353+00:00"
+  "last_updated": "2026-11-17T18:30:34.828516+00:00"
 }

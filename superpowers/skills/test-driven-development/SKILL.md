@@ -1,6 +1,16 @@
 ---
 name: test-driven-development
 description: Use when implementing any feature or bugfix, before writing implementation code
+tools:
+  - claude-code
+  - codex
+  - cursor
+  - gemini-cli
+  - opencode
+  - copilot
+  - windsurf
+  - kiro
+  - hermes
 ---
 
 # Test-Driven Development (TDD)

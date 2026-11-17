@@ -1,6 +1,16 @@
 ---
 name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session
+tools:
+  - claude-code
+  - codex
+  - cursor
+  - gemini-cli
+  - opencode
+  - copilot
+  - windsurf
+  - kiro
+  - hermes
 ---
 
 # Subagent-Driven Development

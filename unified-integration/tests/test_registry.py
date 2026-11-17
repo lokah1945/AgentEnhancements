@@ -32,12 +32,16 @@ class RegistryModuleTests(unittest.TestCase):
                          "skill-creator", "webapp-testing", "claude-api"):
             self.assertIn(expected, names)
 
-    def test_anthropic_skills_are_natively_linked_by_default(self):
+    def test_anthropic_skills_are_available_on_demand(self):
+        """Anthropic skills are in the curated set (linkable via --set anthropic-skills
+        or --set curated) but NOT natively linked by default. Only Superpowers and
+        task-observer are natively linked by default (context-frugal profile)."""
         entries = [e for e in self.mod.load_skill_entries()
                    if e["source"] == "anthropic-skills"]
         self.assertEqual(len(entries), 19)
         for entry in entries:
-            self.assertTrue(entry["natively_linked_by_default"])
+            self.assertFalse(entry["natively_linked_by_default"],
+                             "anthropic-skills should be on-demand, not native by default")
             self.assertTrue(entry["description"].strip())
             self.assertIn("anthropic-skills/skills/", entry["source_path"])
 

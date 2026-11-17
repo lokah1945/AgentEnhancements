@@ -1,6 +1,16 @@
 ---
 name: systematic-debugging
 description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+tools:
+  - claude-code
+  - codex
+  - cursor
+  - gemini-cli
+  - opencode
+  - copilot
+  - windsurf
+  - kiro
+  - hermes
 ---
 
 # Systematic Debugging

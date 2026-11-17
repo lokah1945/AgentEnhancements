@@ -72,17 +72,17 @@ class ConfigurationTests(unittest.TestCase):
             os.environ, {"OPENAI_API_KEY": "ambient-should-not-enable"}
         ):
             self.assertFalse(api.cloud_available("vision-mcp"))
-            self.assertFalse(api.server_state("brave-search-mcp")["visible"])
+            self.assertFalse(api.server_state("tavily-mcp")["visible"])
             edit(
                 path,
-                lambda d: d["api_keys"].update(BRAVE_API_KEY="secret-fixture-brave"),
+                lambda d: d["api_keys"].update(TAVILY_API_KEY="secret-fixture-tavily"),
             )
             self.assertEqual(
-                api.server_state("brave-search-mcp")["reason"], "runtime_not_configured"
+                api.server_state("tavily-mcp")["reason"], "runtime_not_configured"
             )
-            self.assertNotIn("secret-fixture-brave", json.dumps(api.status()))
+            self.assertNotIn("secret-fixture-tavily", json.dumps(api.status()))
             self.assertEqual(
-                api.redact("Token secret-fixture-brave"), "Token [redacted]"
+                api.redact("Token secret-fixture-tavily"), "Token [redacted]"
             )
 
     def test_invalid_and_duplicate_configuration_fail_closed(self):
@@ -112,7 +112,7 @@ class ConfigurationTests(unittest.TestCase):
             self.assertEqual(len(names), 7)
             self.assertNotIn("style-mcp", names)
             self.assertNotIn("task-router-mcp", names)
-            self.assertNotIn("brave-search-mcp", names)
+            self.assertNotIn("serper-mcp", names)
 
     def test_invalid_embedding_backend_cannot_trigger_network(self):
         module = load_module(

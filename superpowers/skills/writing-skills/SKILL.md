@@ -1,6 +1,16 @@
 ---
 name: writing-skills
 description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
+tools:
+  - claude-code
+  - codex
+  - cursor
+  - gemini-cli
+  - opencode
+  - copilot
+  - windsurf
+  - kiro
+  - hermes
 ---
 
 # Writing Skills

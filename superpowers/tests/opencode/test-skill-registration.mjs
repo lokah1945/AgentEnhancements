@@ -146,6 +146,8 @@ try {
   const fixturePlugin = path.join(fixtureRoot, '.opencode', 'plugins', 'superpowers.js');
   fs.mkdirSync(path.dirname(fixturePlugin), { recursive: true });
   fs.copyFileSync(pluginPath, fixturePlugin);
+  // Copy package.json for ES module resolution (from superpowers dir, 2 levels up from plugins)
+  fs.copyFileSync(path.join(path.dirname(pluginPath), '../../package.json'), path.join(fixtureRoot, 'package.json'));
   for (const [id, { frontmatter }] of Object.entries(frontmatterFixtures)) {
     const skillDir = path.join(fixtureRoot, 'skills', id);
     fs.mkdirSync(skillDir, { recursive: true });

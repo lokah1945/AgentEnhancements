@@ -1,13 +1,13 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-16T10:41:50.033382+00:00",
+  "generated_at": "2026-11-17T12:49:29.304862+00:00",
   "stats": {
-    "total": 3464,
+    "total": 3463,
     "by_type": {
       "skill": 3378,
       "plugin": 40,
-      "mcp": 38,
+      "mcp": 37,
       "capability": 8
     },
     "by_source": {
@@ -20,13 +20,12 @@
       "replica-skill": 11,
       "task-observer": 1,
       "plugin-catalog": 40,
-      "plugin-catalog/mcp-servers.json": 38,
+      "plugin-catalog/mcp-servers.json": 37,
       "built-in": 8
     }
   },
   "default_native_sources": [
-    "anthropic-skills",
-    "replica-skill",
+    "Superpowers",
     "task-observer"
   ],
   "entries": [
@@ -269,8 +268,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/academy-guide/SKILL.md",
       "source_path": "anthropic-skills/skills/academy-guide/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:acceptance-orchestrator",
@@ -7191,8 +7190,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/algorithmic-art/SKILL.md",
       "source_path": "anthropic-skills/skills/algorithmic-art/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:alpha-vantage",
@@ -12517,8 +12516,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/brainstorming/SKILL.md",
       "source_path": "superpowers/skills/brainstorming/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:brand-discovery",
@@ -12578,8 +12577,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/brand-guidelines/SKILL.md",
       "source_path": "anthropic-skills/skills/brand-guidelines/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:brand-guidelines-anthropic",
@@ -13712,8 +13711,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/canvas-design/SKILL.md",
       "source_path": "anthropic-skills/skills/canvas-design/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:capacity-workload-planner",
@@ -14318,8 +14317,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/claude-api/SKILL.md",
       "source_path": "anthropic-skills/skills/claude-api/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:claude-code-expert",
@@ -19526,8 +19525,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/diagnosing-superpowers/SKILL.md",
       "source_path": "superpowers/skills/diagnosing-superpowers/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:diagram-generator",
@@ -19610,8 +19609,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/discernment-nudge/SKILL.md",
       "source_path": "anthropic-skills/skills/discernment-nudge/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:disciplinary-pip-tracker",
@@ -19697,8 +19696,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/dispatching-parallel-agents/SKILL.md",
       "source_path": "superpowers/skills/dispatching-parallel-agents/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:distribute-skill-to-all-agents",
@@ -19916,8 +19915,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/doc-coauthoring/SKILL.md",
       "source_path": "anthropic-skills/skills/doc-coauthoring/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:doc2math",
@@ -20177,8 +20176,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/docx/SKILL.md",
       "source_path": "anthropic-skills/skills/docx/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:domain-authority-simulator",
@@ -21712,8 +21711,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/executing-plans/SKILL.md",
       "source_path": "superpowers/skills/executing-plans/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:expense-accounting",
@@ -22680,8 +22679,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/finishing-a-development-branch/SKILL.md",
       "source_path": "superpowers/skills/finishing-a-development-branch/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:firebase",
@@ -23588,8 +23587,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/frontend-design/SKILL.md",
       "source_path": "anthropic-skills/skills/frontend-design/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:frontend-design-direction",
@@ -28551,8 +28550,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/internal-comms/SKILL.md",
       "source_path": "anthropic-skills/skills/internal-comms/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:internal-comms-anthropic",
@@ -33304,8 +33303,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/mcp-builder/SKILL.md",
       "source_path": "anthropic-skills/skills/mcp-builder/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:mcp-builder-ms",
@@ -38016,8 +38015,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/pdf/SKILL.md",
       "source_path": "anthropic-skills/skills/pdf/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:pdf-conversion-router",
@@ -39335,8 +39334,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/pptx/SKILL.md",
       "source_path": "anthropic-skills/skills/pptx/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:pptx-deck-creation",
@@ -41498,8 +41497,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/receiving-code-review/SKILL.md",
       "source_path": "superpowers/skills/receiving-code-review/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:recognition-rewards",
@@ -42022,8 +42021,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-architect/SKILL.md",
       "source_path": "replica-skill/replica-architect/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:replica-backend",
@@ -42036,8 +42035,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-backend/SKILL.md",
       "source_path": "replica-skill/replica-backend/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:replica-brand",
@@ -42050,8 +42049,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-brand/SKILL.md",
       "source_path": "replica-skill/replica-brand/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:replica-build",
@@ -42064,8 +42063,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-build/SKILL.md",
       "source_path": "replica-skill/replica-build/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:replica-deploy",
@@ -42078,8 +42077,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-deploy/SKILL.md",
       "source_path": "replica-skill/replica-deploy/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:replica-design",
@@ -42092,8 +42091,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-design/SKILL.md",
       "source_path": "replica-skill/replica-design/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:replica-diff",
@@ -42106,8 +42105,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-diff/SKILL.md",
       "source_path": "replica-skill/replica-diff/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:replica-entrepreneur",
@@ -42120,8 +42119,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-entrepreneur/SKILL.md",
       "source_path": "replica-skill/replica-entrepreneur/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:replica-launch",
@@ -42134,8 +42133,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-launch/SKILL.md",
       "source_path": "replica-skill/replica-launch/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:replica-recon",
@@ -42148,8 +42147,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-recon/SKILL.md",
       "source_path": "replica-skill/replica-recon/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:replica-test",
@@ -42162,8 +42161,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/replica-test/SKILL.md",
       "source_path": "replica-skill/replica-test/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:repo-foundation",
@@ -42299,8 +42298,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/requesting-code-review/SKILL.md",
       "source_path": "superpowers/skills/requesting-code-review/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:requirements-writing",
@@ -45389,8 +45388,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/skill-creator/SKILL.md",
       "source_path": "anthropic-skills/skills/skill-creator/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:skill-creator-ms",
@@ -45788,8 +45787,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/slack-gif-creator/SKILL.md",
       "source_path": "anthropic-skills/skills/slack-gif-creator/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:sleep-analyzer",
@@ -47225,8 +47224,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/subagent-driven-development/SKILL.md",
       "source_path": "superpowers/skills/subagent-driven-development/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:subagent-orchestrator",
@@ -47670,8 +47669,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/systematic-debugging/SKILL.md",
       "source_path": "superpowers/skills/systematic-debugging/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:systemd-services",
@@ -48661,8 +48660,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/test-driven-development/SKILL.md",
       "source_path": "superpowers/skills/test-driven-development/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:test-fixing",
@@ -48827,8 +48826,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/theme-factory/SKILL.md",
       "source_path": "anthropic-skills/skills/theme-factory/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:thick-client",
@@ -50873,8 +50872,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/using-git-worktrees/SKILL.md",
       "source_path": "superpowers/skills/using-git-worktrees/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:using-lwc",
@@ -50935,8 +50934,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/using-superpowers/SKILL.md",
       "source_path": "superpowers/skills/using-superpowers/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:uv-package-manager",
@@ -51295,8 +51294,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/verification-before-completion/SKILL.md",
       "source_path": "superpowers/skills/verification-before-completion/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:verification-loop",
@@ -52177,8 +52176,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/web-artifacts-builder/SKILL.md",
       "source_path": "anthropic-skills/skills/web-artifacts-builder/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:web-design-guidelines",
@@ -52421,8 +52420,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/webapp-testing/SKILL.md",
       "source_path": "anthropic-skills/skills/webapp-testing/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:webdriverio-skill",
@@ -53251,8 +53250,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/writing-plans/SKILL.md",
       "source_path": "superpowers/skills/writing-plans/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:writing-skills",
@@ -53265,8 +53264,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/writing-skills/SKILL.md",
       "source_path": "superpowers/skills/writing-skills/SKILL.md",
-      "natively_linked_by_default": false,
-      "activation": "on-demand via the skills loader"
+      "natively_linked_by_default": true,
+      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
     },
     {
       "id": "skill:x-api",
@@ -53374,8 +53373,8 @@
       "tags": [],
       "path": "unified-integration/skills/by-category/general/xlsx/SKILL.md",
       "source_path": "anthropic-skills/skills/xlsx/SKILL.md",
-      "natively_linked_by_default": true,
-      "activation": "natively linked into ~/.claude/skills and ~/.agents/skills by setup.sh / link-skills.sh"
+      "natively_linked_by_default": false,
+      "activation": "on-demand via the skills loader"
     },
     {
       "id": "skill:xml-sitemap-visualizer",
@@ -54024,7 +54023,6 @@
       "source_url": "https://github.com/Panniantong/Agent-Reach",
       "vendored": false,
       "mcp_servers": [
-        "brave-search-mcp",
         "tavily-mcp",
         "exa-mcp",
         "firecrawl-mcp"
@@ -54083,7 +54081,7 @@
       "source_url": "https://github.com/mvanhorn/last30days-skill",
       "vendored": false,
       "mcp_servers": [
-        "brave-search-mcp",
+        "exa-mcp",
         "newsapi-mcp",
         "google-news-mcp"
       ],
@@ -54115,7 +54113,6 @@
       "source_url": "https://github.com/morluto/rea",
       "vendored": false,
       "mcp_servers": [
-        "brave-search-mcp",
         "tavily-mcp",
         "memory-mcp",
         "task-router-mcp"
@@ -54985,29 +54982,6 @@
         "task-router-mcp"
       ],
       "activation": "load the SKILL.md integration guide on demand"
-    },
-    {
-      "id": "mcp:brave-search-mcp",
-      "type": "mcp",
-      "name": "brave-search-mcp",
-      "source": "plugin-catalog/mcp-servers.json",
-      "priority": "P0",
-      "category": "search",
-      "description": "Web search primer untuk skill research.",
-      "command": "npx -y @modelcontextprotocol/server-brave-search",
-      "env_required": [
-        "BRAVE_API_KEY"
-      ],
-      "env_optional": [],
-      "for_plugins": [
-        "agent-reach",
-        "last-30-days",
-        "rea",
-        "understand-anything"
-      ],
-      "status": "to-install",
-      "path": "plugin-catalog/mcp-servers.json",
-      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:tavily-mcp",

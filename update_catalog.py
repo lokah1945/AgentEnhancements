@@ -7,7 +7,7 @@ import os
 
 # Plugin ID to MCP servers mapping (same as before)
 plugin_mcp_mapping = {
-    'research-rea': ['brave-search-mcp', 'tavily-mcp', 'memory-mcp', 'task-router-mcp'],
+    'research-rea': ['tavily-mcp', 'memory-mcp', 'task-router-mcp'],
     'tokens-caveman': ['filesystem-mcp', 'style-mcp'],
     'tokens-gstack': ['filesystem-mcp'],
     'agency-academic': ['filesystem-mcp', 'memory-mcp', 'task-router-mcp'],

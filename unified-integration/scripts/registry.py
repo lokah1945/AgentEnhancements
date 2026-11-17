@@ -167,7 +167,7 @@ halaman paragraf baris kata kalimat bab teks berkas folder daftar tabel
 
 # Sources that link-skills.sh activates natively by default. Keep in sync
 # with DEFAULT_SOURCES in link-skills.sh.
-DEFAULT_NATIVE_SOURCES = ("anthropic-skills", "replica-skill", "task-observer")
+DEFAULT_NATIVE_SOURCES = ("Superpowers", "task-observer")
 
 BUILT_IN_CAPABILITIES = [
     {

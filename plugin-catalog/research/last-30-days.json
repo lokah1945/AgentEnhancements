@@ -23,7 +23,7 @@
     "web_fetch"
   ],
   "mcp_servers_suggested": [
-    "brave-search-mcp",
+    "exa-mcp",
     "newsapi-mcp",
     "google-news-mcp"
   ],

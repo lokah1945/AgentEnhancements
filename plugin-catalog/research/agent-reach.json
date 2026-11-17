@@ -27,7 +27,6 @@
     "bash (python)"
   ],
   "mcp_servers_suggested": [
-    "brave-search-mcp",
     "tavily-mcp",
     "exa-mcp",
     "firecrawl-mcp"

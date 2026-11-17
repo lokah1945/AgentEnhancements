@@ -164,7 +164,8 @@ setup_prompts() {
             codex)
                 # Find Codex prompt
                 local prompt_file=""
-                for f in "$PROMPTS_DIR/OpenAI"/**/*odex*/*.txt "$PROMPTS_DIR/OpenAI"/**/*odex*/*.md; do
+                for f in "$PROMPTS_DIR/OpenAI"/**/*odex*/*.txt "$PROMPTS_DIR/OpenAI"/**/*odex*/*.md \
+                         "$PROMPTS_DIR/Open Source prompts/Codex CLI"/*.txt "$PROMPTS_DIR/Open Source prompts/Codex CLI"/*.md; do
                     if [ -f "$f" ]; then
                         prompt_file="$f"
                         break
@@ -174,7 +175,7 @@ setup_prompts() {
                     cp "$prompt_file" "$UNIFIED_DIR/prompts/codex-system-prompt.txt"
                     log_success "Codex system prompt configured from $prompt_file"
                 else
-                    log_warn "Codex prompt not found in $PROMPTS_DIR/OpenAI/"
+                    log_warn "Codex prompt not found in $PROMPTS_DIR/OpenAI/ or $PROMPTS_DIR/Open Source prompts/Codex CLI/"
                 fi
                 ;;
             opencode)

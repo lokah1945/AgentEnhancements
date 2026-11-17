@@ -27,7 +27,6 @@
     "read_file"
   ],
   "mcp_servers_suggested": [
-    "brave-search-mcp",
     "tavily-mcp",
     "memory-mcp",
     "task-router-mcp"

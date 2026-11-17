@@ -4,27 +4,6 @@
   "description": "Roadmap MCP server yang perlu dibangun/dipasang untuk mengaktifkan 40 plugin v2 AgentEnhancements (21 skill plugin + 19 pack persona agency-agents yang tidak memerlukan MCP). Prioritas: P0 wajib sebelum Phase 1, P1 untuk Phase 2, P2 nice-to-have. Build order: docs/MCP_INTEGRATION_CHECKLIST.md. Status 'built' = in-house server di unified-integration/mcp-servers/ (test: test_mcp_servers.py, installer: scripts/setup-mcp.sh).",
   "servers": [
     {
-      "id": "brave-search-mcp",
-      "priority": "P0",
-      "category": "search",
-      "for_plugins": [
-        "agent-reach",
-        "last-30-days",
-        "rea",
-        "understand-anything"
-      ],
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-brave-search"
-      ],
-      "env_required": [
-        "BRAVE_API_KEY"
-      ],
-      "purpose": "Web search primer untuk skill research.",
-      "status": "to-install"
-    },
-    {
       "id": "tavily-mcp",
       "priority": "P0",
       "category": "search",

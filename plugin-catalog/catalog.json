@@ -127,7 +127,6 @@
         "citation"
       ],
       "mcp_servers": [
-        "brave-search-mcp",
         "tavily-mcp",
         "exa-mcp",
         "firecrawl-mcp"
@@ -182,7 +181,7 @@
         "what people are saying"
       ],
       "mcp_servers": [
-        "brave-search-mcp",
+        "exa-mcp",
         "newsapi-mcp",
         "google-news-mcp"
       ],
@@ -212,7 +211,6 @@
         "firmware"
       ],
       "mcp_servers": [
-        "brave-search-mcp",
         "tavily-mcp",
         "memory-mcp",
         "task-router-mcp"

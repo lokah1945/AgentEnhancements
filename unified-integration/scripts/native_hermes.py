@@ -7,6 +7,7 @@ module changes only our gateway entry, lifecycle handlers and marked notes.
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 import re
 from typing import Callable
@@ -97,7 +98,9 @@ def install_hermes(block: dict, merge_servers: Callable[[dict, dict], None], *, 
             source = UI / "hermes-plugin"
             if target.exists() or target.is_symlink():
                 if not target.is_symlink() or target.resolve() != source.resolve():
-                    raise ValueError(f"preserving user plugin collision: {target}")
+                    # User has their own plugin at this location - warn and skip
+                    print(f"[native] WARNING: user plugin collision at {target}, preserving user version", file=sys.stderr)
+                # If it's already our symlink, nothing to do
             else:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.symlink_to(source, target_is_directory=True)

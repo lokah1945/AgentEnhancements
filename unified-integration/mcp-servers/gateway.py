@@ -34,6 +34,7 @@ from api_config import (
     BUILTINS,
     ROOT,
     cloud_available,
+    get_search_provider_key,
     read_config,
     redact,
     server_state,

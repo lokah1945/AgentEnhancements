@@ -14,11 +14,17 @@ import os
 from pathlib import Path
 import shutil
 import sys
+import threading
 from typing import Any
 
 UI = Path(__file__).resolve().parent.parent
 ROOT = UI.parent
 TEMPLATE = UI / "config/ui.api.example.json"
+SEARCH_PROVIDERS_PATH = Path("/root/credential/search_providers.json")
+
+# Round-robin state (in-memory, per-process)
+_search_rr_lock = threading.Lock()
+_search_rr_indices: dict[str, int] = {}
 BUILTINS = (
     "embeddings-mcp",
     "task-router-mcp",
@@ -188,6 +194,68 @@ def cloud_available(
     return bool(value(key, config)) and server_state(server, config)["visible"]
 
 
+# --- Search Provider Round-Robin ---
+
+def _load_search_providers() -> dict:
+    """Load search provider credentials from the central file."""
+    try:
+        if SEARCH_PROVIDERS_PATH.exists():
+            doc = json.loads(SEARCH_PROVIDERS_PATH.read_text(encoding="utf-8"))
+            if isinstance(doc, dict) and "providers" in doc:
+                return doc["providers"]
+    except (OSError, ValueError, TypeError, UnicodeError):
+        pass
+    return {}
+
+
+def get_search_provider_key(provider: str) -> str | None:
+    """Get the next API key for a search provider using round-robin.
+
+    Returns the API key string, or None if provider not found or no active keys.
+    Thread-safe round-robin per provider.
+    """
+    providers = _load_search_providers()
+    if provider not in providers:
+        return None
+
+    provider_info = providers[provider]
+    keys = [k for k in provider_info.get("keys", []) if k.get("status") == "active"]
+    if not keys:
+        return None
+
+    with _search_rr_lock:
+        # Initialize index if not present
+        if provider not in _search_rr_indices:
+            _search_rr_indices[provider] = provider_info.get("round_robin_index", 0)
+
+        idx = _search_rr_indices[provider] % len(keys)
+        _search_rr_indices[provider] = idx + 1
+
+        return keys[idx]["api_key"]
+
+
+def get_search_provider_keys(provider: str) -> list[str]:
+    """Get all active API keys for a search provider (for fallback/retry)."""
+    providers = _load_search_providers()
+    if provider not in providers:
+        return []
+    return [k["api_key"] for k in providers[provider].get("keys", []) if k.get("status") == "active"]
+
+
+def list_search_providers() -> dict:
+    """List all configured search providers with key counts (safe for output)."""
+    providers = _load_search_providers()
+    return {
+        name: {
+            "display_name": info.get("display_name", name),
+            "category": info.get("category", "Search/Research"),
+            "active_keys": len([k for k in info.get("keys", []) if k.get("status") == "active"]),
+            "total_keys": len(info.get("keys", [])),
+        }
+        for name, info in providers.items()
+    }
+
+
 def status() -> dict:
     """Safe for terminal output: values are never part of this result."""
     config, error = read_config()
@@ -208,6 +276,7 @@ def status() -> dict:
             "vision_describe": cloud_available("vision-mcp", config=config),
             "embeddings_openai": cloud_available("embeddings-mcp", config=config),
         },
+        "search_providers": list_search_providers(),
     }
 
 

@@ -6,7 +6,7 @@
 const { chromium } = require('playwright');
 const { SessionManager } = require('./session-manager');
 const { CDPRouter } = require('./cdp-router');
-const { buildLaunchArgs, buildCDPEmulationConfig, applyCDPEmulation } = require('./launch-config');
+const { buildLaunchArgs, buildCDPEmulationConfig, applyCDPEmulation, applyHeadlessDefense } = require('./launch-config');
 
 let sessionManager = null;
 let cdpRouter = null;
@@ -67,6 +67,210 @@ async function initializeBrowser(sessionId, config = {}) {
 
   // Create CDP session for page
   const cdp = await browser.newCDPSession(page);
+
+  // CRITICAL: Use Playwright's context.addInitScript() for CONTEXT-WIDE injection
+  // This fires on EVERY document in EVERY page/tab/popup in this context
+  // This is the PRIMARY guarantee that all pages get injected
+  const defenseScript = `
+    (function() {
+      'use strict';
+
+      // Fix 1: window.chrome object (Chromium internal, missing in headless)
+      if (!window.chrome) {
+        try {
+          window.chrome = {
+            runtime: {
+              id: '',
+              onConnect: null,
+              onConnectExternal: null,
+              onInstalled: null,
+              onMessage: null,
+              onMessageExternal: null,
+              onRestartRequired: null,
+              onStartup: null,
+              onSuspend: null,
+              onSuspendCanceled: null,
+              onUpdateAvailable: null,
+              connect: function() {},
+              connectNative: function() {},
+              getBackgroundPage: function() {},
+              getManifest: function() { return {}; },
+              getPackageDirectoryEntry: function() {},
+              getPlatformInfo: function() {},
+              reload: function() {},
+              requestUpdateCheck: function() {},
+              sendMessage: function() {},
+              sendNativeMessage: function() {},
+              setUninstallURL: function() {}
+            },
+            app: { isInstalled: false },
+            webstore: { onInstallStageChanged: null, onDownloadProgress: null },
+            csi: function() {},
+            loadTimes: function() {}
+          };
+        } catch(e) {}
+      }
+
+      // Fix 2: Window bar visibility (headless returns false, headed returns true)
+      var barNames = ['toolbar', 'menubar', 'personalbar', 'statusbar', 'scrollbars', 'locationbar'];
+      for (var i = 0; i < barNames.length; i++) {
+        var barName = barNames[i];
+        try {
+          var bar = window[barName];
+          if (bar && typeof bar === 'object') {
+            Object.defineProperty(bar, 'visible', {
+              get: function() { return true; },
+              enumerable: true,
+              configurable: true
+            });
+          }
+        } catch(e) {}
+      }
+
+      // Fix 3: Notification.permission (headless often 'denied', headed varies)
+      if (window.Notification && typeof window.Notification.permission === 'string') {
+        try {
+          Object.defineProperty(window.Notification, 'permission', {
+            get: function() { return 'default'; },
+            enumerable: true,
+            configurable: true
+          });
+        } catch(e) {}
+      }
+
+      // Fix 4: CSS system colors (headless renders dark, headed renders light)
+      try {
+        var styleEl = document.createElement('style');
+        styleEl.textContent = ':root { color-scheme: light; }';
+        if (document.head) {
+          document.head.appendChild(styleEl);
+        } else if (document.documentElement) {
+          document.documentElement.appendChild(styleEl);
+        }
+      } catch(e) {}
+
+      // Fix 5: Permissions API (headless may behave differently)
+      if (navigator.permissions && navigator.permissions.query) {
+        var originalQuery = navigator.permissions.query.bind(navigator.permissions);
+        navigator.permissions.query = function(permissionDesc) {
+          if (permissionDesc && permissionDesc.name) {
+            var name = permissionDesc.name;
+            if (['geolocation', 'notifications', 'camera', 'microphone'].includes(name)) {
+              return Promise.resolve({ state: 'prompt', onchange: null });
+            }
+          }
+          return originalQuery(permissionDesc);
+        };
+      }
+
+      // Fix 6: navigator.plugins / mimeTypes (headless may be empty)
+      try {
+        var mockPlugins = [
+          { name: 'Chrome PDF Viewer', filename: 'internal-pdf-viewer', description: 'Portable Document Format', length: 1 },
+          { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai', description: '', length: 1 },
+          { name: 'Native Client', filename: 'internal-nacl-plugin', description: '', length: 1 },
+          { name: 'Widevine Content Decryption Module', filename: 'widevinecdm', description: 'Enables Widevine licenses for playback of HTML audio/video', length: 1 }
+        ];
+        mockPlugins.item = function(index) { return this[index] || null; };
+        mockPlugins.namedItem = function(name) {
+          for (var i = 0; i < this.length; i++) {
+            if (this[i].name === name) return this[i];
+          }
+          return null;
+        };
+        mockPlugins.refresh = function() {};
+
+        Object.defineProperty(navigator, 'plugins', {
+          get: function() { return mockPlugins; },
+          enumerable: true,
+          configurable: true
+        });
+
+        var mockMimeTypes = [
+          { type: 'application/pdf', suffixes: 'pdf', description: 'Portable Document Format', enabledPlugin: mockPlugins[0] },
+          { type: 'application/x-pdf', suffixes: 'pdf', description: 'Portable Document Format', enabledPlugin: mockPlugins[0] },
+          { type: 'application/x-google-chrome-pdf', suffixes: 'pdf', description: 'Portable Document Format', enabledPlugin: mockPlugins[1] },
+          { type: 'application/x-nacl', suffixes: '', description: 'Native Client Executable', enabledPlugin: mockPlugins[2] },
+          { type: 'application/x-pnacl', suffixes: '', description: 'Portable Native Client Executable', enabledPlugin: mockPlugins[2] }
+        ];
+        mockMimeTypes.item = function(index) { return this[index] || null; };
+        mockMimeTypes.namedItem = function(name) {
+          for (var i = 0; i < this.length; i++) {
+            if (this[i].type === name) return this[i];
+          }
+          return null;
+        };
+
+        Object.defineProperty(navigator, 'mimeTypes', {
+          get: function() { return mockMimeTypes; },
+          enumerable: true,
+          configurable: true
+        });
+      } catch(e) {}
+
+      // Fix 7: navigator.platform (headless shows Linux, but UA says Windows)
+      try {
+        Object.defineProperty(navigator, 'platform', {
+          get: function() { return 'Win32'; },
+          enumerable: true,
+          configurable: true
+        });
+      } catch(e) {}
+
+      // Fix 8: navigator.vendorSub (headless often empty)
+      try {
+        Object.defineProperty(navigator, 'vendorSub', {
+          get: function() { return ''; },
+          enumerable: true,
+          configurable: true
+        });
+      } catch(e) {}
+
+      // Fix 9: navigator.productSub (headless often wrong)
+      try {
+        Object.defineProperty(navigator, 'productSub', {
+          get: function() { return '20030107'; },
+          enumerable: true,
+          configurable: true
+        });
+      } catch(e) {}
+
+      // Fix 10: CSS system colors
+      try {
+        var styleEl = document.createElement('style');
+        styleEl.textContent = ':root { color-scheme: light; }';
+        if (document.head) {
+          document.head.appendChild(styleEl);
+        } else if (document.documentElement) {
+          document.documentElement.appendChild(styleEl);
+        }
+      } catch(e) {}
+
+      // Fix 11: Permissions API
+      if (navigator.permissions && navigator.permissions.query) {
+        var originalQuery = navigator.permissions.query.bind(navigator.permissions);
+        navigator.permissions.query = function(permissionDesc) {
+          if (permissionDesc && permissionDesc.name) {
+            var name = permissionDesc.name;
+            if (['geolocation', 'notifications', 'camera', 'microphone'].includes(name)) {
+              return Promise.resolve({ state: 'prompt', onchange: null });
+            }
+          }
+          return originalQuery(permissionDesc);
+        };
+      }
+
+      window.__agentBrowserHeadlessDefenseApplied = true;
+    })();
+  `;
+
+  // PRIMARY: context.addInitScript() - CONTEXT-WIDE, fires on EVERY document
+  await browser.addInitScript(defenseScript);
+  console.log('[agent_browser] Context-wide headless defense registered (addInitScript)');
+
+  // REINFORCEMENT: CDP Page.addScriptToEvaluateOnNewDocument - per-page backup
+  await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: defenseScript });
+  console.log('[agent_browser] CDP per-page defense registered');
 
   // Register with CDP router
   const router = getCDPRouter();

@@ -183,6 +183,24 @@
       "status": "to-install"
     },
     {
+      "id": "agent_browser",
+      "priority": "P0",
+      "category": "browser",
+      "for_plugins": ["all"],
+      "command": "node",
+      "args": ["mcp-servers/agent_browser/src/index.js"],
+      "env_required": [],
+      "env_optional": [
+        "AGENT_BROWSER_PROFILE_DIR",
+        "AGENT_BROWSER_DEFAULT_BROWSER",
+        "AGENT_BROWSER_LOG_LEVEL",
+        "AGENT_BROWSER_CHROMIUM_PATH"
+      ],
+      "purpose": "Pure CDP browser automation — headless but indistinguishable from headful, zero spoofing, full session persistence, human behavior engine",
+      "status": "built",
+      "implementation": "mcp-servers/agent_browser/src/index.js"
+    },
+    {
       "id": "lighthouse-mcp",
       "priority": "P1",
       "category": "browser",

@@ -46,7 +46,8 @@ def prepare() -> Path:
 
 def validate_installation_scope() -> None:
     """A normal install must not capture legacy paths from a different checkout."""
-    paths = [state_root(), memory_root(),
+    paths = [state_root(), memory_root(), ROOT / 'headroom/target',
+             ROOT / 'headroom/target/release/headroom',
              Path(os.environ.get('AGENT_ENHANCEMENTS_API_FILE', ROOT / 'ui.api.json')).expanduser(),
              Path(os.environ.get('AGENT_ENHANCEMENTS_MODEL_FILE', config_root() / 'model.json')).expanduser()]
     observer = os.environ.get('TASK_OBSERVER_WORKSPACE')
@@ -78,6 +79,7 @@ def environment() -> dict[str, str]:
         'TORCH_HOME': str(cache / 'torch'),
         'npm_config_cache': str(cache / 'npm'),
         'CARGO_HOME': str(cache / 'cargo'),
+        'CARGO_TARGET_DIR': str(ROOT / 'headroom/target'),
         'PUPPETEER_CACHE_DIR': str(cache / 'puppeteer'),
         'PLAYWRIGHT_BROWSERS_PATH': str(cache / 'playwright'),
         # AE modules and venv packages cache beside their checkout-local

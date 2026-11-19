@@ -121,13 +121,17 @@ class NativeHostTests(unittest.TestCase):
 
     def test_checkout_move_refreshes_codex_gateway_and_retires_old_direct_server(self):
         import tomlkit
+        self.env.pop('AGENT_ENHANCEMENTS_MODEL_FILE', None)
+        self.env.pop('TASK_OBSERVER_WORKSPACE', None)
         old = self.home / 'removed checkout/unified-integration'
         path = self.home / '.codex/config.toml'
         path.parent.mkdir()
         path.write_text(tomlkit.dumps({'mcp_servers': {
             'agent-enhancements': {'command': 'old-python',
                 'args': [str(old / 'mcp-servers/gateway.py')],
-                'tool_timeout_sec': 91, 'env': {'CUSTOM': 'preserved'}},
+                'tool_timeout_sec': 91, 'env': {'CUSTOM': 'preserved',
+                    'AGENT_ENHANCEMENTS_MODEL_FILE': str(old / 'model.json'),
+                    'TASK_OBSERVER_WORKSPACE': str(old / 'observer')}},
             'embeddings-mcp': {'command': 'old-python',
                 'args': [str(old / 'mcp-servers/embeddings-mcp/server.py')]},
             'personal': {'command': 'personal-command'},
@@ -138,6 +142,10 @@ class NativeHostTests(unittest.TestCase):
                          [str(UI_DIR / 'mcp-servers/gateway.py')])
         self.assertEqual(servers['agent-enhancements']['tool_timeout_sec'], 91)
         self.assertEqual(servers['agent-enhancements']['env']['CUSTOM'], 'preserved')
+        self.assertEqual(servers['agent-enhancements']['env']['AGENT_ENHANCEMENTS_MODEL_FILE'],
+                         str(Path(self.env['AGENT_ENHANCEMENTS_STATE_DIR']) / 'config/model.json'))
+        self.assertEqual(servers['agent-enhancements']['env']['TASK_OBSERVER_WORKSPACE'],
+                         str(Path(self.env['AGENT_MEMORY_ROOT']) / 'task-observer'))
         self.assertNotIn('embeddings-mcp', servers)
         self.assertEqual(servers['personal']['command'], 'personal-command')
 

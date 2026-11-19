@@ -5,22 +5,50 @@ last_updated: 2026-11-16
 audience: users, contributors
 ---
 
-# Skills
+## Skills
 
-## Sources
+### Sources
 
-| Source | Directory | Notes |
-| -------- | ----------- | ------- |
-| agentic-awesome-skills | `agentic-awesome-skills/skills/` | primary source |
-| ECC | `ECC/skills/` | |
-| Ponytail | `ponytail/skills/` | |
-| Superpowers | `superpowers/skills/` | |
-| replica-skill | `replica-skill/` | 11 app-cloning sub-skills (repo-root layout) |
-| agency-agents | `agency-agents/skills/` | 283 The Agency personas in 18 division subdirectories (converted from the vendored upstream by `scripts/convert_agency_agents.py`); names are prefixed `agency-` so they never collide |
-| anthropic-skills | `anthropic-skills/skills/` | 19 official Anthropic skills (docx, pdf, pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...); processed LAST so the official version wins name collisions |
-| task-observer | `task-observer/` | the ambient skill-observation meta-skill (rebelytics/one-skill-to-rule-them-all, CC-BY-4.0, pinned; see [TASK_OBSERVER.md](TASK_OBSERVER.md)); **root-layout source**: its SKILL.md sits at the source root and is aggregated as a single skill |
+- **Source:** agentic-awesome-skills
+  - **Directory:** `agentic-awesome-skills/skills/`
+  - **Notes:** primary source
 
-## SKILL.md frontmatter
+- **Source:** ECC
+  - **Directory:** `ECC/skills/`
+  - **Notes:**
+
+- **Source:** Ponytail
+  - **Directory:** `ponytail/skills/`
+  - **Notes:**
+
+- **Source:** Superpowers
+  - **Directory:** `superpowers/skills/`
+  - **Notes:**
+
+- **Source:** replica-skill
+  - **Directory:** `replica-skill/`
+  - **Notes:** 11 app-cloning sub-skills (repo-root layout)
+
+- **Source:** agency-agents
+  - **Directory:** `agency-agents/skills/`
+  - **Notes:** 283 The Agency personas in 18 division subdirectories (converted
+    from the vendored upstream by `scripts/convert_agency_agents.py`); names are
+    prefixed `agency-` so they never collide
+
+- **Source:** anthropic-skills
+  - **Directory:** `anthropic-skills/skills/`
+  - **Notes:** 19 official Anthropic skills (docx, pdf, pptx, xlsx,
+    skill-creator, mcp-builder, webapp-testing, claude-api, ...); processed LAST
+    so the official version wins name collisions
+
+- **Source:** task-observer
+  - **Directory:** `task-observer/`
+  - **Notes:** the ambient skill-observation meta-skill
+    (rebelytics/one-skill-to-rule-them-all, CC-BY-4.0, pinned; see
+    [TASK_OBSERVER.md](TASK_OBSERVER.md)); **root-layout source**: its SKILL.md
+    sits at the source root and is aggregated as a single skill
+
+### SKILL.md frontmatter
 
 Skills are discovered by the presence of a `SKILL.md` with YAML frontmatter:
 
@@ -42,7 +70,7 @@ Category normalization (anything else falls back to `general`):
 `security`, `architecture`, `testing`, `refactoring`, `code-review`,
 `documentation`, `devops`, `ai-ml`, `productivity`, `general`.
 
-## Aggregation rules (R301-R304)
+### Aggregation rules (R301-R304)
 
 - Skills are aggregated **only** via `aggregate_skills()` in `setup.sh` -
   never copied manually (R004).
@@ -62,7 +90,7 @@ Category normalization (anything else falls back to `general`):
   `codex`, `cursor`, `gemini-cli`, `opencode`, `copilot`, `windsurf`,
   `kiro`, `hermes`.
 
-## Native activation (auto-discovery at runtime)
+### Native activation (auto-discovery at runtime)
 
 `setup.sh` symlinks a curated set into the directories that Agent Skills
 compatible harnesses read automatically:
@@ -88,16 +116,19 @@ bash unified-integration/scripts/link-skills.sh --unlink [names]
 Only symlinks owned by the registry are created, refreshed or removed;
 user-owned directories, files and foreign symlinks are never touched.
 
-**Skill discovery is flexible**: default 8 skill cards per prompt, configurable via `AE_MAX_SKILL_CARDS` env var. Agents decide which skills to actually read/use from the suggestions.
+**Skill discovery is flexible**: default 8 skill cards per prompt, configurable
+via `AE_MAX_SKILL_CARDS` env var. Agents decide which skills to actually
+read/use from the suggestions.
 
-## Using skills
+### Using skills
 
 After setup, normal natural-language tasks trigger native discovery and prompt
 routing automatically in Claude Code, current Codex, OpenCode 2 and selected
 Hermes profiles. The default set supplies bounded workflow metadata;
 prompt-time routing searches the complete
 3,378-skill catalog without injecting all descriptions into every request.
-Matching is lexical with a small English/Indonesian alias set, so recommendations
+Matching is lexical with a small English/Indonesian alias set, so
+recommendations
 are guidance, not a guarantee that every task will select the ideal skill.
 Agent aliases such as `Codex`/`codex-cli` are normalized during matching; tools
 such as `python` are not mistaken for incompatible agent names.
@@ -119,7 +150,7 @@ The loader supports two on-disk layouts: directory skills
 (`by-category/<cat>/<name>/SKILL.md`) and legacy flat skills
 (`by-category/<cat>/<name>.md`).
 
-## Updating skills
+### Updating skills
 
 Run `unified-integration/update-skills.sh`. Vendored directories that are
 not git repositories are skipped with a warning - refresh them by

@@ -5,9 +5,9 @@ last_updated: 2026-11-16
 audience: users
 ---
 
-# Troubleshooting
+## Troubleshooting
 
-## Setup
+### Setup
 
 **`setup.sh` fails with "Permission denied" or "No such file or directory"
 mentioning `/root/agent-enhancements`**
@@ -30,7 +30,7 @@ Optional. headroom needs a Rust toolchain to build; without it the setup
 logs `cargo not found, will use fallback compression` and continues with
 the built-in Python/shell compression.
 
-## Native activation and accounts
+### Native activation and accounts
 
 **Codex warns that hooks need review**
 Open `/hooks` and review the AgentEnhancements commands. Once trusted, they run
@@ -44,7 +44,8 @@ The adapter targets OpenCode 2 (verified with 2.2.5 and 2.3.0); setup refuses
 OpenCode 1 before changing its configuration. Upgrade the CLI first.
 
 **A selected agent is missing or a Hermes profile is not configured**
-Check the saved `host-selection.json` described in [CONFIGURATION.md](CONFIGURATION.md).
+Check the saved `host-selection.json` described in
+[CONFIGURATION.md](CONFIGURATION.md).
 Re-run `native-integration.py` with the intended `--select-agents` and repeated
 `--profile` values. Profile names must already exist. Only selected Hermes
 profiles are modified; missing aliases are not recreated.
@@ -71,10 +72,10 @@ installing MCP does not repair an unavailable model slug.
 Merged JSONC is serialized as JSON to preserve its values safely. The original
 file, including comments, remains in a private timestamped backup beside it.
 
-## Memory
+### Memory
 
 **Memories not saved**
-Check `AGENT_MEMORY_ROOT` (default `~/.agent-memory`). The SQLite database
+Check `AGENT_MEMORY_ROOT` (default `.agentenhancements/memory`). The SQLite database
 is `memory.db` inside that directory; verify with
 `python3 unified-integration/scripts/memory.py <agent> list`.
 
@@ -87,7 +88,7 @@ data written by a pre-fix version with ISO `T` timestamps, re-save it with the
 current utility. New notes use UTC SQLite timestamps; reads filter expired
 values even before cleanup. Automatic notes expire after seven days.
 
-## Skills
+### Skills
 
 **`by-category/` looks almost empty in a fresh clone**
 Expected: only the `general` flat files are committed. Run `setup.sh` to
@@ -103,18 +104,19 @@ If you still see nesting, you are on an old revision; delete
 The bundled projects are vendored copies, not submodules. Refresh them by
 re-copying from upstream (see [UPDATING.md](UPDATING.md)).
 
-## Compression
+### Compression
 
 **`compress.sh` produces empty output for piped input**
 Fixed in this revision (stdin is captured once before detection). Update
 your checkout.
 
 **headroom not used**
-Check `HEADROOM_BIN`. Building Rust is optional and disabled by default; set
-`AGENT_ENHANCEMENTS_BUILD_HEADROOM=1` during setup to opt in. Python fallback
+Check `HEADROOM_BIN`. Setup attempts a Rust build when cargo is available;
+set `AGENT_ENHANCEMENTS_BUILD_HEADROOM=0` during setup to skip it. Python
+fallback
 is always available. This utility is separate from native CLI compaction.
 
-## Tests
+### Tests
 
 After merging a new skill source, run `bash unified-integration/setup.sh` to
 rebuild the generated registry directories. The committed index alone does
@@ -142,7 +144,7 @@ workflow and keeps every suite enabled.
 The workflow also installs jq and ripgrep, and verifies PCRE2 support before
 running ECC's scanner tests.
 
-## GitHub Actions
+### GitHub Actions
 
 **Jobs fail before any step starts, with no downloadable logs**
 Read the check-run annotations. An account billing lock can reject every job

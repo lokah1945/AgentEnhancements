@@ -1,8 +1,8 @@
 # AgentEnhancements Development Contract
 
 **Project**: AgentEnhancements  
-**Version**: 2.2  
-**Effective Date**: 2026-11-15  
+**Version**: 2.3\
+**Effective Date**: 2026-11-20\
 **Status**: BINDING - All agents MUST comply
 
 ---
@@ -331,7 +331,7 @@ Rules:
 
 - **Variable:** `AGENT_ENHANCEMENTS_BASE_DIR`
   - **Purpose:** Project root
-  - **Default:** `/root/agent-enhancements`
+  - **Default:** Checkout root inferred from the installed setup script
 
 - **Variable:** `AGENT_MEMORY_ROOT`
   - **Purpose:** Memory storage
@@ -429,6 +429,12 @@ unified-integration/
 ---
 
 ## 10. Change Log
+
+- **Version:**2.3
+  - **Date:**2026-11-20
+  - **Author:**Codex, session ae-audit-20261119
+  - **Changes:** Maintainer-approved checkout-local runtime/state defaults;
+    optional isolation override and native relocation behavior in section 8.6.
 
 - **Version:** 2.2
   - **Date:** 2026-11-15

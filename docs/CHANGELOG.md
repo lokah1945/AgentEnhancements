@@ -1,6 +1,6 @@
 ---
 title: Changelog
-version: 1.5
+version: 1.6
 last_updated: 2026-11-20
 audience: all
 ---
@@ -9,7 +9,7 @@ audience: all
 
 ## 2026-11-20 — Audit and checkout-local execution
 
-Generated from the committed audit history through`cba4e255` using
+Generated from the committed audit history through `57b96a97` using
 `git log --reverse --format="%h %s" b6e1c056..HEAD`. The maintainer explicitly
 requested checkout-local venv/cache/memory. State defaults changed with
 that approval; data schemas and supported host lists remain compatible.
@@ -41,6 +41,13 @@ Regression evidence and remaining limitations are recorded in
 - `5842dc7d` docs(setup): recommend installation from the project checkout
 - `3948fe95` fix(native): replace stale managed environment paths on reinstall
 - `cba4e255` fix(context): keep optional token counting offline on cold caches
+- `3c5e7949` docs(changelog): generate the audit change log from committed
+  history
+- `cf9a4ffe` docs(audit): record end-to-end findings and clean-clone evidence
+- `8d2b1526` fix(ci): use supported contexts for job-level isolation paths
+- `6d3cc309` fix(ci): install all command tools required by the integration
+  suite
+- `57b96a97` fix(runtime): keep inherited Cargo targets inside the checkout
 
 ## 2026-11-16 — Native Hermes profiles and installation verification
 

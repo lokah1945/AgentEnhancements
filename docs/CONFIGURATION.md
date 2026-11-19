@@ -1,7 +1,7 @@
 ---
 title: Configuration
-version: 1.7
-last_updated: 2026-11-19
+version: 1.8
+last_updated: 2026-11-20
 audience: users, maintainers
 ---
 
@@ -355,3 +355,9 @@ No global AE memory or model file is imported implicitly. Back up and
 review old state before a deliberate migration; setup does not move or
 remove user data. System Python, Node, Rust and agent CLIs are prerequisites,
 not copies of AE plugin code.
+
+Cargo build outputs resolve to `headroom/target` inside the checkout,
+including when a caller has a global CARGO_TARGET_DIR. A normal install
+rejects target/binary symlinks that leave the checkout. Audit/consent helper
+logs retain their documented private `unified-integration/memory/audit/`
+location; those logs also stay inside the checkout.

@@ -11,7 +11,12 @@ REPO_DIR = UI_DIR.parent
 
 def load_module(name, path, env=None):
     """Import a module from a file path, optionally with env vars set at
-    import time (restored afterwards). Returns a FRESH module each call."""
+    import time (restored afterwards). Returns a FRESH module each call.
+
+    The module is registered in sys.modules while it executes: the
+    dataclass machinery (and `from __future__ import annotations`)
+    resolves the owning module's namespace through sys.modules, so an
+    unregistered exec breaks any module that defines a dataclass."""
     saved = {}
     if env:
         for k, v in env.items():
@@ -20,7 +25,12 @@ def load_module(name, path, env=None):
     try:
         spec = importlib.util.spec_from_file_location(name, str(path))
         mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        sys.modules[name] = mod
+        try:
+            spec.loader.exec_module(mod)
+        except BaseException:
+            sys.modules.pop(name, None)
+            raise
         return mod
     finally:
         for k, v in saved.items():

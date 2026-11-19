@@ -7,8 +7,26 @@
 
 ## 1. Project purpose
 
-`AgentEnhancements` is a **single integration layer that unifies 40 external
-skill repositories** (6 categories) plus a setup pipeline that provisions
+<!-- ae:counts:summary:begin -->
+
+- **3,378 specialized skills/agents** from **8 skill sources**; 3,430 source
+  records before name collisions are resolved.
+- **40 catalog plugins** from **22 unique upstream repositories**
+  (`integrated`: 1, `integrated-ready`: 39); 21 entries have vendored source.
+- **40 MCP servers** (`built`: 10, `to-install`: 30); **9 bundled Python
+  backends**, 8 enabled by default before host configuration.
+- **8 built-in capabilities**; **16 default native skills**; 31 skills in the
+  optional curated set.
+- **3,466 registry entries** in total; **11 vendored projects** listed in the
+  root license notice.
+
+<!-- ae:counts:summary:end -->
+
+Detailed source counts and status meanings: [generated
+inventory](docs/CAPABILITY_COUNTS.md).
+
+`AgentEnhancements` is a **single integration layer that catalogs plugin entries
+and aggregates vendored skill sources** plus a setup pipeline that provisions
 9 AI-agent CLIs (Claude Code, Codex CLI, Cursor, Gemini CLI,
 GitHub Copilot CLI, Kiro, OpenCode, Windsurf, Hermes) from one source of truth.
 
@@ -23,38 +41,174 @@ integrated during the audit, plus **19 agency packs** vendored from
 `github.com/msitarzewski/agency-agents` (18 divisions + NEXUS orchestration
 playbooks). Total: **40 plugins** across 6 categories (5 requested + `agency`).
 
-| # | Category | Requested plugin | Catalog ID | Status | Source |
-|---|----------|------------------|------------|--------|--------|
-| 1 | code | Matt Pocock skills | `code-mattpocock-skills` | integrated-ready | `github.com/mattpocock/skills` |
-| 2 | code | Karpathy skills | `code-karpathy-skills` | integrated-ready | `github.com/multica-ai/andrej-karpathy-skills` |
-| 3 | code | Agent Skills (Addy Osmani) | `code-agent-skills-addyosmani` | integrated-ready | `github.com/addyosmani/agent-skills` |
-|   | code | _+ Replica Skill (bonus)_ | `code-replica-skill` | **vendored** | `github.com/Jakeschincariol/replica-skill` |
-| 4 | research | Graphify | `research-graphify` | integrated-ready | `github.com/Graphify-Labs/graphify` |
-| 5 | research | Agent-Reach | `research-agent-reach` | integrated-ready | `github.com/Panniantong/Agent-Reach` |
-| 6 | research | Understand Anything | `research-understand-anything` | integrated-ready | `github.com/Egonex-AI/Understand-Anything` |
-| 7 | research | Last 30 Days | `research-last-30-days` | integrated-ready | `github.com/mvanhorn/last30days-skill` |
-| 8 | research | REA | `research-rea` | integrated-ready | `github.com/morluto/rea` |
-| 9 | tokens | GStack | `tokens-gstack` | integrated-ready | `github.com/garrytan/gstack` |
-| 10 | tokens | Caveman | `tokens-caveman` | integrated-ready | `github.com/JuliusBrussee/Caveman` |
-| 11 | tokens | GSD | `tokens-gsd` | integrated-ready | `github.com/gsd-build/get-shit-done` |
-| 12 | tokens | BMAD Method | `tokens-bmad-method` | integrated-ready | `github.com/bmad-code-org/BMAD-METHOD` |
-| 13 | design | UI UX Pro Max | `design-ui-ux-pro-max` | integrated-ready | `github.com/nextlevelbuilder/ui-ux-pro-max-skill` |
-| 14 | design | Impeccable | `design-impeccable` | integrated-ready | `github.com/pbakaus/impeccable` |
-| 15 | design | PPT Master | `design-ppt-master` | integrated-ready | `github.com/hugohe3/ppt-master` |
-| 16 | design | Diagram Design | `design-diagram-design` | integrated-ready | `github.com/cathrynlavery/diagram-design` |
-| 17 | multimedia | Skills by Anthropic | `multimedia-anthropic-skills` | **vendored** (19 sub-skills) | `github.com/anthropics/skills` |
-| 18 | multimedia | OpenMontage | `multimedia-openmontage` | integrated-ready | `github.com/calesthio/OpenMontage` |
-| 19 | multimedia | Hyperframes | `multimedia-hyperframes` | integrated-ready | `github.com/heygen-com/hyperframes` |
-| 20 | multimedia | Humanizer | `multimedia-humanizer` | integrated-ready | `github.com/blader/humanizer` |
-| 21 | agency | The Agency division packs (18) | `agency-<division>` | **vendored** | `github.com/msitarzewski/agency-agents` |
-| 22 | agency | NEXUS orchestration playbooks | `agency-nexus` | **vendored** | `github.com/msitarzewski/agency-agents` |
+- **#:** 1
+  - **Category:** code
+  - **Requested plugin:** Matt Pocock skills
+  - **Catalog ID:** `code-mattpocock-skills`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/mattpocock/skills`
 
-**Status legend**
+- **#:** 2
+  - **Category:** code
+  - **Requested plugin:** Karpathy skills
+  - **Catalog ID:** `code-karpathy-skills`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/multica-ai/andrej-karpathy-skills`
+
+- **#:** 3
+  - **Category:** code
+  - **Requested plugin:** Agent Skills (Addy Osmani)
+  - **Catalog ID:** `code-agent-skills-addyosmani`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/addyosmani/agent-skills`
+
+- **#:**
+  - **Category:** code
+  - **Requested plugin:** _+ Replica Skill (bonus)_
+  - **Catalog ID:** `code-replica-skill`
+  - **Availability notes:** **vendored**
+  - **Source:** `github.com/Jakeschincariol/replica-skill`
+
+- **#:** 4
+  - **Category:** research
+  - **Requested plugin:** Graphify
+  - **Catalog ID:** `research-graphify`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/Graphify-Labs/graphify`
+
+- **#:** 5
+  - **Category:** research
+  - **Requested plugin:** Agent-Reach
+  - **Catalog ID:** `research-agent-reach`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/Panniantong/Agent-Reach`
+
+- **#:** 6
+  - **Category:** research
+  - **Requested plugin:** Understand Anything
+  - **Catalog ID:** `research-understand-anything`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/Egonex-AI/Understand-Anything`
+
+- **#:** 7
+  - **Category:** research
+  - **Requested plugin:** Last 30 Days
+  - **Catalog ID:** `research-last-30-days`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/mvanhorn/last30days-skill`
+
+- **#:** 8
+  - **Category:** research
+  - **Requested plugin:** REA
+  - **Catalog ID:** `research-rea`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/morluto/rea`
+
+- **#:** 9
+  - **Category:** tokens
+  - **Requested plugin:** GStack
+  - **Catalog ID:** `tokens-gstack`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/garrytan/gstack`
+
+- **#:** 10
+  - **Category:** tokens
+  - **Requested plugin:** Caveman
+  - **Catalog ID:** `tokens-caveman`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/JuliusBrussee/Caveman`
+
+- **#:** 11
+  - **Category:** tokens
+  - **Requested plugin:** GSD
+  - **Catalog ID:** `tokens-gsd`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/gsd-build/get-shit-done`
+
+- **#:** 12
+  - **Category:** tokens
+  - **Requested plugin:** BMAD Method
+  - **Catalog ID:** `tokens-bmad-method`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/bmad-code-org/BMAD-METHOD`
+
+- **#:** 13
+  - **Category:** design
+  - **Requested plugin:** UI UX Pro Max
+  - **Catalog ID:** `design-ui-ux-pro-max`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/nextlevelbuilder/ui-ux-pro-max-skill`
+
+- **#:** 14
+  - **Category:** design
+  - **Requested plugin:** Impeccable
+  - **Catalog ID:** `design-impeccable`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/pbakaus/impeccable`
+
+- **#:** 15
+  - **Category:** design
+  - **Requested plugin:** PPT Master
+  - **Catalog ID:** `design-ppt-master`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/hugohe3/ppt-master`
+
+- **#:** 16
+  - **Category:** design
+  - **Requested plugin:** Diagram Design
+  - **Catalog ID:** `design-diagram-design`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/cathrynlavery/diagram-design`
+
+- **#:** 17
+  - **Category:** multimedia
+  - **Requested plugin:** Skills by Anthropic
+  - **Catalog ID:** `multimedia-anthropic-skills`
+  - **Availability notes:** **vendored** (19 sub-skills)
+  - **Source:** `github.com/anthropics/skills`
+
+- **#:** 18
+  - **Category:** multimedia
+  - **Requested plugin:** OpenMontage
+  - **Catalog ID:** `multimedia-openmontage`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/calesthio/OpenMontage`
+
+- **#:** 19
+  - **Category:** multimedia
+  - **Requested plugin:** Hyperframes
+  - **Catalog ID:** `multimedia-hyperframes`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/heygen-com/hyperframes`
+
+- **#:** 20
+  - **Category:** multimedia
+  - **Requested plugin:** Humanizer
+  - **Catalog ID:** `multimedia-humanizer`
+  - **Availability notes:** integrated-ready
+  - **Source:** `github.com/blader/humanizer`
+
+- **#:** 21
+  - **Category:** agency
+  - **Requested plugin:** The Agency division packs (18)
+  - **Catalog ID:** `agency-<division>`
+  - **Availability notes:** **vendored**
+  - **Source:** `github.com/msitarzewski/agency-agents`
+
+- **#:** 22
+  - **Category:** agency
+  - **Requested plugin:** NEXUS orchestration playbooks
+  - **Catalog ID:** `agency-nexus`
+  - **Availability notes:** **vendored**
+  - **Source:** `github.com/msitarzewski/agency-agents`
+
+### Status legend
 
 - `vendored` — upstream source code copied into the repo (works offline, frozen
   at vendored commit).
 - `integrated-ready` — `manifest.json` + `SKILL.md` guide exist; the upstream
-  repo is pulled on first use by `unified-integration/setup.sh`.
+  runtime and dependencies must be installed separately by the user. Setup does
+  not fetch these upstreams.
 
 > Source-URL divergences from the original request (typo or upstream rename)
 > were normalized during the audit; canonical URLs are stored in
@@ -62,12 +216,14 @@ playbooks). Total: **40 plugins** across 6 categories (5 requested + `agency`).
 
 ## 3. Repository architecture
 
-```
+```text
 AgentEnhancements/
 ├── README.md                           # audited setup guide (canonical)
 ├── README_INTEGRATION.md               # this file (integration narrative)
-├── .cursorrules                        # centralized system prompt (Karpathy + Anthropic best practices)
-├── CONTRACT.md                         # contribution contract (§12.3 commit format)
+├── .cursorrules                        # centralized system prompt (Karpathy +
+# Anthropic best practices)
+├── CONTRACT.md                         # contribution contract (§12.3 commit
+# format)
 │
 ├── skills/                             # ← modular tree (NEW)
 │   ├── manifest.json                   # aggregator index (40 plugins)
@@ -79,8 +235,10 @@ AgentEnhancements/
 │   ├── multimedia-writing/{4 plugins}/
 │   └── agency/{19 packs}/
 │
-├── plugin-catalog/                     # canonical catalog + per-plugin manifests
-│   ├── catalog.json                    # 40 plugins, 6 categories, upstream URLs
+├── plugin-catalog/                     # canonical catalog + per-plugin
+# manifests
+│   ├── catalog.json                    # 40 plugins, 6 categories, upstream
+│ # URLs
 │   ├── mcp-servers.json                # 40 MCP servers, P0/P1/P2 priority
 │   ├── code/, research/, ...           # original SKILL.md + manifest sources
 │   └── README.md
@@ -88,8 +246,10 @@ AgentEnhancements/
 ├── unified-integration/                # installation pipeline
 │   ├── setup.sh                        # installer (9 agent CLIs)
 │   ├── update-skills.sh                # registry re-builder
-│   ├── mcp-servers/                    # 9 in-house MCP servers + installer template
-│   ├── scripts/setup-mcp.sh            # MCP config installer for 6 agent CLIs
+│   ├── mcp-servers/                    # 9 in-house MCP servers + installer
+│ # template
+│   ├── scripts/setup-mcp.sh            # shared native MCP configuration
+│ # installer
 │   ├── skills/
 │   │   ├── all-skills.json             # 3,378 skills aggregated registry
 │   │   ├── agent-registry.json         # per-agent install mapping
@@ -102,13 +262,16 @@ AgentEnhancements/
 │   │   └── ... (7 more)
 │   ├── hooks/                          # 16 hook scripts
 │   ├── memory/, compression/           # cross-session state
-│   ├── scripts/                        # 11 utility scripts
-│   └── tests/                          # 236 tests (17 regression modules)
+│   ├── scripts/                        # shared utility scripts
+│   └── tests/                          # integration regression modules
 │
 ├── vendored upstream projects (frozen)
-│   ├── anthropic-skills/               # github.com/anthropics/skills (19 sub-skills)
-│   ├── replica-skill/                  # github.com/Jakeschincariol/replica-skill (11 sub-skills)
-│   ├── agency-agents/                  # github.com/msitarzewski/agency-agents (283 personas)
+│   ├── anthropic-skills/               # github.com/anthropics/skills (19
+│ # sub-skills)
+│   ├── replica-skill/                  # github.com/Jakeschincariol/replica-skill
+│ # (11 sub-skills)
+│   ├── agency-agents/                  # github.com/msitarzewski/agency-agents
+│ # (283 personas)
 │   ├── agentic-awesome-skills/         # skills collection
 │   ├── claude-mem/                     # cross-session memory
 │   ├── headroom/                       # context-window optimization
@@ -123,80 +286,132 @@ AgentEnhancements/
 │
 ├── scripts/
 │   ├── scaffold_modular_skills.sh      # rebuild skills/ tree
-│   └── generate_skills_index.py        # regenerate skills/manifest.json + READMEs
+│   └── generate_skills_index.py        # regenerate skills/manifest.json +
+│ # READMEs
 │
 └── .github/workflows/                  # CI (tests + skill-index freshness)
 ```
 
 ### 3.1 The three layers
 
-The architecture is **three layered caches** with strict one-way data flow:
+The catalog and vendored skill bundles are parallel sources:
 
-1. **Catalog layer** (`plugin-catalog/`) — source of truth for **what**
-   plugins exist and where their upstream lives. Maintained by humans; each
-   plugin has a JSON manifest + a SKILL.md guide. Categories: `code`,
-   `research`, `tokens-optimization`, `design`, `multimedia-writing`,
-   `agency` (The Agency persona packs).
+1. **Catalog layer** (`plugin-catalog/`) describes plugin guides, upstream
+   locations and candidate MCP servers. `scaffold_modular_skills.sh` and
+   `generate_skills_index.py` derive the modular guide tree in `skills/`.
+2. **Skill aggregation** scans vendored bundles through
+   `setup.sh aggregate_skills()` and derives `all-skills.json` plus the
+   installed `by-category/` and `by-agent/` copies.
+3. **Capability registry** combines that skills index with the catalog,
+   MCP manifest and built-in descriptors. The L0 map and native agent
+   instructions point to this registry for bounded discovery.
 
-2. **Modular skills layer** (`skills/`) — the **canonical on-disk layout**
-   that humans and agents read. Generated from the catalog by
-   `scripts/scaffold_modular_skills.sh`. Self-contained per-plugin dirs.
-
-3. **Installed registry layer** (`unified-integration/skills/`) — the
-   **machine-indexed view** consumed by `setup.sh` to install into 9 agent
-   CLIs. Aggregated from all sources (catalog + vendored projects) by
-   `update-skills.sh` → `all-skills.json` (3,378 skills total from 8 sources).
-
-Data flow: **catalog → skills tree → unified-integration → agent CLIs**.
-Never edit the upper layers directly; regenerate from below.
+The modular guide tree is not a source for skill aggregation. Edit canonical
+vendor/catalog inputs, then regenerate their dependent artifacts.
 
 ### 3.2 The 40 plugins, by category
 
 #### Code (`skills/code/`)
 
-| Plugin | Purpose | MCP servers needed |
-|--------|---------|---------------------|
-| `mattpocock-skills` | TypeScript rigor: type narrowing, generics, Zod schema-first, refactor patterns | typescript-language-server, eslint-mcp |
-| `karpathy-skills` | Minimal-first ML / numerical: first-principles derivation, ≤30-line implementations, no-over-engineering review | jupyter-mcp, python-repl-mcp |
-| `agent-skills-addyosmani` | Frontend performance: Core Web Vitals, Lighthouse automation, a11y audits | browser-tools-mcp, lighthouse-mcp, pa11y-mcp |
-| `replica-skill` | Reverse-engineer / clone a web app into a fresh codebase (11 sub-skills, vendored) | browser-tools-mcp, vision-mcp |
+- **Plugin:** `mattpocock-skills`
+  - **Purpose:** TypeScript rigor: type narrowing, generics, Zod schema-first,
+    refactor patterns
+  - **MCP servers needed:** typescript-language-server, eslint-mcp
+
+- **Plugin:** `karpathy-skills`
+  - **Purpose:** Minimal-first ML / numerical: first-principles derivation,
+    ≤30-line implementations, no-over-engineering review
+  - **MCP servers needed:** jupyter-mcp, python-repl-mcp
+
+- **Plugin:** `agent-skills-addyosmani`
+  - **Purpose:** Frontend performance: Core Web Vitals, Lighthouse automation,
+    a11y audits
+  - **MCP servers needed:** browser-tools-mcp, lighthouse-mcp, pa11y-mcp
+
+- **Plugin:** `replica-skill`
+  - **Purpose:** Reverse-engineer / clone a web app into a fresh codebase (11
+    sub-skills, vendored)
+  - **MCP servers needed:** browser-tools-mcp, vision-mcp
 
 #### Research (`skills/research/`)
 
-| Plugin | Purpose | MCP servers needed |
-|--------|---------|---------------------|
-| `graphify` | Extract entities + relations from unstructured text → knowledge graph | neo4j-mcp, graphrag-mcp, embeddings-mcp |
-| `agent-reach` | Deep multi-source research with citation tracking | tavily-mcp, exa-mcp, firecrawl-mcp |
-| `understand-anything` | Feynman-style concept explanation for onboarding | wikipedia-mcp, arxiv-mcp, embeddings-mcp |
-| `last-30-days` | Fresh-trend monitoring (last 30 days of news / releases) | exa-mcp, newsapi-mcp, google-news-mcp |
-| `rea` | Reverse Engineer Anything — analyze how apps/binaries work (upstream `morluto/rea` MCP server, install separately) | rea MCP server (upstream) |
+- **Plugin:** `graphify`
+  - **Purpose:** Extract entities + relations from unstructured text → knowledge
+    graph
+  - **MCP servers needed:** neo4j-mcp, graphrag-mcp, embeddings-mcp
+
+- **Plugin:** `agent-reach`
+  - **Purpose:** Deep multi-source research with citation tracking
+  - **MCP servers needed:** tavily-mcp, exa-mcp, firecrawl-mcp
+
+- **Plugin:** `understand-anything`
+  - **Purpose:** Feynman-style concept explanation for onboarding
+  - **MCP servers needed:** wikipedia-mcp, arxiv-mcp, embeddings-mcp
+
+- **Plugin:** `last-30-days`
+  - **Purpose:** Fresh-trend monitoring (last 30 days of news / releases)
+  - **MCP servers needed:** exa-mcp, newsapi-mcp, google-news-mcp
+
+- **Plugin:** `rea`
+  - **Purpose:** Reverse Engineer Anything — analyze how apps/binaries work
+    (upstream `morluto/rea` MCP server, install separately)
+  - **MCP servers needed:** rea MCP server (upstream)
 
 #### Tokens / Optimization (`skills/tokens-optimization/`)
 
-| Plugin | Purpose | MCP servers needed |
-|--------|---------|---------------------|
-| `gstack` | Token budgeting, cache strategy, context compression | — |
-| `caveman` | Aggressive shorthand compression for token reduction | — |
-| `gsd` | Atomic parallel checklist execution (Get Shit Done) | task-router-mcp, memory-mcp |
-| `bmad-method` | Multi-persona agile (PM/SM/Dev/Architect) build orchestrator | linear-mcp, github-issues-mcp, memory-mcp |
+- **Plugin:** `gstack`
+  - **Purpose:** Token budgeting, cache strategy, context compression
+  - **MCP servers needed:** —
+
+- **Plugin:** `caveman`
+  - **Purpose:** Aggressive shorthand compression for token reduction
+  - **MCP servers needed:** —
+
+- **Plugin:** `gsd`
+  - **Purpose:** Atomic parallel checklist execution (Get Shit Done)
+  - **MCP servers needed:** task-router-mcp, memory-mcp
+
+- **Plugin:** `bmad-method`
+  - **Purpose:** Multi-persona agile (PM/SM/Dev/Architect) build orchestrator
+  - **MCP servers needed:** linear-mcp, github-issues-mcp, memory-mcp
 
 #### Design (`skills/design/`)
 
-| Plugin | Purpose | MCP servers needed |
-|--------|---------|---------------------|
-| `ui-ux-pro-max` | Design-token extraction, color/spacing systems, component audit | figma-mcp, browser-tools-mcp, storybook-mcp |
-| `impeccable` | Visual polish: alignment, contrast, hierarchy, anti-AI-ism design | browser-tools-mcp, figma-mcp |
-| `ppt-master` | Slide narrative + structure for technical decks | google-slides-mcp, office-mcp, image-search-mcp |
-| `diagram-design` | Mermaid / D2 / Excalidraw diagram authoring | mermaid-mcp, excalidraw-mcp |
+- **Plugin:** `ui-ux-pro-max`
+  - **Purpose:** Design-token extraction, color/spacing systems, component audit
+  - **MCP servers needed:** figma-mcp, browser-tools-mcp, storybook-mcp
+
+- **Plugin:** `impeccable`
+  - **Purpose:** Visual polish: alignment, contrast, hierarchy, anti-AI-ism
+    design
+  - **MCP servers needed:** browser-tools-mcp, figma-mcp
+
+- **Plugin:** `ppt-master`
+  - **Purpose:** Slide narrative + structure for technical decks
+  - **MCP servers needed:** google-slides-mcp, office-mcp, image-search-mcp
+
+- **Plugin:** `diagram-design`
+  - **Purpose:** Mermaid / D2 / Excalidraw diagram authoring
+  - **MCP servers needed:** mermaid-mcp, excalidraw-mcp
 
 #### Multimedia / Writing (`skills/multimedia-writing/`)
 
-| Plugin | Purpose | MCP servers needed |
-|--------|---------|---------------------|
-| `anthropic-skills` | Office docs (.docx/.pdf/.pptx/.xlsx), MCP server authoring, skill creator, webapp testing — **19 sub-skills vendored** | filesystem-mcp, pdf-mcp, vision-mcp |
-| `openmontage` | Non-linear video editing via ffmpeg for shorts / montages | ffmpeg-mcp, video-mcp |
-| `hyperframes` | Personalized talking-head video (consent-gated) | heygen-mcp, elevenlabs-mcp |
-| `humanizer` | Remove AI-isms from generated text, naturalize tone | style-mcp, grammar-mcp |
+- **Plugin:** `anthropic-skills`
+  - **Purpose:** Office docs (.docx/.pdf/.pptx/.xlsx), MCP server authoring,
+    skill creator, webapp testing — **19 sub-skills vendored**
+  - **MCP servers needed:** filesystem-mcp, pdf-mcp, vision-mcp
+
+- **Plugin:** `openmontage`
+  - **Purpose:** Non-linear video editing via ffmpeg for shorts / montages
+  - **MCP servers needed:** ffmpeg-mcp, video-mcp
+
+- **Plugin:** `hyperframes`
+  - **Purpose:** Personalized talking-head video (consent-gated)
+  - **MCP servers needed:** heygen-mcp, elevenlabs-mcp
+
+- **Plugin:** `humanizer`
+  - **Purpose:** Remove AI-isms from generated text, naturalize tone
+  - **MCP servers needed:** style-mcp, grammar-mcp
 
 #### Agency Personas (`skills/agency/`)
 
@@ -211,7 +426,7 @@ under the `agency-agents` source (skill names prefixed `agency-`). Persona
 packs need no MCP servers — they are behavioral guidance, not tooling.
 
 | Pack | Personas | Pack | Personas |
-|------|----------|------|----------|
+| ------ | ---------- | ------ | ---------- |
 | engineering | 66 | specialized | 59 |
 | marketing | 37 | game-development | 21 |
 | security | 12 | gis | 13 |
@@ -229,37 +444,68 @@ Three plugins double as **cross-cutting orchestrators** (declared in
 `catalog.json:orchestrators`):
 
 | Slug | Role | Best for |
-|------|------|----------|
+| ------ | ------ | ---------- |
 | `bmad-method` | build | greenfield multi-persona projects |
 | `gsd` | execute | atomic checklist, parallel sub-agents |
 | `rea` | research | hypothesis-driven multi-step investigation |
 
 ### 3.4 Vendored upstream projects (frozen copies)
 
-In addition to the 40 cataloged plugins, **10 complete upstream projects** are
+In addition to the 40 cataloged plugins, the upstream projects listed in the
+root license notice are
 vendored into the repo root (their source code, not just manifests):
 
-| Project | Origin | Why vendored |
-|---------|--------|--------------|
-| `anthropic-skills/` | github.com/anthropics/skills | Multi-skill bundle, 19 sub-skills |
-| `replica-skill/` | github.com/Jakeschincariol/replica-skill | Multi-skill bundle, 11 sub-skills |
-| `agency-agents/` | github.com/msitarzewski/agency-agents | 283 persona skills + NEXUS playbooks |
-| `agentic-awesome-skills/` | awesome-list fork | Curated skill index, used as discovery source |
-| `claude-mem/` | github.com/crystalsta/claudemem | Cross-session memory hooks |
-| `headroom/` | github.com/withspectrum/headroom | Context-window optimization primitives |
-| `ponytail/` | github.com/DietrichGebert/ponytail | Skills framework + hooks (MIT) |
-| `superpowers/` | github.com/obra/superpowers | Developer productivity skills (MIT) |
-| `system-prompts-and-models-of-ai-tools/` | github.com/x1xhlol/system-prompts-and-models-of-ai-tools | Reference prompts (GPL-3.0) |
-| `ECC/` | github.com/affaan-m/ECC | Enhanced Claude Code configuration (MIT) |
+- **Project:** `anthropic-skills/`
+  - **Origin:** github.com/anthropics/skills
+  - **Why vendored:** Multi-skill bundle, 19 sub-skills
 
-The vendored projects feed the aggregation pipeline: 2,729 (AAS) + 314 (ECC)
-+ 283 (Agency) + 19 (Anthropic) + 15 (Superpowers) + 11 (Replica) + 6 (Ponytail)
-+ 1 (task-observer) bring the **total indexed skill count to 3,378** in
-`all-skills.json`.
+- **Project:** `replica-skill/`
+  - **Origin:** github.com/Jakeschincariol/replica-skill
+  - **Why vendored:** Multi-skill bundle, 11 sub-skills
+
+- **Project:** `agency-agents/`
+  - **Origin:** github.com/msitarzewski/agency-agents
+  - **Why vendored:** 283 persona skills + NEXUS playbooks
+
+- **Project:** `agentic-awesome-skills/`
+  - **Origin:** awesome-list fork
+  - **Why vendored:** Curated skill index, used as discovery source
+
+- **Project:** `claude-mem/`
+  - **Origin:** github.com/thedotmack/claude-mem
+  - **Why vendored:** Cross-session memory hooks
+
+- **Project:** `headroom/`
+  - **Origin:** github.com/headroomlabs-ai/headroom
+  - **Why vendored:** Context-window optimization primitives
+
+- **Project:** `ponytail/`
+  - **Origin:** github.com/DietrichGebert/ponytail
+  - **Why vendored:** Skills framework + hooks (MIT)
+
+- **Project:** `superpowers/`
+  - **Origin:** github.com/obra/superpowers
+  - **Why vendored:** Developer productivity skills (MIT)
+
+- **Project:** `system-prompts-and-models-of-ai-tools/`
+  - **Origin:** github.com/x1xhlol/system-prompts-and-models-of-ai-tools
+  - **Why vendored:** Reference prompts (GPL-3.0)
+
+- **Project:** `ECC/`
+  - **Origin:** github.com/affaan-m/ECC
+  - **Why vendored:** Enhanced Claude Code configuration (MIT)
+
+- **Project:** `task-observer/`
+  - **Origin:** github.com/rebelytics/one-skill-to-rule-them-all
+  - **Why vendored:** Ambient skill observation (CC-BY-4.0, pinned)
+
+The [generated source table](docs/CAPABILITY_COUNTS.md) distinguishes raw
+records from unique indexed skills. Skill sources feed `setup.sh` directly;
+plugin guides form a separate catalog surface.
 
 ## 4. The setup pipeline
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────┐
 │ plugin-catalog/catalog.json + vendored upstream projects           │
 │   ↓ (scaffold_modular_skills.sh)                                   │
@@ -268,8 +514,8 @@ The vendored projects feed the aggregation pipeline: 2,729 (AAS) + 314 (ECC)
 │ unified-integration/skills/all-skills.json  (3,378 skills)         │
 │   ↓ (setup.sh, per-agent dispatch)                                 │
 │ ~/.claude/CLAUDE.md      ~/.codex/AGENTS.md      ~/.cursor/...     │
-│ ~/.continue/config.json  ~/.gemini/...           ~/.kiro/...       │
-│ ~/.copilot/...           ~/.opencode/...         ~/.windsurf/...   │
+│ ~/.config/opencode/...  ~/.gemini/...           ~/.kiro/...       │
+│ selected Hermes profiles and reference/rule files                │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -278,9 +524,8 @@ it merges rather than overwrites user customizations (post-H-1 audit fix).
 
 ## 5. Quality posture
 
-- **323 integration tests**, including 3 opt-in live tests (2 network, 1
-  preflight model), plus native CLI fixtures and installed-host checks. See
-  the current
+- The integration regression suite includes opt-in network/model tests and
+  native CLI fixtures. Totals change with the suite; consult the dated
   [verification report](docs/audit/NATIVE_HOSTS_E2E_2026-11-16.md).
 - **Adaptive preflight** (capability selection before the main agent's first
   inference): 58 dedicated regression tests cover the model.json contract,
@@ -291,7 +536,8 @@ it merges rather than overwrites user customizations (post-H-1 audit fix).
   enforced in CI.
 - **End-to-end setup** verified against 8 stub agent CLIs in an isolated
   HOME (42-second cold run, exit 0).
-- **Secrets scan**: zero real credentials in the tree.
+- Secret-scan evidence is scoped to the dated audit and revision that produced
+  it.
 - **Deterministic builds**: skill index sorted by name; byte-stable across
   re-runs (post-H-2 audit fix).
 
@@ -311,39 +557,49 @@ bash unified-integration/setup.sh
 
 # 4. Verify
 test -f ~/.claude/CLAUDE.md && echo "Claude Code provisioned"
-ls ~/.codex/ ~/.cursor/ ~/.continue/ 2>/dev/null
+ls ~/.codex/ ~/.cursor/ ~/.config/opencode/ 2>/dev/null
 ```
 
-For full options (dry-run, agent filter, no-vendored mode) see
-`README.md` → "Usage".
+For setup and native host selection, see [README.md](README.md) and [the agent
+guide](docs/AGENTS.md). `setup.sh` has no dry-run or no-vendored CLI options.
 
 ## 7. What's next — the merger backlog
 
 See **`docs/MCP_INTEGRATION_CHECKLIST.md`** for the step-by-step plan to
 finish the merger. Summary:
 
-- **40 MCP servers** declared across the 40 plugins (the agency persona packs
-  need none); **5 P0** servers must be
-  installed before Phase 1 is functional.
-- **9 servers built in-house** at `unified-integration/mcp-servers/`
-  (embeddings, task-router, ffmpeg, vision, graphrag, arxiv,
-  google-news, video, style) - installed by `setup-mcp.sh`, gated by
-  CI job `mcp-servers`, covered by 39 regression tests.
-- **25 distinct API keys / env vars** required across the catalog: Serper,
-  You, Tavily, Exa, Firecrawl, Figma, HeyGen, ElevenLabs, Microsoft Graph,
-  Google OAuth, NewsAPI, Linear, GitHub, OpenAI, Bing Image, Neo4j,
-  LanguageTool, agent_browser (Chromium path/profile/log level).
+- The generated inventory distinguishes MCP implementation status, bundled
+  backends and default enablement. Runtime readiness is checked separately.
+- External MCPs need installed executables, account authorization and central
+  credential references. Suggested package commands remain roadmap data.
+- `setup-mcp.sh --check` and the offline MCP regression module verify bundled
+  protocol behavior; optional live tests require deliberate opt-in.
 
 ## 8. Related documents
 
-| Document | Audience |
-|----------|----------|
-| `README.md` | Setup & daily users |
-| `README_INTEGRATION.md` (this file) | Architects & integrators |
-| `.cursorrules` | Cursor / Claude Code / any agent reading system prompts |
-| `skills/README.md` | Plugin authors |
-| `docs/MCP_INTEGRATION_CHECKLIST.md` | Platform engineers building MCP servers |
-| `docs/ADAPTIVE_PREFLIGHT.md` | Architects wiring capability-selection preflight |
-| `docs/CONFIGURATION.md` | Operators managing credentials and env vars |
-| `docs/audit/E2E_AUDIT_2026-11.md` | Security / QA reviewers |
-| `CONTRACT.md` | Contributors |
+- **Document:** `README.md`
+  - **Audience:** Setup & daily users
+
+- **Document:** `README_INTEGRATION.md` (this file)
+  - **Audience:** Architects & integrators
+
+- **Document:** `.cursorrules`
+  - **Audience:** Cursor / Claude Code / any agent reading system prompts
+
+- **Document:** `skills/README.md`
+  - **Audience:** Plugin authors
+
+- **Document:** `docs/MCP_INTEGRATION_CHECKLIST.md`
+  - **Audience:** Platform engineers building MCP servers
+
+- **Document:** `docs/ADAPTIVE_PREFLIGHT.md`
+  - **Audience:** Architects wiring capability-selection preflight
+
+- **Document:** `docs/CONFIGURATION.md`
+  - **Audience:** Operators managing credentials and env vars
+
+- **Document:** `docs/audit/E2E_AUDIT_2026-11.md`
+  - **Audience:** Security / QA reviewers
+
+- **Document:** `CONTRACT.md`
+  - **Audience:** Contributors

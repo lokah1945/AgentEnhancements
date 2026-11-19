@@ -24,10 +24,9 @@ OpenCode/Hermes use as the context channel). Mode 1 never switches to
 Mode 2 automatically; the model source follows the user's explicit
 choice.
 
-Configuration (user scope, outside any project checkout):
+Configuration (private, checkout-local state):
 
-  $XDG_CONFIG_HOME/agentenhancements/model.json (fallback
-  ~/.config/agentenhancements/model.json):
+  <checkout>/.agentenhancements/config/model.json:
 
     {"adaptive_preflight_mode": 0}                      # disabled
     {"adaptive_preflight_mode": 1}                      # native host
@@ -58,6 +57,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import stat
 import sys
 import time
 import urllib.error
@@ -209,11 +209,9 @@ def _api_config():
 
 
 def config_dir() -> Path:
-    """User-scope configuration directory (XDG pattern, outside cwd)."""
-    xdg = os.environ.get("XDG_CONFIG_HOME")
-    if xdg:
-        return Path(xdg).expanduser() / "agentenhancements"
-    return Path.home() / ".config" / "agentenhancements"
+    """Private configuration in the active checkout, independent of cwd/XDG."""
+    from project_paths import config_root
+    return config_root()
 
 
 def model_config_path() -> Path:
@@ -269,12 +267,14 @@ def load_model_config(path: Optional[Path] = None) -> ModelConfig:
     Mode 0 with a diagnosis code (review 12, fallback table)."""
     target = Path(path) if path else model_config_path()
     try:
-        raw = target.read_text(encoding="utf-8")
+        with target.open("rb") as stream:
+            raw_bytes = stream.read(64 * 1024 + 1)
     except OSError:
         return ModelConfig()  # missing file == Mode 0, no diagnosis
-    if len(raw) > 64 * 1024:
+    if len(raw_bytes) > 64 * 1024:
         return ModelConfig(diagnosis="model_json_too_large")
     try:
+        raw = raw_bytes.decode("utf-8")
         doc = json.loads(raw, object_pairs_hook=_reject_duplicate_keys)
     except (ValueError, TypeError) as exc:
         return ModelConfig(diagnosis=f"model_json_invalid:{type(exc).__name__}")
@@ -332,7 +332,10 @@ class Deadline:
 
     def timeout(self) -> float:
         """Socket timeout for the next call, capped for safety."""
-        return max(0.05, min(self.remaining(), HTTP_TIMEOUT_CAP_SECONDS))
+        remaining = self.remaining()
+        if remaining <= 0:
+            raise PreflightError("timeout")
+        return min(remaining, HTTP_TIMEOUT_CAP_SECONDS)
 
 
 # ---------------------------------------------------------------------------
@@ -704,11 +707,23 @@ def resolve_api_key(endpoint: str) -> str:
         pass
     key_file = config_dir() / "preflight.key"
     try:
-        if key_file.is_file() and key_file.stat().st_mode & 0o077 == 0:
-            for line in key_file.read_text(encoding="utf-8").splitlines():
+        descriptor = os.open(
+            key_file, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_NONBLOCK", 0),
+        )
+        with os.fdopen(descriptor, "r", encoding="utf-8") as stream:
+            info = os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077:
+                return ""
+            if hasattr(os, "getuid") and info.st_uid != os.getuid():
+                return ""
+            raw = stream.read(64 * 1024 + 1)
+            if len(raw) > 64 * 1024:
+                return ""
+            for line in raw.splitlines():
                 if line.strip():
                     return line.strip()
-    except OSError:
+    except (OSError, UnicodeError):
         pass
     return ""
 
@@ -728,6 +743,7 @@ class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
 
 def _post_json(url: str, headers: Dict[str, str], payload: Dict[str, Any],
                timeout: float) -> Dict[str, Any]:
+    expires = time.monotonic() + timeout
     request = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
@@ -739,7 +755,27 @@ def _post_json(url: str, headers: Dict[str, str], payload: Dict[str, Any],
     opener = urllib.request.build_opener(_NoRedirectHandler())
     try:
         with opener.open(request, timeout=timeout) as response:
-            body = response.read(1_048_576)
+            # Socket timeouts are otherwise inactivity limits: a provider can
+            # keep read(size) alive indefinitely by slowly streaming bytes.
+            # read1 returns available chunks, letting the shared remaining
+            # budget cap every subsequent socket read.
+            chunks = []
+            size = 0
+            while True:
+                remaining = expires - time.monotonic()
+                if remaining <= 0:
+                    raise PreflightError("timeout")
+                transport = getattr(getattr(response.fp, "raw", None), "_sock", None)
+                if transport is not None:
+                    transport.settimeout(remaining)
+                chunk = response.read1(min(65_536, 1_048_577 - size))
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                size += len(chunk)
+                if size > 1_048_576:
+                    raise PreflightError("response_too_large")
+            body = b"".join(chunks)
             return json.loads(body.decode("utf-8"))
     except urllib.error.HTTPError as exc:
         # A refused redirect surfaces here as a 30x code.
@@ -939,13 +975,20 @@ def run_custom_selection(prompt: str, config: ModelConfig,
                          deadline: Deadline, api_key: str) -> Selection:
     """Mode 2: at most two inference rounds, bounded catalog reads,
     every failure mapped to a PreflightError code."""
+    # The selector gets intent, never credentials embedded in a prompt. Redact
+    # before ranking/truncation so a credential cannot survive as a prefix or
+    # reappear on the optional lookup round.
+    redact = _api_config().redact
+    prompt = redact(prompt.replace(api_key, "[redacted]") if api_key else prompt)
     registry = _registry()
     candidates = registry.paged_search(prompt, limit=MAX_SEARCH_HINTS)
     user = _round_one_user(prompt, candidates)
     for round_no in range(MAX_INFERENCE_ROUNDS):
         if deadline.expired:
-            raise PreflightError("deadline_exceeded")
+            raise PreflightError("timeout")
         payload = call_model(config, SELECTOR_SYSTEM, user, deadline, api_key)
+        if deadline.expired:
+            raise PreflightError("timeout")
         selection = parse_selection(payload)
         if selection.decision != "lookup":
             return selection
@@ -976,7 +1019,8 @@ class PreflightResult:
 def _diagnose(message: str) -> None:
     """Bounded stderr diagnosis; stdout is the context channel on
     OpenCode/Hermes and must stay clean (review 12)."""
-    print(f"[AgentEnhancements] preflight: {message[:200]}", file=sys.stderr)
+    message = " ".join(message.split())[:200]
+    print(f"[AgentEnhancements] preflight: {message}", file=sys.stderr)
 
 
 def preflight_context(
@@ -1044,7 +1088,7 @@ def preflight_context(
             )
         revision = registry_revision()
         if deadline.expired:
-            raise PreflightError("deadline_exceeded")
+            raise PreflightError("timeout")
         return PreflightResult(
             context=render_package(items, revision),
             requested_mode=config.mode,
@@ -1052,8 +1096,7 @@ def preflight_context(
         )
     except PreflightError as exc:
         _diagnose(
-            f"mode {config.mode} -> 0 fallback ({exc.code}"
-            + (f": {exc.detail}" if exc.detail else "") + ")"
+            f"mode {config.mode} -> 0 fallback ({exc.code})"
         )
         return PreflightResult(
             context=fallback(agent, prompt),

@@ -5,9 +5,9 @@ last_updated: "2026-11-16"
 audience: "Maintainers, on-call"
 ---
 
-# Runbook — diagnosa & pemulihan AgentEnhancements
+## Runbook — diagnosa & pemulihan AgentEnhancements
 
-## Doctor: pemeriksaan berurutan
+### Doctor: pemeriksaan berurutan
 
 Jalankan dari root repo. Setiap langkah menyebut gejala, perintah, dan
 tindakan bila gagal.
@@ -36,7 +36,7 @@ subproses pengujian. Pengaturan persetujuan global tidak diubah. Uji Hermes
 memverifikasi discovery MCP, injeksi skill, serta simpan ringkasan/tugas di
 dua profil sementara.
 
-### 1. Bundle vendored utuh?
+#### 1. Bundle vendored utuh?
 
 ```bash
 python3 - <<'PY'
@@ -44,7 +44,8 @@ import json, hashlib
 from pathlib import Path
 m = json.loads(Path("task-observer/VENDORED.json").read_text())
 bad = [r for r, w in m["files"].items()
-       if hashlib.sha256((Path("task-observer")/r).read_bytes()).hexdigest() != w]
+       if hashlib.sha256(
+           (Path("task-observer")/r).read_bytes()).hexdigest() != w]
 print("MISMATCH:", bad) if bad else print("OK: bundle pristine")
 PY
 ```
@@ -52,7 +53,7 @@ PY
 Jika checksum gagal, periksa perubahan dengan `git diff -- task-observer/`.
 Pulihkan hanya perubahan yang tidak diperlukan; bundle adalah pin kanonik.
 
-### 2. MCP gateway hidup?
+#### 2. MCP gateway hidup?
 
 ```bash
 bash unified-integration/scripts/setup-mcp.sh --prepare   # cetak path venv
@@ -65,7 +66,7 @@ umum: dependensi venv (jalankan ulang --prepare), ui.api.json rusak
 (hapus dan `api_config.py init`), backend eksternal tidak dikonfigurasi
 (masih ok — hanya `status: unavailable`).
 
-### 3. Konteks sesi dalam budget?
+#### 3. Konteks sesi dalam budget?
 
 ```bash
 AGENT_MEMORY_ROOT="$(mktemp -d)" python3 \
@@ -79,7 +80,7 @@ Output harus ≤ ~400 token (observer card). Bila membengkak: cek
 --audit` (instalasi lama `--set all` = 132K+ token; `--migrate`
 menurunkannya ke set default dengan aman).
 
-### 4. Discovery routing sehat?
+#### 4. Discovery routing sehat?
 
 ```bash
 python3 unified-integration/scripts/registry.py search "buat laporan pdf"
@@ -89,7 +90,7 @@ python3 unified-integration/scripts/registry.py search "buat laporan pdf"
 benar (abstain by design). Benchmark penuh (recall@5 ≥ 95%,
 neg-suppression ≥ 90%): lihat `docs/benchmark/REPORT_2026-11-15.md`.
 
-### 5. Promote/rollback observer?
+#### 5. Promote/rollback observer?
 
 - Promote gagal `Invalid cross-device link` → versi lama; update.
   Versi sekarang copy-backup → verify → swap lokal (aman lintas-fs).
@@ -97,7 +98,7 @@ neg-suppression ≥ 90%): lihat `docs/benchmark/REPORT_2026-11-15.md`.
   Refusal "verification failed" berarti backup rusak — source TIDAK
   disentuh; periksa `skill-updates/rollback/`.
 
-## Ledger kanal host (siapa menyuntik apa)
+### Ledger kanal host (siapa menyuntik apa)
 
 | Kanal | Isi | Batas |
 | --- | --- | ---: |
@@ -110,7 +111,7 @@ neg-suppression ≥ 90%): lihat `docs/benchmark/REPORT_2026-11-15.md`.
 Cold start total ≤ 4.000 token (CONTRACT §8.4). Perubahan kanal baru
 wajib mendaftar di `context_budget.COLD_START_CHANNELS` + test CI.
 
-## Keputusan rilis (gates)
+### Keputusan rilis (gates)
 
 1. `run-tests.py` 100% (skip by design hanya untuk env-dependen).
 2. `setup-mcp.sh --check` 10/10.

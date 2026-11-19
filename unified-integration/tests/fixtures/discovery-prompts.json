@@ -1,0 +1,510 @@
+{
+  "version": 1,
+  "method": "Paired natural task intents; acceptable alternatives were chosen from capability descriptions and router policy before the baseline run. This is a small lexical-discovery regression corpus, not a semantic or task-completion evaluation. No fixture text is consumed by production ranking.",
+  "cases": [
+    {
+      "id": "word-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Prepare a formal offer letter as a Word document.",
+      "acceptable_ids": [
+        "skill:docx"
+      ]
+    },
+    {
+      "id": "word-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Siapkan surat penawaran resmi dalam dokumen Word.",
+      "acceptable_ids": [
+        "skill:docx"
+      ]
+    },
+    {
+      "id": "sheet-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Clean this Excel workbook and add formulas for the totals.",
+      "acceptable_ids": [
+        "skill:xlsx"
+      ]
+    },
+    {
+      "id": "sheet-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Bersihkan buku kerja Excel ini dan tambahkan rumus untuk totalnya.",
+      "acceptable_ids": [
+        "skill:xlsx"
+      ]
+    },
+    {
+      "id": "slides-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Turn the quarterly results into a PowerPoint presentation.",
+      "acceptable_ids": [
+        "skill:pptx"
+      ]
+    },
+    {
+      "id": "slides-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Ubah hasil kuartalan menjadi presentasi PowerPoint.",
+      "acceptable_ids": [
+        "skill:pptx"
+      ]
+    },
+    {
+      "id": "pdf-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Extract the tables from this PDF and merge the remaining pages.",
+      "acceptable_ids": [
+        "skill:pdf"
+      ]
+    },
+    {
+      "id": "pdf-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Ekstrak tabel dari PDF ini dan gabungkan halaman sisanya.",
+      "acceptable_ids": [
+        "skill:pdf"
+      ]
+    },
+    {
+      "id": "mcp-build-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Build an MCP server that exposes our inventory API as tools.",
+      "acceptable_ids": [
+        "skill:mcp-builder"
+      ]
+    },
+    {
+      "id": "mcp-build-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Bangun server MCP yang menyediakan API inventaris kami sebagai tool.",
+      "acceptable_ids": [
+        "skill:mcp-builder"
+      ]
+    },
+    {
+      "id": "skill-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Create a reusable skill and evaluate how reliably its trigger works.",
+      "acceptable_ids": [
+        "skill:skill-creator",
+        "skill:writing-skills"
+      ]
+    },
+    {
+      "id": "skill-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Buat skill yang dapat dipakai ulang dan evaluasi keandalan pemicunya.",
+      "acceptable_ids": [
+        "skill:skill-creator",
+        "skill:writing-skills"
+      ]
+    },
+    {
+      "id": "browser-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Test this local web app with Playwright and capture a browser screenshot.",
+      "acceptable_ids": [
+        "skill:webapp-testing",
+        "skill:playwright-skill"
+      ]
+    },
+    {
+      "id": "browser-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Uji aplikasi web lokal ini dengan Playwright dan ambil tangkapan layar browser.",
+      "acceptable_ids": [
+        "skill:webapp-testing",
+        "skill:playwright-skill"
+      ]
+    },
+    {
+      "id": "claude-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Add streaming responses using the Anthropic Claude API and SDK.",
+      "acceptable_ids": [
+        "skill:claude-api"
+      ]
+    },
+    {
+      "id": "claude-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Tambahkan respons streaming memakai API dan SDK Claude dari Anthropic.",
+      "acceptable_ids": [
+        "skill:claude-api"
+      ]
+    },
+    {
+      "id": "debug-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "The application crashes after login; reproduce the bug and find its root cause.",
+      "acceptable_ids": [
+        "skill:systematic-debugging",
+        "skill:debugger",
+        "skill:debugging-strategies",
+        "skill:debugging-toolkit"
+      ]
+    },
+    {
+      "id": "debug-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Aplikasi macet sesudah login; reproduksi kerusakan dan temukan akar masalahnya.",
+      "acceptable_ids": [
+        "skill:systematic-debugging",
+        "skill:debugger",
+        "skill:debugging-strategies",
+        "skill:debugging-toolkit"
+      ]
+    },
+    {
+      "id": "review-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Review this pull request for code quality before we merge it.",
+      "acceptable_ids": [
+        "skill:requesting-code-review",
+        "skill:code-review-excellence",
+        "skill:code-review-and-quality",
+        "skill:five-axis-code-review",
+        "skill:code-reviewer"
+      ]
+    },
+    {
+      "id": "review-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Tinjau pull request ini untuk kualitas kode sebelum digabungkan.",
+      "acceptable_ids": [
+        "skill:requesting-code-review",
+        "skill:code-review-excellence",
+        "skill:code-review-and-quality",
+        "skill:five-axis-code-review",
+        "skill:code-reviewer"
+      ]
+    },
+    {
+      "id": "threat-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Model security threats for this payment service using STRIDE.",
+      "acceptable_ids": [
+        "skill:threat-modeling",
+        "skill:threat-modeling-expert",
+        "skill:stride-analysis-patterns"
+      ]
+    },
+    {
+      "id": "threat-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Modelkan ancaman keamanan layanan pembayaran ini memakai STRIDE.",
+      "acceptable_ids": [
+        "skill:threat-modeling",
+        "skill:threat-modeling-expert",
+        "skill:stride-analysis-patterns"
+      ]
+    },
+    {
+      "id": "architecture-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Evaluate software architecture tradeoffs and record the system design decision in an ADR.",
+      "acceptable_ids": [
+        "skill:architecture",
+        "skill:software-architecture",
+        "skill:architecture-decision-records",
+        "skill:agency-engineering-software-architect"
+      ]
+    },
+    {
+      "id": "architecture-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Evaluasi kompromi arsitektur perangkat lunak dan catat keputusan desain sistem dalam ADR.",
+      "acceptable_ids": [
+        "skill:architecture",
+        "skill:software-architecture",
+        "skill:architecture-decision-records",
+        "skill:agency-engineering-software-architect"
+      ]
+    },
+    {
+      "id": "ci-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Set up GitHub Actions workflows for continuous integration, tests and deployment.",
+      "acceptable_ids": [
+        "skill:github-actions",
+        "skill:github-actions-templates",
+        "skill:github-actions-advanced",
+        "skill:github-workflow-automation"
+      ]
+    },
+    {
+      "id": "ci-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Siapkan workflow GitHub Actions untuk integrasi berkelanjutan, pengujian, dan deployment.",
+      "acceptable_ids": [
+        "skill:github-actions",
+        "skill:github-actions-templates",
+        "skill:github-actions-advanced",
+        "skill:github-workflow-automation"
+      ]
+    },
+    {
+      "id": "ui-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Design a new dashboard UI with a coherent color palette and typography.",
+      "acceptable_ids": [
+        "skill:frontend-design",
+        "skill:ui-ux-pro-max",
+        "skill:design-system",
+        "skill:agency-design-ui-designer"
+      ]
+    },
+    {
+      "id": "ui-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Rancang tampilan dashboard baru dengan palet warna dan tipografi yang konsisten.",
+      "acceptable_ids": [
+        "skill:frontend-design",
+        "skill:ui-ux-pro-max",
+        "skill:design-system",
+        "skill:agency-design-ui-designer"
+      ]
+    },
+    {
+      "id": "video-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Edit this interview footage into short video clips with subtitles.",
+      "acceptable_ids": [
+        "skill:video-editing",
+        "skill:agency-marketing-short-video-editing-coach"
+      ]
+    },
+    {
+      "id": "video-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Sunting rekaman wawancara ini menjadi klip video pendek dengan subtitle.",
+      "acceptable_ids": [
+        "skill:video-editing",
+        "skill:agency-marketing-short-video-editing-coach"
+      ]
+    },
+    {
+      "id": "postgres-en",
+      "language": "en",
+      "kind": "positive",
+      "prompt": "Optimize a slow PostgreSQL query; inspect EXPLAIN plans and index selection.",
+      "acceptable_ids": [
+        "skill:postgresql-optimization",
+        "skill:postgresql",
+        "skill:postgres-best-practices",
+        "skill:sql-optimization-patterns",
+        "skill:postgres-patterns",
+        "skill:supabase-postgres-best-practices"
+      ]
+    },
+    {
+      "id": "postgres-id",
+      "language": "id",
+      "kind": "positive",
+      "prompt": "Optimalkan query PostgreSQL yang lambat; periksa rencana EXPLAIN dan pemilihan indeks.",
+      "acceptable_ids": [
+        "skill:postgresql-optimization",
+        "skill:postgresql",
+        "skill:postgres-best-practices",
+        "skill:sql-optimization-patterns",
+        "skill:postgres-patterns",
+        "skill:supabase-postgres-best-practices"
+      ]
+    },
+    {
+      "id": "graph-en",
+      "language": "en",
+      "kind": "ambiguous",
+      "prompt": "Extract entities and relationships from these documents into a knowledge graph.",
+      "acceptable_ids": [
+        "skill:agency-engineering-knowledge-graph-engineer",
+        "skill:rag-engineer",
+        "skill:rag-implementation"
+      ]
+    },
+    {
+      "id": "graph-id",
+      "language": "id",
+      "kind": "ambiguous",
+      "prompt": "Ekstrak entitas dan hubungan dari dokumen ini menjadi graf pengetahuan.",
+      "acceptable_ids": [
+        "skill:agency-engineering-knowledge-graph-engineer",
+        "skill:rag-engineer",
+        "skill:rag-implementation"
+      ]
+    },
+    {
+      "id": "research-en",
+      "language": "en",
+      "kind": "ambiguous",
+      "prompt": "Research competing approaches to retrieval augmented generation and write a cited report.",
+      "acceptable_ids": [
+        "skill:deep-research",
+        "skill:deep-research-framework",
+        "skill:agency-research-synthesist",
+        "skill:research-ops"
+      ]
+    },
+    {
+      "id": "research-id",
+      "language": "id",
+      "kind": "ambiguous",
+      "prompt": "Riset pendekatan alternatif retrieval augmented generation dan tulis laporan dengan kutipan sumber.",
+      "acceptable_ids": [
+        "skill:deep-research",
+        "skill:deep-research-framework",
+        "skill:agency-research-synthesist",
+        "skill:research-ops"
+      ]
+    },
+    {
+      "id": "plan-en",
+      "language": "en",
+      "kind": "ambiguous",
+      "prompt": "Turn these product requirements into an implementation plan before coding.",
+      "acceptable_ids": [
+        "skill:writing-plans",
+        "skill:brainstorming",
+        "skill:concise-planning",
+        "skill:plan-writing"
+      ]
+    },
+    {
+      "id": "plan-id",
+      "language": "id",
+      "kind": "ambiguous",
+      "prompt": "Ubah persyaratan produk ini menjadi rencana implementasi sebelum menulis kode.",
+      "acceptable_ids": [
+        "skill:writing-plans",
+        "skill:brainstorming",
+        "skill:concise-planning",
+        "skill:plan-writing"
+      ]
+    },
+    {
+      "id": "compression-en",
+      "language": "en",
+      "kind": "ambiguous",
+      "prompt": "Compress a long agent conversation to reduce its context token budget.",
+      "acceptable_ids": [
+        "skill:context-compression",
+        "skill:context-optimization"
+      ]
+    },
+    {
+      "id": "compression-id",
+      "language": "id",
+      "kind": "ambiguous",
+      "prompt": "Kompres percakapan agent yang panjang agar anggaran token konteks berkurang.",
+      "acceptable_ids": [
+        "skill:context-compression",
+        "skill:context-optimization"
+      ]
+    },
+    {
+      "id": "thanks-en",
+      "language": "en",
+      "kind": "negative",
+      "prompt": "Thanks, that answers my question.",
+      "acceptable_ids": []
+    },
+    {
+      "id": "thanks-id",
+      "language": "id",
+      "kind": "negative",
+      "prompt": "Terima kasih, itu sudah menjawab pertanyaan saya.",
+      "acceptable_ids": []
+    },
+    {
+      "id": "arithmetic-en",
+      "language": "en",
+      "kind": "negative",
+      "prompt": "What is 17 multiplied by 23?",
+      "acceptable_ids": []
+    },
+    {
+      "id": "arithmetic-id",
+      "language": "id",
+      "kind": "negative",
+      "prompt": "Berapa hasil 17 dikali 23?",
+      "acceptable_ids": []
+    },
+    {
+      "id": "translation-en",
+      "language": "en",
+      "kind": "negative",
+      "prompt": "Translate good morning into Indonesian.",
+      "acceptable_ids": []
+    },
+    {
+      "id": "translation-id",
+      "language": "id",
+      "kind": "negative",
+      "prompt": "Terjemahkan selamat pagi ke bahasa Inggris.",
+      "acceptable_ids": []
+    },
+    {
+      "id": "figma-en",
+      "language": "en",
+      "kind": "unavailable_mcp",
+      "prompt": "Use figma-mcp to inspect the design tokens in our Figma file.",
+      "acceptable_ids": [],
+      "unavailable_id": "mcp:figma-mcp"
+    },
+    {
+      "id": "figma-id",
+      "language": "id",
+      "kind": "unavailable_mcp",
+      "prompt": "Gunakan figma-mcp untuk memeriksa token desain di berkas Figma kami.",
+      "acceptable_ids": [],
+      "unavailable_id": "mcp:figma-mcp"
+    },
+    {
+      "id": "tavily-en",
+      "language": "en",
+      "kind": "unavailable_mcp",
+      "prompt": "Search the web through tavily-mcp for current results.",
+      "acceptable_ids": [],
+      "unavailable_id": "mcp:tavily-mcp"
+    },
+    {
+      "id": "tavily-id",
+      "language": "id",
+      "kind": "unavailable_mcp",
+      "prompt": "Cari hasil web terbaru melalui tavily-mcp.",
+      "acceptable_ids": [],
+      "unavailable_id": "mcp:tavily-mcp"
+    }
+  ]
+}

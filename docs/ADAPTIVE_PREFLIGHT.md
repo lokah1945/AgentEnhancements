@@ -5,7 +5,7 @@ last_updated: 2026-11-19
 audience: users, maintainers
 ---
 
-# Adaptive Preflight Capability Selection
+## Adaptive Preflight Capability Selection
 
 Implementation of the 2026-11-19 architecture review
 ("Audit Arsitektur Pemilihan Capability", roadmap stage 1: one shared
@@ -13,15 +13,23 @@ handler with fixtures). The runtime hook can now delegate capability
 selection to an isolated selector before the main agent's first
 inference, instead of only listing heuristic candidates.
 
-## Model
+### Model
 
 One selector role, three modes, one validated package:
 
-| Mode | Who assigns | Model used by the selector |
-| --- | --- | --- |
-| 0 - disabled (default) | The hook uses the existing loader. | None: the main agent decides from the candidate cards. |
-| 1 - native | The host adapter supplies the selection through its own sanctioned inference surface. | The host's configured model. |
-| 2 - custom | The AE hook calls the user-configured endpoint. | The endpoint/sdk/model triple in model.json. |
+- **Mode:** 0 - disabled (default)
+  - **Who assigns:** The hook uses the existing loader.
+  - **Model used by the selector:** None: the main agent decides from the
+    candidate cards.
+
+- **Mode:** 1 - native
+  - **Who assigns:** The host adapter supplies the selection through its own
+    sanctioned inference surface.
+  - **Model used by the selector:** The host's configured model.
+
+- **Mode:** 2 - custom
+  - **Who assigns:** The AE hook calls the user-configured endpoint.
+  - **Model used by the selector:** The endpoint/sdk/model triple in model.json.
 
 The selector never executes anything and never sees history, tool
 payloads, memory, observations or credentials. Its input is the task
@@ -38,13 +46,12 @@ document that names typed registry IDs. AgentEnhancements then:
 The main agent keeps every decision and every permission: preflight
 only prepares guidance and names; execution stays with the host.
 
-## Configuration
+### Configuration
 
-User scope, outside any project checkout:
+Private state under the active checkout, independent of cwd and global XDG:
 
 ```text
-$XDG_CONFIG_HOME/agentenhancements/model.json
-# fallback: ~/.config/agentenhancements/model.json
+.agentenhancements/config/model.json
 ```
 
 ```json
@@ -78,7 +85,7 @@ Rules (enforced by `scripts/adaptive_preflight.py` and its tests):
   atomic replace; changes apply from the next prompt.
 - The file must never contain secrets.
 
-### Protocol details (Mode 2)
+#### Protocol details (Mode 2)
 
 - `sdk: "openai"` - Chat Completions at `<endpoint>/chat/completions`
   (OpenAI-compatible; for OpenRouter use `https://openrouter.ai/api/v1`).
@@ -95,7 +102,7 @@ Rules (enforced by `scripts/adaptive_preflight.py` and its tests):
 - Redirects are refused: the validated origin must not silently move.
 - `temperature` is 0 and output is capped at 500 tokens.
 
-### Credentials (Mode 2)
+#### Credentials (Mode 2)
 
 The key never lives in model.json or ui.api.json. Resolution order:
 
@@ -107,7 +114,7 @@ The key never lives in model.json or ui.api.json. Resolution order:
 
 A missing key falls back to Mode 0 before any network attempt.
 
-### Mode 1 contract
+#### Mode 1 contract
 
 The adapter supplies its native selection on the hook event:
 
@@ -135,7 +142,7 @@ supply the field simply run Mode 0 until their host-side integration
 is proven. Mode 2 needs no adapter change - the runtime performs the
 call inside the existing hook.
 
-## Output contract
+### Output contract
 
 The selector returns one of:
 
@@ -148,13 +155,29 @@ The selector returns one of:
 
 Validation and resolution then prove, per item:
 
-| Type | Proof before the main request | Delivery |
-| --- | --- | --- |
-| skill | the SKILL.md exists under an allowed root | `direct_read` (exact path to read before related work) or `loaded` when the host profile already links it natively |
-| plugin | the guide file exists; status is recorded | `direct_read` (guidance; runtime entry points follow the guide) |
-| mcp | `api_config.server_state` reports the server visible | `callable` (the gateway publishes the schema on the session toolset) |
-| tool:<server>/<name> | the server is visible | `callable` with the exact tool reference |
-| capability | built-in descriptor | `callable` with the documented usage line |
+- **Type:** skill
+  - **Proof before the main request:** the SKILL.md exists under an allowed root
+  - **Delivery:** `direct_read` (exact path to read before related work) or
+    `loaded` when the host profile already links it natively
+
+- **Type:** plugin
+  - **Proof before the main request:** the guide file exists; status is recorded
+  - **Delivery:** `direct_read` (guidance; runtime entry points follow the
+    guide)
+
+- **Type:** mcp
+  - **Proof before the main request:** `api_config.server_state` reports the
+    server visible
+  - **Delivery:** `callable` (the gateway publishes the schema on the session
+    toolset)
+
+- **Type:** `tool:<server>/<name>`
+  - **Proof before the main request:** the server is visible
+  - **Delivery:** `callable` with the exact tool reference
+
+- **Type:** capability
+  - **Proof before the main request:** built-in descriptor
+  - **Delivery:** `callable` with the documented usage line
 
 Anything that cannot be proven is `unavailable`. One unavailable
 **required** item sends the whole turn back to Mode 0 with a
@@ -167,7 +190,7 @@ name-surface alias that `registry.py show` used to allow).
 The rendered package carries the local `registry_revision` digest so a
 host can detect catalog changes between selection and dispatch.
 
-## Fallbacks and deadline
+### Fallbacks and deadline
 
 The whole preflight phase shares one monotonic deadline - 2 seconds by
 default (`AE_PREFLIGHT_DEADLINE_MS`), at most two inference rounds -
@@ -184,7 +207,7 @@ Mode 0 is provably egress-free: no credentials are read, no network
 module is exercised, and the regression suite asserts no socket is
 ever opened.
 
-## Cost notes
+### Cost notes
 
 Measured on the audit's fixtures, a rendered package replaces the
 eight candidate cards (about 220-230 tokens) with a typically smaller,
@@ -196,7 +219,7 @@ cross-domain tasks and rare capabilities benefit most; simple tasks
 are better served by Mode 0, which is exactly why it stays the
 default and the fallback.
 
-## Verification
+### Verification
 
 - `tests/test_adaptive_preflight.py` - 58 regression tests: config
   contract, Mode 0 parity (byte-identical renders, single memory
@@ -210,7 +233,7 @@ default and the fallback.
 - `scripts/doctor.py` prints an advisory preflight summary (requested
   and effective mode, diagnosis code, key presence - never the key).
 
-## What is deliberately not claimed
+### What is deliberately not claimed
 
 - A package item marked `callable` is proven against the gateway's
   published surface and the current configuration; the final proof

@@ -1,15 +1,33 @@
 # Multimedia / Writing Skills
 
-Multimedia + writing skills: office docs, video montage, talking-head avatars, AI-ism removal.
+Multimedia + writing skills: office docs, video montage, talking-head avatars,
+AI-ism removal.
 
 Plugins: **4**
 
-| Slug | Name | Status | MCP servers | Source |
-|------|------|--------|-------------|--------|
-| [`anthropic-skills`](./anthropic-skills/) | Anthropic Skills | vendored | filesystem-mcp, pdf-mcp, vision-mcp | `anthropics/skills` |
-| [`humanizer`](./humanizer/) | Humanizer | integrated-ready | style-mcp, grammar-mcp | `blader/humanizer` |
-| [`hyperframes`](./hyperframes/) | Hyperframes | integrated-ready | heygen-mcp, elevenlabs-mcp | `heygen-com/hyperframes` |
-| [`openmontage`](./openmontage/) | OpenMontage | integrated-ready | ffmpeg-mcp, video-mcp | `calesthio/OpenMontage` |
+- **Slug:** [`anthropic-skills`](./anthropic-skills/)
+  - **Name:** Anthropic Skills
+  - **Status:** integrated
+  - **MCP servers:** filesystem-mcp, pdf-mcp, vision-mcp
+  - **Source:** `anthropics/skills`
+
+- **Slug:** [`humanizer`](./humanizer/)
+  - **Name:** Humanizer
+  - **Status:** integrated-ready
+  - **MCP servers:** style-mcp, grammar-mcp
+  - **Source:** `blader/humanizer`
+
+- **Slug:** [`hyperframes`](./hyperframes/)
+  - **Name:** Hyperframes
+  - **Status:** integrated-ready
+  - **MCP servers:** heygen-mcp, elevenlabs-mcp
+  - **Source:** `heygen-com/hyperframes`
+
+- **Slug:** [`openmontage`](./openmontage/)
+  - **Name:** OpenMontage
+  - **Status:** integrated-ready
+  - **MCP servers:** ffmpeg-mcp, video-mcp
+  - **Source:** `calesthio/OpenMontage`
 
 ## Files in each plugin directory
 

@@ -1,8 +1,13 @@
+# AgentEnhancements modification, 2026-11-19: expose the documented headroom binary.
 [package]
 name = "headroom-cli"
 version = "0.1.0"
 edition = "2021"
 description = "Headroom CLI for context compression"
+
+[[bin]]
+name = "headroom"
+path = "src/main.rs"
 
 [dependencies]
 headroom-core = { path = "../headroom-core" }

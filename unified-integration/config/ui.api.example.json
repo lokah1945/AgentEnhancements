@@ -371,7 +371,7 @@
       "optional": []
     },
     "agent-browser-mcp": {
-      "enabled": true,
+      "enabled": false,
       "required": [],
       "optional": [
         "AGENT_BROWSER_PROFILE_DIR",
@@ -381,9 +381,8 @@
       ],
       "command": [
         "node",
-        "mcp-servers/agent_browser/src/index.js"
+        "{repo}/mcp-servers/agent_browser/src/index.js"
       ],
-      "cwd": "/root/project/AgentEnhancements",
       "env": {
         "AGENT_BROWSER_PROFILE_DIR": "AGENT_BROWSER_PROFILE_DIR",
         "AGENT_BROWSER_DEFAULT_BROWSER": "AGENT_BROWSER_DEFAULT_BROWSER",

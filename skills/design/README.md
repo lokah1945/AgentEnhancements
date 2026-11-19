@@ -4,12 +4,29 @@ Design skills: UI/UX tokens, visual polish, slide narrative, diagramming.
 
 Plugins: **4**
 
-| Slug | Name | Status | MCP servers | Source |
-|------|------|--------|-------------|--------|
-| [`diagram-design`](./diagram-design/) | Diagram Design | integrated-ready | mermaid-mcp, excalidraw-mcp | `cathrynlavery/diagram-design` |
-| [`impeccable`](./impeccable/) | Impeccable | integrated-ready | browser-tools-mcp, figma-mcp | `pbakaus/impeccable` |
-| [`ppt-master`](./ppt-master/) | PPT Master | integrated-ready | google-slides-mcp, office-mcp, image-search-mcp | `hugohe3/ppt-master` |
-| [`ui-ux-pro-max`](./ui-ux-pro-max/) | UI UX Pro Max | integrated-ready | figma-mcp, browser-tools-mcp, storybook-mcp | `nextlevelbuilder/ui-ux-pro-max-skill` |
+- **Slug:** [`diagram-design`](./diagram-design/)
+  - **Name:** Diagram Design
+  - **Status:** integrated-ready
+  - **MCP servers:** mermaid-mcp, excalidraw-mcp
+  - **Source:** `cathrynlavery/diagram-design`
+
+- **Slug:** [`impeccable`](./impeccable/)
+  - **Name:** Impeccable
+  - **Status:** integrated-ready
+  - **MCP servers:** browser-tools-mcp, figma-mcp
+  - **Source:** `pbakaus/impeccable`
+
+- **Slug:** [`ppt-master`](./ppt-master/)
+  - **Name:** PPT Master
+  - **Status:** integrated-ready
+  - **MCP servers:** google-slides-mcp, office-mcp, image-search-mcp
+  - **Source:** `hugohe3/ppt-master`
+
+- **Slug:** [`ui-ux-pro-max`](./ui-ux-pro-max/)
+  - **Name:** UI UX Pro Max
+  - **Status:** integrated-ready
+  - **MCP servers:** figma-mcp, browser-tools-mcp, storybook-mcp
+  - **Source:** `nextlevelbuilder/ui-ux-pro-max-skill`
 
 ## Files in each plugin directory
 

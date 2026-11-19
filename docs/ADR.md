@@ -5,12 +5,12 @@ last_updated: 2026-11-13
 audience: maintainers and all agents
 ---
 
-# ADR — Architecture Decision Records
+## ADR — Architecture Decision Records
 
 Keputusan arsitektur untuk integrasi plugin catalog + replica-skill. Mengikuti
 template Michael Nygard. ADR ini melengkapi CONTRACT.md (tidak menimpanya).
 
-## ADR-001 — Struktur kategori 5 untuk plugin catalog
+### ADR-001 — Struktur kategori 5 untuk plugin catalog
 
 **Status**: Accepted (2026-11-13)
 
@@ -29,7 +29,7 @@ di-regenerasi dari scratch); catalog punya siklus hidup sendiri.
 **Consequences**: Dua "dunia" skill — ter-rekonsiliasi via `catalog-wire.sh`
 (symlink guide ke by-category/) tanpa mengubah index.
 
-## ADR-002 — Manifest format (skill-manifest.v1.json)
+### ADR-002 — Manifest format (skill-manifest.v1.json)
 
 **Status**: Accepted (2026-11-13)
 
@@ -44,7 +44,7 @@ mcp_servers_suggested, trigger_keywords, best_for, integration_notes.
 
 **Consequences**: Verifikasi path mencegah manifest basi saat file dipindah.
 
-## ADR-003 — Catalog index terpisah dari unified index
+### ADR-003 — Catalog index terpisah dari unified index
 
 **Status**: Accepted (2026-11-13)
 
@@ -61,7 +61,7 @@ SKILL.md frontmatter).
 **Consequences**: catalog.json di-generate oleh `scripts/gen-catalog-index.py`
 (ada di scripts workspace); regenerasi ulang bila manifest berubah.
 
-## ADR-004 — Vendor replica-skill vs submodule
+### ADR-004 — Vendor replica-skill vs submodule
 
 **Status**: Accepted (2026-11-13)
 
@@ -78,27 +78,32 @@ di pipeline: `setup.sh` aggregate_skills menambahkan source "replica-skill";
 
 **Consequences**: 11 skill replica masuk unified index dengan kategori
 "general" (normalisasi kategori agregasi). Update upstream: `update-skills.sh`
-tidak bisa git-pull (bukan repo git) — update manual via re-vendor; didokumentasikan.
+tidak bisa git-pull (bukan repo git) — update manual via re-vendor;
+didokumentasikan.
 
-## ADR-005 — Nama script menghindari pelanggaran CI filename
+### ADR-005 — Nama script menghindari pelanggaran CI filename
 
 **Status**: Accepted (2026-11-13)
 
-**Context**: CONTRACT 9.1 mem-block filename mengandung `fixed|new|v\d+|temp|backup`.
+**Context**: CONTRACT 9.1 mem-block filename mengandung
+`fixed|new|v\d+|temp|backup`.
 Patch awal punya `system-prompt-v2.md` dan `setup.sh` kedua (melanggar
 single source of truth 2.1).
 
 **Decision**:
-- Prompt konsolidasi → `unified-integration/prompts/consolidated-system-prompt.txt`
+
+- Prompt konsolidasi →
+  `unified-integration/prompts/consolidated-system-prompt.txt`
   (mengikuti pola `*-system-prompt.txt` kanonik).
-- Tidak ada setup.sh kedua → wiring via `unified-integration/scripts/catalog-wire.sh`.
+- Tidak ada setup.sh kedua → wiring via
+  `unified-integration/scripts/catalog-wire.sh`.
 - Semua nama script baru bebas token terlarang.
 
 **Rationale**: Kepatuhan CI + single source of truth.
 
 **Consequences**: Nama-nama di dokumentasi mengikuti nama final.
 
-## ADR-006 — .cursorrules manual tidak ditambahkan
+### ADR-006 — .cursorrules manual tidak ditambahkan
 
 **Status**: Accepted (2026-11-13)
 
@@ -112,9 +117,10 @@ yang bisa di-generate ke config agent manapun oleh setup.sh.
 
 **Rationale**: Agent neutrality; satu source, banyak target.
 
-**Consequences**: User Cursor mendapat rules via jalur kanonik, bukan file manual.
+**Consequences**: User Cursor mendapat rules via jalur kanonik, bukan file
+manual.
 
-## ADR-007 — Orchestrator tier berlapis
+### ADR-007 — Orchestrator tier berlapis
 
 **Status**: Accepted (2026-11-13)
 
@@ -125,7 +131,7 @@ bisa dikomposisi (recon saja, entrepreneur saja).
 
 **Rationale**: Separation of concerns; replica punya urutan internal khusus.
 
-## ADR-008 — Bahasa Indonesia default untuk docs baru
+### ADR-008 — Bahasa Indonesia default untuk docs baru
 
 **Status**: Accepted (2026-11-13)
 
@@ -135,7 +141,7 @@ asli — tidak dimodifikasi (respect upstream).
 
 **Rationale**: Konsisten preferensi maintainer; meminimalkan diff upstream.
 
-## Template ADR
+### Template ADR
 
 ```markdown
 ## ADR-XXX — <Title>

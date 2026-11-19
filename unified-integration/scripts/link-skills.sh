@@ -65,6 +65,8 @@ resolve_skills() {
     python3 -c "
 import json
 import os
+import sys
+from pathlib import Path
 
 with open(os.environ['INDEX_FILE'], encoding='utf-8') as f:
     data = json.load(f)
@@ -76,6 +78,19 @@ wanted = [w for w in filt.split() if w]
 seen = set()
 for skill in data.get('skills', []):
     name = skill.get('name') or ''
+    category = skill.get('category', 'general')
+    components = (name, category)
+    if any(not isinstance(part, str) or not part or part in ('.', '..')
+           or '/' in part or chr(92) in part
+           or any(ord(c) < 32 or ord(c) == 127 for c in part)
+           for part in components):
+        print('invalid skill name or category in registry; skipped', file=sys.stderr)
+        continue
+    root = Path(os.environ['INDEX_FILE']).parent.resolve()
+    source = root / 'by-category' / category / name / 'SKILL.md'
+    if not source.resolve().is_relative_to(root):
+        print('invalid skill path outside registry; skipped', file=sys.stderr)
+        continue
     if not name or name in seen:
         continue
     if mode == 'sources' and skill.get('source') not in wanted:
@@ -83,7 +98,7 @@ for skill in data.get('skills', []):
     if mode == 'names' and name not in wanted:
         continue
     seen.add(name)
-    print(name + '\t' + skill.get('category', 'general'))
+    print(name + '\t' + category)
 "
 }
 
@@ -115,6 +130,7 @@ link_skill() {
             current="$(readlink "$dst" 2>/dev/null || true)"
             case "$current" in
                 "$SKILLS_DIR"/*) ;;  # ours: refresh below
+                */unified-integration/skills/by-category/"$category/$name") ;; # previous checkout
                 *)
                     log_warn "skip $target/$name: symlink points outside the registry ($current)"
                     continue
@@ -129,6 +145,12 @@ link_skill() {
 
 unlink_named() {
     local name="$1"
+    case "$name" in
+        ''|.|..|*/*|*\\*|*$'\n'*|*$'\r'*|*$'\t'*)
+            log_error "invalid skill name for unlink"
+            return 1
+            ;;
+    esac
     local target
     for target in "${TARGETS[@]}"; do
         local dst="$target/$name"

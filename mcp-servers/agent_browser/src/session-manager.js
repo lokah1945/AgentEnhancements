@@ -2,34 +2,36 @@
  * session-manager.js - Persistent browser profile management
  *
  * Handles session lifecycle: create, list, delete, snapshot, restore
- * Profiles stored in ~/.agent-browser/profiles/{sessionId}/
+ * Profiles stored in checkout-local private AE state.
  */
 
 const fs = require('fs');
 const path = require('path');
-const { homedir } = require('os');
 const crypto = require('crypto');
 
-const DEFAULT_PROFILE_ROOT = path.join(homedir(), '.agent-browser', 'profiles');
-const SESSIONS_INDEX = path.join(DEFAULT_PROFILE_ROOT, 'sessions.json');
+const STATE_ROOT = process.env.AGENT_ENHANCEMENTS_STATE_DIR || path.resolve(__dirname, '../../../.agentenhancements');
+const DEFAULT_PROFILE_ROOT = path.join(STATE_ROOT, 'cache', 'browser', 'profiles');
 
 class SessionManager {
   constructor(options = {}) {
     this.profileRoot = options.profileRoot || DEFAULT_PROFILE_ROOT;
+    this.sessionsIndex = path.join(this.profileRoot, 'sessions.json');
     this.ensureDirectories();
     this.sessions = this.loadSessionsIndex();
   }
 
   ensureDirectories() {
     if (!fs.existsSync(this.profileRoot)) {
-      fs.mkdirSync(this.profileRoot, { recursive: true });
+      fs.mkdirSync(this.profileRoot, { recursive: true, mode: 0o700 });
     }
+    if (fs.lstatSync(this.profileRoot).isSymbolicLink()) throw new Error('Refusing symlinked browser profiles');
+    fs.chmodSync(this.profileRoot, 0o700);
   }
 
   loadSessionsIndex() {
     try {
-      if (fs.existsSync(SESSIONS_INDEX)) {
-        return JSON.parse(fs.readFileSync(SESSIONS_INDEX, 'utf8'));
+      if (fs.existsSync(this.sessionsIndex) && !fs.lstatSync(this.sessionsIndex).isSymbolicLink()) {
+        return JSON.parse(fs.readFileSync(this.sessionsIndex, 'utf8'));
       }
     } catch (e) {
       console.warn('[SessionManager] Failed to load sessions index:', e.message);
@@ -39,7 +41,13 @@ class SessionManager {
 
   saveSessionsIndex() {
     try {
-      fs.writeFileSync(SESSIONS_INDEX, JSON.stringify(this.sessions, null, 2), 'utf8');
+      const temporary = path.join(this.profileRoot, '.sessions-' + crypto.randomBytes(8).toString('hex'));
+      try {
+        fs.writeFileSync(temporary, JSON.stringify(this.sessions, null, 2), { encoding: 'utf8', mode: 0o600, flag: 'wx' });
+        fs.renameSync(temporary, this.sessionsIndex);
+      } finally {
+        if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+      }
     } catch (e) {
       console.error('[SessionManager] Failed to save sessions index:', e.message);
     }
@@ -50,6 +58,10 @@ class SessionManager {
   }
 
   getProfilePath(sessionId) {
+    if (typeof sessionId !== 'string' || sessionId.length > 128 ||
+        !/^[A-Za-z0-9_.-]+$/.test(sessionId) || sessionId === '.' || sessionId === '..') {
+      throw new Error('Invalid session identifier');
+    }
     return path.join(this.profileRoot, sessionId);
   }
 

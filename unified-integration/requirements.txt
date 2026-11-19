@@ -4,4 +4,4 @@ PyYAML>=6,<7
 tomlkit>=0.13,<1
 json5>=0.12,<1
 jsonschema>=4.20,<5
-filelock>=3.16,<4
+filelock>=4.2.1,<5

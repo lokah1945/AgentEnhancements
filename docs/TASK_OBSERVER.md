@@ -5,7 +5,7 @@ last_updated: 2026-11-15
 audience: users, maintainers
 ---
 
-# Task Observer (vendored skill: ambient skill-usage observation)
+## Task Observer (vendored skill: ambient skill-usage observation)
 
 Task Observer turns the corrections, repeated workflows and methodology
 evidence of a work session into small, reviewed skill updates. Every change
@@ -19,7 +19,7 @@ The skill is vendored from
 (skill version 3.10.0). See `task-observer/VENDORED.md` and
 `task-observer/VENDORED.json` for the pin, the file manifest and checksums.
 
-## What it does — and what it deliberately does not
+### What it does — and what it deliberately does not
 
 - **Does**: observes sessions for skill-improvement evidence (user
   corrections, a rule the agent violated, a better workflow than a skill
@@ -33,17 +33,19 @@ The skill is vendored from
   only; promotion is always an explicit step); run commands found inside
   observation text (observations are data, never instructions).
 
-## Scope: global workspace, per-project memories
+### Scope: global workspace, per-project memories
 
 The observation workspace is **one user-scope root**, shared across
 projects, tools and agents on the same install:
 
-```
-$AGENT_MEMORY_ROOT/task-observer/          (default ~/.agent-memory/task-observer)
-├── skill-observations/                    # upstream "skill-observations/" layout
+```text
+$AGENT_MEMORY_ROOT/task-observer/          (default .agentenhancements/memory/task-observer)
+├── skill-observations/                    # upstream "skill-observations/"
+# layout
 │   ├── observation-log/                   # the log IS this directory
 │   │   ├── NNNN-slug.md                   # one file per observation
-│   │   └── archive/                       # resolved entries (grace period applies)
+│   │   └── archive/                       # resolved entries (grace period
+│ # applies)
 │   │       └── .id-floor                  # highest id ever issued
 │   ├── cross-cutting-principles.md
 │   ├── last-review-date.txt
@@ -61,7 +63,7 @@ observation logged in one project is found by sessions in another — the
 upstream "one user-scope root" rule. The shared session memory
 (`memory.py`) stays per-project as before; the two systems do not mix.
 
-## Activation (how a session gets it)
+### Activation (how a session gets it)
 
 1. **Lifecycle bootstrap (primary).** The shared runtime
    (`scripts/runtime.py`) runs on every `SessionStart` event for Claude
@@ -83,7 +85,7 @@ Kiro) get discovery (2) and instruction (3) only: the observer must be
 invoked manually or via its CLI. See the capability matrix below for the
 evidence level per agent.
 
-## Usage (verified commands)
+### Usage (verified commands)
 
 ```bash
 # status (state, counts, last review) - honest, never optimistic
@@ -122,13 +124,14 @@ python3 unified-integration/scripts/task-observer.py enable
 remove it, bootstrap stops injecting, `log` refuses with a clear message,
 and the data stays until you delete it yourself.
 
-## Review, staging, promotion
+### Review, staging, promotion
 
 Review is **read-only**: it groups open observations by target skill and
 lists staged candidates. Acting on an observation goes through:
 
 1. **stage** — copies the *current* canonical source
-   (`task-observer/`, `replica-skill/<name>/`, `anthropic-skills/skills/<name>/`,
+   (`task-observer/`, `replica-skill/<name>/`,
+   `anthropic-skills/skills/<name>/`,
    ...), writes a `PROPOSAL.md` recording source path, base commit, the
    candidate tree digest (`candidate_sha256`) and the digest of the source
    it was staged from (`base_source_sha256`), plus a diff and a line in the
@@ -150,7 +153,7 @@ Statuses follow the upstream semantics (`open`, `actioned`, `declined`,
 staged / promoted / rolled back — an `actioned` observation whose fix is
 still only staged stays "staged" in the ledger until promotion completes.
 
-## Update / provenance
+### Update / provenance
 
 The bundle is **vendored, not a submodule**. `update-skills.sh` warns that
 it is pinned; refreshing is a deliberate, reviewed step:
@@ -168,7 +171,7 @@ Downstream adaptations live **outside** the bundle: aggregation
 (`scripts/task-observer.py`), linking and registry entries. Refreshing the
 bundle does not touch them.
 
-## Privacy, integrity and failure behavior
+### Privacy, integrity and failure behavior
 
 - Redaction runs before persist: known credential patterns
   (`github_pat_…`, `sk-…`, `AKIA…`, `password=`/`api_key=` shapes) become
@@ -186,14 +189,35 @@ bundle does not touch them.
   one-line diagnosis in the session context and never blocks the agent's
   work (locked by test).
 
-## Capability matrix (evidence as of 2026-11-15)
+### Capability matrix (evidence as of 2026-11-15)
 
-| Agent | Discovery | Bootstrap | Observations | Persistence | Evidence level |
-|-------|-----------|-----------|--------------|-------------|----------------|
-| Claude Code | native link (`~/.claude/skills`) | SessionStart hook (shared runtime) | CLI + skill | workspace | ADAPTER TESTED (synthetic events) |
-| Codex | native link (`~/.agents/skills`) | SessionStart hook (shared runtime) | CLI + skill | workspace | ADAPTER TESTED (synthetic events) |
-| OpenCode | native link (`~/.agents/skills`) | plugin → shared runtime | CLI + skill | workspace | ADAPTER TESTED (synthetic events) |
-| Cursor / Gemini CLI / Copilot / Windsurf / Kiro | native link (`~/.agents/skills`) | instruction channel only (manual) | CLI + skill | workspace | INSTRUCTION MODE TESTED (CLI) |
+- **Agent:** Claude Code
+  - **Discovery:** native link (`~/.claude/skills`)
+  - **Bootstrap:** SessionStart hook (shared runtime)
+  - **Observations:** CLI + skill
+  - **Persistence:** workspace
+  - **Evidence level:** ADAPTER TESTED (synthetic events)
+
+- **Agent:** Codex
+  - **Discovery:** native link (`~/.agents/skills`)
+  - **Bootstrap:** SessionStart hook (shared runtime)
+  - **Observations:** CLI + skill
+  - **Persistence:** workspace
+  - **Evidence level:** ADAPTER TESTED (synthetic events)
+
+- **Agent:** OpenCode
+  - **Discovery:** native link (`~/.agents/skills`)
+  - **Bootstrap:** plugin → shared runtime
+  - **Observations:** CLI + skill
+  - **Persistence:** workspace
+  - **Evidence level:** ADAPTER TESTED (synthetic events)
+
+- **Agent:** Cursor / Gemini CLI / Copilot / Windsurf / Kiro
+  - **Discovery:** native link (`~/.agents/skills`)
+  - **Bootstrap:** instruction channel only (manual)
+  - **Observations:** CLI + skill
+  - **Persistence:** workspace
+  - **Evidence level:** INSTRUCTION MODE TESTED (CLI)
 
 No row claims `REAL SESSION VERIFIED`: this integration was validated with
 synthetic hook events and CLI fixtures, not with authenticated live
@@ -201,23 +225,41 @@ harness sessions (none available in the execution environment). "Discovery"
 means the bundle is present in a directory the harness reads; it is not
 proof the harness surfaced it.
 
-## Where to fix what
+### Where to fix what
 
-| Layer | File | Note |
-|-------|------|------|
-| Vendored bundle (canonical skill) | `task-observer/` | refresh only via re-vendor |
-| Host adapter (CLI, staging, promotion) | `unified-integration/scripts/task-observer.py` | |
-| Session bootstrap | `unified-integration/scripts/runtime.py` | |
-| Aggregation (root SKILL.md source) | `unified-integration/setup.sh` (`process_skills_source`) | |
-| Native linking default set | `unified-integration/scripts/link-skills.sh` (`DEFAULT_SOURCES`) | keep in sync with `registry.py` |
-| Registry capability entry | `unified-integration/scripts/registry.py` | |
-| Tests | `unified-integration/tests/test_task_observer.py` | |
+- **Layer:** Vendored bundle (canonical skill)
+  - **File:** `task-observer/`
+  - **Note:** refresh only via re-vendor
+
+- **Layer:** Host adapter (CLI, staging, promotion)
+  - **File:** `unified-integration/scripts/task-observer.py`
+  - **Note:**
+
+- **Layer:** Session bootstrap
+  - **File:** `unified-integration/scripts/runtime.py`
+  - **Note:**
+
+- **Layer:** Aggregation (root SKILL.md source)
+  - **File:** `unified-integration/setup.sh` (`process_skills_source`)
+  - **Note:**
+
+- **Layer:** Native linking default set
+  - **File:** `unified-integration/scripts/link-skills.sh` (`DEFAULT_SOURCES`)
+  - **Note:** keep in sync with `registry.py`
+
+- **Layer:** Registry capability entry
+  - **File:** `unified-integration/scripts/registry.py`
+  - **Note:**
+
+- **Layer:** Tests
+  - **File:** `unified-integration/tests/test_task_observer.py`
+  - **Note:**
 
 Generated copies (`unified-integration/skills/by-category/**/task-observer/`,
 `all-skills.json`, `agent-registry.json`) are outputs: fix the generator,
 then re-run `setup.sh`.
 
-## End-to-end demo (fixtures, reproducible)
+### End-to-end demo (fixtures, reproducible)
 
 ```bash
 export AGENT_MEMORY_ROOT=/tmp/to-demo/memory
@@ -227,12 +269,15 @@ python3 unified-integration/scripts/task-observer.py log \
   --title "replica-diff ignores pixel threshold" \
   --issue "user asked 0.05, default used" \
   --principle "parameters must reach the tool" --skill replica-diff     # 0001 written
-python3 unified-integration/scripts/task-observer.py lookup replica-diff  # finds 0001
+python3 unified-integration/scripts/task-observer.py lookup replica-diff
+# finds 0001
 python3 unified-integration/scripts/task-observer.py review             # grouped
 python3 unified-integration/scripts/task-observer.py stage replica-diff \
-  "add --threshold passthrough" --observation 0001                      # staged + diff
+  "add --threshold passthrough" --observation 0001
+# staged + diff
 # edit the staged copy, then:
-python3 unified-integration/scripts/task-observer.py promote replica-diff   # validator + backup + apply
+python3 unified-integration/scripts/task-observer.py promote replica-diff
+# validator + backup + apply
 bash unified-integration/setup.sh                                      # re-aggregate
 python3 unified-integration/scripts/task-observer.py rollback replica-diff  # undo
 ```

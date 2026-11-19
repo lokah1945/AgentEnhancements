@@ -1,12 +1,11 @@
 import { spawn } from "node:child_process"
 import { existsSync } from "node:fs"
-import { homedir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const unified = resolve(dirname(fileURLToPath(import.meta.url)), "..")
-const dataHome = process.env.XDG_DATA_HOME || join(homedir(), ".local", "share")
-const isolatedPython = join(dataHome, "agentenhancements", "venv", "bin", "python")
+const state = process.env.AGENT_ENHANCEMENTS_STATE_DIR || join(unified, "..", ".agentenhancements")
+const isolatedPython = join(state, "runtime", "venv", "bin", "python")
 const python = existsSync(isolatedPython) ? isolatedPython : "python3"
 
 /** OpenCode connects MCP asynchronously. Wait for our managed server before

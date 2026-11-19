@@ -56,12 +56,16 @@ print(json.dumps([str(memory.MEMORY_ROOT),str(adaptive_preflight.model_config_pa
         tools = self.root / 'tools'
         tools.mkdir()
         uv = tools / 'uv'
-        uv.write_text('#!' + sys.executable + '\nimport pathlib,sys\n'
+        uv.write_text('#!' + sys.executable + '\nimport os,pathlib,sys\n'
+                      'pathlib.Path(os.environ["AE_TEST_ENV_MARKER"]).write_text(os.environ.get("CARGO_TARGET_DIR",""))\n'
                       'if sys.argv[1]=="venv":\n'
                       ' p=pathlib.Path(sys.argv[-1])/"bin/python"\n'
                       ' p.parent.mkdir(parents=True);p.write_text("#!/bin/sh\\nexit 0\\n");p.chmod(0o700)\n')
         uv.chmod(0o700)
-        env = dict(self.env, PATH=str(tools)+os.pathsep+os.environ['PATH'])
+        marker = self.repo / 'captured-build-path'
+        env = dict(self.env, PATH=str(tools)+os.pathsep+os.environ['PATH'],
+                   CARGO_TARGET_DIR=str(self.home / 'external-build-target'),
+                   AE_TEST_ENV_MARKER=str(marker))
         result = subprocess.run(['bash', str(self.scripts / 'setup-mcp.sh'), '--prepare'],
                                 cwd=self.home, env=env, capture_output=True,
                                 text=True, timeout=20)
@@ -71,6 +75,7 @@ print(json.dumps([str(memory.MEMORY_ROOT),str(adaptive_preflight.model_config_pa
         self.assertTrue(python.is_file())
         self.assertEqual((self.repo / '.agentenhancements').stat().st_mode & 0o777, 0o700)
         self.assertFalse((self.home / '.local/share/agentenhancements').exists())
+        self.assertEqual(marker.read_text(), str(self.repo / 'headroom/target'))
 
     def test_default_compressor_does_not_select_a_global_path_binary(self):
         tools = self.root / 'foreign-tools'

@@ -12,10 +12,22 @@ jobs:
   static-checks:
     name: Static checks (CONTRACT §9.1)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify generated capability counts and current documentation claims
+        run: python3 scripts/generate_capability_counts.py --check
+
+      - name: Verify public repository description
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}" --jq .description > "$RUNNER_TEMP/repository-description.txt"
+          diff -u docs/repository-description.txt "$RUNNER_TEMP/repository-description.txt"
 
       - name: bash -n on all integration shell scripts
         run: |
@@ -94,8 +106,17 @@ jobs:
   integration-tests:
     name: unified-integration test suite
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HOME: ${{ runner.temp }}/ae-integration-home
+      XDG_CONFIG_HOME: ${{ runner.temp }}/ae-integration-config
+      XDG_DATA_HOME: ${{ runner.temp }}/ae-integration-data
+      AGENT_MEMORY_ROOT: ${{ github.workspace }}/.agentenhancements/memory
+      AGENT_ENHANCEMENTS_BUILD_HEADROOM: "0"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Build modular skills tree (scaffold from catalog)
         run: |
           bash scripts/scaffold_modular_skills.sh
@@ -108,15 +129,53 @@ jobs:
       - name: Run regression suite
         run: |
           runtime_python="$(bash unified-integration/scripts/setup-mcp.sh --prepare)"
-          "$runtime_python" unified-integration/tests/run-tests.py
+          # Fixtures create their own HOME; inherited host aliases would send
+          # writes into the job's shared config directories instead.
+          env -u CODEX_HOME -u CLAUDE_CONFIG_DIR -u HERMES_HOME \
+            -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
+            -u TASK_OBSERVER_WORKSPACE \
+            "$runtime_python" unified-integration/tests/run-tests.py
+      - name: Verify frozen bilingual discovery benchmark
+        run: |
+          runtime_python="$(bash unified-integration/scripts/setup-mcp.sh --prepare)"
+          "$runtime_python" unified-integration/tests/discovery_benchmark.py --check \
+            --output "${RUNNER_TEMP}/ae-discovery.json"
+
+  headroom-cli:
+    name: headroom CLI build and regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RUSTUP_TOOLCHAIN: "1.99.1"
+      CARGO_HOME: ${{ github.workspace }}/.agentenhancements/cache/cargo
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install tested Rust toolchain
+        run: rustup toolchain install 1.99.1 --profile minimal
+      - name: Test standalone compression and every mode
+        run: cargo test --manifest-path headroom/Cargo.toml --locked -p headroom-cli
+      - name: Build the binary used by setup
+        run: cargo build --manifest-path headroom/Cargo.toml --locked --release -p headroom-cli
+      - name: Smoke test installed CLI interface
+        run: |
+          test -x headroom/target/release/headroom
+          for mode in auto code logs json markdown generic; do
+            printf '%s\n' '{"keep":null,"values":[1,2,3]}' |
+              headroom/target/release/headroom compress --mode "$mode" > "$RUNNER_TEMP/headroom-$mode.txt"
+            test -s "$RUNNER_TEMP/headroom-$mode.txt"
+          done
 
   ecc-tests:
     name: ECC test suite (CONTRACT §5.1)
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
       - name: Install and verify ECC command-line tools
@@ -127,7 +186,7 @@ jobs:
           printf 'ecc-pcre2-probe\n' | rg --pcre2 -- '^ecc-pcre2-probe$'
           jq --version
       - name: Install ECC dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
         working-directory: ECC
       - name: Build opencode artifacts
         run: npm run build:opencode
@@ -136,7 +195,7 @@ jobs:
         run: |
           # Follow ECC's own CI: suites that move shared build artifacts or
           # assert timing budgets must run outside the parallel worker pool.
-          ECC_TEST_SERIAL=$(grep -rlE --include='*.test.js' 'build-opencode|\.backup-|dist\.backup|time budget' tests | sed 's#^tests/##' | sort | paste -sd, -)
+          ECC_TEST_SERIAL=$(rg -l --glob '*.test.js' 'build-opencode|\.backup-|dist\.backup|time budget|real animator' tests | sed 's#^tests/##' | sort | paste -sd, -)
           export ECC_TEST_SERIAL
           ECC_TEST_JOBS=4 node tests/run-all.js
         working-directory: ECC
@@ -146,8 +205,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - name: Install ffmpeg / tesseract for the media & vision servers
@@ -177,18 +238,21 @@ jobs:
           sys.exit(0 if result.wasSuccessful() else 1)
           PY
 
+      - name: Browser profile storage regressions (offline)
+        run: npm --prefix mcp-servers/agent_browser test
+
   markdownlint:
-    name: markdownlint (advisory, owned layer)
+    name: markdownlint (owned layer)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          node-version: "20"
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
       - name: Lint owned documentation
         run: |
-          npx -y markdownlint-cli \
+          npx -y markdownlint-cli@0.49.1 \
             README.md README_INTEGRATION.md CONTRACT.md docs/*.md \
-            unified-integration/skills/README.md skills/*.md skills/*/README.md || \
-            echo "::warning::markdownlint reported issues (advisory)"
+            unified-integration/skills/README.md skills/*.md skills/*/README.md

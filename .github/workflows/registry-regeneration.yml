@@ -5,6 +5,15 @@ on:
     branches: ["**"]
     paths:
       - 'skills/**'
+      - 'ECC/skills/**'
+      - 'ponytail/skills/**'
+      - 'superpowers/skills/**'
+      - 'replica-skill/**'
+      - 'task-observer/**'
+      - 'unified-integration/setup.sh'
+      - 'unified-integration/update-skills.sh'
+      - 'scripts/generate_capability_counts.py'
+      - '.github/workflows/registry-regeneration.yml'
       - 'plugin-catalog/**'
       - 'agentic-awesome-skills/skills/**'
       - 'anthropic-skills/skills/**'
@@ -15,6 +24,15 @@ on:
   pull_request:
     paths:
       - 'skills/**'
+      - 'ECC/skills/**'
+      - 'ponytail/skills/**'
+      - 'superpowers/skills/**'
+      - 'replica-skill/**'
+      - 'task-observer/**'
+      - 'unified-integration/setup.sh'
+      - 'unified-integration/update-skills.sh'
+      - 'scripts/generate_capability_counts.py'
+      - '.github/workflows/registry-regeneration.yml'
       - 'plugin-catalog/**'
       - 'agentic-awesome-skills/skills/**'
       - 'anthropic-skills/skills/**'
@@ -35,24 +53,28 @@ jobs:
     name: Regenerate Skill Registry
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      HOME: ${{ runner.temp }}/ae-registry-home
+      XDG_CONFIG_HOME: ${{ runner.temp }}/ae-registry-config
+      XDG_DATA_HOME: ${{ runner.temp }}/ae-registry-data
+      AGENT_MEMORY_ROOT: ${{ github.workspace }}/.agentenhancements/memory
+      AGENT_ENHANCEMENTS_BUILD_HEADROOM: "0"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install pyyaml
-
       - name: Build capability registry
         run: |
+          # Refresh the skills index from vendored sources before building its consumers.
+          bash unified-integration/setup.sh >/dev/null
           python3 unified-integration/scripts/registry.py build
           echo "agent-registry.json and all-skills.json regenerated"
 
@@ -69,6 +91,9 @@ jobs:
         run: |
           python3 unified-integration/scripts/catalog-validate.py
 
+      - name: Verify generated capability counts
+        run: python3 scripts/generate_capability_counts.py --check
+
       - name: Check for drift
         run: |
           if ! git diff --exit-code -- skills/library-map.json unified-integration/skills/agent-registry.json unified-integration/skills/all-skills.json; then
@@ -79,7 +104,7 @@ jobs:
           echo "No drift detected - registry is up to date"
 
       - name: Upload registry artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: registry-files
           path: |

@@ -35,11 +35,14 @@ for mod in [
     "test_task_observer",
     "test_audit_remediation",
     "test_native_hosts",
-    "test_security_regressions",
     "test_context_budget_boundaries",
-    "test_discovery_quality",
     "test_setup_safety",
+    "test_security_regressions",
+    "test_capability_counts",
+    "test_registry_workflow",
     "test_runtime_dependencies",
+    "test_discovery_quality",
+    "test_modular_docs",
     "test_project_local_state",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))

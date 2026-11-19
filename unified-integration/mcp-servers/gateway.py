@@ -112,6 +112,18 @@ def failed(message: str) -> types.CallToolResult:
     )
 
 
+def _redact_payload(item: Any, config: dict) -> Any:
+    """Clean complete values before any display truncation or serialization."""
+    if isinstance(item, str):
+        return redact(item, config)
+    if isinstance(item, list):
+        return [_redact_payload(value, config) for value in item]
+    if isinstance(item, dict):
+        return {redact(key, config): _redact_payload(value, config)
+                for key, value in item.items()}
+    return item
+
+
 class External:
     """Own stdio/client contexts in one task; never leak credentials to stderr."""
 
@@ -426,6 +438,7 @@ class Gateway:
                         payload = {}
                     if not isinstance(payload, dict):
                         payload = {}
+                    payload = _redact_payload(payload, config)
                     # Same redaction the call_tool path applies: external
                     # MCPs may echo environment values in error text. Only
                     # provenance fields survive, string-clamped.
@@ -535,18 +548,8 @@ class Gateway:
                     return failed("Credentials changed; MCP reconnect is in progress.")
                 response = await worker.call(original, arguments)
 
-            # Some external MCPs echo environment values in error messages.
-            def clean(item: Any) -> Any:
-                if isinstance(item, str):
-                    return redact(item, config)
-                if isinstance(item, list):
-                    return [clean(x) for x in item]
-                if isinstance(item, dict):
-                    return {redact(k, config): clean(v) for k, v in item.items()}
-                return item
-
             return types.CallToolResult.model_validate(
-                clean(response.model_dump(mode="json"))
+                _redact_payload(response.model_dump(mode="json"), config)
             )
         except Exception:
             return failed(

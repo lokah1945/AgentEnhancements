@@ -3,11 +3,12 @@
 
 RSS fallback for NewsAPI outages, feeding the last-30-days skill
 (plugin-catalog/mcp-servers.json → google-news-mcp, P2, news).
-No API key required. 10-minute response cache in /tmp/ae-news-cache.
+No API key required. Private 10-minute response cache under AGENT_MEMORY_ROOT.
 """
 from __future__ import annotations
 
 import hashlib
+import os
 import tempfile
 import time
 import urllib.error
@@ -24,7 +25,7 @@ VERSION = "1.0.0"
 BASE = "https://news.google.com/rss"
 LANGS = {"en": "en", "id": "id", "jp": "jp", "kr": "kr", "de": "de",
          "fr": "fr", "es": "es", "pt": "pt-BR", "zh": "zh-Hans"}
-CACHE_DIR = Path(tempfile.gettempdir()) / "ae-news-cache"
+CACHE_DIR = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory")) / "mcp" / "news-cache"
 CACHE_TTL = 600
 TIMEOUT = 30
 MAX_LIMIT = 50
@@ -41,14 +42,22 @@ def _tool(fn):
 
 def _cache_get(key: str) -> str | None:
     path = CACHE_DIR / f"{key}.xml"
-    if path.is_file() and time.time() - path.stat().st_mtime < CACHE_TTL:
+    if not path.is_symlink() and path.is_file() and time.time() - path.stat().st_mtime < CACHE_TTL:
         return path.read_text()
     return None
 
 
 def _cache_put(key: str, body: str) -> None:
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    (CACHE_DIR / f"{key}.xml").write_text(body)
+    CACHE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    CACHE_DIR.chmod(0o700)
+    descriptor, temporary = tempfile.mkstemp(dir=CACHE_DIR, prefix=".response-")
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(body)
+        os.replace(temporary, CACHE_DIR / f"{key}.xml")
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def _fetch(url: str) -> str | dict:

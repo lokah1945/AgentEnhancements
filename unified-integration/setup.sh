@@ -1033,8 +1033,18 @@ EOF
 #!/bin/bash
 # Initialize agent memory system
 
+set -euo pipefail
+umask 077
 MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}"
+if [ -L "$MEMORY_ROOT" ] || [ -L "$MEMORY_ROOT/memory.db" ]; then
+    echo "Refusing symlinked memory storage" >&2
+    exit 1
+fi
 mkdir -p "$MEMORY_ROOT"/{projects,global,sessions,skills}
+chmod 700 "$MEMORY_ROOT"
+if [ -e "$MEMORY_ROOT/memory.db" ]; then
+    chmod 600 "$MEMORY_ROOT/memory.db"
+fi
 
 # Create SQLite database for structured memory when the sqlite3 CLI is
 # available. Without it, the Python hooks create the same schema on first
@@ -1060,6 +1070,7 @@ CREATE INDEX IF NOT EXISTS idx_agent_project ON memories(agent, project);
 CREATE INDEX IF NOT EXISTS idx_type ON memories(memory_type);
 CREATE INDEX IF NOT EXISTS idx_expires ON memories(expires_at);
 SQL
+    chmod 600 "$MEMORY_ROOT/memory.db"
     echo "Memory system initialized at $MEMORY_ROOT (schema created)"
 elif [ -f "$MEMORY_ROOT/memory.db" ]; then
     echo "Memory storage ready at $MEMORY_ROOT (database exists; schema maintained by the Python hooks)"
@@ -1080,6 +1091,7 @@ Uses parameterized queries to prevent SQL injection
 """
 
 import sqlite3
+import stat
 import sys
 import os
 import json
@@ -1090,8 +1102,18 @@ MEMORY_ROOT = os.environ.get("AGENT_MEMORY_ROOT", os.path.expanduser("~/.agent-m
 DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
 
 def init_db():
+    if os.path.islink(DB_PATH):
+        raise OSError("Refusing symlinked memory database")
     os.makedirs(MEMORY_ROOT, exist_ok=True, mode=0o700)
+    os.chmod(MEMORY_ROOT, 0o700)
     os.makedirs(os.path.join(MEMORY_ROOT, "projects"), exist_ok=True)
+    descriptor = os.open(DB_PATH, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise OSError("Memory database must be a regular file")
+        os.fchmod(descriptor, 0o600)
+    finally:
+        os.close(descriptor)
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS memories (
@@ -2107,6 +2129,7 @@ Manages persistent memory across sessions and agents
 import sqlite3
 import json
 import os
+import stat
 import sys
 from pathlib import Path
 from typing import Optional, List, Dict, Any
@@ -2124,6 +2147,19 @@ class AgentMemory:
     def _init_db(self):
         """Initialize database"""
         MEMORY_ROOT.mkdir(parents=True, exist_ok=True, mode=0o700)
+        MEMORY_ROOT.chmod(0o700)
+        # Claim a private regular file before SQLite opens it. A pre-existing
+        # symlink must never redirect schema/data writes or chmod to another
+        # database, and a permissive umask must not expose a new database.
+        descriptor = os.open(
+            DB_PATH, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600
+        )
+        try:
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise OSError("memory database must be a regular file")
+            os.fchmod(descriptor, 0o600)
+        finally:
+            os.close(descriptor)
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS memories (

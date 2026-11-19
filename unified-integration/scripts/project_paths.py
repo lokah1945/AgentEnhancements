@@ -49,6 +49,9 @@ def validate_installation_scope() -> None:
     paths = [state_root(), memory_root(),
              Path(os.environ.get('AGENT_ENHANCEMENTS_API_FILE', ROOT / 'ui.api.json')).expanduser(),
              Path(os.environ.get('AGENT_ENHANCEMENTS_MODEL_FILE', config_root() / 'model.json')).expanduser()]
+    observer = os.environ.get('TASK_OBSERVER_WORKSPACE')
+    if observer:
+        paths.append(Path(observer).expanduser())
     headroom = os.environ.get('HEADROOM_BIN')
     if headroom:
         paths.append(Path(shutil.which(headroom) or headroom).expanduser())
@@ -63,6 +66,10 @@ def environment() -> dict[str, str]:
     return {
         'AGENT_ENHANCEMENTS_STATE_DIR': str(root),
         'AGENT_MEMORY_ROOT': str(memory_root()),
+        'AGENT_ENHANCEMENTS_API_FILE': str(Path(os.environ.get('AGENT_ENHANCEMENTS_API_FILE', ROOT / 'ui.api.json')).expanduser()),
+        'AGENT_ENHANCEMENTS_MODEL_FILE': str(Path(os.environ.get('AGENT_ENHANCEMENTS_MODEL_FILE', config_root() / 'model.json')).expanduser()),
+        'TASK_OBSERVER_WORKSPACE': str(Path(os.environ.get('TASK_OBSERVER_WORKSPACE', memory_root() / 'task-observer')).expanduser()),
+        'HEADROOM_BIN': os.environ.get('HEADROOM_BIN', str(ROOT / 'headroom/target/release/headroom')),
         'XDG_CACHE_HOME': str(cache),
         'UV_CACHE_DIR': str(cache / 'uv'),
         'PIP_CACHE_DIR': str(cache / 'pip'),
@@ -73,7 +80,10 @@ def environment() -> dict[str, str]:
         'CARGO_HOME': str(cache / 'cargo'),
         'PUPPETEER_CACHE_DIR': str(cache / 'puppeteer'),
         'PLAYWRIGHT_BROWSERS_PATH': str(cache / 'playwright'),
-        'PYTHONPYCACHEPREFIX': str(cache / 'pycache'),
+        # AE modules and venv packages cache beside their checkout-local
+        # source. An empty prefix also avoids recompiling system stdlib
+        # into a fresh state directory on every native hook invocation.
+        'PYTHONPYCACHEPREFIX': '',
         'TMPDIR': str(cache / 'tmp'),
         'TMP': str(cache / 'tmp'),
         'TEMP': str(cache / 'tmp'),

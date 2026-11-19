@@ -48,6 +48,11 @@ MIT grant above for anything inside those directories:
 
 Notes for redistributors:
 
+- Generated copies retain their source licenses. Reference prompts copied
+  into unified-integration/prompts/ from the GPL-3.0 collection are not
+  relicensed under MIT by their destination directory. Copied skill bundles
+  retain their source LICENSE/NOTICE; MIT covers AE-authored integration code.
+
 - system-prompts-and-models-of-ai-tools is GPL-3.0. Anyone distributing that
   directory (or substantial parts of it) must comply with GPL-3.0, including
   source availability for the collection. The prompts themselves may also be

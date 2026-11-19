@@ -5,12 +5,14 @@ last_updated: 2026-11-16
 audience: maintainers, contributors
 ---
 
-# Architecture
+## Architecture
 
-## Overview
+### Overview
 
-AgentEnhancements is an **aggregation platform**: it vendors eight open-source
-projects and wires them together through a single integration layer so that
+AgentEnhancements is an **aggregation platform**: it combines vendored
+open-source
+projects (listed in the root license notice) and wires them together through a
+single integration layer so that
 AI coding assistants (Claude Code, Codex, OpenCode, Cursor, Gemini CLI,
 Windsurf, Copilot, Kiro, Hermes) can share one skills registry, one capability
 registry, one memory system and one compression layer. ONE install provides
@@ -21,13 +23,16 @@ compatible harnesses discover it automatically at runtime.
 AgentEnhancements/
 ├── unified-integration/     # OWNED integration layer (this repo's code)
 │   ├── setup.sh             # single entry point / installer
-│   ├── update-skills.sh     # refresh vendored sources (where they are git repos)
+│   ├── update-skills.sh     # re-aggregate; upstream refresh uses reviewed
+│ # re-vendoring
 │   ├── launch-agent.sh      # universal launcher (env-aware, self-locating)
-│   ├── config/              # machine state (detected-agents.sh, auto-generated)
+│   ├── config/              # machine state (detected-agents.sh,
+│ # auto-generated)
 │   ├── prompts/             # per-agent system prompts + universal prompt
 │   ├── skills/              # unified registry
 │   │   ├── all-skills.json  # UNIFIED SKILLS INDEX (schema below)
-│   │   ├── agent-registry.json  # CAPABILITY REGISTRY (skills+plugins+MCP+capabilities)
+│   │   ├── agent-registry.json  # CAPABILITY REGISTRY
+│ # (skills+plugins+MCP+capabilities)
 │   │   ├── by-category/     # populated by setup.sh (10 canonical buckets)
 │   │   └── by-agent/        # populated by setup.sh (9 canonical agents)
 │   ├── memory/              # hooks + config for the memory system
@@ -35,24 +40,29 @@ AgentEnhancements/
 │   ├── scripts/             # load-skills.py, memory.py, compress.py,
 │   │                        # registry.py, link-skills.sh, dispatch.sh,
 │   │                        # task-observer.py (observer host adapter),
-│   │                        # native-integration.py, native_hermes.py, doctor.py,
-│   │                        # catalog tooling (validate/wire/test/consent/audit)
+│   │                        # native-integration.py, native_hermes.py,
+│ # doctor.py,
+│   │                        # catalog tooling
+│ # (validate/wire/test/consent/audit)
 │   └── tests/               # regression suite (python3 tests/run-tests.py)
 ├── agentic-awesome-skills/  # vendored (skills, primary source)
-├── anthropic-skills/        # vendored (19 official Anthropic skills, Apache-2.0)
+├── anthropic-skills/        # vendored (19 official Anthropic skills,
+# Apache-2.0)
 ├── claude-mem/              # vendored
 ├── ECC/                     # vendored
 ├── headroom/                # vendored (Rust)
 ├── agency-agents/           # vendored (283 personas + NEXUS playbooks)
-├── plugin-catalog/          # curated external plugin sources (40) + MCP roadmap
+├── plugin-catalog/          # curated external plugin sources (40) + MCP
+# roadmap
 ├── ponytail/                # vendored
 ├── replica-skill/           # vendored (11 app-cloning sub-skills)
-├── task-observer/           # vendored (ambient skill-observation meta-skill, CC-BY-4.0, pinned)
+├── task-observer/           # vendored (ambient skill-observation meta-skill,
+# CC-BY-4.0, pinned)
 ├── superpowers/             # vendored
 └── system-prompts-and-models-of-ai-tools/  # vendored (prompt sources)
 ```
 
-## Automatic runtime
+### Automatic runtime
 
 Claude Code and Codex pass native JSON events to `scripts/runtime.py`.
 OpenCode 2 loads `opencode-plugin/index.js` and bridges its prompt/context/idle
@@ -67,7 +77,7 @@ persist summaries. No launcher or manual skill command
 is needed. Native compaction remains under each CLI's control. The memory DB
 and skill-index schemas are unchanged.
 
-## Setup pipeline (`setup.sh`)
+### Setup pipeline (`setup.sh`)
 
 0. **prepare runtime** - create an isolated Python environment and install
    declared dependencies; no global pip installation.
@@ -89,7 +99,8 @@ and skill-index schemas are unchanged.
    into code.
 3b. **build_registry** - regenerates `skills/agent-registry.json` from the
    fresh index plus `plugin-catalog/` (40 plugins) and the MCP roadmap
-   (38 servers) and the built-in capabilities. Non-fatal on failure; the
+   (see generated inventory) and the built-in capabilities. Non-fatal on
+   failure; the
    committed registry remains a fallback.
 4. **setup_memory** - writes `memory/config.yaml`, `init-memory.sh` and the
    per-agent memory hooks (Python, parameterized SQL + thin bash wrappers).
@@ -106,7 +117,8 @@ and skill-index schemas are unchanged.
    connection before the first model request captures available tools.
 6b. **link_native_skills** - runs `scripts/link-skills.sh` to symlink the
    default set (task-observer + 15 Superpowers skills) into `~/.claude/skills/`
-   and `~/.agents/skills/`, making those skills auto-discoverable at
+   `~/.agents/skills/`, `~/.codex/skills/` and `~/.config/opencode/skills/`,
+   making those skills auto-discoverable at
    runtime by every Agent Skills compatible harness. Ownership-safe and
    non-fatal.
 7. **create_launcher / create_skills_loader / create_memory_util /
@@ -116,7 +128,7 @@ Every generated artifact is committed alongside the generator: the heredoc
 templates inside `setup.sh` and the committed files must stay byte-identical
 (enforced by `tests/test_sync.py`).
 
-## Unified index schema (`all-skills.json`)
+### Unified index schema (`all-skills.json`)
 
 ```json
 {
@@ -150,13 +162,14 @@ templates inside `setup.sh` and the committed files must stay byte-identical
 Schema changes require human approval (CONTRACT §4.2). v1.1 added the
 additive `path` / `source_path` fields for capability mapping.
 
-## Capability registry (`agent-registry.json`)
+### Capability registry (`agent-registry.json`)
 
 Built by `scripts/registry.py` from three inputs plus static descriptors:
 the skills index, `plugin-catalog/catalog.json` (40 plugins) and
-`plugin-catalog/mcp-servers.json` (38 MCP servers), plus 7 built-in
-capabilities (memory, compression, loader, dispatcher, native linking,
-launcher, the registry itself). Every entry carries `id`, `type`, `name`,
+`plugin-catalog/mcp-servers.json`, plus the built-in descriptors (memory,
+compression, loader, dispatcher, native linking, launcher, registry and Task
+Observer). See [generated counts](CAPABILITY_COUNTS.md). Every entry carries
+`id`, `type`, `name`,
 `description`, `path` and `activation`. Query surface:
 
 ```bash
@@ -169,7 +182,7 @@ Scoring uses stop-word filtering (EN + ID), format-family aliases
 (word->docx, excel->xlsx, powerpoint->pptx), name-match priority and a
 zero-friction boost for natively linked skills.
 
-## Invariants
+### Invariants
 
 The private root `ui.api.json` is the credential source for project MCPs.
 It is not an agent credential store: native authentication, provider settings

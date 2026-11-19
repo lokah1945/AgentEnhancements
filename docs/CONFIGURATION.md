@@ -348,7 +348,9 @@ plugins, credentials and approvals are preserved.
 
 `AGENT_ENHANCEMENTS_STATE_DIR` is an optional absolute override for isolated
 fixtures. Existing explicit memory/API/model-file overrides remain
-supported. Keep overrides inside the checkout for a project-local install.
+supported. The normal setup command rejects state, memory, API/model or headroom
+overrides outside the checkout. Isolated low-level fixture utilities keep
+their explicit override support.
 No global AE memory or model file is imported implicitly. Back up and
 review old state before a deliberate migration; setup does not move or
 remove user data. System Python, Node, Rust and agent CLIs are prerequisites,

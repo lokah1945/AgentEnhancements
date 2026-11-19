@@ -1,30 +1,123 @@
 # Agency Personas Skills
 
-AI-persona packs from The Agency (agency-agents): 283 specialist personas across 18 divisions plus the NEXUS orchestration playbooks.
+AI-persona packs from The Agency (agency-agents): 283 specialist personas across
+18 divisions plus the NEXUS orchestration playbooks.
 
 Plugins: **19**
 
-| Slug | Name | Status | MCP servers | Source |
-|------|------|--------|-------------|--------|
-| [`academic`](./academic/) | The Agency — Academic Division (6 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`design`](./design/) | The Agency — Design Division (10 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`engineering`](./engineering/) | The Agency — Engineering Division (66 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`finance`](./finance/) | The Agency — Finance Division (5 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`game-development`](./game-development/) | The Agency — Game Development Division (21 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`gis`](./gis/) | The Agency — GIS Division (13 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`healthcare`](./healthcare/) | The Agency — Healthcare Division (3 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`marketing`](./marketing/) | The Agency — Marketing Division (37 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`paid-media`](./paid-media/) | The Agency — Paid Media Division (7 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`product`](./product/) | The Agency — Product Division (6 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`project-management`](./project-management/) | The Agency — Project Management Division (7 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`research`](./research/) | The Agency — Research Division (1 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`sales`](./sales/) | The Agency — Sales Division (9 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`security`](./security/) | The Agency — Security Division (12 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`spatial-computing`](./spatial-computing/) | The Agency — Spatial Computing Division (6 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`specialized`](./specialized/) | The Agency — Specialized Division (59 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`support`](./support/) | The Agency — Support Division (6 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`testing`](./testing/) | The Agency — Testing Division (9 personas) | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
-| [`nexus`](./nexus/) | The Agency — NEXUS Orchestration Playbooks | vendored | filesystem-mcp, memory-mcp, task-router-mcp | `msitarzewski/agency-agents` |
+- **Slug:** [`academic`](./academic/)
+  - **Name:** The Agency — Academic Division (6 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`design`](./design/)
+  - **Name:** The Agency — Design Division (10 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`engineering`](./engineering/)
+  - **Name:** The Agency — Engineering Division (66 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`finance`](./finance/)
+  - **Name:** The Agency — Finance Division (5 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`game-development`](./game-development/)
+  - **Name:** The Agency — Game Development Division (21 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`gis`](./gis/)
+  - **Name:** The Agency — GIS Division (13 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`healthcare`](./healthcare/)
+  - **Name:** The Agency — Healthcare Division (3 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`marketing`](./marketing/)
+  - **Name:** The Agency — Marketing Division (37 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`paid-media`](./paid-media/)
+  - **Name:** The Agency — Paid Media Division (7 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`product`](./product/)
+  - **Name:** The Agency — Product Division (6 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`project-management`](./project-management/)
+  - **Name:** The Agency — Project Management Division (7 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`research`](./research/)
+  - **Name:** The Agency — Research Division (1 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`sales`](./sales/)
+  - **Name:** The Agency — Sales Division (9 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`security`](./security/)
+  - **Name:** The Agency — Security Division (12 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`spatial-computing`](./spatial-computing/)
+  - **Name:** The Agency — Spatial Computing Division (6 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`specialized`](./specialized/)
+  - **Name:** The Agency — Specialized Division (59 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`support`](./support/)
+  - **Name:** The Agency — Support Division (6 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`testing`](./testing/)
+  - **Name:** The Agency — Testing Division (9 personas)
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
+
+- **Slug:** [`nexus`](./nexus/)
+  - **Name:** The Agency — NEXUS Orchestration Playbooks
+  - **Status:** integrated-ready
+  - **MCP servers:** filesystem-mcp, memory-mcp, task-router-mcp
+  - **Source:** `msitarzewski/agency-agents`
 
 ## Files in each plugin directory
 

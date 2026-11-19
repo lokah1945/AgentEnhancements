@@ -1,0 +1,1 @@
+Automatic capability integration for AI agents: 3,378 skills, 40 plugins and 40 MCP catalog entries; shared memory and context utilities.

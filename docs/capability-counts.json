@@ -1,0 +1,81 @@
+{
+  "built_in_capabilities": 8,
+  "mcp": {
+    "bundled_backends": 9,
+    "by_priority": {
+      "P0": 7,
+      "P1": 22,
+      "P2": 11
+    },
+    "by_status": {
+      "built": 10,
+      "to-install": 30
+    },
+    "default_disabled": [
+      "task-router-mcp"
+    ],
+    "default_enabled_backends": 8,
+    "external_built": [
+      "agent_browser"
+    ],
+    "total": 40
+  },
+  "native": {
+    "curated_skills": 31,
+    "curated_sources": [
+      "anthropic-skills",
+      "replica-skill",
+      "task-observer"
+    ],
+    "default_skills": 16,
+    "default_sources": [
+      "Superpowers",
+      "task-observer"
+    ]
+  },
+  "plugins": {
+    "by_category": {
+      "agency": 19,
+      "code": 4,
+      "design": 4,
+      "multimedia-writing": 4,
+      "research": 5,
+      "tokens-optimization": 4
+    },
+    "by_status": {
+      "integrated": 1,
+      "integrated-ready": 39
+    },
+    "total": 40,
+    "unique_upstreams": 22,
+    "vendored_entries": 21
+  },
+  "registry_entries": 3466,
+  "skills": {
+    "by_source": {
+      "ECC": 314,
+      "Ponytail": 6,
+      "Superpowers": 15,
+      "agency-agents": 283,
+      "agentic-awesome-skills": 2729,
+      "anthropic-skills": 19,
+      "replica-skill": 11,
+      "task-observer": 1
+    },
+    "collapsed_records": 52,
+    "raw_by_source": {
+      "ECC": 314,
+      "Ponytail": 6,
+      "Superpowers": 15,
+      "agency-agents": 283,
+      "agentic-awesome-skills": 2781,
+      "anthropic-skills": 19,
+      "replica-skill": 11,
+      "task-observer": 1
+    },
+    "raw_records": 3430,
+    "sources": 8,
+    "total": 3378
+  },
+  "vendored_projects": 11
+}

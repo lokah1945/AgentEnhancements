@@ -20,6 +20,7 @@ TARGETS = {
     "$UNIFIED_DIR/scripts/compress.py": "scripts/compress.py",
     "$UNIFIED_DIR/launch-agent.sh": "launch-agent.sh",
     "$COMPRESSION_DIR/compress.sh": "compression/compress.sh",
+    "$COMPRESSION_DIR/config.yaml": "compression/config.yaml",
     "$MEMORY_DIR/config.yaml": "memory/config.yaml",
     "$MEMORY_DIR/init-memory.sh": "memory/init-memory.sh",
     "$SKILLS_DIR/README.md": "skills/README.md",

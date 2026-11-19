@@ -37,6 +37,13 @@ mcp = FastMCP("vision-mcp")
 TOOLS: dict[str, Callable] = {}
 
 
+class _NoCredentialRedirect(urllib.request.HTTPRedirectHandler):
+    """Do not forward image data or API credentials to redirect targets."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 def _tool(fn):
     TOOLS[fn.__name__] = fn
     return mcp.tool()(fn)
@@ -173,7 +180,8 @@ def describe(image_path: str, detail: str = "auto") -> dict:
             headers={"Content-Type": "application/json"}, method="POST")
         request.add_header("Authorization", f"Bearer {api_key}")
         try:
-            with urllib.request.urlopen(request, timeout=60) as resp:
+            opener = urllib.request.build_opener(_NoCredentialRedirect())
+            with opener.open(request, timeout=60) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
             return {"mode": "openai", "model": model,
                     "description": payload["choices"][0]["message"]["content"]}

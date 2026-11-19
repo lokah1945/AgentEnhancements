@@ -64,6 +64,13 @@ def _local_embed(text: str) -> list[float]:
     return [round(v / norm, 8) for v in vec]
 
 
+class _NoCredentialRedirect(urllib.request.HTTPRedirectHandler):
+    """Keep API keys and request data on the explicitly configured endpoint."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 def _openai_embed(texts: list[str]) -> list[list[float]] | dict:
     config, _ = read_config()
     api_key = value("OPENAI_API_KEY", config)
@@ -82,7 +89,8 @@ def _openai_embed(texts: list[str]) -> list[list[float]] | dict:
     )
     request.add_header("Authorization", f"Bearer {api_key}")
     try:
-        with urllib.request.urlopen(request, timeout=OPENAI_TIMEOUT) as resp:
+        opener = urllib.request.build_opener(_NoCredentialRedirect())
+        with opener.open(request, timeout=OPENAI_TIMEOUT) as resp:
             body = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         return {

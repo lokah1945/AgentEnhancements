@@ -1,15 +1,33 @@
 # Code Skills
 
-Code-craft skills: TypeScript rigor, minimal-first ML, frontend perf, reverse-engineering clones.
+Code-craft skills: TypeScript rigor, minimal-first ML, frontend perf,
+reverse-engineering clones.
 
 Plugins: **4**
 
-| Slug | Name | Status | MCP servers | Source |
-|------|------|--------|-------------|--------|
-| [`agent-skills-addyosmani`](./agent-skills-addyosmani/) | Agent Skills (Addy Osmani) | integrated-ready | browser-tools-mcp, lighthouse-mcp, pa11y-mcp | `addyosmani/agent-skills` |
-| [`karpathy-skills`](./karpathy-skills/) | Andrej Karpathy Skills | integrated-ready | jupyter-mcp, python-repl-mcp | `multica-ai/andrej-karpathy-skills` |
-| [`mattpocock-skills`](./mattpocock-skills/) | Matt Pocock Skills | integrated-ready | typescript-language-server-mcp, eslint-mcp | `mattpocock/skills` |
-| [`replica-skill`](./replica-skill/) | Replica Skill (11 sub-skills) | vendored | browser-tools-mcp, vision-mcp | `Jakeschincariol/replica-skill` |
+- **Slug:** [`agent-skills-addyosmani`](./agent-skills-addyosmani/)
+  - **Name:** Agent Skills (Addy Osmani)
+  - **Status:** integrated-ready
+  - **MCP servers:** browser-tools-mcp, lighthouse-mcp, pa11y-mcp
+  - **Source:** `addyosmani/agent-skills`
+
+- **Slug:** [`karpathy-skills`](./karpathy-skills/)
+  - **Name:** Andrej Karpathy Skills
+  - **Status:** integrated-ready
+  - **MCP servers:** jupyter-mcp, python-repl-mcp
+  - **Source:** `multica-ai/andrej-karpathy-skills`
+
+- **Slug:** [`mattpocock-skills`](./mattpocock-skills/)
+  - **Name:** Matt Pocock Skills
+  - **Status:** integrated-ready
+  - **MCP servers:** typescript-language-server-mcp, eslint-mcp
+  - **Source:** `mattpocock/skills`
+
+- **Slug:** [`replica-skill`](./replica-skill/)
+  - **Name:** Replica Skill (11 sub-skills)
+  - **Status:** integrated-ready
+  - **MCP servers:** browser-tools-mcp, vision-mcp
+  - **Source:** `Jakeschincariol/replica-skill`
 
 ## Files in each plugin directory
 

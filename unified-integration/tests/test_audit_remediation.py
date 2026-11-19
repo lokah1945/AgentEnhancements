@@ -105,6 +105,12 @@ class RoutingTests(unittest.TestCase):
         self.assertEqual(rea["source"]["license"], "MIT")
         self.assertNotIn("Reason-Explain-Act", json.dumps(rea))
 
+    def test_rea_catalog_role_matches_reverse_engineering_guide(self):
+        catalog = json.loads((REPO_DIR / "plugin-catalog/catalog.json").read_text())
+        rea = next(item for item in catalog["orchestrators"] if item["slug"] == "rea")
+        self.assertEqual(rea["role"], "reverse-engineering")
+        self.assertIn("binary", rea["for_mode"])
+
 
 class TaskRouterHardeningTests(unittest.TestCase):
     """AE-10: python denylist + default-off."""

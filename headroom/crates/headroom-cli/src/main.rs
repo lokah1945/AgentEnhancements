@@ -1,10 +1,9 @@
+// AgentEnhancements modification, 2026-11-19: repair CLI modes and keep
+// standalone output self-contained without process-local CCR offloads.
 use clap::{Parser, Subcommand};
 use headroom_core::ccr::InMemoryCcrStore;
 use headroom_core::transforms::pipeline::{
-    CompressionPipeline, CompressionPipelineBuilder, PipelineConfig, PipelineMode, PipelineResult,
-};
-use headroom_core::transforms::pipeline::offloads::{
-    DiffNoise, DiffOffload, JsonOffload, LogOffload, ProseFieldOffload,
+    CompressionPipeline, PipelineConfig, PipelineResult,
 };
 use headroom_core::transforms::pipeline::reformats::{JsonMinifier, LogTemplate};
 use headroom_core::transforms::pipeline::traits::CompressionContext;
@@ -52,56 +51,17 @@ enum CompressionMode {
     Generic,
 }
 
-impl From<CompressionMode> for PipelineMode {
-    fn from(mode: CompressionMode) -> Self {
-        match mode {
-            CompressionMode::Auto => PipelineMode::Auto,
-            CompressionMode::Code => PipelineMode::Code,
-            CompressionMode::Logs => PipelineMode::Logs,
-            CompressionMode::Json => PipelineMode::Json,
-            CompressionMode::Markdown => PipelineMode::Markdown,
-            CompressionMode::Generic => PipelineMode::Generic,
-        }
-    }
-}
 
-fn build_pipeline(mode: PipelineMode) -> CompressionPipeline {
+fn build_pipeline(_mode: CompressionMode) -> CompressionPipeline {
     let config = PipelineConfig::default();
-    let mut builder = CompressionPipeline::builder().with_config(config.clone());
-
-    // Always add reformats
-    builder = builder.with_reformat(JsonMinifier).with_reformat(LogTemplate::new(config.reformat.log_template));
-
-    // Add offloads based on mode
-    match mode {
-        PipelineMode::Json => {
-            builder = builder.with_offload(JsonOffload::from_pipeline(&config));
-        }
-        PipelineMode::Logs => {
-            builder = builder
-                .with_offload(LogOffload::new(config.bloat.log))
-                .with_offload(ProseFieldOffload::new(config.offload.prose_field));
-        }
-        PipelineMode::Code => {
-            builder = builder
-                .with_offload(DiffOffload::new(config.bloat.diff))
-                .with_offload(DiffNoise::new(config.offload.diff_noise));
-        }
-        PipelineMode::Markdown => {
-            builder = builder.with_offload(ProseFieldOffload::new(config.offload.prose_field));
-        }
-        PipelineMode::Auto | PipelineMode::Generic => {
-            // Use all transforms
-            builder = builder
-                .with_offload(JsonOffload::from_pipeline(&config))
-                .with_offload(LogOffload::new(config.bloat.log))
-                .with_offload(DiffOffload::new(config.bloat.diff))
-                .with_offload(DiffNoise::new(config.offload.diff_noise))
-                .with_offload(ProseFieldOffload::new(config.offload.prose_field));
-        }
-    }
-
-    builder.build()
+    // The standalone process has no retrieval service after it exits.
+    // Only use self-contained reformats; CCR offloads belong to long-lived
+    // hosts that retain their store and expose a retrieval tool.
+    CompressionPipeline::builder()
+        .with_config(config.clone())
+        .with_reformat(JsonMinifier)
+        .with_reformat(LogTemplate::new(config.reformat.log_template))
+        .build()
 }
 
 fn detect_content_type(content: &str, mode: CompressionMode) -> ContentType {
@@ -118,11 +78,11 @@ fn detect_content_type(content: &str, mode: CompressionMode) -> ContentType {
         }
     } else {
         match mode {
-            PipelineMode::Json => ContentType::JsonArray,
-            PipelineMode::Logs => ContentType::BuildOutput,
-            PipelineMode::Code => ContentType::GitDiff,
-            PipelineMode::Markdown => ContentType::PlainText,
-            PipelineMode::Generic | PipelineMode::Auto => ContentType::PlainText,
+            CompressionMode::Json => ContentType::JsonArray,
+            CompressionMode::Logs => ContentType::BuildOutput,
+            CompressionMode::Code => ContentType::GitDiff,
+            CompressionMode::Markdown => ContentType::PlainText,
+            CompressionMode::Generic | CompressionMode::Auto => ContentType::PlainText,
         }
     }
 }
@@ -141,7 +101,7 @@ async fn main() -> anyhow::Result<()> {
                 buf
             };
 
-            let pipeline = build_pipeline(mode.into());
+            let pipeline = build_pipeline(mode);
             let content_type = detect_content_type(&content, mode);
             let ctx = CompressionContext::default();
             let store = InMemoryCcrStore::new();
@@ -158,11 +118,55 @@ async fn main() -> anyhow::Result<()> {
             eprintln!("Compression: {} -> {} bytes ({} bytes saved, {} steps)",
                 content.len(), result.output.len(), result.bytes_saved, result.steps_applied.len());
         }
-        Commands::Mcp { transport } => {
+        Commands::Mcp { transport: _ } => {
             eprintln!("MCP server not yet implemented for CLI. Use headroom-proxy for proxy mode.");
             std::process::exit(1);
         }
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn explicit_modes_detect_the_expected_content_types() {
+        for (mode, expected) in [
+            (CompressionMode::Code, ContentType::GitDiff),
+            (CompressionMode::Logs, ContentType::BuildOutput),
+            (CompressionMode::Json, ContentType::JsonArray),
+            (CompressionMode::Markdown, ContentType::PlainText),
+            (CompressionMode::Generic, ContentType::PlainText),
+        ] {
+            assert_eq!(detect_content_type("example", mode), expected);
+        }
+    }
+
+    #[test]
+    fn json_mode_preserves_values() {
+        let input = "{\"keep\":null,\"empty\":\"\",\"values\":[1,2,3]}";
+        let result = build_pipeline(CompressionMode::Json).run(
+            input, ContentType::JsonArray, &CompressionContext::default(),
+            &InMemoryCcrStore::new(),
+        );
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&result.output).unwrap(),
+                   serde_json::from_str::<serde_json::Value>(input).unwrap());
+    }
+
+    #[test]
+    fn standalone_json_keeps_every_row_without_transient_offloads() {
+        let rows: Vec<_> = (0..1000).map(|i| serde_json::json!({
+            "id": i, "status": "pending", "description": "repetitive fixture record"
+        })).collect();
+        let input = serde_json::to_string(&rows).unwrap();
+        let result = build_pipeline(CompressionMode::Json).run(
+            &input, ContentType::JsonArray, &CompressionContext::default(),
+            &InMemoryCcrStore::new(),
+        );
+        assert!(result.cache_keys.is_empty(), "CLI cannot retrieve cache entries after exit");
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&result.output).unwrap(),
+                   serde_json::from_str::<serde_json::Value>(&input).unwrap());
+    }
 }

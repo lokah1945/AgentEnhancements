@@ -7,9 +7,11 @@ Loads and matches skills from all sources based on task context
 import json
 import os
 import sys
-import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from registry import DEFAULT_NATIVE_SOURCES, rank_entries
 
 SKILLS_DIR = Path(os.environ.get(
     "AGENT_SKILLS_DIR",
@@ -19,11 +21,12 @@ SKILLS_DIR = Path(os.environ.get(
 AGENT_ALIASES = {"claude": "claude-code", "claude-code": "claude-code",
                  "codex-cli": "codex", "codex": "codex", "gemini": "gemini-cli",
                  "gemini-cli": "gemini-cli", "opencode": "opencode",
-                 "cursor": "cursor", "windsurf": "windsurf", "copilot": "copilot", "kiro": "kiro"}
+                 "cursor": "cursor", "windsurf": "windsurf", "copilot": "copilot", "kiro": "kiro",
+                 "hermes": "hermes"}
 
 class SkillsLoader:
     def __init__(self, agent: str = "claude-code"):
-        self.agent = agent
+        self.agent = AGENT_ALIASES.get(agent.casefold(), agent.casefold())
         self.skills_index = self._load_index()
 
     def _load_index(self) -> Dict:
@@ -35,19 +38,8 @@ class SkillsLoader:
         return {"skills": []}
 
     def find_skills(self, task_description: str, max_results: int = 5) -> List[Dict]:
-        """Rank relevant terms, without treating agent compatibility as relevance."""
-        task_lower = task_description.casefold()
-        matches = []
-        stopwords = set("a an the in on is it to for of and or with this that please help me my use using create make i you can do check all analisa cek saya dan di yang untuk dengan ini nya bisa".split())
-        keywords = set(re.findall(r'\b[\w+#-]+\b', task_lower)) - stopwords
-        translations = {"keamanan": "security", "uji": "testing", "pengujian": "testing",
-                        "perbaiki": "debugging", "arsitektur": "architecture",
-                        "dokumentasi": "documentation", "tabel": "spreadsheet",
-                        "presentasi": "pptx", "excel": "xlsx", "bug": "debugging"}
-        keywords.update(translations[k] for k in tuple(keywords) if k in translations)
-        if not keywords:
-            return []
-
+        """Use registry relevance/abstention after filtering host compatibility."""
+        candidates = []
         for skill in self.skills_index.get("skills", []):
             tools = skill.get("tools") or []
             compatible = {AGENT_ALIASES[t.casefold()] for t in tools if t.casefold() in AGENT_ALIASES}
@@ -55,23 +47,13 @@ class SkillsLoader:
             # or say "Agent Skills". Those are not incompatible agent names.
             if compatible and self.agent not in compatible:
                 continue
-            def terms(value):
-                return set(re.findall(r'\b[\w+#]+\b', str(value).casefold()))
-            name = str(skill.get("name", "")).casefold()
-            name_terms = terms(name)
-            tags = terms(" ".join(skill.get("tags") or []))
-            desc = terms(skill.get("description", ""))
-            when = terms(skill.get("when_to_use", ""))
-            score = (12 * len(keywords & name_terms) + 5 * len(keywords & tags)
-                     + 2 * len(keywords & when) + len(keywords & desc))
-            if name in keywords:
-                score += 30
-            if score > 0:
-                matches.append((score, skill))
-
-        # Sort by score and return top matches
-        matches.sort(key=lambda x: (-x[0], x[1].get("name", "")))
-        return [skill for _, skill in matches[:max_results]]
+            candidates.append({
+                **skill, "type": "skill", "_skill": skill,
+                "natively_linked_by_default": skill.get("source") in DEFAULT_NATIVE_SOURCES,
+            })
+        # Return the original skill records: ranking metadata stays internal.
+        return [entry["_skill"] for _, entry in
+                rank_entries(candidates, task_description, limit=max_results)]
 
     def skill_path(self, skill_name: str) -> Optional[Path]:
         """Resolve either supported layout while preventing path traversal."""

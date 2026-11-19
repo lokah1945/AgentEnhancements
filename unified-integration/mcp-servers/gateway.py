@@ -112,6 +112,18 @@ def failed(message: str) -> types.CallToolResult:
     )
 
 
+def _redact_payload(item: Any, config: dict) -> Any:
+    """Clean complete values before any display truncation or serialization."""
+    if isinstance(item, str):
+        return redact(item, config)
+    if isinstance(item, list):
+        return [_redact_payload(value, config) for value in item]
+    if isinstance(item, dict):
+        return {redact(key, config): _redact_payload(value, config)
+                for key, value in item.items()}
+    return item
+
+
 class External:
     """Own stdio/client contexts in one task; never leak credentials to stderr."""
 
@@ -135,7 +147,8 @@ class External:
         # MCP SDK supplies a minimal platform environment. Only references from
         # this backend are added; unrelated API keys are never forwarded.
         # For search providers, use round-robin to distribute load across keys.
-        env = {}
+        from project_paths import environment
+        env = environment()
         for name, ref in self.settings.get("env", {}).items():
             # Search provider round-robin: TAVILY_API_KEY, EXA_API_KEY, SERPER_API_KEY, YOU_API_KEY
             if ref in ("TAVILY_API_KEY", "EXA_API_KEY", "SERPER_API_KEY", "YOU_API_KEY"):
@@ -426,6 +439,7 @@ class Gateway:
                         payload = {}
                     if not isinstance(payload, dict):
                         payload = {}
+                    payload = _redact_payload(payload, config)
                     # Same redaction the call_tool path applies: external
                     # MCPs may echo environment values in error text. Only
                     # provenance fields survive, string-clamped.
@@ -535,18 +549,8 @@ class Gateway:
                     return failed("Credentials changed; MCP reconnect is in progress.")
                 response = await worker.call(original, arguments)
 
-            # Some external MCPs echo environment values in error messages.
-            def clean(item: Any) -> Any:
-                if isinstance(item, str):
-                    return redact(item, config)
-                if isinstance(item, list):
-                    return [clean(x) for x in item]
-                if isinstance(item, dict):
-                    return {redact(k, config): clean(v) for k, v in item.items()}
-                return item
-
             return types.CallToolResult.model_validate(
-                clean(response.model_dump(mode="json"))
+                _redact_payload(response.model_dump(mode="json"), config)
             )
         except Exception:
             return failed(
@@ -589,6 +593,8 @@ class Gateway:
 
 async def main() -> None:
     """Run one native gateway; no launcher or explicit agent call is required."""
+    from project_paths import environment
+    os.environ.update(environment())
     gateway = Gateway()
     async with stdio_server() as (reader, writer):
         await gateway.server.run(

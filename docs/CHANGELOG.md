@@ -1,11 +1,53 @@
 ---
 title: Changelog
-version: 1.5
-last_updated: 2026-11-16
+version: 1.6
+last_updated: 2026-11-20
 audience: all
 ---
 
-# Changelog
+## Changelog
+
+## 2026-11-20 — Audit and checkout-local execution
+
+Generated from the committed audit history through `57b96a97` using
+`git log --reverse --format="%h %s" b6e1c056..HEAD`. The maintainer explicitly
+requested checkout-local venv/cache/memory. State defaults changed with
+that approval; data schemas and supported host lists remain compatible.
+Regression evidence and remaining limitations are recorded in
+[the dated audit report](../AuditReport/ae-end-to-end-audit-report-20261119.md).
+
+- `a37a6fb7` chore(audit): integrate additional upstream audit reports
+- `b1e4fc23` fix(security): protect runtime credentials and private storage
+- `8c792325` fix(compression): build a usable CLI and preserve standalone
+  content
+- `902da7e4` fix(discovery): unify bilingual ranking and verify live skill
+  readiness
+- `a7f61f16` fix(installer): fail safely on invalid revisions and stale
+  runtimes
+- `fc74ce70` fix(native): refresh managed entry points after moving the
+  checkout
+- `2c051703` fix(deps): update vulnerable Rust dependencies in headroom and
+  ECC2
+- `0e1de429` fix(catalog): align REA orchestration metadata with its actual
+  guide
+- `37acee88` feat(runtime): keep AE dependencies and state inside the active
+  checkout
+- `88211d7e` fix(browser): isolate profile storage and validate session
+  identifiers
+- `026e1994` docs(inventory): generate capability counts and correct
+  integration claims
+- `320c0205` ci(audit): enforce inventory discovery compression and
+  documentation checks
+- `5842dc7d` docs(setup): recommend installation from the project checkout
+- `3948fe95` fix(native): replace stale managed environment paths on reinstall
+- `cba4e255` fix(context): keep optional token counting offline on cold caches
+- `3c5e7949` docs(changelog): generate the audit change log from committed
+  history
+- `cf9a4ffe` docs(audit): record end-to-end findings and clean-clone evidence
+- `8d2b1526` fix(ci): use supported contexts for job-level isolation paths
+- `6d3cc309` fix(ci): install all command tools required by the integration
+  suite
+- `57b96a97` fix(runtime): keep inherited Cargo targets inside the checkout
 
 ## 2026-11-16 — Native Hermes profiles and installation verification
 
@@ -173,7 +215,7 @@ Vendored projects change upstream; see their own histories.
 
 ## [Unreleased] — 2026-11-13 — anthropic-skills all-in-one integration
 
-### Added
+### Added (historical entry 1)
 
 - **anthropic-skills vendored** (19 official Anthropic skills: docx, pdf,
   pptx, xlsx, skill-creator, mcp-builder, webapp-testing, claude-api,
@@ -198,7 +240,7 @@ Vendored projects change upstream; see their own histories.
 - 28 new tests (77 total): registry unit+CLI, native linking in an
   isolated HOME, dispatch routing table.
 
-### Fixed
+### Fixed (historical entry 1)
 
 - **Index frontmatter parsing**: YAML block scalars (`>-`) left 64 skills
   with a literal marker as their description (and one empty). The index
@@ -214,7 +256,7 @@ Vendored projects change upstream; see their own histories.
   matched upstream; rewritten for the real content, status `integrated`,
   `vendored: true` with `vendored_path`.
 
-### Changed
+### Changed (historical entry 1)
 
 - Index schema (additive, v1.0 -> v1.1): new `path` and `source_path`
   fields per skill for capability mapping; `sources` list derived from
@@ -225,7 +267,7 @@ Vendored projects change upstream; see their own histories.
 
 ## [Unreleased] — 2026-11-13 — Production readiness
 
-### Fixed
+### Fixed (historical entry 2)
 
 - **Merge**: `audit/deep-review` remediation (13 commits) merged into the
   master line; master had continued on the broken pipeline (all 21 findings
@@ -248,7 +290,7 @@ Vendored projects change upstream; see their own histories.
 - **README install instructions**: one-liner now points at
   `AgentEnhancements/master` (was `agent-enhancements/main` - 404).
 
-### Changed
+### Changed (historical entry 2)
 
 - **Plugin catalog URLs**: 13 manifests + `catalog.json` + category READMEs
   updated with verified repository URLs (12 org-root-only placeholders, 3
@@ -262,7 +304,7 @@ Vendored projects change upstream; see their own histories.
   `by-category/*` except the committed flat samples) ignored so a setup
   run no longer dirties `git status`.
 
-### Added
+### Added (historical entry 2)
 
 - `docs/audit/PRODUCTION_READINESS_AUDIT.md` - end-to-end audit report
   (19 findings: 3 critical, 5 high, 6 medium, 5 low; all fixable ones
@@ -272,7 +314,7 @@ Vendored projects change upstream; see their own histories.
 
 ## [Unreleased] — 2026-11-13 — Plugin Catalog + Replica Skill
 
-### Added
+### Added (historical entry 3)
 
 - **replica-skill/** (vendored, MIT, by Jake Schincariol): 11 skill clone-app
   clean-room — recon, architect, design, build, backend, test, diff,
@@ -302,7 +344,7 @@ Vendored projects change upstream; see their own histories.
 - **docs/**: QUICKSTART.md, COOKBOOK.md (11 resep), SAFETY.md, ADR.md (8 ADR),
   MCP_SERVERS.md, LICENSE_AUDIT.md, ROUTER_POLICY.md, INTEGRATION_CHECKLIST.md.
 
-### Changed
+### Changed (historical entry 3)
 
 - `unified-integration/setup.sh`: aggregate_skills menambahkan source
   "replica-skill" (11 sub-skill masuk unified index otomatis).
@@ -337,7 +379,7 @@ Vendored projects change upstream; see their own histories.
 
 ## [2.1.1] - 2026-11-01 - Audit remediation
 
-### Fixed
+### Fixed (historical entry 3)
 
 - **setup.sh aborts on the first aggregated skill** - bash arithmetic
   post-increment from zero returns exit status 1 under `set -e`, so
@@ -386,7 +428,7 @@ Vendored projects change upstream; see their own histories.
   repository name and branch (`agent-enhancements/main`); `cd` path fixed;
   skill counts aligned with the index (F-13).
 
-### Changed
+### Changed (historical entry 4)
 
 - `all-skills.json` regenerated with the fixed pipeline (2,884 → 3,116
   skills; schema now includes `agent_skill_counts`).
@@ -398,7 +440,7 @@ Vendored projects change upstream; see their own histories.
   variables instead of Python string literals (escapes and paths with
   quotes now survive).
 
-### Added
+### Added (historical entry 4)
 
 - Regression test suite: `unified-integration/tests/` (49 tests) covering
   compression, memory, the loader, hooks, index invariants, generator/artifact

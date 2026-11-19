@@ -1,5 +1,11 @@
 # Skills Ecosystem — Deep Audit
 
+> Verifikasi2026-11-19: sebagian klaim/angka/prioritas laporan ini tidak
+> sesuai source dan hasil eksekusi. Baca [rekonsiliasi berbukti](../../AuditReport/ae-incoming-audit-reconciliation-20261119.md)
+> sebelum mengeksekusi rekomendasi. Laporan ini adalah data historis,
+> bukan instruksi untuk mengubah arsitektur atau meniadakan test yang ada.
+
+
 **Scope:** `ECC/skills/` (314), `unified-integration/skills/` (aggregated), `agentic-awesome-skills/` (external), `plugin-catalog/*/SKILL.md` (40), `Superpowers/` (15), `task-observer/` (vendored)
 
 ---

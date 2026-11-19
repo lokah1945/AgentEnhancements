@@ -14,12 +14,24 @@ if [ -z "${BASH_SOURCE[0]:-}" ]; then
     if [ ! -f "$INSTALL_DIR/unified-integration/setup.sh" ]; then
         git clone https://github.com/lokah1945/AgentEnhancements.git "$INSTALL_DIR"
         if [ -n "$AE_REF" ]; then
-            git -C "$INSTALL_DIR" checkout --quiet "$AE_REF" ||
-                echo "[agent-enhancements] ref '$AE_REF' not found; keeping default branch" >&2
+            if ! git -C "$INSTALL_DIR" fetch --quiet origin "$AE_REF" ||
+               ! git -C "$INSTALL_DIR" checkout --quiet --detach FETCH_HEAD; then
+                echo "[agent-enhancements] requested revision unavailable; refusing unpinned installation" >&2
+                exit 1
+            fi
         fi
     elif [ -d "$INSTALL_DIR/.git" ]; then
-        if ! git -C "$INSTALL_DIR" pull --ff-only --quiet origin "${AE_REF:-master}" 2>/dev/null; then
-            echo "[agent-enhancements] could not fast-forward $INSTALL_DIR to ${AE_REF:-master}; running the existing copy" >&2
+        if [ -n "$AE_REF" ]; then
+            if ! git -C "$INSTALL_DIR" diff --quiet ||
+               ! git -C "$INSTALL_DIR" diff --cached --quiet ||
+               ! git -C "$INSTALL_DIR" fetch --quiet origin "$AE_REF" ||
+               ! git -C "$INSTALL_DIR" checkout --quiet --detach FETCH_HEAD; then
+                echo "[agent-enhancements] cannot safely select requested revision; installation aborted" >&2
+                exit 1
+            fi
+        elif ! git -C "$INSTALL_DIR" pull --ff-only --quiet origin master 2>/dev/null; then
+            echo "[agent-enhancements] cannot fast-forward installation; existing files preserved" >&2
+            exit 1
         fi
     fi
     exec bash "$INSTALL_DIR/unified-integration/setup.sh" "$@"
@@ -415,7 +427,18 @@ aggregate_skills() {
     log_info "Aggregating skills from all sources..."
 
     SKILLS_DIR="$UNIFIED_DIR/skills"
-    mkdir -p "$SKILLS_DIR"
+    # Generated directories must not redirect removal/copy operations through
+    # a pre-existing directory symlink. Check each parent before creating it.
+    ensure_registry_directory() {
+        if [ -L "$1" ]; then
+            log_error "Refusing symlinked registry directory: $1"
+            return 1
+        fi
+        mkdir -p "$1"
+    }
+    ensure_registry_directory "$SKILLS_DIR"
+    ensure_registry_directory "$SKILLS_DIR/by-category"
+    ensure_registry_directory "$SKILLS_DIR/by-agent"
 
     # Create master skills index
     cat > "$SKILLS_DIR/README.md" << 'EOF'
@@ -423,22 +446,26 @@ aggregate_skills() {
 
 This directory contains aggregated skills from multiple sources:
 
-1. **agentic-awesome-skills** - 2,781 skills (primary source)
+1. **agentic-awesome-skills** - primary skill source
 2. **ECC** - Additional skills and commands
 3. **Ponytail** - Additional skills and hooks
 4. **Superpowers** - Additional skills
-5. **replica-skill** - 11 app-cloning sub-skills
-6. **anthropic-skills** - 19 official Anthropic skills (docx, pdf, pptx,
+5. **replica-skill** - app-cloning sub-skills
+6. **anthropic-skills** - official Anthropic skills (docx, pdf, pptx,
    xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
-7. **agency-agents** - 283 AI-persona skills from The Agency (18 divisions,
+7. **agency-agents** - AI-persona skills from The Agency (division bundles,
    converted to Agent Skills format by scripts/convert_agency_agents.py)
 8. **task-observer** - vendored ambient skill-observation meta-skill
    (rebelytics/one-skill-to-rule-them-all, CC-BY-4.0, pinned; root-layout
    source: one skill bundle whose SKILL.md sits at the source root)
 
+Current counts are generated from the canonical index and catalogs in
+[the capability inventory](../../docs/CAPABILITY_COUNTS.md). The index below
+is the source of truth for the skills available in this installation.
+
 ## Structure
 
-```
+```text
 skills/
 ├── by-category/
 │   ├── security/
@@ -458,16 +485,20 @@ skills/
 │   ├── opencode/
 │   ├── copilot/
 │   ├── windsurf/
-│   └── kiro/
+│   ├── kiro/
+│   └── hermes/
 └── all-skills.json
 ```
 
 ## Usage
 
 Skills are in SKILL.md format with frontmatter:
-- name, description, risk, source, date_added, author, tags, tools (compatible agents)
+
+- name, description, risk, source, date_added, author, tags, tools (compatible
+  agents)
 
 To use a skill, the agent should:
+
 1. Match task keywords to skill's "When to Use" section
 2. Load the skill's detailed guide
 3. Apply the skill's patterns and procedures
@@ -476,13 +507,13 @@ EOF
     # Create category directories
     CATEGORIES=("security" "architecture" "testing" "refactoring" "code-review" "documentation" "devops" "ai-ml" "productivity" "general")
     for cat in "${CATEGORIES[@]}"; do
-        mkdir -p "$SKILLS_DIR/by-category/$cat"
+        ensure_registry_directory "$SKILLS_DIR/by-category/$cat"
     done
 
     # Create agent directories
     AGENT_LIST=("claude-code" "codex" "cursor" "gemini-cli" "opencode" "copilot" "windsurf" "kiro" "hermes")
     for agent in "${AGENT_LIST[@]}"; do
-        mkdir -p "$SKILLS_DIR/by-agent/$agent"
+        ensure_registry_directory "$SKILLS_DIR/by-agent/$agent"
     done
 
     # Accumulate skill metadata into a record file (fields separated by
@@ -551,7 +582,10 @@ EOF
                 target_dir="$SKILLS_DIR/by-category/$skill_category/$skill_name"
                 mkdir -p "$(dirname "$target_dir")"
                 rm -rf "$target_dir"
-                cp -r "$skill_dir" "$target_dir" 2>/dev/null || true
+                if ! cp -r "$skill_dir" "$target_dir"; then
+                    log_error "Failed to copy skill bundle: $skill_name"
+                    return 1
+                fi
 
                 # Also copy to by-agent/ for each compatible tool.
                 # Only the canonical agent directories are populated.
@@ -562,7 +596,10 @@ EOF
                                 agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
                                 mkdir -p "$(dirname "$agent_target_dir")"
                                 rm -rf "$agent_target_dir"
-                                cp -r "$skill_dir" "$agent_target_dir" 2>/dev/null || true
+                                if ! cp -r "$skill_dir" "$agent_target_dir"; then
+                                    log_error "Failed to copy agent skill bundle: $skill_name"
+                                    return 1
+                                fi
                                 ;;
                             *)
                                 # Unknown tool name: keep it in the index but
@@ -619,7 +656,10 @@ EOF
                 target_dir="$SKILLS_DIR/by-category/$skill_category/$skill_name"
                 mkdir -p "$(dirname "$target_dir")"
                 rm -rf "$target_dir"
-                cp -r "$skill_dir" "$target_dir" 2>/dev/null || true
+                if ! cp -r "$skill_dir" "$target_dir"; then
+                    log_error "Failed to copy skill bundle: $skill_name"
+                    return 1
+                fi
 
                 while IFS= read -r tool; do
                     if [ -n "$tool" ]; then
@@ -628,7 +668,10 @@ EOF
                                 agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
                                 mkdir -p "$(dirname "$agent_target_dir")"
                                 rm -rf "$agent_target_dir"
-                                cp -r "$skill_dir" "$agent_target_dir" 2>/dev/null || true
+                                if ! cp -r "$skill_dir" "$agent_target_dir"; then
+                                    log_error "Failed to copy agent skill bundle: $skill_name"
+                                    return 1
+                                fi
                                 ;;
                             *)
                                 ;;
@@ -958,7 +1001,7 @@ setup_memory() {
 memory:
   # Storage backend
   backend: "sqlite"  # or "file", "redis"
-  path: "~/.agent-memory"
+  path: "${AGENT_ENHANCEMENTS_BASE_DIR}/.agentenhancements/memory"
 
   # Memory types
   types:
@@ -1033,8 +1076,19 @@ EOF
 #!/bin/bash
 # Initialize agent memory system
 
-MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}"
+set -euo pipefail
+umask 077
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+MEMORY_ROOT="${AGENT_MEMORY_ROOT:-${AGENT_ENHANCEMENTS_STATE_DIR:-$PROJECT_ROOT/.agentenhancements}/memory}"
+if [ -L "$MEMORY_ROOT" ] || [ -L "$MEMORY_ROOT/memory.db" ]; then
+    echo "Refusing symlinked memory storage" >&2
+    exit 1
+fi
 mkdir -p "$MEMORY_ROOT"/{projects,global,sessions,skills}
+chmod 700 "$MEMORY_ROOT"
+if [ -e "$MEMORY_ROOT/memory.db" ]; then
+    chmod 600 "$MEMORY_ROOT/memory.db"
+fi
 
 # Create SQLite database for structured memory when the sqlite3 CLI is
 # available. Without it, the Python hooks create the same schema on first
@@ -1060,6 +1114,7 @@ CREATE INDEX IF NOT EXISTS idx_agent_project ON memories(agent, project);
 CREATE INDEX IF NOT EXISTS idx_type ON memories(memory_type);
 CREATE INDEX IF NOT EXISTS idx_expires ON memories(expires_at);
 SQL
+    chmod 600 "$MEMORY_ROOT/memory.db"
     echo "Memory system initialized at $MEMORY_ROOT (schema created)"
 elif [ -f "$MEMORY_ROOT/memory.db" ]; then
     echo "Memory storage ready at $MEMORY_ROOT (database exists; schema maintained by the Python hooks)"
@@ -1080,18 +1135,32 @@ Uses parameterized queries to prevent SQL injection
 """
 
 import sqlite3
+import stat
 import sys
 import os
 import json
 from datetime import datetime, timezone
 
 AGENT = "AGENT_PLACEHOLDER"
-MEMORY_ROOT = os.environ.get("AGENT_MEMORY_ROOT", os.path.expanduser("~/.agent-memory"))
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+from project_paths import memory_root
+MEMORY_ROOT = str(memory_root())
 DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
 
 def init_db():
+    if os.path.islink(DB_PATH):
+        raise OSError("Refusing symlinked memory database")
     os.makedirs(MEMORY_ROOT, exist_ok=True, mode=0o700)
+    os.chmod(MEMORY_ROOT, 0o700)
     os.makedirs(os.path.join(MEMORY_ROOT, "projects"), exist_ok=True)
+    descriptor = os.open(DB_PATH, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise OSError("Memory database must be a regular file")
+        os.fchmod(descriptor, 0o600)
+    finally:
+        os.close(descriptor)
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS memories (
@@ -1302,13 +1371,10 @@ setup_compression() {
     if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
         log_success "headroom binary found at $BASE_DIR/headroom/target/release/headroom"
         HEADROOM_CMD="$BASE_DIR/headroom/target/release/headroom"
-    elif command -v headroom &> /dev/null; then
-        log_success "headroom binary found in PATH"
-        HEADROOM_CMD="headroom"
     elif [ -f "$BASE_DIR/headroom/Cargo.toml" ] && [ "${AGENT_ENHANCEMENTS_BUILD_HEADROOM:-1}" = "1" ]; then
         if command -v cargo &> /dev/null; then
             log_info "Building headroom from source..."
-            if (cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -20); then
+            if (cd "$BASE_DIR/headroom" && cargo build --locked --release -p headroom-cli 2>&1 | tail -20); then
                 if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
                     HEADROOM_CMD="$BASE_DIR/headroom/target/release/headroom"
                     log_success "headroom built successfully"
@@ -1330,7 +1396,7 @@ setup_compression() {
     fi
 
     # Create compression configuration
-    cat > "$COMPRESSION_DIR/config.yaml" << EOF
+    cat > "$COMPRESSION_DIR/config.yaml" << 'EOF'
 # Context Compression Configuration
 
 compression:
@@ -1339,7 +1405,7 @@ compression:
 
   # Headroom settings
   headroom:
-    binary_path: "${HEADROOM_CMD:-headroom}"
+    binary_path: "${HEADROOM_BIN:-headroom}"
     # Compression modes
     modes:
       code: "smart"        # Preserve code structure, compress comments/whitespace
@@ -1878,6 +1944,7 @@ fi
 # variables take precedence.
 UNIFIED_DIR="${AGENT_ENHANCEMENTS_UNIFIED_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(dirname "$UNIFIED_DIR")}"
+eval "$(python3 "$UNIFIED_DIR/scripts/project_paths.py" shell)"
 
 # Detected agents (written by setup.sh); pre-declared so the script also
 # works when the file is missing.
@@ -1901,7 +1968,7 @@ else
 fi
 
 # Set environment variables
-export AGENT_MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}"
+export AGENT_MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$BASE_DIR/.agentenhancements/memory}"
 export AGENT_SKILLS_DIR="$UNIFIED_DIR/skills"
 export AGENT_COMPRESSION_CONFIG="$UNIFIED_DIR/compression/config.yaml"
 export AGENT_PROMPTS_DIR="$UNIFIED_DIR/prompts"
@@ -1957,9 +2024,11 @@ Loads and matches skills from all sources based on task context
 import json
 import os
 import sys
-import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from registry import DEFAULT_NATIVE_SOURCES, rank_entries
 
 SKILLS_DIR = Path(os.environ.get(
     "AGENT_SKILLS_DIR",
@@ -1969,11 +2038,12 @@ SKILLS_DIR = Path(os.environ.get(
 AGENT_ALIASES = {"claude": "claude-code", "claude-code": "claude-code",
                  "codex-cli": "codex", "codex": "codex", "gemini": "gemini-cli",
                  "gemini-cli": "gemini-cli", "opencode": "opencode",
-                 "cursor": "cursor", "windsurf": "windsurf", "copilot": "copilot", "kiro": "kiro"}
+                 "cursor": "cursor", "windsurf": "windsurf", "copilot": "copilot", "kiro": "kiro",
+                 "hermes": "hermes"}
 
 class SkillsLoader:
     def __init__(self, agent: str = "claude-code"):
-        self.agent = agent
+        self.agent = AGENT_ALIASES.get(agent.casefold(), agent.casefold())
         self.skills_index = self._load_index()
 
     def _load_index(self) -> Dict:
@@ -1985,19 +2055,8 @@ class SkillsLoader:
         return {"skills": []}
 
     def find_skills(self, task_description: str, max_results: int = 5) -> List[Dict]:
-        """Rank relevant terms, without treating agent compatibility as relevance."""
-        task_lower = task_description.casefold()
-        matches = []
-        stopwords = set("a an the in on is it to for of and or with this that please help me my use using create make i you can do check all analisa cek saya dan di yang untuk dengan ini nya bisa".split())
-        keywords = set(re.findall(r'\b[\w+#-]+\b', task_lower)) - stopwords
-        translations = {"keamanan": "security", "uji": "testing", "pengujian": "testing",
-                        "perbaiki": "debugging", "arsitektur": "architecture",
-                        "dokumentasi": "documentation", "tabel": "spreadsheet",
-                        "presentasi": "pptx", "excel": "xlsx", "bug": "debugging"}
-        keywords.update(translations[k] for k in tuple(keywords) if k in translations)
-        if not keywords:
-            return []
-
+        """Use registry relevance/abstention after filtering host compatibility."""
+        candidates = []
         for skill in self.skills_index.get("skills", []):
             tools = skill.get("tools") or []
             compatible = {AGENT_ALIASES[t.casefold()] for t in tools if t.casefold() in AGENT_ALIASES}
@@ -2005,23 +2064,13 @@ class SkillsLoader:
             # or say "Agent Skills". Those are not incompatible agent names.
             if compatible and self.agent not in compatible:
                 continue
-            def terms(value):
-                return set(re.findall(r'\b[\w+#]+\b', str(value).casefold()))
-            name = str(skill.get("name", "")).casefold()
-            name_terms = terms(name)
-            tags = terms(" ".join(skill.get("tags") or []))
-            desc = terms(skill.get("description", ""))
-            when = terms(skill.get("when_to_use", ""))
-            score = (12 * len(keywords & name_terms) + 5 * len(keywords & tags)
-                     + 2 * len(keywords & when) + len(keywords & desc))
-            if name in keywords:
-                score += 30
-            if score > 0:
-                matches.append((score, skill))
-
-        # Sort by score and return top matches
-        matches.sort(key=lambda x: (-x[0], x[1].get("name", "")))
-        return [skill for _, skill in matches[:max_results]]
+            candidates.append({
+                **skill, "type": "skill", "_skill": skill,
+                "natively_linked_by_default": skill.get("source") in DEFAULT_NATIVE_SOURCES,
+            })
+        # Return the original skill records: ranking metadata stays internal.
+        return [entry["_skill"] for _, entry in
+                rank_entries(candidates, task_description, limit=max_results)]
 
     def skill_path(self, skill_name: str) -> Optional[Path]:
         """Resolve either supported layout while preventing path traversal."""
@@ -2107,12 +2156,16 @@ Manages persistent memory across sessions and agents
 import sqlite3
 import json
 import os
+import stat
 import sys
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
-MEMORY_ROOT = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from project_paths import memory_root
+
+MEMORY_ROOT = memory_root()
 DB_PATH = MEMORY_ROOT / "memory.db"
 
 class AgentMemory:
@@ -2124,6 +2177,19 @@ class AgentMemory:
     def _init_db(self):
         """Initialize database"""
         MEMORY_ROOT.mkdir(parents=True, exist_ok=True, mode=0o700)
+        MEMORY_ROOT.chmod(0o700)
+        # Claim a private regular file before SQLite opens it. A pre-existing
+        # symlink must never redirect schema/data writes or chmod to another
+        # database, and a permissive umask must not expose a new database.
+        descriptor = os.open(
+            DB_PATH, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600
+        )
+        try:
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise OSError("memory database must be a regular file")
+            os.fchmod(descriptor, 0o600)
+        finally:
+            os.close(descriptor)
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS memories (
@@ -2316,10 +2382,11 @@ import sys
 import os
 import json
 import re
+import shutil
 from pathlib import Path
 from typing import Optional
 
-HEADROOM_BIN = os.environ.get("HEADROOM_BIN", "headroom")
+HEADROOM_BIN = os.environ.get("HEADROOM_BIN", "")
 
 
 def _default_fallback_bin() -> str:
@@ -2336,14 +2403,13 @@ FALLBACK_BIN = _default_fallback_bin()
 def get_headroom_bin() -> Optional[str]:
     """Find headroom binary"""
     for bin_path in [HEADROOM_BIN, FALLBACK_BIN]:
-        if bin_path and os.path.exists(bin_path):
-            return bin_path
-        try:
-            result = subprocess.run(["which", bin_path], capture_output=True)
-            if result.returncode == 0:
-                return result.stdout.decode().strip()
-        except:
-            pass
+        if not bin_path:
+            continue
+        if os.path.isfile(bin_path) and os.access(bin_path, os.X_OK):
+            return str(Path(bin_path).resolve())
+        executable = shutil.which(bin_path)
+        if executable:
+            return executable
     return None
 
 def compress_content(content: str, mode: str = "auto", agent: str = "claude-code") -> str:
@@ -2471,6 +2537,8 @@ main() {
     echo "Unified directory: $UNIFIED_DIR"
     echo ""
 
+    python3 "$UNIFIED_DIR/scripts/project_paths.py" validate
+    eval "$(python3 "$UNIFIED_DIR/scripts/project_paths.py" shell)"
     local runtime_python
     runtime_python="$(bash "$UNIFIED_DIR/scripts/setup-mcp.sh" --prepare)"
     export PATH="$(dirname "$runtime_python"):$PATH"
@@ -2529,7 +2597,7 @@ main() {
     echo ""
     echo "Environment variables for customization:"
     echo "  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: repository root detected from setup.sh location)"
-    echo "  AGENT_MEMORY_ROOT - Override memory storage location (default: ~/.agent-memory)"
+    echo "  AGENT_MEMORY_ROOT - Override memory storage location (default: checkout/.agentenhancements/memory)"
     echo "  HEADROOM_BIN - Override headroom binary path"
 }
 

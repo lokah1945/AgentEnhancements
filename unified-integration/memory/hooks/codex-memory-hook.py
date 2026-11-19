@@ -6,18 +6,32 @@ Uses parameterized queries to prevent SQL injection
 """
 
 import sqlite3
+import stat
 import sys
 import os
 import json
 from datetime import datetime, timezone
 
 AGENT = "codex"
-MEMORY_ROOT = os.environ.get("AGENT_MEMORY_ROOT", os.path.expanduser("~/.agent-memory"))
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+from project_paths import memory_root
+MEMORY_ROOT = str(memory_root())
 DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
 
 def init_db():
+    if os.path.islink(DB_PATH):
+        raise OSError("Refusing symlinked memory database")
     os.makedirs(MEMORY_ROOT, exist_ok=True, mode=0o700)
+    os.chmod(MEMORY_ROOT, 0o700)
     os.makedirs(os.path.join(MEMORY_ROOT, "projects"), exist_ok=True)
+    descriptor = os.open(DB_PATH, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise OSError("Memory database must be a regular file")
+        os.fchmod(descriptor, 0o600)
+    finally:
+        os.close(descriptor)
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS memories (

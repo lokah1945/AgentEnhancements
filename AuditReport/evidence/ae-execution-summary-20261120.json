@@ -1,0 +1,1305 @@
+{
+  "audit_started": "2026-11-19",
+  "local_verification_closed": "2026-11-20",
+  "runtime_source_commit": "57b96a97c0b564705008d493ac268d6a244aae09",
+  "baseline_commit": "b4ca7e6a",
+  "baseline_integration": {
+    "tests": 323,
+    "optional_live_skips": 3,
+    "result": "OK"
+  },
+  "final_integration": {
+    "tests": 394,
+    "optional_live_skips": 3,
+    "result": "OK",
+    "source_commit": "57b96a97c0b564705008d493ac268d6a244aae09",
+    "elapsed_seconds": 215.761,
+    "interpreter": "checkout .agentenhancements/runtime/venv/bin/python",
+    "fixture_aliases": "cleared exactly as CI"
+  },
+  "ECC": {
+    "passed": 9422,
+    "failed": 0,
+    "network": "none",
+    "Node": "20",
+    "new_skips": 0
+  },
+  "idempotence": {
+    "exit_code": 0,
+    "native_files": 19,
+    "changed_paths": [],
+    "setup2_to_setup3_same_source": true,
+    "commit": "cba4e255"
+  },
+  "checks": {
+    "catalog": 40,
+    "MCP_protocol_targets": 10,
+    "smokes": 20,
+    "browser_regressions": 2,
+    "lint_diagnostics": 0
+  },
+  "dependencies": {
+    "python_vulnerabilities": 0,
+    "npm": {
+      "info": 0,
+      "low": 0,
+      "moderate": 7,
+      "high": 0,
+      "critical": 0,
+      "total": 7
+    },
+    "rust_headroom_vulnerabilities": 0,
+    "rust_ECC2_vulnerabilities": 0
+  },
+  "home": {
+    "managed_config_paths_checked": 19,
+    "changed": [
+      ".hermes/profiles/ilma/config.yaml"
+    ],
+    "background_snapshot_differences": 64,
+    "restoration_performed": false,
+    "audit_tool_isolation_exception": "One early npx lint invocation used the host npm cache. All subsequent invocations isolated HOME/cache; original cache contents were not preserved, so no unsafe deletion/restoration was attempted."
+  },
+  "failed_attempt_notes": [
+    "Host ECC fixtures inherited fixed path aliases; clean Node20 namespace without aliases passed9422.",
+    "Initial ECC Docker HOME was missing; creating private HOME fixed2fixture failures.",
+    "An old agent harness wrote a conflicting log; final ECC log has a single writer and9422/0.",
+    "ECC2 fixture assumes git init.defaultBranch=main; isolated config fixed1fixturefailure;508parent tests and childhelper passed.",
+    "First fresh setup was attempted before clone checkout completed and exited127; complete clone rerun succeeded836.5seconds.",
+    "Two preflight assertions referenced the superseded XDG default; they now verify the maintainer-approved project state and retain permission checks.",
+    "Final lint first saw historical changelog debt; committed formatting fixed it under unchanged rules.",
+    "Secret scanner exit1 reports candidates, not a zero-alert certificate. Npm audit exit1 is still recorded for7moderate.",
+    "Initial CI publish used unsupported runner.temp in jobs.env; regression failed six subcases, fixed by8d2b1526.",
+    "First executing CI lacked ripgrep/ffmpeg/tesseract; existing functional test failed and media tests could not execute. Prerequisites fixed by6d3cc309; latest CI all jobs pass.",
+    "Additional fresh-clone invocation mistakenly used system Python/filelock3.32.0 and fixed host aliases:24failures/1error/4skips. Re-run uses checkout venv and the same alias-clearing command as CI; unsuccessful log retained."
+  ],
+  "commands": [
+    {
+      "name": "binary-selection-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 0.514,
+      "log_file": "audit-binary-selection-red.log",
+      "log_sha256": "52ff0ca349a4f3fc2e394a46f36e09874eb5a21e16c58698fbe74db7d70acae2"
+    },
+    {
+      "name": "browser-boundary-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.373,
+      "log_file": "audit-browser-boundary-green.log",
+      "log_sha256": "5a2ed19d0550566c7f699d33f2eb6130367b1cef26d7ba13882933ca55ccb85b"
+    },
+    {
+      "name": "browser-boundary-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 0.342,
+      "log_file": "audit-browser-boundary-red.log",
+      "log_sha256": "8a75acad2ab3c924960f0ee7d30d0a048466d5d66d8a0a4efda7612717e27eb9"
+    },
+    {
+      "name": "browser-local-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.339,
+      "log_file": "audit-browser-local-green.log",
+      "log_sha256": "30af1011827de802450bdf00f307cec0d99e4d52609e83acd0439c5f21330f62"
+    },
+    {
+      "name": "browser-local-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 0.354,
+      "log_file": "audit-browser-local-red.log",
+      "log_sha256": "9e511bde7d20c0195cef56dcb31e0a608b0e3609e598ad660da42216262dd3e2"
+    },
+    {
+      "name": "browser-package-suite",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.867,
+      "log_file": "audit-browser-package-suite.log",
+      "log_sha256": "f0dd98a82afb9e3d11ca23570ce7be24770169942d7a93de2cea12496a04590a"
+    },
+    {
+      "name": "budget-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.612,
+      "log_file": "audit-budget-green.log",
+      "log_sha256": "abb0c8c2fc770b1a41bb026e80ae4e00e8c00805f63e40de800efc7c222b78be"
+    },
+    {
+      "name": "budget-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 0.574,
+      "log_file": "audit-budget-red.log",
+      "log_sha256": "697146cb794cacbf74bcb326f7b5861084bd069fe7191444510630b46aed580b"
+    },
+    {
+      "name": "cargo-scan-prepare",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 221.226,
+      "log_file": "audit-cargo-scan-prepare.log",
+      "log_sha256": "b8c0d1b664c3ac1504d42859eb53bc7880002ea70a4c48fbe7638144bfcbab91"
+    },
+    {
+      "name": "catalog",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.336,
+      "log_file": "audit-catalog.log",
+      "log_sha256": "8644807e745349b84f7ee1fa9247b74a42fa37fa44812082d59c4dcc70ef018d"
+    },
+    {
+      "name": "compression-final",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.52,
+      "log_file": "audit-compression-final.log",
+      "log_sha256": "b349852c7770dca3d72c4647b9903b7ea2c390840d2d378b409c0719036dd6be"
+    },
+    {
+      "name": "dependencies-floor-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 3.616,
+      "log_file": "audit-dependencies-floor-red.log",
+      "log_sha256": "ef751bc4790a5eae043ab0f2a120a0f4c477bbfe018790aa6e83c17c7dcc69a0"
+    },
+    {
+      "name": "dependencies-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 1.589,
+      "log_file": "audit-dependencies-green.log",
+      "log_sha256": "cef6c0b31d6ecf9eda4620b9e39df18fcda10be552512458861adeb6f8ffdbf0"
+    },
+    {
+      "name": "dependencies-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 0.555,
+      "log_file": "audit-dependencies-red.log",
+      "log_sha256": "e51c10096c8c314bb88b750c1229d68fc669a5f608db085227ca0c318096050c"
+    },
+    {
+      "name": "dependency-audit",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 36.934,
+      "log_file": "audit-dependency-audit.log",
+      "log_sha256": "15950a68a7ed99c59779717acefdceb3f69cfd31bde67d2c954f2a3cea4d7955"
+    },
+    {
+      "name": "description-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 2.603,
+      "log_file": "audit-description-red.log",
+      "log_sha256": "d582c255513323da56520e85c428d00d1317afb8c402af06b313cf87cb74190b"
+    },
+    {
+      "name": "discovery-gate-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 114.038,
+      "log_file": "audit-discovery-gate-green.log",
+      "log_sha256": "531d8a9f59ba58ae367834fd2242cbccb8e9c5aab652830fe6ab0ead34fd1e41"
+    },
+    {
+      "name": "final-scope-recheck",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 2.586,
+      "log_file": "audit-final-scope-recheck.log",
+      "log_sha256": "e4500738f9450745701840ee44eaccd68de8ac694121511d0e7d850404f91866"
+    },
+    {
+      "name": "headroom-compile-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 4.136,
+      "log_file": "audit-headroom-compile-green.log",
+      "log_sha256": "2de2e3393131c031ae2fd1966d2dfbe640cb5a07bc1e88f100f60008b1ab7552"
+    },
+    {
+      "name": "headroom-compile-red",
+      "label": "audit",
+      "exit_code": 101,
+      "elapsed_seconds": 77.446,
+      "log_file": "audit-headroom-compile-red.log",
+      "log_sha256": "f9b0bcf9699a79066b86eda50bd63891a6dea2160f934491ac5353da69d59206"
+    },
+    {
+      "name": "headroom-offload-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 2.479,
+      "log_file": "audit-headroom-offload-green.log",
+      "log_sha256": "2f1fce68effbddece27dabda6cc386c105dd1e7ee4dd44e1cd4fef1765200348"
+    },
+    {
+      "name": "headroom-offload-red",
+      "label": "audit",
+      "exit_code": 101,
+      "elapsed_seconds": 3.493,
+      "log_file": "audit-headroom-offload-red.log",
+      "log_sha256": "fa0cde9190b7bba75107739d1f16acdba231a31c3267b5dcdf8281bc6bedaf69"
+    },
+    {
+      "name": "headroom-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 0.013,
+      "log_file": "audit-headroom-red.log",
+      "log_sha256": "a96bf18474bc74aaa584873de13befcaf953650a47b6fbcb5da743d4772e15d2"
+    },
+    {
+      "name": "headroom-release",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 265.572,
+      "log_file": "audit-headroom-release.log",
+      "log_sha256": "0bf9d93fb269b4db5e1769658f79feafcb61ea88b8631a4837fc1c3b074fbc66"
+    },
+    {
+      "name": "integration-clean-env",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 268.076,
+      "log_file": "audit-integration-clean-env.log",
+      "log_sha256": "f270f7a8a18029ce500e0ac414549c701eec9838a5ec4a1573e9c6578340d64f"
+    },
+    {
+      "name": "integration-initial",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 190.461,
+      "log_file": "audit-integration-initial.log",
+      "log_sha256": "cad0c893af5dca87a7eb75c5bed794b99f0360b47be9b5d674ced35069c4fe61"
+    },
+    {
+      "name": "local-compressor-path-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 2.73,
+      "log_file": "audit-local-compressor-path-red.log",
+      "log_sha256": "045ee854783756ce09160549a05fde234131b57daf6faf5dad512f84004429f7"
+    },
+    {
+      "name": "local-runtime-prepare",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 4.832,
+      "log_file": "audit-local-runtime-prepare.log",
+      "log_sha256": "d27784e95b67aa20862a121957cfb8081fb147af04abf8de72ed6753870ce45f"
+    },
+    {
+      "name": "local-scope-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 3.169,
+      "log_file": "audit-local-scope-green.log",
+      "log_sha256": "065b1c06721c3a7742ba293af983b60a12cd2c8663060512172da66f0aa860b2"
+    },
+    {
+      "name": "local-scope-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 2.848,
+      "log_file": "audit-local-scope-red.log",
+      "log_sha256": "b231e1d1400262347d9d3dacce4581471ff1e23f658a812e6fa6fa8b313b323f"
+    },
+    {
+      "name": "local-smoke",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 9.499,
+      "log_file": "audit-local-smoke.log",
+      "log_sha256": "ac142ac74462c19786ec3d5d9befef2396c217361ecc23d778cd755b135d6c16"
+    },
+    {
+      "name": "local-state-full-suite",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 225.764,
+      "log_file": "audit-local-state-full-suite.log",
+      "log_sha256": "1ee01a6caa8a9d6b86f470d6b2137fbbfe9df6bd0f28088b46db66b5ae1dd523"
+    },
+    {
+      "name": "local-state-suite-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 228.155,
+      "log_file": "audit-local-state-suite-green.log",
+      "log_sha256": "4e371f130b4e7ffc657d7f631359f5ff1e914a2cce19e8c5793f56592027200a"
+    },
+    {
+      "name": "local-sync-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.5,
+      "log_file": "audit-local-sync-green.log",
+      "log_sha256": "d6cdc86dc62ef9dff0ddc656119cb1c5fde2ae658e6cb38b09962300fd2f3514"
+    },
+    {
+      "name": "log-edge-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 12.252,
+      "log_file": "audit-log-edge-green.log",
+      "log_sha256": "9486e94afe04d0b5206e4efbd4fc0c9f1d98d6748be5baa0e3aa20f25106404c"
+    },
+    {
+      "name": "log-edge-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 11.791,
+      "log_file": "audit-log-edge-red.log",
+      "log_sha256": "3e0eb2efd59587fc25373e2a57de52a6531e451a31eaeb1164082a541e9efdd0"
+    },
+    {
+      "name": "mcp-activation-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 5.08,
+      "log_file": "audit-mcp-activation-green.log",
+      "log_sha256": "8788c6146caf0e32b0613bed4736f648d827e96b24edc30a3c42479406f4d981"
+    },
+    {
+      "name": "mcp-activation-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 5.61,
+      "log_file": "audit-mcp-activation-red.log",
+      "log_sha256": "a3cc6030345797ef9a1823025bd520fd1f12d14616925ab834b0113483f20e70"
+    },
+    {
+      "name": "mcp-protocol",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 7.963,
+      "log_file": "audit-mcp-protocol.log",
+      "log_sha256": "798eaf2ed0d323630f96df0ebbc06f05624363c9b4248d4f5692f27bf24ce588"
+    },
+    {
+      "name": "mcp-xdg-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 2.236,
+      "log_file": "audit-mcp-xdg-green.log",
+      "log_sha256": "2e1f28747f6a100640234e8973983ee8ceb7ff891a06d1653aa0f1047164bf00"
+    },
+    {
+      "name": "mcp-xdg-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 1.327,
+      "log_file": "audit-mcp-xdg-red.log",
+      "log_sha256": "1ef23a796382b9a934d3cdd5d42a08bb2b9714889ea55646ca2f960d2d5217bf"
+    },
+    {
+      "name": "metadata-regressions",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 2.079,
+      "log_file": "audit-metadata-regressions.log",
+      "log_sha256": "48fc19b9cc9e0c54189f0fbb6896a9a42cec2221ff61cc9ca4efafe3f81ac7c9"
+    },
+    {
+      "name": "native-relocation-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 18.056,
+      "log_file": "audit-native-relocation-green.log",
+      "log_sha256": "d8ab1904a2eec7c70ffd6c450ad5929e55bb1c993ee670c73e1c992306941209"
+    },
+    {
+      "name": "native-relocation-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 18.653,
+      "log_file": "audit-native-relocation-red.log",
+      "log_sha256": "97839980eb34c96fd3a425594f394cc5319f07434416813f7a695d7da97a41e1"
+    },
+    {
+      "name": "native-stale-environment-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 24.233,
+      "log_file": "audit-native-stale-environment-green.log",
+      "log_sha256": "f84d2902f2a65433f114e89084443173dc969d80523282d33faff1d9dbb2c75e"
+    },
+    {
+      "name": "native-stale-environment-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 35.222,
+      "log_file": "audit-native-stale-environment-red.log",
+      "log_sha256": "a76b56f46f71065f709b69a75d3f993ee10a394ca7521b2243044eb5fe9cbd1d"
+    },
+    {
+      "name": "observer-isolation-note",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 0.6,
+      "log_file": "audit-observer-isolation-note.log",
+      "log_sha256": "63a905e20f75767d841ef716b01a32e7acb76555ed739aa6dee968cf45219356"
+    },
+    {
+      "name": "portability-confirmed",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 1.809,
+      "log_file": "audit-portability-confirmed.log",
+      "log_sha256": "eb4e090753932f6274aa82db0c139748d18f03304d514523a0f96eeb0aab0428"
+    },
+    {
+      "name": "portability-green",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 1.647,
+      "log_file": "audit-portability-green.log",
+      "log_sha256": "636230ccd792337f40f545f42b948ffb2ea2ae4ba0289d71109d965a7bbcc553"
+    },
+    {
+      "name": "portability-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 1.953,
+      "log_file": "audit-portability-red.log",
+      "log_sha256": "2a0aa7ea31a12a397d9323aa87fdf6b117bc22494a1a0c459b9afd5d34a1f891"
+    },
+    {
+      "name": "portability-verified",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 1.581,
+      "log_file": "audit-portability-verified.log",
+      "log_sha256": "a76e34f0d054d25339594ec602b21cdd312486e93253afc108848023e89846f0"
+    },
+    {
+      "name": "prepare",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 7.522,
+      "log_file": "audit-prepare.log",
+      "log_sha256": "a7ce964c05d98bb5cebc393ba518a0fd2eae17519d054d83c86d9436ae443c6e"
+    },
+    {
+      "name": "project-local-benchmark-exact",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 140.265,
+      "log_file": "audit-project-local-benchmark-exact.log",
+      "log_sha256": "9612101e8aa548a81a38fb17b02b2186349d0576482ed7c083ce09dc774d6a76"
+    },
+    {
+      "name": "project-local-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 2.27,
+      "log_file": "audit-project-local-green.log",
+      "log_sha256": "35e0c01bc57ec011a8b22d157f8ae60b22ff79a514fb3572a898c0090fd91b00"
+    },
+    {
+      "name": "project-local-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 1.962,
+      "log_file": "audit-project-local-red.log",
+      "log_sha256": "47c8b8195c4780889670e63fed53c5031c7d9af1a7390bec4c73381bcbf7d190"
+    },
+    {
+      "name": "rea-catalog-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 4.34,
+      "log_file": "audit-rea-catalog-green.log",
+      "log_sha256": "7ec1cce029a7d8c24efcc09221a008fb4aaf31dde83027a62d0ebae7fd8cb477"
+    },
+    {
+      "name": "rea-catalog-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 4.413,
+      "log_file": "audit-rea-catalog-red.log",
+      "log_sha256": "4756a1f6c07ee0e85c0157b9fc14f3f84e0f7397b61d45090740e34fae15c635"
+    },
+    {
+      "name": "regressions-clean-env",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 23.188,
+      "log_file": "audit-regressions-clean-env.log",
+      "log_sha256": "ba1d82039c4dadb8811dc2f5647f878aa8a483cb3df0856245d1c26ba8478d5e"
+    },
+    {
+      "name": "rust-dependency-update",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 2.966,
+      "log_file": "audit-rust-dependency-update.log",
+      "log_sha256": "ab423cd54fb696aedffc391907b33d8ba855e66b452c573c57917c59bdaa138c"
+    },
+    {
+      "name": "rust-ecc-audit-after",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.964,
+      "log_file": "audit-rust-ecc-audit-after.log",
+      "log_sha256": "577b5ad94fc1308b63204bc41b45468e47455ec441bddc602b3a99783beb3da0"
+    },
+    {
+      "name": "rust-ecc-audit",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 2.454,
+      "log_file": "audit-rust-ecc-audit.log",
+      "log_sha256": "bffb8ff64ea529233897041c488d2ae4ba04558563b4ef4d61457b091af8f61b"
+    },
+    {
+      "name": "rust-ecc-tests-branch-main",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 72.212,
+      "log_file": "audit-rust-ecc-tests-branch-main.log",
+      "log_sha256": "03c186813b2c2bba46a1fd4a0030ea0ecf196655f6cd720fbee15d1d41f49ef3"
+    },
+    {
+      "name": "rust-ecc-tests-final",
+      "label": "audit",
+      "exit_code": 101,
+      "elapsed_seconds": 540.817,
+      "log_file": "audit-rust-ecc-tests-final.log",
+      "log_sha256": "1e3f2308e4411af4d0aadae8a823abb0437596140947f4f4cb149f1831e58a14"
+    },
+    {
+      "name": "rust-headroom-audit-after",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 1.138,
+      "log_file": "audit-rust-headroom-audit-after.log",
+      "log_sha256": "a8c8018cf441a64411bcc2b31e294c82e99e95d07a91c278f5973b33880099be"
+    },
+    {
+      "name": "rust-headroom-audit",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 21.153,
+      "log_file": "audit-rust-headroom-audit.log",
+      "log_sha256": "e94813400e879672dab984fe21c6f73b61a3ce41e71930196dc719b547fd9a21"
+    },
+    {
+      "name": "rust-headroom-tests-final",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 254.611,
+      "log_file": "audit-rust-headroom-tests-final.log",
+      "log_sha256": "c51eff900fbc93fd3daecddfbdcb485b7fac7f739d6e9e02968faf04a5052e8f"
+    },
+    {
+      "name": "setup-1",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 513.745,
+      "log_file": "audit-setup-1.log",
+      "log_sha256": "ffe1969cc9cabee50fe0a758589c53c1290d5029ddd0b8443b542f92a82dc39e"
+    },
+    {
+      "name": "setup-2",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 192.353,
+      "log_file": "audit-setup-2.log",
+      "log_sha256": "107a470d612cd905084fbd828bf87bb296c2ce13c868104e98320c59052bfdd3"
+    },
+    {
+      "name": "setup-extra-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 1.451,
+      "log_file": "audit-setup-extra-green.log",
+      "log_sha256": "e80fe20e4ddc6cb6642248c526ddf043872922adedf28f9dfe8aafdbc80c1e76"
+    },
+    {
+      "name": "setup-extra-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 1.513,
+      "log_file": "audit-setup-extra-red.log",
+      "log_sha256": "b321401bbf6239b462227b66b7f56f0b2daa7702e1abdadd89f7f223ee3c62ed"
+    },
+    {
+      "name": "setup-safety-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 1.537,
+      "log_file": "audit-setup-safety-green.log",
+      "log_sha256": "be7b5658ae7940e2924aaee55826ff665944803243d7b0f2877f357977f6de92"
+    },
+    {
+      "name": "setup-safety-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 3.011,
+      "log_file": "audit-setup-safety-red.log",
+      "log_sha256": "44520e2856c38090977374bf017a930c7086c2ab54f5bfff2be43574a3b79c8e"
+    },
+    {
+      "name": "smoke-final",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 9.136,
+      "log_file": "audit-smoke-final.log",
+      "log_sha256": "ccdaccab4f4ba6ef61c864d976ef1ffa988f017882b74238c678d1a893cd9194"
+    },
+    {
+      "name": "smoke",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 8.466,
+      "log_file": "audit-smoke.log",
+      "log_sha256": "c6bad7639f72a72cb9cc2aca4c7255c148766dd19c4d985c8f3d758a371807fb"
+    },
+    {
+      "name": "static-final",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 1.222,
+      "log_file": "audit-static-final.log",
+      "log_sha256": "1222582fcf26a15367289a90aa786e447a574c69db48884f808f6ee0210e21e4"
+    },
+    {
+      "name": "static",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 1.181,
+      "log_file": "audit-static.log",
+      "log_sha256": "1222582fcf26a15367289a90aa786e447a574c69db48884f808f6ee0210e21e4"
+    },
+    {
+      "name": "suite-before-commit",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 200.271,
+      "log_file": "audit-suite-before-commit.log",
+      "log_sha256": "26b461da833f86d50cff0ecc8c988870d96dd8f720b0a89ac9ab6e1294aa1a97"
+    },
+    {
+      "name": "suite-final",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 198.983,
+      "log_file": "audit-suite-final.log",
+      "log_sha256": "b6cb919c3c83cb418d8cd09ded55b2bd9beff9fac70bb3c9219d58a64ce313bc"
+    },
+    {
+      "name": "template-final",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.463,
+      "log_file": "audit-template-final.log",
+      "log_sha256": "ca1e6f9d81260c51e2287ee17b6c7afb4b5d28762ec180c413ded004dadc43e8"
+    },
+    {
+      "name": "tokenizer-offline-final",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.79,
+      "log_file": "audit-tokenizer-offline-final.log",
+      "log_sha256": "d90a6ddf680d6b66c8bd1481abca0018cbcf251d6e419619379d6ad9c66e288e"
+    },
+    {
+      "name": "tokenizer-offline-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.876,
+      "log_file": "audit-tokenizer-offline-green.log",
+      "log_sha256": "a2aeba0af4868f6efbd3fb17a50a3855b00fec1d8fd453f7e9c8ad6e73db3dca"
+    },
+    {
+      "name": "tokenizer-offline-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 0.969,
+      "log_file": "audit-tokenizer-offline-red.log",
+      "log_sha256": "7ae01489f8380e98746e840fcc25ea1e25b7947e76a588de7ab99c31640ff424"
+    },
+    {
+      "name": "browser-tests",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 0.692,
+      "log_file": "baseline-browser-tests.log",
+      "log_sha256": "7fd0dd30bc2c110277f17a7a645555629e22eec5d48397c8aa4e76f1a89fe926"
+    },
+    {
+      "name": "codex-config-smoke",
+      "label": "baseline",
+      "exit_code": 0,
+      "elapsed_seconds": 0.189,
+      "log_file": "baseline-codex-config-smoke.log",
+      "log_sha256": "0828170adaf17b0a88ec2e14f494f864ce2d9a58ab6d10615bb7be2d3e779fcf"
+    },
+    {
+      "name": "dependency-audit",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 41.029,
+      "log_file": "baseline-dependency-audit.log",
+      "log_sha256": "27ac63d156c855d66297977e6d5f6fb99fc0894ea1927fc773b7f0554428a4e7"
+    },
+    {
+      "name": "discovery-gate-red",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 121.61,
+      "log_file": "baseline-discovery-gate-red.log",
+      "log_sha256": "1a4b57c535e2b3a46cceea5712eadc26df55b9e3a28bb27ad1dfb9c5fa0234e7"
+    },
+    {
+      "name": "ecc-build",
+      "label": "baseline",
+      "exit_code": 0,
+      "elapsed_seconds": 3.755,
+      "log_file": "baseline-ecc-build.log",
+      "log_sha256": "21fa386ffda9e1a34e78e69ffef94c005dfdab0a1b600b6c4101d4a819fe3b1c"
+    },
+    {
+      "name": "ecc-container-clean",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 528.073,
+      "log_file": "baseline-ecc-container-clean.log",
+      "log_sha256": "9aefdebf050fedc45ed43782dacdfc43d432d638a98d043fad63d9edaa9a6d5b"
+    },
+    {
+      "name": "ecc-container-layout",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 566.469,
+      "log_file": "baseline-ecc-container-layout.log",
+      "log_sha256": "dfe06409920f027944b4415b50c281ae57e8edec4ddbe6fc88225a31dfd6f868"
+    },
+    {
+      "name": "ecc-container",
+      "label": "baseline",
+      "exit_code": 143,
+      "elapsed_seconds": 226.574,
+      "log_file": "baseline-ecc-container.log",
+      "log_sha256": "7bffb9acf92a4d3d4080492fbf74a528088f033f6f11017fa260b7271fb2250e"
+    },
+    {
+      "name": "ecc-deps",
+      "label": "baseline",
+      "exit_code": 0,
+      "elapsed_seconds": 22.248,
+      "log_file": "baseline-ecc-deps.log",
+      "log_sha256": "255863b022240fd7285e0617ec42e5ea7675296773919af52ee69980d903d928"
+    },
+    {
+      "name": "ecc-node20-clean-env",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 767.797,
+      "log_file": "baseline-ecc-node20-clean-env.log",
+      "log_sha256": "176e0021b910f2532fe6e188fdd09ede5ce3c162b9dc168fd6e2974b6cf47bd8"
+    },
+    {
+      "name": "ecc-tests",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 800.704,
+      "log_file": "baseline-ecc-tests.log",
+      "log_sha256": "296a15f85d1cbeacd491c9921dab128ed7a79dcc256e5eac764d98ede6805c24"
+    },
+    {
+      "name": "hermes-smoke",
+      "label": "baseline",
+      "exit_code": 0,
+      "elapsed_seconds": 79.625,
+      "log_file": "baseline-hermes-smoke.log",
+      "log_sha256": "734099a9809c2a13280683ccc9d159fb04d3d63a619a2d8d43cf9608d6117c04"
+    },
+    {
+      "name": "integration-clean-env",
+      "label": "baseline",
+      "exit_code": 0,
+      "elapsed_seconds": 188.691,
+      "log_file": "baseline-integration-clean-env.log",
+      "log_sha256": "09322a4c5d8b7021ac231e253d3a8f93962b2a595f51ba7155d10156480171c3"
+    },
+    {
+      "name": "integration-tests",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 182.009,
+      "log_file": "baseline-integration-tests.log",
+      "log_sha256": "37f4d877e0694d2618129d92844120f3ead8794467f535368d476720ce2e488a"
+    },
+    {
+      "name": "integration-unrestricted",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 200.453,
+      "log_file": "baseline-integration-unrestricted.log",
+      "log_sha256": "5f6bd2890d9dfee8953896b026c748f4c9509e7e6bd60a35d97d61763cc2b458"
+    },
+    {
+      "name": "native-smoke",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 32.199,
+      "log_file": "baseline-native-smoke.log",
+      "log_sha256": "0b6b0ae9ef715f23a1e7e16451fcbe884b266d6c74a24138a506fc480b364e58"
+    },
+    {
+      "name": "npm-audit",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 2.448,
+      "log_file": "baseline-npm-audit.log",
+      "log_sha256": "4f40b129cec9bc679e5eb88d23fde947c6a32fb8095fec6c2d01d3c281fdfc3e"
+    },
+    {
+      "name": "secrets-history",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 285.016,
+      "log_file": "baseline-secrets-history.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "secrets-tree",
+      "label": "baseline",
+      "exit_code": 1,
+      "elapsed_seconds": 37.003,
+      "log_file": "baseline-secrets-tree.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "setup-1-network",
+      "label": "baseline",
+      "exit_code": 0,
+      "elapsed_seconds": 752.63,
+      "log_file": "baseline-setup-1-network.log",
+      "log_sha256": "3464a182b2b1d1dce087bb70e4308b1719f5a092992a2f0db91a12460bfb46b3"
+    },
+    {
+      "name": "setup-1",
+      "label": "baseline",
+      "exit_code": 2,
+      "elapsed_seconds": 6.045,
+      "log_file": "baseline-setup-1.log",
+      "log_sha256": "58f7bee92c00cd2905bf8ca419b913998cc429a507cbd17f20c10ab8b1d3361e"
+    },
+    {
+      "name": "setup-2",
+      "label": "baseline",
+      "exit_code": 0,
+      "elapsed_seconds": 171.426,
+      "log_file": "baseline-setup-2.log",
+      "log_sha256": "6b8b4ef08d19ce539e79fb1a9b133a196405d6856a47bbddcab96f607f78c723"
+    },
+    {
+      "name": "update-sqlite",
+      "label": "ecc2",
+      "exit_code": 0,
+      "elapsed_seconds": 2.105,
+      "log_file": "ecc2-update-sqlite.log",
+      "log_sha256": "601241371f359f700b6f56349ad8f73e7b8c95731747d6670c3bb5d7ca81326c"
+    },
+    {
+      "name": "update-transitives",
+      "label": "ecc2",
+      "exit_code": 0,
+      "elapsed_seconds": 10.38,
+      "log_file": "ecc2-update-transitives.log",
+      "log_sha256": "a4829eeb75818bc826d175c31c17811f22de95a7ec7358705e9ae60f6556c90b"
+    },
+    {
+      "name": "benchmark-exact",
+      "exit_code": 0,
+      "elapsed_seconds": 72.031,
+      "log_file": "final-benchmark-exact.log",
+      "log_sha256": "d33f0469f4bea3bbde4d6e6cc858d44ed711af7f385dc28071c2024324c93b82"
+    },
+    {
+      "name": "browser-suite",
+      "exit_code": 0,
+      "elapsed_seconds": 0.666,
+      "log_file": "final-browser-suite.log",
+      "log_sha256": "8a0a59a7dff6dfab63581d9dea40247f1a5ed515810ad428615bf6a362f7b92d"
+    },
+    {
+      "name": "catalog",
+      "exit_code": 0,
+      "elapsed_seconds": 0.374,
+      "log_file": "final-catalog.log",
+      "log_sha256": "8644807e745349b84f7ee1fa9247b74a42fa37fa44812082d59c4dcc70ef018d"
+    },
+    {
+      "name": "count-drift",
+      "exit_code": 0,
+      "elapsed_seconds": 1.539,
+      "log_file": "final-count-drift.log",
+      "log_sha256": "c40dfa403b4bcb5b593bdd78afa4aa0d9c386877aea794c596523728d41be4af"
+    },
+    {
+      "name": "dependency-npm",
+      "exit_code": 1,
+      "elapsed_seconds": 2.591,
+      "log_file": "final-dependency-npm.log",
+      "log_sha256": "4f40b129cec9bc679e5eb88d23fde947c6a32fb8095fec6c2d01d3c281fdfc3e"
+    },
+    {
+      "name": "dependency-python",
+      "exit_code": 0,
+      "elapsed_seconds": 10.748,
+      "log_file": "final-dependency-python.log",
+      "log_sha256": "3978f67e41b1bcdbf063799fb8c493fcacbb9d7817817ce2e272c3c0d1cf338c"
+    },
+    {
+      "name": "dependency-rust-ecc",
+      "exit_code": 0,
+      "elapsed_seconds": 2.317,
+      "log_file": "final-dependency-rust-ecc.log",
+      "log_sha256": "b16e223b42b5f9658fb6abe9a1727e018a999026ada797b7157830efad07d446"
+    },
+    {
+      "name": "dependency-rust-headroom",
+      "exit_code": 0,
+      "elapsed_seconds": 13.131,
+      "log_file": "final-dependency-rust-headroom.log",
+      "log_sha256": "cffa57b56ffb4956b549636faf79b66bbc4635788fad7871dfe115f00d3ca097"
+    },
+    {
+      "name": "ecc-build",
+      "exit_code": 0,
+      "elapsed_seconds": 3.193,
+      "log_file": "final-ecc-build.log",
+      "log_sha256": "21fa386ffda9e1a34e78e69ffef94c005dfdab0a1b600b6c4101d4a819fe3b1c"
+    },
+    {
+      "name": "ecc-deps",
+      "exit_code": 0,
+      "elapsed_seconds": 19.321,
+      "log_file": "final-ecc-deps.log",
+      "log_sha256": "a956eb0ef1d6f1fd5f0a29833e226f4c98443bf7d801722172bac9b4fe834963"
+    },
+    {
+      "name": "full-suite",
+      "exit_code": 0,
+      "elapsed_seconds": 227.947,
+      "log_file": "final-full-suite.log",
+      "log_sha256": "6db988bfdb68ec4535cdd9982f5fa8a74b4940e357a5f9cf0809d94348688b82"
+    },
+    {
+      "name": "lint-final",
+      "exit_code": 0,
+      "elapsed_seconds": 4.085,
+      "log_file": "final-lint-final.log",
+      "log_sha256": "8bed732b10e92a8b27836419ba56a5ff0392704a5e903814c62de9f7cd6fe381"
+    },
+    {
+      "name": "lint",
+      "exit_code": 1,
+      "elapsed_seconds": 7.777,
+      "log_file": "final-lint.log",
+      "log_sha256": "76b92605391443ddc7d98149fbb1c33f294ed8665ca76c89e2b55dcf2ae437c9"
+    },
+    {
+      "name": "mcp-protocol",
+      "exit_code": 0,
+      "elapsed_seconds": 4.903,
+      "log_file": "final-mcp-protocol.log",
+      "log_sha256": "70d0782e1cbdffbe22c93986913015669a8b0c048550e2778ca5e5fc18ea6ae4"
+    },
+    {
+      "name": "setup-1",
+      "exit_code": 0,
+      "elapsed_seconds": 836.5,
+      "log_file": "final-setup-1.log",
+      "log_sha256": "3b49896b669d1a868ff8920f4152522e8dfa1ab5b2f936c6be4a9e85171337b2"
+    },
+    {
+      "name": "setup-2",
+      "exit_code": 0,
+      "elapsed_seconds": 154.232,
+      "log_file": "final-setup-2.log",
+      "log_sha256": "366692c3c0e9502b7224fd79ff564a8032da8adeebab049e9cd9d9b0840d9ab6"
+    },
+    {
+      "name": "setup-3",
+      "exit_code": 0,
+      "elapsed_seconds": 151.262,
+      "log_file": "final-setup-3.log",
+      "log_sha256": "ac47710aa572c5ab774b9381e6863c9a2e08a059df8d70ff61f408fe92c34ffe"
+    },
+    {
+      "name": "smoke-final",
+      "exit_code": 0,
+      "elapsed_seconds": 9.826,
+      "log_file": "final-smoke-final.log",
+      "log_sha256": "dff4c33bfd0264b107408fdf0be9b6838c235018b9ef623c0ee99478d9ee7abb"
+    },
+    {
+      "name": "static",
+      "exit_code": 0,
+      "elapsed_seconds": 1.208,
+      "log_file": "final-static.log",
+      "log_sha256": "7ee1c32db87f353a97526a9de3ee3e7c28e5303ee5c25e62e2b8d893452c36c7"
+    },
+    {
+      "name": "api-regression",
+      "label": "security-api",
+      "exit_code": 0,
+      "elapsed_seconds": 10.98,
+      "log_file": "security-api-api-regression.log",
+      "log_sha256": "5d6cbb0510baa838673a217a6dea0a7e4d5b8f3b34e3c8f1f34d3221b12c4638"
+    },
+    {
+      "name": "edge-red",
+      "label": "security",
+      "exit_code": 1,
+      "elapsed_seconds": 11.195,
+      "log_file": "security-edge-red.log",
+      "log_sha256": "48b2b6f5e55535a52a113e98ddb0c2f382ce2e86870331153d26a5c951e9a72e"
+    },
+    {
+      "name": "final-green",
+      "label": "security",
+      "exit_code": 0,
+      "elapsed_seconds": 11.471,
+      "log_file": "security-final-green.log",
+      "log_sha256": "6acf877edae531bd7431b2e801341acf7c55d7bfd7c8fb643dae97d2b5d8b1c4"
+    },
+    {
+      "name": "mcp-regression",
+      "label": "security-mcp",
+      "exit_code": 0,
+      "elapsed_seconds": 15.789,
+      "log_file": "security-mcp-mcp-regression.log",
+      "log_sha256": "15a7668f8b1e2030236f9f0f19d4502010281b089d4e998daf3df766d281e142"
+    },
+    {
+      "name": "preflight-regression",
+      "label": "security-preflight",
+      "exit_code": 1,
+      "elapsed_seconds": 82.359,
+      "log_file": "security-preflight-preflight-regression.log",
+      "log_sha256": "755c76096d2abd2fd0148e479156de52e0664022b19dfa3775eb3499c9109185"
+    },
+    {
+      "name": "deps",
+      "label": "tooling",
+      "exit_code": 0,
+      "elapsed_seconds": 4.44,
+      "log_file": "tooling-deps.log",
+      "log_sha256": "18863fb0ad57a9323ddfce2b94cc5eee00c17ed66ce864ce27c044571b50dfdc"
+    },
+    {
+      "name": "runtime-deps",
+      "label": "tooling",
+      "exit_code": 0,
+      "elapsed_seconds": 5.711,
+      "log_file": "tooling-runtime-deps.log",
+      "log_sha256": "418302b323c81c5f41a08cc3ce3562ef94694e449c45e9c2f0d5c3a7e550cf04"
+    },
+    {
+      "name": "tokenizer",
+      "label": "tooling",
+      "exit_code": 0,
+      "elapsed_seconds": 9.401,
+      "log_file": "tooling-tokenizer.log",
+      "log_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d"
+    },
+    {
+      "name": "venv",
+      "label": "tooling",
+      "exit_code": 0,
+      "elapsed_seconds": 0.487,
+      "log_file": "tooling-venv.log",
+      "log_sha256": "f4db444680d4308d042c8e4f41e9c50642af05d872aa4adebbb464ff51200804"
+    },
+    {
+      "name": "cargo-project-path-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 2.522,
+      "log_file": "audit-cargo-project-path-red.log",
+      "log_sha256": "6a553b946571ef679545edf5005f891704f170135935198db8988b62fa221071"
+    },
+    {
+      "name": "cargo-project-path-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 2.627,
+      "log_file": "audit-cargo-project-path-green.log",
+      "log_sha256": "84be0cd1c0d6387f7966d7206b727269408946d8779407467765bb8062e7e525"
+    },
+    {
+      "name": "ci-prerequisites-check",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 2.968,
+      "log_file": "audit-ci-prerequisites-check.log",
+      "log_sha256": "160291ff2653496033f9d24951f25691e5b635d9628971273195106e26d138b0"
+    },
+    {
+      "name": "full-suite-final",
+      "label": "final",
+      "exit_code": 0,
+      "elapsed_seconds": 213.372,
+      "log_file": "final-full-suite-final.log",
+      "log_sha256": "843bb661316aa4592d022437fc06606a4e25cb16cd01ef0c7d29790d724acf1c"
+    },
+    {
+      "name": "network-smoke",
+      "label": "final",
+      "exit_code": 0,
+      "elapsed_seconds": 5.33,
+      "log_file": "final-network-smoke.log",
+      "log_sha256": "ba4aaeaa162552e1fd7b8a805ab44358150e0c12f5e46ec834db7dc9fe7a3489"
+    },
+    {
+      "name": "full-suite-publication",
+      "label": "final",
+      "exit_code": 1,
+      "elapsed_seconds": 210.051,
+      "log_file": "final-full-suite-publication.log",
+      "log_sha256": "b9a90dacb895707c8f4a70a0cac3d4162f1acec2159202664f1df5e840645307"
+    },
+    {
+      "name": "full-suite-publication-native",
+      "label": "final",
+      "exit_code": 0,
+      "elapsed_seconds": 215.761,
+      "log_file": "final-full-suite-publication-native.log",
+      "log_sha256": "4f31b545767fbf8640d2e2df868e87d4a38d1a2c8c8c2ce1967f63eea8052cdf"
+    }
+  ],
+  "setup_source_commit": "cba4e255",
+  "public_network_smoke": {
+    "passed": 2,
+    "failed": 0,
+    "opt_in": "AE_MCP_NETWORK_TESTS=1",
+    "elapsed_seconds": 5.33
+  },
+  "branch_CI": [
+    {
+      "conclusion": "success",
+      "databaseId": 44583836807,
+      "event": "push",
+      "headSha": "57b96a97c0b564705008d493ac268d6a244aae09",
+      "jobs": [
+        {
+          "name": "markdownlint (owned layer)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "ECC test suite (CONTRACT \u00a75.1)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "headroom CLI build and regression tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "unified-integration test suite",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Static checks (CONTRACT \u00a79.1)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "in-house MCP servers (health + tools)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/lokah1945/AgentEnhancements/actions/runs/44583836807",
+      "workflowName": "CI"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 44583850272,
+      "event": "pull_request",
+      "headSha": "57b96a97c0b564705008d493ac268d6a244aae09",
+      "jobs": [
+        {
+          "name": "Static checks (CONTRACT \u00a79.1)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "in-house MCP servers (health + tools)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "markdownlint (owned layer)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "headroom CLI build and regression tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "unified-integration test suite",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "ECC test suite (CONTRACT \u00a75.1)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/lokah1945/AgentEnhancements/actions/runs/44583850272",
+      "workflowName": "CI"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 44583850092,
+      "event": "pull_request",
+      "headSha": "57b96a97c0b564705008d493ac268d6a244aae09",
+      "jobs": [
+        {
+          "name": "Regenerate Skill Registry",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/lokah1945/AgentEnhancements/actions/runs/44583850092",
+      "workflowName": "Registry Regeneration"
+    }
+  ],
+  "publication_incremental_secret_scan": {
+    "publication-history": {
+      "exit_code": 0,
+      "candidate_count": 0
+    },
+    "publication-diff": {
+      "exit_code": 0,
+      "candidate_count": 0
+    },
+    "provided_pat_tracked_matches": 0
+  }
+}

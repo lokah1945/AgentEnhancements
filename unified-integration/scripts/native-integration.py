@@ -20,7 +20,7 @@ import sys
 import tomlkit
 
 from api_config import BUILTINS, initialize
-from native_config import read_json, write, write_json
+from native_config import managed_integration_path, read_json, write, write_json
 from native_hermes import host_selection_path, install_hermes
 
 EXTRA_COMMANDS = {"hermes": "hermes"}
@@ -39,6 +39,10 @@ EVENTS = (
 
 def runtime_python() -> str:
     """Keep venv command paths stable across python/python3 entry points."""
+    from project_paths import runtime_root
+    local = runtime_root() / 'venv/bin/python3'
+    if local.is_file():
+        return str(local)
     canonical = Path(sys.prefix) / "bin/python3"
     if sys.prefix != sys.base_prefix and canonical.is_file():
         return str(canonical)
@@ -65,14 +69,13 @@ def merge_hooks(doc: dict, agent: str) -> None:
             if handlers:
                 retained.append({**group, "hooks": handlers})
         hooks[event] = retained
-    command = shlex.join([runtime_python(), str(UI / "scripts/runtime.py"), agent])
-    if os.environ.get("AGENT_MEMORY_ROOT"):
-        command = (
-            "env "
-            + shlex.quote("AGENT_MEMORY_ROOT=" + os.environ["AGENT_MEMORY_ROOT"])
-            + " "
-            + command
-        )
+    from project_paths import environment
+    variables = environment()
+    for name in ('AGENT_ENHANCEMENTS_API_FILE', 'AGENT_ENHANCEMENTS_MODEL_FILE'):
+        if os.environ.get(name):
+            variables[name] = os.environ[name]
+    command = shlex.join(['env', *[key+'='+value for key, value in variables.items()],
+                          runtime_python(), str(UI / "scripts/runtime.py"), agent])
     for event in EVENTS:
         hooks.setdefault(event, []).append(
             {
@@ -93,6 +96,8 @@ def mcp_block() -> dict:
     template = json.loads((UI / "mcp-servers/mcp.json.example").read_text())[
         "mcpServers"
     ]
+    from project_paths import environment
+    template['agent-enhancements'].setdefault('env', {}).update(environment())
     for name in (
         "AGENT_ENHANCEMENTS_API_FILE",
         "AGENT_MEMORY_ROOT",
@@ -121,14 +126,20 @@ def merge_servers(existing: dict, block: dict) -> None:
     for name in BUILTINS:
         old = existing.get(name)
         if isinstance(old, dict):
-            command = json.dumps(old.get("args", old.get("command", [])))
-            if str(UI / "mcp-servers" / name / "server.py") in command:
+            command = old.get("args", old.get("command", []))
+            if isinstance(command, list) and any(
+                managed_integration_path(arg, "mcp-servers", name, "server.py")
+                for arg in command
+            ):
                 del existing[name]
     for name, cfg in block.items():
         old = existing.get(name)
         if old is not None and old != cfg:
-            old_args = json.dumps(old.get("args", old.get("command", [])))
-            if str(UI / "mcp-servers/gateway.py") not in old_args:
+            old_args = old.get("args", old.get("command", []))
+            if not isinstance(old_args, list) or not any(
+                managed_integration_path(arg, "mcp-servers", "gateway.py")
+                for arg in old_args
+            ):
                 print(f"[native] preserving user server: {name}", file=sys.stderr)
                 continue
         # The managed command may change after an update; per-tool approvals,
@@ -229,19 +240,17 @@ def install(agent: str, *, mcp_only: bool = False, profiles: list[str] | None = 
             # Use the curated set natively, plus prompt-time routing for the
             # full index, avoiding thousands of skill descriptions per call.
             old = doc.get("skills", [])
-            managed = str(UI / "skills/by-category")
             if isinstance(old, list):
-                doc["skills"] = [p for p in old if p != managed]
+                doc["skills"] = [p for p in old if not managed_integration_path(p, "skills", "by-category")]
             instructions = doc.setdefault("instructions", [])
-            prompt = str(UI / "prompts/opencode-system-prompt.txt")
-            doc["instructions"] = [p for p in instructions if p != prompt]
+            doc["instructions"] = [p for p in instructions if not managed_integration_path(
+                p, "prompts", "opencode-system-prompt.txt")]
             instruction = str(config_dir / "AGENTS.md")
             if instruction not in doc["instructions"]:
                 doc["instructions"].append(instruction)
             plugin = str(UI / "opencode-plugin")
-            plugins = doc.setdefault("plugins", [])
-            if plugin not in plugins:
-                plugins.append(plugin)
+            plugins = [p for p in doc.get("plugins", []) if not managed_integration_path(p, "opencode-plugin")]
+            doc["plugins"] = [*plugins, plugin]
             # Install runtime hooks for opencode
             merge_hooks(doc, agent)
         write_json(path, doc)

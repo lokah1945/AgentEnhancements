@@ -1,11 +1,11 @@
 # AgentEnhancements — Modular Skills Tree
 
-Self-contained skill directory consumed by `unified-integration/setup.sh`
-and any MCP-compatible agent (Claude Code, Codex, Cursor, etc.).
+Generated catalog-guide view for humans and agents. Plugin manifests
+and guides remain canonical under `plugin-catalog/`.
 
 ## Layout
 
-```
+```text
 skills/
 ├── manifest.json                    # aggregator index (read this first)
 ├── README.md                        # this file
@@ -42,33 +42,54 @@ skills/
 │   └── openmontage/                # OpenMontage
 ├── agency/
 │   ├── README.md                    # Agency Personas category overview
-│   └── academic/                # The Agency — Academic Division (6 personas) (vendored)
-│   └── design/                # The Agency — Design Division (10 personas) (vendored)
-│   └── engineering/                # The Agency — Engineering Division (66 personas) (vendored)
-│   └── finance/                # The Agency — Finance Division (5 personas) (vendored)
-│   └── game-development/                # The Agency — Game Development Division (21 personas) (vendored)
+│   └── academic/                # The Agency — Academic Division (6 personas)
+│ # (vendored)
+│   └── design/                # The Agency — Design Division (10 personas)
+│ # (vendored)
+│   └── engineering/                # The Agency — Engineering Division (66
+│ # personas) (vendored)
+│   └── finance/                # The Agency — Finance Division (5 personas)
+│ # (vendored)
+│   └── game-development/                # The Agency — Game Development
+│ # Division (21 personas) (vendored)
 │   └── gis/                # The Agency — GIS Division (13 personas) (vendored)
-│   └── healthcare/                # The Agency — Healthcare Division (3 personas) (vendored)
-│   └── marketing/                # The Agency — Marketing Division (37 personas) (vendored)
-│   └── paid-media/                # The Agency — Paid Media Division (7 personas) (vendored)
-│   └── product/                # The Agency — Product Division (6 personas) (vendored)
-│   └── project-management/                # The Agency — Project Management Division (7 personas) (vendored)
-│   └── research/                # The Agency — Research Division (1 personas) (vendored)
-│   └── sales/                # The Agency — Sales Division (9 personas) (vendored)
-│   └── security/                # The Agency — Security Division (12 personas) (vendored)
-│   └── spatial-computing/                # The Agency — Spatial Computing Division (6 personas) (vendored)
-│   └── specialized/                # The Agency — Specialized Division (59 personas) (vendored)
-│   └── support/                # The Agency — Support Division (6 personas) (vendored)
-│   └── testing/                # The Agency — Testing Division (9 personas) (vendored)
-│   └── nexus/                # The Agency — NEXUS Orchestration Playbooks (vendored)
+│   └── healthcare/                # The Agency — Healthcare Division (3
+│ # personas) (vendored)
+│   └── marketing/                # The Agency — Marketing Division (37
+│ # personas) (vendored)
+│   └── paid-media/                # The Agency — Paid Media Division (7
+│ # personas) (vendored)
+│   └── product/                # The Agency — Product Division (6 personas)
+│ # (vendored)
+│   └── project-management/                # The Agency — Project Management
+│ # Division (7 personas) (vendored)
+│   └── research/                # The Agency — Research Division (1 personas)
+│ # (vendored)
+│   └── sales/                # The Agency — Sales Division (9 personas)
+│ # (vendored)
+│   └── security/                # The Agency — Security Division (12 personas)
+│ # (vendored)
+│   └── spatial-computing/                # The Agency — Spatial Computing
+│ # Division (6 personas) (vendored)
+│   └── specialized/                # The Agency — Specialized Division (59
+│ # personas) (vendored)
+│   └── support/                # The Agency — Support Division (6 personas)
+│ # (vendored)
+│   └── testing/                # The Agency — Testing Division (9 personas)
+│ # (vendored)
+│   └── nexus/                # The Agency — NEXUS Orchestration Playbooks
+│ # (vendored)
 ```
 
 Every `skills/<cat>/<slug>/` directory is self-contained:
 
-| File             | Purpose                                                              |
-|------------------|----------------------------------------------------------------------|
-| `SKILL.md`       | Agent-readable skill spec (YAML frontmatter + capabilities + workflow) |
-| `manifest.json`  | Machine-readable plugin manifest (id, version, MCP deps, triggers)  |
+- **File:** `SKILL.md`
+  - **Purpose:** Agent-readable skill spec (YAML frontmatter + capabilities +
+    workflow)
+
+- **File:** `manifest.json`
+  - **Purpose:** Machine-readable plugin manifest (id, version, MCP deps,
+    triggers)
 
 The per-plugin directories are generated at install time (symlinks into
 `plugin-catalog/`, built by `bash scripts/scaffold_modular_skills.sh`);
@@ -78,44 +99,65 @@ git. Refresh the index with `python3 scripts/generate_skills_index.py`.
 ## Coverage
 
 - **40 plugins** across **6 categories**.
-- **21 vendored** (source code copied into repo): replica-skill, anthropic-skills, academic, design, engineering, finance, game-development, gis, healthcare, marketing, paid-media, product, project-management, research, sales, security, spatial-computing, specialized, support, testing, nexus.
-- **19 integrated-ready** (manifest + SKILL.md only; upstream pulled on demand).
+- **21 vendored** (source code copied into repo): replica-skill,
+  anthropic-skills, academic, design, engineering, finance, game-development,
+  gis, healthcare, marketing, paid-media, product, project-management, research,
+  sales, security, spatial-computing, specialized, support, testing, nexus.
+- Implementation status (independent of vendored source): integrated: 1,
+  integrated-ready: 39.
+- External runtimes require deliberate user installation and configuration.
 
 ## Categories
 
 ### Code  ·  `skills/code/`
 
-Code-craft skills: TypeScript rigor, minimal-first ML, frontend perf, reverse-engineering clones.
+Code-craft skills: TypeScript rigor, minimal-first ML, frontend perf,
+reverse-engineering clones.
 
 Plugins (4):
 
-- **Agent Skills (Addy Osmani)** (`agent-skills-addyosmani`) — integrated-ready — MCP: browser-tools-mcp, lighthouse-mcp, pa11y-mcp
-- **Andrej Karpathy Skills** (`karpathy-skills`) — integrated-ready — MCP: jupyter-mcp, python-repl-mcp
-- **Matt Pocock Skills** (`mattpocock-skills`) — integrated-ready — MCP: typescript-language-server-mcp, eslint-mcp
-- **Replica Skill (11 sub-skills)** (`replica-skill`) — vendored — MCP: browser-tools-mcp, vision-mcp
+- **Agent Skills (Addy Osmani)** (`agent-skills-addyosmani`) — integrated-ready;
+  external source — MCP: browser-tools-mcp, lighthouse-mcp, pa11y-mcp
+- **Andrej Karpathy Skills** (`karpathy-skills`) — integrated-ready; external
+  source — MCP: jupyter-mcp, python-repl-mcp
+- **Matt Pocock Skills** (`mattpocock-skills`) — integrated-ready; external
+  source — MCP: typescript-language-server-mcp, eslint-mcp
+- **Replica Skill (11 sub-skills)** (`replica-skill`) — integrated-ready;
+  vendored source — MCP: browser-tools-mcp, vision-mcp
 
 ### Research  ·  `skills/research/`
 
-Deep-research skills: knowledge graphs, multi-step reasoning, fresh-trend monitoring, Feynman-style explanation.
+Deep-research skills: knowledge graphs, multi-step reasoning, fresh-trend
+monitoring, Feynman-style explanation.
 
 Plugins (5):
 
-- **Agent-Reach** (`agent-reach`) — integrated-ready — MCP: tavily-mcp, exa-mcp, firecrawl-mcp
-- **Graphify** (`graphify`) — integrated-ready — MCP: neo4j-mcp, graphrag-mcp, embeddings-mcp
-- **Last 30 Days** (`last-30-days`) — integrated-ready — MCP: exa-mcp, newsapi-mcp, google-news-mcp
-- **REA (Reverse Engineer Anything)** (`rea`) — integrated-ready — MCP: tavily-mcp, memory-mcp, task-router-mcp
-- **Understand Anything** (`understand-anything`) — integrated-ready — MCP: wikipedia-mcp, arxiv-mcp, embeddings-mcp
+- **Agent-Reach** (`agent-reach`) — integrated-ready; external source — MCP:
+  tavily-mcp, exa-mcp, firecrawl-mcp
+- **Graphify** (`graphify`) — integrated-ready; external source — MCP:
+  neo4j-mcp, graphrag-mcp, embeddings-mcp
+- **Last 30 Days** (`last-30-days`) — integrated-ready; external source — MCP:
+  exa-mcp, newsapi-mcp, google-news-mcp
+- **REA (Reverse Engineer Anything)** (`rea`) — integrated-ready; external
+  source — MCP: tavily-mcp, memory-mcp, task-router-mcp
+- **Understand Anything** (`understand-anything`) — integrated-ready; external
+  source — MCP: wikipedia-mcp, arxiv-mcp, embeddings-mcp
 
 ### Tokens / Optimization  ·  `skills/tokens-optimization/`
 
-Token / context budget skills: compression, agile persona dispatch, atomic parallel execution.
+Token / context budget skills: compression, agile persona dispatch, atomic
+parallel execution.
 
 Plugins (4):
 
-- **BMAD Method** (`bmad-method`) — integrated-ready — MCP: linear-mcp, github-issues-mcp, memory-mcp
-- **Caveman** (`caveman`) — integrated-ready — MCP: filesystem-mcp, style-mcp
-- **Get Shit Done (GSD)** (`gsd`) — integrated-ready — MCP: task-router-mcp, memory-mcp
-- **GStack** (`gstack`) — integrated-ready — MCP: filesystem-mcp
+- **BMAD Method** (`bmad-method`) — integrated-ready; external source — MCP:
+  linear-mcp, github-issues-mcp, memory-mcp
+- **Caveman** (`caveman`) — integrated-ready; external source — MCP:
+  filesystem-mcp, style-mcp
+- **Get Shit Done (GSD)** (`gsd`) — integrated-ready; external source — MCP:
+  task-router-mcp, memory-mcp
+- **GStack** (`gstack`) — integrated-ready; external source — MCP:
+  filesystem-mcp
 
 ### Design  ·  `skills/design/`
 
@@ -123,54 +165,95 @@ Design skills: UI/UX tokens, visual polish, slide narrative, diagramming.
 
 Plugins (4):
 
-- **Diagram Design** (`diagram-design`) — integrated-ready — MCP: mermaid-mcp, excalidraw-mcp
-- **Impeccable** (`impeccable`) — integrated-ready — MCP: browser-tools-mcp, figma-mcp
-- **PPT Master** (`ppt-master`) — integrated-ready — MCP: google-slides-mcp, office-mcp, image-search-mcp
-- **UI UX Pro Max** (`ui-ux-pro-max`) — integrated-ready — MCP: figma-mcp, browser-tools-mcp, storybook-mcp
+- **Diagram Design** (`diagram-design`) — integrated-ready; external source —
+  MCP: mermaid-mcp, excalidraw-mcp
+- **Impeccable** (`impeccable`) — integrated-ready; external source — MCP:
+  browser-tools-mcp, figma-mcp
+- **PPT Master** (`ppt-master`) — integrated-ready; external source — MCP:
+  google-slides-mcp, office-mcp, image-search-mcp
+- **UI UX Pro Max** (`ui-ux-pro-max`) — integrated-ready; external source — MCP:
+  figma-mcp, browser-tools-mcp, storybook-mcp
 
 ### Multimedia / Writing  ·  `skills/multimedia-writing/`
 
-Multimedia + writing skills: office docs, video montage, talking-head avatars, AI-ism removal.
+Multimedia + writing skills: office docs, video montage, talking-head avatars,
+AI-ism removal.
 
 Plugins (4):
 
-- **Anthropic Skills** (`anthropic-skills`) — vendored — MCP: filesystem-mcp, pdf-mcp, vision-mcp
-- **Humanizer** (`humanizer`) — integrated-ready — MCP: style-mcp, grammar-mcp
-- **Hyperframes** (`hyperframes`) — integrated-ready — MCP: heygen-mcp, elevenlabs-mcp
-- **OpenMontage** (`openmontage`) — integrated-ready — MCP: ffmpeg-mcp, video-mcp
+- **Anthropic Skills** (`anthropic-skills`) — integrated; vendored source — MCP:
+  filesystem-mcp, pdf-mcp, vision-mcp
+- **Humanizer** (`humanizer`) — integrated-ready; external source — MCP:
+  style-mcp, grammar-mcp
+- **Hyperframes** (`hyperframes`) — integrated-ready; external source — MCP:
+  heygen-mcp, elevenlabs-mcp
+- **OpenMontage** (`openmontage`) — integrated-ready; external source — MCP:
+  ffmpeg-mcp, video-mcp
 
 ### Agency Personas  ·  `skills/agency/`
 
-AI-persona packs from The Agency (agency-agents): 283 specialist personas across 18 divisions plus the NEXUS orchestration playbooks.
+AI-persona packs from The Agency (agency-agents): 283 specialist personas across
+18 divisions plus the NEXUS orchestration playbooks.
 
 Plugins (19):
 
-- **The Agency — Academic Division (6 personas)** (`academic`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Design Division (10 personas)** (`design`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Engineering Division (66 personas)** (`engineering`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Finance Division (5 personas)** (`finance`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Game Development Division (21 personas)** (`game-development`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — GIS Division (13 personas)** (`gis`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Healthcare Division (3 personas)** (`healthcare`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Marketing Division (37 personas)** (`marketing`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Paid Media Division (7 personas)** (`paid-media`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Product Division (6 personas)** (`product`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Project Management Division (7 personas)** (`project-management`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Research Division (1 personas)** (`research`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Sales Division (9 personas)** (`sales`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Security Division (12 personas)** (`security`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Spatial Computing Division (6 personas)** (`spatial-computing`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Specialized Division (59 personas)** (`specialized`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Support Division (6 personas)** (`support`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — Testing Division (9 personas)** (`testing`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
-- **The Agency — NEXUS Orchestration Playbooks** (`nexus`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Academic Division (6 personas)** (`academic`) —
+  integrated-ready; vendored source — MCP: filesystem-mcp, memory-mcp,
+  task-router-mcp
+- **The Agency — Design Division (10 personas)** (`design`) — integrated-ready;
+  vendored source — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Engineering Division (66 personas)** (`engineering`) —
+  integrated-ready; vendored source — MCP: filesystem-mcp, memory-mcp,
+  task-router-mcp
+- **The Agency — Finance Division (5 personas)** (`finance`) — integrated-ready;
+  vendored source — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Game Development Division (21 personas)** (`game-development`)
+  — integrated-ready; vendored source — MCP: filesystem-mcp, memory-mcp,
+  task-router-mcp
+- **The Agency — GIS Division (13 personas)** (`gis`) — integrated-ready;
+  vendored source — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Healthcare Division (3 personas)** (`healthcare`) —
+  integrated-ready; vendored source — MCP: filesystem-mcp, memory-mcp,
+  task-router-mcp
+- **The Agency — Marketing Division (37 personas)** (`marketing`) —
+  integrated-ready; vendored source — MCP: filesystem-mcp, memory-mcp,
+  task-router-mcp
+- **The Agency — Paid Media Division (7 personas)** (`paid-media`) —
+  integrated-ready; vendored source — MCP: filesystem-mcp, memory-mcp,
+  task-router-mcp
+- **The Agency — Product Division (6 personas)** (`product`) — integrated-ready;
+  vendored source — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Project Management Division (7 personas)**
+  (`project-management`) — integrated-ready; vendored source — MCP:
+  filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Research Division (1 personas)** (`research`) —
+  integrated-ready; vendored source — MCP: filesystem-mcp, memory-mcp,
+  task-router-mcp
+- **The Agency — Sales Division (9 personas)** (`sales`) — integrated-ready;
+  vendored source — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Security Division (12 personas)** (`security`) —
+  integrated-ready; vendored source — MCP: filesystem-mcp, memory-mcp,
+  task-router-mcp
+- **The Agency — Spatial Computing Division (6 personas)** (`spatial-computing`)
+  — integrated-ready; vendored source — MCP: filesystem-mcp, memory-mcp,
+  task-router-mcp
+- **The Agency — Specialized Division (59 personas)** (`specialized`) —
+  integrated-ready; vendored source — MCP: filesystem-mcp, memory-mcp,
+  task-router-mcp
+- **The Agency — Support Division (6 personas)** (`support`) — integrated-ready;
+  vendored source — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Testing Division (9 personas)** (`testing`) — integrated-ready;
+  vendored source — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — NEXUS Orchestration Playbooks** (`nexus`) — integrated-ready;
+  vendored source — MCP: filesystem-mcp, memory-mcp, task-router-mcp
 
 ## Integration with unified-integration
 
-`unified-integration/setup.sh` aggregates every `SKILL.md` in this tree into
-`unified-integration/skills/all-skills.json` (the registry that gets installed
-into each agent CLI). The modular tree is the **source of truth for plugin
-content**; `unified-integration/skills/` is the **installed view**.
+`unified-integration/setup.sh` aggregates the vendored skill sources into
+`unified-integration/skills/all-skills.json`. Catalog guides are a separate
+surface in `agent-registry.json`; this modular tree does not install the
+external upstream runtimes. Implementation status and runtime readiness
+are separate dimensions (CONTRACT section 8.1).
 
 ## See also
 

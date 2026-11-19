@@ -54,6 +54,7 @@ class RuntimeTests(unittest.TestCase):
             [sys.executable, str(UI_DIR / "scripts/runtime.py"), agent],
             env={
                 "AGENT_MEMORY_ROOT": str(self.memory),
+                "AGENT_ENHANCEMENTS_STATE_DIR": str(self.root / 'ae-state'),
                 "AGENT_SKILLS_DIR": str(self.root / "skills"),
                 # Keep the Mode 0 baseline deterministic even on a machine
                 # that has a user-scope preflight model.json (CONTRACT 8.5).
@@ -206,6 +207,7 @@ class NativeConfigurationTests(unittest.TestCase):
         self.home = Path(self.tmp.name)
         self.env = {
             "HOME": str(self.home),
+            "AGENT_ENHANCEMENTS_STATE_DIR": str(self.home / 'ae-state'),
             "CODEX_HOME": str(self.home / ".codex"),
             "XDG_CONFIG_HOME": str(self.home / ".config"),
             "AGENT_ENHANCEMENTS_API_FILE": str(self.home / "ui.api.json"),

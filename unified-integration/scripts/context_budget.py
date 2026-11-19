@@ -40,6 +40,8 @@ host model surface includes.
 
 from __future__ import annotations
 
+import sys
+
 MAX_BOOTSTRAP = 1_000
 MAX_COLD_START_TOTAL = 4_000
 MAX_MEMORY_RECALL = 600
@@ -76,19 +78,22 @@ COLD_START_CHANNELS = (
 
 
 def approx_tokens(text: str) -> int:
-    """Tokenizer-measured count when tiktoken is importable, else the
-    documented character ratio. Callers that need exact numbers should
-    import tiktoken themselves; this is for runtime guards where the
-    deterministic fallback is acceptable and must stay dependency-free."""
+    """Use an encoder already initialized by the host, otherwise local math.
+
+    Optional tokenizer loading can fetch public encoding data on a cold or
+    invalid cache. Hooks must never initiate that IO. Exact benchmark tools
+    initialize their own tokenizer explicitly outside the runtime path.
+    """
     if not text:
         return 0
-    try:  # pragma: no cover - environment dependent
-        import tiktoken
-
-        enc = tiktoken.get_encoding("o200k_base")
-        return len(enc.encode(text))
-    except Exception:  # noqa: BLE001 - fallback by design
-        return int(len(text) / CHARS_PER_TOKEN_FALLBACK) + 1
+    try:
+        registry = sys.modules.get("tiktoken.registry")
+        encoder = getattr(registry, "ENCODINGS", {}).get("o200k_base")
+        if encoder is not None:
+            return len(encoder.encode(text))
+    except Exception:  # optional host encoder failure uses the local fallback
+        pass
+    return int(len(text) / CHARS_PER_TOKEN_FALLBACK) + 1
 
 
 def clamp_to_budget(text: str, max_tokens: int, *, label: str = "") -> str:
@@ -102,6 +107,8 @@ def clamp_to_budget(text: str, max_tokens: int, *, label: str = "") -> str:
     """
     if not text:
         return text
+    if max_tokens <= 0:
+        return ""
     if approx_tokens(text) <= max_tokens:
         return text
     lines = text.splitlines(keepends=True)
@@ -109,15 +116,29 @@ def clamp_to_budget(text: str, max_tokens: int, *, label: str = "") -> str:
     used = 0
     note = f"\n[{label or 'context'} trimmed to the {max_tokens}-token budget; request the remainder explicitly]"
     note_cost = approx_tokens(note)
+    if note_cost > max_tokens:
+        return ""
     for line in lines:
         cost = approx_tokens(line)
         if used + cost > max_tokens - note_cost:
             break
         kept.append(line)
         used += cost
-    if not kept:  # single very long line
-        kept = [text[: int(max_tokens * CHARS_PER_TOKEN_FALLBACK)]]
-    return "".join(kept).rstrip() + note
+    prefix = "".join(kept).rstrip()
+    if not kept or approx_tokens(prefix + note) > max_tokens:
+        # Reserve the notice inside the bound, and measure the combined
+        # output. A fixed character slice can overflow for both the notice
+        # itself and scripts/Unicode whose token-to-character ratio differs.
+        source = prefix if kept else text
+        low, high = 0, len(source)
+        while low < high:
+            middle = (low + high + 1) // 2
+            if approx_tokens(source[:middle].rstrip() + note) <= max_tokens:
+                low = middle
+            else:
+                high = middle - 1
+        prefix = source[:low].rstrip()
+    return prefix + note
 
 
 def budget_report(channels: dict[str, int]) -> dict:

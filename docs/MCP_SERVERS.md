@@ -1,109 +1,67 @@
 ---
 title: MCP Server Roadmap
-version: 1.2
-last_updated: 2026-11-15
+version: 2.0
+last_updated: 2026-11-19
 audience: all agents and maintainers
 ---
 
-# MCP Servers Roadmap & Matrix
 
-Konfigurasi mesin terbaca: `plugin-catalog/mcp-servers.json` (38 server,
-prioritas P0/P1/P2). File ini adalah dokumentasi + matriks relasi plugin ke MCP.
+The canonical roadmap is `plugin-catalog/mcp-servers.json`. Its `status`,
+`priority`, `for_plugins` and credential-reference fields describe the catalog.
+[Generated counts](CAPABILITY_COUNTS.md) distinguish catalog implementation
+status from bundled Python backends and default enablement. Plugin dependency
+suggestions live in `plugin-catalog/catalog.json` and each plugin manifest;
+they are guidance, not proof an upstream is installed.
 
-Runtime aktif memakai satu gateway native untuk sembilan implementasi bawaan.
-Credential dan pemetaan 38 MCP ada di `ui.api.json` pada root repository;
-lihat [konfigurasi](CONFIGURATION.md). Key kosong menyembunyikan tool cloud;
-server eksternal tanpa runtime/credential tidak ditawarkan ke agent. Perubahan
-dipantau otomatis dan panggilan lama diperiksa kembali. GraphRAG tidak memakai
-API key; embeddings/vision memiliki bagian lokal yang tetap tersedia. Matriks
-di bawah adalah katalog dependency upstream, bukan bukti seluruh layanannya
-sudah terpasang atau dapat dipanggil tanpa credential.
+Setup configures one native `agent-enhancements` gateway for selected hosts.
+The gateway loads bundled backends and configured external subprocesses.
+Claude uses its native user-scope `.claude.json`; Codex uses `config.toml`;
+OpenCode uses `opencode.json(c)`; selected Hermes profiles use `config.yaml`.
+Existing host configuration and tool approvals are preserved.
 
-**Opt-in khusus**: `task-router-mcp` menjalankan payload bash/python arbitrer
-(setara shell agent, bukan sandbox) sehingga **disembunyikan secara default**;
-aktifkan eksplisit via `"task-router-mcp": {"enabled": true}` di `ui.api.json`
-(lihat docs/SAFETY.md §0). Semua server lain tetap mengikuti aturan di atas.
+## Availability
 
-## Distribusi prioritas
+The private root `ui.api.json` controls MCP credentials, command arrays and
+reference mappings. Missing or malformed configuration disables cloud access;
+empty values do not inherit API credentials from the shell. Local tools can
+remain available with keys empty. Runtime status is recomputed and every call
+rechecks current configuration, including after a credential is revoked.
 
-| Prioritas | Jumlah | Arti |
-|-----------|--------|------|
-| P0 | 5 | Wajib sebelum plugin dasar jalan (filesystem, memory, brave-search, browser-tools) |
-| P1 | 22 | Mengaktifkan plugin utuh |
-| P2 | 11 | Nice-to-have / cadangan |
+External candidates require an installed executable, the correct arguments,
+credentials and completed authorization. `agent_browser` is cataloged as built
+but remains an external runtime. Package names in the roadmap are not a
+certification that the package exists or is safe to install.
 
-## Matriks: Plugin ke MCP
+Task router is hidden until explicitly enabled in `ui.api.json`. Its command
+execution has the user's privileges. Host permissions remain the execution
+boundary. Vision semantic description sends image data to its configured
+provider; comparison and OCR are local. See [safety](SAFETY.md).
 
-| Plugin | MCP wajib | MCP opsional |
-|--------|-----------|--------------|
-| replica-skill | — (stdlib Python) | browser-tools-mcp, vision-mcp |
-| mattpocock-skills | typescript-language-server-mcp, eslint-mcp | — |
-| karpathy-skills | jupyter-mcp, python-repl-mcp | embeddings-mcp |
-| agent-skills-addyosmani | browser-tools-mcp, lighthouse-mcp | pa11y-mcp |
-| graphify | neo4j-mcp | graphrag-mcp, embeddings-mcp |
-| agent-reach | brave-search-mcp | tavily-mcp, exa-mcp, firecrawl-mcp |
-| understand-anything | wikipedia-mcp | arxiv-mcp, embeddings-mcp |
-| last-30-days | brave-search-mcp | newsapi-mcp, google-news-mcp |
-| rea | rea MCP server (upstream morluto/rea, install sendiri) | — |
-| gstack | — | — |
-| caveman | — | — |
-| gsd | task-router-mcp, memory-mcp | github-issues-mcp |
-| bmad-method | memory-mcp | github-issues-mcp, linear-mcp |
-| ui-ux-pro-max | figma-mcp | browser-tools-mcp, storybook-mcp |
-| impeccable | browser-tools-mcp | figma-mcp |
-| ppt-master | google-slides-mcp atau office-mcp | image-search-mcp |
-| diagram-design | mermaid-mcp | excalidraw-mcp |
-| anthropic-skills | filesystem-mcp | pdf-mcp, vision-mcp |
-| openmontage | ffmpeg-mcp | video-mcp |
-| hyperframes | heygen-mcp, elevenlabs-mcp | — |
-| humanizer | style-mcp | grammar-mcp |
-
-## Matriks: MCP ke Plugin (reverse)
-
-| MCP server | Dipakai oleh |
-|------------|--------------|
-| filesystem-mcp | anthropic-skills + semua (baseline) |
-| memory-mcp | gsd, bmad-method, anthropic-skills |
-| brave-search-mcp | agent-reach, last-30-days, understand-anything |
-| browser-tools-mcp | agent-skills-addyosmani, impeccable, ui-ux-pro-max, replica-skill |
-| vision-mcp | anthropic-skills, impeccable, replica-skill |
-| typescript-language-server-mcp | mattpocock-skills, agent-skills-addyosmani |
-| eslint-mcp | mattpocock-skills, agent-skills-addyosmani |
-| jupyter-mcp / python-repl-mcp | karpathy-skills |
-| neo4j-mcp | graphify |
-| figma-mcp | ui-ux-pro-max, impeccable |
-| lighthouse-mcp / pa11y-mcp | agent-skills-addyosmani |
-| mermaid-mcp / excalidraw-mcp | diagram-design |
-| google-slides-mcp / office-mcp / image-search-mcp | ppt-master, diagram-design |
-| ffmpeg-mcp / video-mcp | openmontage |
-| heygen-mcp / elevenlabs-mcp | hyperframes, openmontage |
-| style-mcp / grammar-mcp | humanizer |
-
-## Instalasi native
-
-`setup.sh` memasang sembilan MCP bawaan secara otomatis. Claude Code memakai
-`~/.claude.json` untuk user scope; Codex memakai `~/.codex/config.toml`;
-OpenCode memakai `~/.config/opencode/opencode.json(c)`. Config pribadi dan
-server pengguna dipertahankan. `.claude/mcp.json` bukan lokasi native Claude.
-
-Server P0 eksternal dan server katalog lain memerlukan paket, akun, kredensial
-serta argumen masing-masing. Gunakan ID dari `mcp-servers.json` dan batasi root
-filesystem yang boleh diakses. Panduan/plugin dalam katalog tidak otomatis
-memasang 29 server eksternal itu. Lihat [ENV_VARS](ENV_VARS.md) dan
-[MCP_INTEGRATION_CHECKLIST](MCP_INTEGRATION_CHECKLIST.md).
-
-## Keamanan MCP
-
-1. API key via env variable, tidak hardcoded (CONTRACT R003).
-2. MCP media personal (heygen, elevenlabs) wajib consent gate.
-3. `scripts/audit-trail.sh mcp-call` tersedia untuk workflow katalog.
-   Seluruh panggilan SDK belum otomatis diarahkan ke utility audit tersebut;
-   hook memori hanya menyimpan nama tool, bukan payload lengkap.
-
-## Test pasca-install
+## Verify an installation
 
 ```bash
+python3 unified-integration/scripts/api_config.py status
 bash unified-integration/scripts/setup-mcp.sh --check
 bash unified-integration/scripts/mcp-test.sh --priority P0
 bash unified-integration/scripts/mcp-test.sh --for-plugin replica-skill
 ```
+
+The protocol check exercises bundled backends and the gateway. External
+readiness and successful upstream calls need separate checks. The audit-trail
+utility is available explicitly; memory hooks record tool names, not complete
+MCP payloads or an automatic audit of every SDK call.
+
+See [configuration](CONFIGURATION.md), [deployment
+checklist](MCP_INTEGRATION_CHECKLIST.md)
+and [credential references](ENV_VARS.md).
+
+### Browser profile storage
+
+The optional agent-browser backend is disabled in a fresh configuration
+until its Node dependencies and Chromium are installed deliberately.
+Its default profiles are under `.agentenhancements/cache/browser/profiles`
+in the checkout. Each custom profile root owns its session index; directories
+are0700 and index files0600. Session identifiers cannot traverse outside
+the profile directory. `npm --prefix mcp-servers/agent_browser test` runs
+offline storage and boundary regressions; live browser flows still need
+Chromium and a separately configured runtime.

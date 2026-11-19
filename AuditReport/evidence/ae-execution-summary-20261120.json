@@ -1,7 +1,7 @@
 {
   "audit_started": "2026-11-19",
   "local_verification_closed": "2026-11-20",
-  "runtime_source_commit": "cba4e255",
+  "runtime_source_commit": "57b96a97c0b564705008d493ac268d6a244aae09",
   "baseline_commit": "b4ca7e6a",
   "baseline_integration": {
     "tests": 323,
@@ -9,9 +9,13 @@
     "result": "OK"
   },
   "final_integration": {
-    "tests": 393,
+    "tests": 394,
     "optional_live_skips": 3,
-    "result": "OK"
+    "result": "OK",
+    "source_commit": "57b96a97c0b564705008d493ac268d6a244aae09",
+    "elapsed_seconds": 215.761,
+    "interpreter": "checkout .agentenhancements/runtime/venv/bin/python",
+    "fixture_aliases": "cleared exactly as CI"
   },
   "ECC": {
     "passed": 9422,
@@ -53,7 +57,8 @@
       ".hermes/profiles/ilma/config.yaml"
     ],
     "background_snapshot_differences": 64,
-    "restoration_performed": false
+    "restoration_performed": false,
+    "audit_tool_isolation_exception": "One early npx lint invocation used the host npm cache. All subsequent invocations isolated HOME/cache; original cache contents were not preserved, so no unsafe deletion/restoration was attempted."
   },
   "failed_attempt_notes": [
     "Host ECC fixtures inherited fixed path aliases; clean Node20 namespace without aliases passed9422.",
@@ -63,7 +68,10 @@
     "First fresh setup was attempted before clone checkout completed and exited127; complete clone rerun succeeded836.5seconds.",
     "Two preflight assertions referenced the superseded XDG default; they now verify the maintainer-approved project state and retain permission checks.",
     "Final lint first saw historical changelog debt; committed formatting fixed it under unchanged rules.",
-    "Secret scanner exit1 reports candidates, not a zero-alert certificate. Npm audit exit1 is still recorded for7moderate."
+    "Secret scanner exit1 reports candidates, not a zero-alert certificate. Npm audit exit1 is still recorded for7moderate.",
+    "Initial CI publish used unsupported runner.temp in jobs.env; regression failed six subcases, fixed by8d2b1526.",
+    "First executing CI lacked ripgrep/ffmpeg/tesseract; existing functional test failed and media tests could not execute. Prerequisites fixed by6d3cc309; latest CI all jobs pass.",
+    "Additional fresh-clone invocation mistakenly used system Python/filelock3.32.0 and fixed host aliases:24failures/1error/4skips. Re-run uses checkout venv and the same alias-clearing command as CI; unsuccessful log retained."
   ],
   "commands": [
     {
@@ -1118,6 +1126,180 @@
       "elapsed_seconds": 0.487,
       "log_file": "tooling-venv.log",
       "log_sha256": "f4db444680d4308d042c8e4f41e9c50642af05d872aa4adebbb464ff51200804"
+    },
+    {
+      "name": "cargo-project-path-red",
+      "label": "audit",
+      "exit_code": 1,
+      "elapsed_seconds": 2.522,
+      "log_file": "audit-cargo-project-path-red.log",
+      "log_sha256": "6a553b946571ef679545edf5005f891704f170135935198db8988b62fa221071"
+    },
+    {
+      "name": "cargo-project-path-green",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 2.627,
+      "log_file": "audit-cargo-project-path-green.log",
+      "log_sha256": "84be0cd1c0d6387f7966d7206b727269408946d8779407467765bb8062e7e525"
+    },
+    {
+      "name": "ci-prerequisites-check",
+      "label": "audit",
+      "exit_code": 0,
+      "elapsed_seconds": 2.968,
+      "log_file": "audit-ci-prerequisites-check.log",
+      "log_sha256": "160291ff2653496033f9d24951f25691e5b635d9628971273195106e26d138b0"
+    },
+    {
+      "name": "full-suite-final",
+      "label": "final",
+      "exit_code": 0,
+      "elapsed_seconds": 213.372,
+      "log_file": "final-full-suite-final.log",
+      "log_sha256": "843bb661316aa4592d022437fc06606a4e25cb16cd01ef0c7d29790d724acf1c"
+    },
+    {
+      "name": "network-smoke",
+      "label": "final",
+      "exit_code": 0,
+      "elapsed_seconds": 5.33,
+      "log_file": "final-network-smoke.log",
+      "log_sha256": "ba4aaeaa162552e1fd7b8a805ab44358150e0c12f5e46ec834db7dc9fe7a3489"
+    },
+    {
+      "name": "full-suite-publication",
+      "label": "final",
+      "exit_code": 1,
+      "elapsed_seconds": 210.051,
+      "log_file": "final-full-suite-publication.log",
+      "log_sha256": "b9a90dacb895707c8f4a70a0cac3d4162f1acec2159202664f1df5e840645307"
+    },
+    {
+      "name": "full-suite-publication-native",
+      "label": "final",
+      "exit_code": 0,
+      "elapsed_seconds": 215.761,
+      "log_file": "final-full-suite-publication-native.log",
+      "log_sha256": "4f31b545767fbf8640d2e2df868e87d4a38d1a2c8c8c2ce1967f63eea8052cdf"
     }
-  ]
+  ],
+  "setup_source_commit": "cba4e255",
+  "public_network_smoke": {
+    "passed": 2,
+    "failed": 0,
+    "opt_in": "AE_MCP_NETWORK_TESTS=1",
+    "elapsed_seconds": 5.33
+  },
+  "branch_CI": [
+    {
+      "conclusion": "success",
+      "databaseId": 44583836807,
+      "event": "push",
+      "headSha": "57b96a97c0b564705008d493ac268d6a244aae09",
+      "jobs": [
+        {
+          "name": "markdownlint (owned layer)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "ECC test suite (CONTRACT \u00a75.1)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "headroom CLI build and regression tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "unified-integration test suite",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Static checks (CONTRACT \u00a79.1)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "in-house MCP servers (health + tools)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/lokah1945/AgentEnhancements/actions/runs/44583836807",
+      "workflowName": "CI"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 44583850272,
+      "event": "pull_request",
+      "headSha": "57b96a97c0b564705008d493ac268d6a244aae09",
+      "jobs": [
+        {
+          "name": "Static checks (CONTRACT \u00a79.1)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "in-house MCP servers (health + tools)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "markdownlint (owned layer)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "headroom CLI build and regression tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "unified-integration test suite",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "ECC test suite (CONTRACT \u00a75.1)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/lokah1945/AgentEnhancements/actions/runs/44583850272",
+      "workflowName": "CI"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 44583850092,
+      "event": "pull_request",
+      "headSha": "57b96a97c0b564705008d493ac268d6a244aae09",
+      "jobs": [
+        {
+          "name": "Regenerate Skill Registry",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/lokah1945/AgentEnhancements/actions/runs/44583850092",
+      "workflowName": "Registry Regeneration"
+    }
+  ],
+  "publication_incremental_secret_scan": {
+    "publication-history": {
+      "exit_code": 0,
+      "candidate_count": 0
+    },
+    "publication-diff": {
+      "exit_code": 0,
+      "candidate_count": 0
+    },
+    "provided_pat_tracked_matches": 0
+  }
 }

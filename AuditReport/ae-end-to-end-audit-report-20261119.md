@@ -17,8 +17,9 @@ ditelusuri melalui conventional commit dengan Agent/Session/Task/Context.
 Audit ini memverifikasi integrasi milik AE, generator, batas data runtime,
 CLI headroom, registry/discovery, konfigurasi native dan seluruh suite CI.
 Tree tracked/history dipindai, tetapi ini bukan sertifikasi setiap baris
-semua proyek vendor atau akun/provider eksternal. Semua eksekusi setup,
-hook, fixture dan CLI menggunakan HOME/memory/config sementara.
+semua proyek vendor atau akun/provider eksternal. Eksekusi setup, hook,
+fixture dan CLI AE menggunakan HOME/memory/config sementara. Pengecualian
+isolasi tool audit dan batas pembandingan HOME dicatat di bawah.
 
 Temuan baru terverifikasi: **30**, P0 **0**, P1 **13**, P2 **16**, P3 **1**. Seluruh temuan baru pada daftar berikut ditangani dengan regression test.
 Risiko P2/P3 yang ditunda dipisahkan dari temuan yang sudah diperbaiki.
@@ -27,7 +28,7 @@ Risiko P2/P3 yang ditunda dipisahkan dari temuan yang sudah diperbaiki.
 
 | Ukuran | Sebelum | Sesudah |
 | --- | --- | --- |
-| Integration baseline | 323 tes, OK, 3 live opsional skip | 393 tes OK,3 opsional skip pada clone baru |
+| Integration baseline | 323 tes, OK, 3 live opsional skip | 394 tes OK,3 opsional skip pada clone baru |
 | Default setup | exit0 tetapi build Rust E0432, fallback | binary headroom dibangun; run2 memakai binary yang ada |
 | Filelock | 13 advisori, resolver3.32.7 | >=4.2.1; pip-audit tidak menemukan advisori |
 | Loader/hook top-1 | 15/40 (37.5%) | 25/40 (62.5%) |
@@ -60,8 +61,10 @@ nol unavailable advertised/ready, JSON valid, sumber stabil dan <=400 token.
 
 ## Temuan terverifikasi dan reproduksi
 
-Lokasi berikut menunjuk working tree final. Perintah regression umum:
-`python3 -m unittest discover -s unified-integration/tests -p <module>.py -v`.
+Lokasi berikut menunjuk working tree final. Perintah regression umum memakai
+`.agentenhancements/runtime/venv/bin/python -m unittest discover`
+dengan `-s unified-integration/tests -p <module>.py -v`. Fixture yang membuat
+HOME sendiri membersihkan host aliases seperti pada langkah CI.
 Semua credential dan endpoint dalam test adalah fixture sintetis/localhost;
 nilai credential nyata tidak dicetak, disimpan di laporan atau commit.
 
@@ -401,6 +404,12 @@ HOME byte-identik. Path proyek canonical disimpan untuk scope memori;
 raw tool input/output tidak disimpan. Automatic notes disamarkan dan TTL7
 hari; manual API memory.save tetap menyimpan data eksplisit pemanggil.
 
+Satu pemanggilan awal npx markdownlint memakai cache npm HOME host.
+Pemanggilan berikutnya mengarahkan HOME/cache ke lokasi terisolasi, lalu
+ke dalam checkout. Ini kesalahan isolasi tool audit; isi cache awal tidak
+tersedia untuk pemulihan yang aman, sehingga cache host tidak dihapus
+atau ditimpa. Karena itu tidak ada klaim bahwa seluruh HOME tidak berubah.
+
 Mode0 preflight tetap lokal; Mode2 opt-in mengirim bounded redacted prompt
 dan metadata publik ke endpoint HTTPS yang dipilih pengguna. Ini bukan
 classifier semua data privat; pengguna tetap menentukan kelayakan egress.
@@ -462,7 +471,7 @@ dari30perbaikan baru. Tidak ada P0/P1 terverifikasi yang dibiarkan terbuka.
 | AE26-R01 | P2 | `docs/LICENSE_AUDIT.md:1`; `anthropic-skills/skills/doc-coauthoring/` | Tidak ada LICENSE.txt pada satu bundle dan tidak ada root LICENSE vendor; hak arsip promptGPL/komersial belum menjadi keputusan hukum auditor. | Terbuka; notice dibetulkan,18/19license diperiksa; maintainer perlu klarifikasi upstream/hak redistribusi. |
 | AE26-R02 | P2 | `ECC/package-lock.json:1` | npm audit:7moderate,0high/critical; tooling transitive memerlukan beberapa perubahan major menurut resolver. | Terbuka; hindari major override tanpa suite upstream; target perbaikan dependency upstream, tanpa audit ignore/thresholdlonggar. |
 | AE26-R03 | P2 | `unified-integration/tests/fixtures/discovery-prompts.json:1` | Ranker leksikal masih miss15/40top1 dan10/40top3 meski peningkatan terukur. | Terbuka; evaluasi corpus dan domain lebih luas sebelum perubahanmodel/classifier; jangan overfit jawaban fixture. |
-| AE26-R04 | P2 | `unified-integration/tests/test_adaptive_preflight.py:1`; `docs/AGENTS.md:1` | Tiga live/network tests opt-in; semua OS/trust/account model tidak tersedia dari fixtureLinux. | Terbuka; butuh host/credential/trust native yang relevan untuk sertifikasi tambahan; tidak melewati approval CLI. |
+| AE26-R04 | P2 | `unified-integration/tests/test_adaptive_preflight.py:1`; `docs/AGENTS.md:1` | Tiga default live/network tests opt-in; dua arxiv/news sudah lulus secara eksplisit; semua OS/trust/account model tidak tersedia dari fixtureLinux. | Terbuka; butuh host/credential/trust native yang relevan untuk sertifikasi tambahan; tidak melewati approval CLI. |
 | AE26-R05 | P2 | `unified-integration/scripts/consent-gate.sh:1`; `unified-integration/mcp-servers/gateway.py:1` | Helper eksplisit bukan enforcement universal semua MCPeksternal; hostapproval tetap batas otorisasi. | Terbuka; dokumentasi jujur, backend sensitif tidak aktif default; policy gateway universal memerlukan desain terpisah. |
 | AE26-R06 | P2 | `.github/workflows/ci.yml:1`; `unified-integration/requirements.txt:1` | Scan manual tree/history/Python/npm/Rust ada, tetapi SCA/SBOM/secret baseline berkala belum lengkap. Kandidat vendor belum semuanya terklasifikasi. | Terbuka; tidak menambahkan ignore massal atau scan palsu. Tambah automation setelah baselinefalse-positive dan kebijakan re-vendor jelas. Recommendedcurlpipe dihapus. |
 | AE26-R07 | P3 | `headroom/Cargo.lock:1`; `ECC/ecc2/Cargo.lock:1` | cargo-audit kini0vulnerability/0unsound; masih ada informasi unmaintainedchrono/humantime/paste/pin-utils tanpa patchedreplacementlangsung. | Terbuka; monitor upstream dan evaluasi pengganti kompatibel. Warning tidak disembunyikan. |
@@ -489,14 +498,16 @@ dari30perbaikan baru. Tidak ada P0/P1 terverifikasi yang dibiarkan terbuka.
 
 ## Verifikasi final dan publikasi
 
-Penutupan lokal20November2026, source code`cba4e255` (changelog-only
-followup`3c5e7949`). Clone mandiri dibuat tanpa alternates/hardlinks git.
+Penutupan lokal 20 November 2026; full verification terbaru pada
+`57b96a97` berhasil dalam 215.761 detik dengan Python venv checkout dan
+lingkungan fixture yang sama dengan CI. Clone mandiri dibuat tanpa
+alternates/hardlinks git.
 Default setup pertama berhasil836.5detik dan benar-benar membangun
 headroom dari source yang sama dengan versi final; tidak ada binary awal.
 Dua setup berikut pada kode final berhasil154.232/151.262detik;19native
 configuration hashes serta daftar backup tidak berubah pada pengulangan.
 
-- Integration393tests: OK, tiga live/network opt-in yang sama dengan
+- Integration394tests: OK, tiga live/network opt-in yang sama dengan
   baseline tetap ditandai; tidak ada skip baru.
 - ECC9422passed/0failed pada Node20container tanpa jaringan dan tanpa
   config alias global. Clone final tidak memount object/source repo lama.
@@ -519,5 +530,64 @@ Ringkasan exit/timing/hash log sanitasi disimpan pada evidence. Scan akhir track
 semua redaksi100%; PAT yang diberikan0match dalam file tracked.
 Tidak ada kandidat baru yang dikonfirmasi sebagai credential produksi;
 klasifikasi seluruh vendor/history tetap memiliki batas yang dicatat.
-History tidak ditulis ulang. Bagian CI akan diisi dengan run yang benar-benar berhasil;
-keberhasilan lokal tidak disamakan dengan keberhasilan GitHub Actions.
+History tidak ditulis ulang. CI untuk source final `57b96a97` berhasil:
+
+- [CI push](https://github.com/lokah1945/AgentEnhancements/actions/runs/44583836807):
+  seluruh enam job berhasil.
+- [CI PR](https://github.com/lokah1945/AgentEnhancements/actions/runs/44583850272):
+  seluruh enam job berhasil.
+- [Registry PR](https://github.com/lokah1945/AgentEnhancements/actions/runs/44583850092):
+  regeneration dan drift gate berhasil.
+
+[PR #9](https://github.com/lokah1945/AgentEnhancements/pull/9) memuat check
+untuk report followup. Merge hanya dilakukan setelah check commit terbaru
+berhasil, lalu CI master dan workflow registry terjadwal diverifikasi
+kembali melalui workflow_dispatch. Hasil master dilaporkan pada respons
+eksekusi akhir; link di atas membuktikan source yang sudah diperiksa.
+
+## Iterasi publikasi CI
+
+CI-F01(P2), `.github/workflows/ci.yml:111` dan
+`.github/workflows/registry-regeneration.yml:57`: run push pertama
+[CI44578871592](https://github.com/lokah1945/AgentEnhancements/actions/runs/44578871592)
+dan registry44578874966 berhenti sebelum job/check-run dibuat. Perubahan
+audit keliru memakai `runner.temp` pada job-levelenv. Sumber kebenaran
+[context availability GitHub](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability)
+menetapkan scope berbeda sebelum runnerdialokasikan.
+
+Commit`8d2b1526` memakai github.workspace dan menyiapkan HOMEprivate
+sesudah checkout. Regression konteks gagal pada enam subcase sebelum fix;
+dua workflow tests kemudian lulus. Ini perbaikan iterasi audit, terpisah
+dari30temuan baseline yang ditutup. Tidak ada job/test yang dinonaktifkan.
+
+CI-F02(P2), integration job: run8d2b1526 menjalankan394tests tetapi
+functional test serial-selection gagal karena `rg` belum dipasang. Delapan
+media tests juga tidak dapat berjalan pada runner tanpa ffmpeg/tesseract.
+Commit`6d3cc309` mendeklarasikan ripgrep/jq/ffmpeg/tesseract sebagai
+prerequisite job, memakai existing functional regression sebagai bukti
+sebelum/sesudah. Tidak ada test yang dihapus atau ditambahskip.
+
+Tambahan bukti penutupan: dua public-network tests arxiv/news lulus dengan
+opt-in eksplisit(5.33detik); hanya selector model riil tetap membutuhkan
+model.json/key yang sesuai. Full suite clone terbaru394tests OK/3default
+opt-in. Persyaratan checkout-local juga diuji terhadap global
+CARGO_TARGET_DIR; normal preparation menormalkannya ke target milik
+checkout dan menolak target/binarysymlink keluar.
+
+RQ26-01 lanjutan `57b96a97`: scope test membuktikan bahwa inherited
+CARGO_TARGET_DIR dapat menunjuk ke luar checkout. Runtime preparation kini
+mengarahkan build ke target canonical dan memvalidasi symlink target/binary.
+Empat scope tests lulus; kebijakan discovery dan source Rust tetap sama.
+Kompresi standalone memakai reformating JSON/log yang mandiri; bentuk
+input yang tidak didukung dapat diteruskan tanpa perubahan. Smoke CLI enam
+mode tidak membuktikan rasio kompresi semua kode/Markdown.
+
+Scan tambahan rentang `cba4e255..57b96a97` serta diff laporan/kontrak
+menghasilkan nol kandidat baru, dengan redaksi 100%. Ini tidak menghapus
+kandidat vendor/history yang sudah dicatat. Pengulangan uji tambahan yang
+keliru memakai Python sistem (filelock 3.32.0) serta fixed host aliases
+gagal 24 tests/1 error. Perintah verifikasi dikoreksi ke Python venv
+checkout dan penghapusan aliases yang sama dengan langkah CI; hasil gagal
+harness tetap disimpan pada evidence, bukan disembunyikan sebagai pass.
+Pengulangan yang benar menghasilkan 394 tests OK dengan tiga opt-in
+bawaan, exit 0, tanpa perubahan source atau pelonggaran assertion.

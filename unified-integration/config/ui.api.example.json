@@ -370,7 +370,7 @@
       "required": [],
       "optional": []
     },
-    "agent-browser": {
+    "agent-browser-mcp": {
       "enabled": true,
       "required": [],
       "optional": [
@@ -378,7 +378,18 @@
         "AGENT_BROWSER_DEFAULT_BROWSER",
         "AGENT_BROWSER_LOG_LEVEL",
         "AGENT_BROWSER_CHROMIUM_PATH"
-      ]
+      ],
+      "command": [
+        "node",
+        "mcp-servers/agent_browser/src/index.js"
+      ],
+      "cwd": "/root/project/AgentEnhancements",
+      "env": {
+        "AGENT_BROWSER_PROFILE_DIR": "AGENT_BROWSER_PROFILE_DIR",
+        "AGENT_BROWSER_DEFAULT_BROWSER": "AGENT_BROWSER_DEFAULT_BROWSER",
+        "AGENT_BROWSER_LOG_LEVEL": "AGENT_BROWSER_LOG_LEVEL",
+        "AGENT_BROWSER_CHROMIUM_PATH": "AGENT_BROWSER_CHROMIUM_PATH"
+      }
     },
     "grammar-mcp": {
       "enabled": true,

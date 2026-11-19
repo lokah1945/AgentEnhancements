@@ -100,10 +100,10 @@ Deep-research skills: knowledge graphs, multi-step reasoning, fresh-trend monito
 
 Plugins (5):
 
-- **Agent-Reach** (`agent-reach`) — integrated-ready — MCP: brave-search-mcp, tavily-mcp, exa-mcp, firecrawl-mcp
+- **Agent-Reach** (`agent-reach`) — integrated-ready — MCP: tavily-mcp, exa-mcp, firecrawl-mcp
 - **Graphify** (`graphify`) — integrated-ready — MCP: neo4j-mcp, graphrag-mcp, embeddings-mcp
-- **Last 30 Days** (`last-30-days`) — integrated-ready — MCP: brave-search-mcp, newsapi-mcp, google-news-mcp
-- **REA (Reverse Engineer Anything)** (`rea`) — integrated-ready — MCP: (none)
+- **Last 30 Days** (`last-30-days`) — integrated-ready — MCP: exa-mcp, newsapi-mcp, google-news-mcp
+- **REA (Reverse Engineer Anything)** (`rea`) — integrated-ready — MCP: tavily-mcp, memory-mcp, task-router-mcp
 - **Understand Anything** (`understand-anything`) — integrated-ready — MCP: wikipedia-mcp, arxiv-mcp, embeddings-mcp
 
 ### Tokens / Optimization  ·  `skills/tokens-optimization/`
@@ -113,9 +113,9 @@ Token / context budget skills: compression, agile persona dispatch, atomic paral
 Plugins (4):
 
 - **BMAD Method** (`bmad-method`) — integrated-ready — MCP: linear-mcp, github-issues-mcp, memory-mcp
-- **Caveman** (`caveman`) — integrated-ready — MCP: (none)
+- **Caveman** (`caveman`) — integrated-ready — MCP: filesystem-mcp, style-mcp
 - **Get Shit Done (GSD)** (`gsd`) — integrated-ready — MCP: task-router-mcp, memory-mcp
-- **GStack** (`gstack`) — integrated-ready — MCP: (none)
+- **GStack** (`gstack`) — integrated-ready — MCP: filesystem-mcp
 
 ### Design  ·  `skills/design/`
 
@@ -145,25 +145,25 @@ AI-persona packs from The Agency (agency-agents): 283 specialist personas across
 
 Plugins (19):
 
-- **The Agency — Academic Division (6 personas)** (`academic`) — vendored — MCP: (none)
-- **The Agency — Design Division (10 personas)** (`design`) — vendored — MCP: (none)
-- **The Agency — Engineering Division (66 personas)** (`engineering`) — vendored — MCP: (none)
-- **The Agency — Finance Division (5 personas)** (`finance`) — vendored — MCP: (none)
-- **The Agency — Game Development Division (21 personas)** (`game-development`) — vendored — MCP: (none)
-- **The Agency — GIS Division (13 personas)** (`gis`) — vendored — MCP: (none)
-- **The Agency — Healthcare Division (3 personas)** (`healthcare`) — vendored — MCP: (none)
-- **The Agency — Marketing Division (37 personas)** (`marketing`) — vendored — MCP: (none)
-- **The Agency — Paid Media Division (7 personas)** (`paid-media`) — vendored — MCP: (none)
-- **The Agency — Product Division (6 personas)** (`product`) — vendored — MCP: (none)
-- **The Agency — Project Management Division (7 personas)** (`project-management`) — vendored — MCP: (none)
-- **The Agency — Research Division (1 personas)** (`research`) — vendored — MCP: (none)
-- **The Agency — Sales Division (9 personas)** (`sales`) — vendored — MCP: (none)
-- **The Agency — Security Division (12 personas)** (`security`) — vendored — MCP: (none)
-- **The Agency — Spatial Computing Division (6 personas)** (`spatial-computing`) — vendored — MCP: (none)
-- **The Agency — Specialized Division (59 personas)** (`specialized`) — vendored — MCP: (none)
-- **The Agency — Support Division (6 personas)** (`support`) — vendored — MCP: (none)
-- **The Agency — Testing Division (9 personas)** (`testing`) — vendored — MCP: (none)
-- **The Agency — NEXUS Orchestration Playbooks** (`nexus`) — vendored — MCP: (none)
+- **The Agency — Academic Division (6 personas)** (`academic`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Design Division (10 personas)** (`design`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Engineering Division (66 personas)** (`engineering`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Finance Division (5 personas)** (`finance`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Game Development Division (21 personas)** (`game-development`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — GIS Division (13 personas)** (`gis`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Healthcare Division (3 personas)** (`healthcare`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Marketing Division (37 personas)** (`marketing`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Paid Media Division (7 personas)** (`paid-media`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Product Division (6 personas)** (`product`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Project Management Division (7 personas)** (`project-management`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Research Division (1 personas)** (`research`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Sales Division (9 personas)** (`sales`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Security Division (12 personas)** (`security`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Spatial Computing Division (6 personas)** (`spatial-computing`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Specialized Division (59 personas)** (`specialized`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Support Division (6 personas)** (`support`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — Testing Division (9 personas)** (`testing`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
+- **The Agency — NEXUS Orchestration Playbooks** (`nexus`) — vendored — MCP: filesystem-mcp, memory-mcp, task-router-mcp
 
 ## Integration with unified-integration
 

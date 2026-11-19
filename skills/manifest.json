@@ -123,7 +123,6 @@
       "skill_md": "skills/research/agent-reach/SKILL.md",
       "manifest": "skills/research/agent-reach/manifest.json",
       "mcp_servers": [
-        "brave-search-mcp",
         "tavily-mcp",
         "exa-mcp",
         "firecrawl-mcp"
@@ -173,7 +172,7 @@
       "skill_md": "skills/research/last-30-days/SKILL.md",
       "manifest": "skills/research/last-30-days/manifest.json",
       "mcp_servers": [
-        "brave-search-mcp",
+        "exa-mcp",
         "newsapi-mcp",
         "google-news-mcp"
       ],
@@ -201,7 +200,11 @@
       "path": "skills/research/rea",
       "skill_md": "skills/research/rea/SKILL.md",
       "manifest": "skills/research/rea/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "tavily-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "rea",
         "reverse engineer",
@@ -277,7 +280,10 @@
       "path": "skills/tokens-optimization/caveman",
       "skill_md": "skills/tokens-optimization/caveman/SKILL.md",
       "manifest": "skills/tokens-optimization/caveman/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "style-mcp"
+      ],
       "trigger_keywords": [
         "caveman",
         "minimize",
@@ -321,7 +327,9 @@
       "path": "skills/tokens-optimization/gstack",
       "skill_md": "skills/tokens-optimization/gstack/SKILL.md",
       "manifest": "skills/tokens-optimization/gstack/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp"
+      ],
       "trigger_keywords": [
         "token",
         "compress",
@@ -544,7 +552,11 @@
       "path": "skills/agency/academic",
       "skill_md": "skills/agency/academic/SKILL.md",
       "manifest": "skills/agency/academic/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "worldbuilding",
         "narrative design",
@@ -565,7 +577,11 @@
       "path": "skills/agency/design",
       "skill_md": "skills/agency/design/SKILL.md",
       "manifest": "skills/agency/design/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "ui designer",
         "ux research",
@@ -586,7 +602,11 @@
       "path": "skills/agency/engineering",
       "skill_md": "skills/agency/engineering/SKILL.md",
       "manifest": "skills/agency/engineering/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "frontend developer",
         "backend architect",
@@ -608,7 +628,11 @@
       "path": "skills/agency/finance",
       "skill_md": "skills/agency/finance/SKILL.md",
       "manifest": "skills/agency/finance/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "bookkeeper",
         "financial analyst",
@@ -629,7 +653,11 @@
       "path": "skills/agency/game-development",
       "skill_md": "skills/agency/game-development/SKILL.md",
       "manifest": "skills/agency/game-development/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "game designer",
         "unity",
@@ -651,7 +679,11 @@
       "path": "skills/agency/gis",
       "skill_md": "skills/agency/gis/SKILL.md",
       "manifest": "skills/agency/gis/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "gis",
         "arcgis",
@@ -673,7 +705,11 @@
       "path": "skills/agency/healthcare",
       "skill_md": "skills/agency/healthcare/SKILL.md",
       "manifest": "skills/agency/healthcare/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "clinical evidence",
         "healthcare compliance",
@@ -692,7 +728,11 @@
       "path": "skills/agency/marketing",
       "skill_md": "skills/agency/marketing/SKILL.md",
       "manifest": "skills/agency/marketing/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "growth",
         "content creator",
@@ -714,7 +754,11 @@
       "path": "skills/agency/paid-media",
       "skill_md": "skills/agency/paid-media/SKILL.md",
       "manifest": "skills/agency/paid-media/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "ppc",
         "google ads",
@@ -735,7 +779,11 @@
       "path": "skills/agency/product",
       "skill_md": "skills/agency/product/SKILL.md",
       "manifest": "skills/agency/product/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "product manager",
         "prioritization",
@@ -756,7 +804,11 @@
       "path": "skills/agency/project-management",
       "skill_md": "skills/agency/project-management/SKILL.md",
       "manifest": "skills/agency/project-management/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "project manager",
         "sprint planning",
@@ -777,7 +829,11 @@
       "path": "skills/agency/research",
       "skill_md": "skills/agency/research/SKILL.md",
       "manifest": "skills/agency/research/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "literature review",
         "research synthesist",
@@ -797,7 +853,11 @@
       "path": "skills/agency/sales",
       "skill_md": "skills/agency/sales/SKILL.md",
       "manifest": "skills/agency/sales/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "outbound",
         "discovery call",
@@ -818,7 +878,11 @@
       "path": "skills/agency/security",
       "skill_md": "skills/agency/security/SKILL.md",
       "manifest": "skills/agency/security/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "threat model",
         "penetration test",
@@ -839,7 +903,11 @@
       "path": "skills/agency/spatial-computing",
       "skill_md": "skills/agency/spatial-computing/SKILL.md",
       "manifest": "skills/agency/spatial-computing/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "visionos",
         "webxr",
@@ -861,7 +929,11 @@
       "path": "skills/agency/specialized",
       "skill_md": "skills/agency/specialized/SKILL.md",
       "manifest": "skills/agency/specialized/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "mcp builder",
         "orchestrator",
@@ -883,7 +955,11 @@
       "path": "skills/agency/support",
       "skill_md": "skills/agency/support/SKILL.md",
       "manifest": "skills/agency/support/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "customer support",
         "analytics",
@@ -904,7 +980,11 @@
       "path": "skills/agency/testing",
       "skill_md": "skills/agency/testing/SKILL.md",
       "manifest": "skills/agency/testing/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "qa",
         "test automation",
@@ -925,7 +1005,11 @@
       "path": "skills/agency/nexus",
       "skill_md": "skills/agency/nexus/SKILL.md",
       "manifest": "skills/agency/nexus/manifest.json",
-      "mcp_servers": [],
+      "mcp_servers": [
+        "filesystem-mcp",
+        "memory-mcp",
+        "task-router-mcp"
+      ],
       "trigger_keywords": [
         "nexus",
         "multi-agent pipeline",

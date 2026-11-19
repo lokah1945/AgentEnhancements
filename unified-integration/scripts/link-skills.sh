@@ -130,6 +130,7 @@ link_skill() {
             current="$(readlink "$dst" 2>/dev/null || true)"
             case "$current" in
                 "$SKILLS_DIR"/*) ;;  # ours: refresh below
+                */unified-integration/skills/by-category/"$category/$name") ;; # previous checkout
                 *)
                     log_warn "skip $target/$name: symlink points outside the registry ($current)"
                     continue

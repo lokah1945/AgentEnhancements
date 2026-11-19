@@ -13,6 +13,15 @@ import tempfile
 import json5
 
 
+def managed_integration_path(value: object, *suffix: str) -> bool:
+    """Recognize our canonical entry points even after a checkout moves."""
+    if not isinstance(value, (str, Path)):
+        return False
+    path = Path(value).expanduser()
+    parts = ("unified-integration", *suffix)
+    return path.is_absolute() and path.parts[-len(parts):] == parts
+
+
 def write(path: Path, content: str) -> None:
     """Preserve unchanged files and keep private backups of actual changes."""
     path.parent.mkdir(parents=True, exist_ok=True)

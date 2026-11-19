@@ -14,7 +14,7 @@ from typing import Callable
 
 import yaml
 
-from native_config import merge_instructions, read_json, write, write_json
+from native_config import managed_integration_path, merge_instructions, read_json, write, write_json
 
 UI = Path(__file__).resolve().parent.parent
 ROOT = UI.parent
@@ -96,6 +96,10 @@ def install_hermes(block: dict, merge_servers: Callable[[dict, dict], None], *, 
                 raise ValueError(f"agent-enhancements is disabled by the user: {path}")
             target = root / "plugins/agent-enhancements"
             source = UI / "hermes-plugin"
+            if target.is_symlink() and managed_integration_path(
+                target.parent / target.readlink(), "hermes-plugin"
+            ) and target.resolve() != source.resolve():
+                target.unlink()
             if target.exists() or target.is_symlink():
                 if not target.is_symlink() or target.resolve() != source.resolve():
                     # User has their own plugin at this location - warn and skip

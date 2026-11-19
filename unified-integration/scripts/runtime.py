@@ -50,6 +50,10 @@ def skill_context(agent: str, prompt: str) -> str:
 
     max_results is configurable via AE_MAX_SKILL_CARDS env var (default 8).
     The agent decides which skills to actually read/use from the suggestions.
+
+    This is the Mode 0 render of the adaptive preflight (CONTRACT 8.5):
+    missing model.json, mode 0, and every preflight failure path must
+    produce exactly this payload.
     """
     spec = importlib.util.spec_from_file_location(
         "ae_skills_loader", Path(__file__).with_name("load-skills.py")
@@ -73,6 +77,31 @@ def skill_context(agent: str, prompt: str) -> str:
         MAX_SKILL_CARDS,
         label="skill candidates",
     )
+
+
+def prompt_context(agent: str, prompt: str, event: dict) -> str:
+    """UserPromptSubmit context: adaptive preflight Modes 0/1/2.
+
+    Mode 0 (missing or invalid model.json) never imports the preflight
+    module, never reads credentials and never opens a socket: the
+    legacy discovery cards are rendered directly, byte-identical to
+    the pre-feature runtime (CONTRACT 8.5 parity gate). Modes 1 and 2
+    load the shared handler; every failure falls back to this render.
+    """
+    try:
+        from adaptive_preflight import (
+            MODE_DISABLED,
+            load_model_config,
+            preflight_context,
+        )
+    except Exception:  # noqa: BLE001 - advisory by contract
+        return skill_context(agent, prompt)
+    config = load_model_config()
+    if config.mode == MODE_DISABLED and not config.diagnosis:
+        return skill_context(agent, prompt)
+    return preflight_context(
+        agent, prompt, event, fallback=skill_context
+    ).context
 
 
 def observer_context(agent: str) -> str:
@@ -135,10 +164,12 @@ def handle(agent: str, event: dict) -> str:
         return ""
     if name == "UserPromptSubmit":
         prompt = str(event.get("prompt") or "")
+        # Memory effects run exactly once per prompt, before and
+        # independently of any preflight mode (CONTRACT 8.5).
         memory.save(
             f"session:{session_key}:task", redact(prompt)[:MAX_MEMORY], ttl_days=7
         )
-        return skill_context(agent, prompt)[:MAX_CONTEXT]
+        return prompt_context(agent, prompt, event)[:MAX_CONTEXT]
     if name in {"PreToolUse", "PostToolUse"}:
         # Tool bodies can contain secrets, source files, or huge output.
         # Record only a bounded tool name; never raw shell input/output.

@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import importlib.util
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 
 import tomlkit
@@ -136,11 +138,32 @@ async def probe(label: str, path: Path, config: dict) -> dict:
     return row
 
 
+def preflight_report() -> dict:
+    """Advisory adaptive-preflight configuration summary (CONTRACT 8.5).
+
+    No model API is called and no secret is read: the report shows the
+    requested/effective mode, the diagnosis code when model.json was
+    rejected, and - for Mode 2 - whether a key resolved, never the key.
+    """
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "ae_adaptive_preflight", UI / "scripts/adaptive_preflight.py")
+        module = importlib.util.module_from_spec(spec)
+        # Register before exec: the dataclass machinery resolves the owning
+        # module through sys.modules (same fix as tests/helpers.py).
+        sys.modules["ae_adaptive_preflight"] = module
+        spec.loader.exec_module(module)
+        return module.status_report()
+    except Exception as exc:  # noqa: BLE001 - advisory by contract
+        return {"diagnosis": f"preflight status unavailable ({type(exc).__name__})"}
+
+
 def summarize(rows: list[dict]) -> dict:
     """A failed or missing target must never disappear from release evidence."""
     return {"targets": len(rows), "passed": sum(bool(row["passed"]) for row in rows),
             "failed": sum(not row["passed"] for row in rows), "results": rows,
-            "model_auth": "not tested by doctor; use native CLI smoke tests"}
+            "model_auth": "not tested by doctor; use native CLI smoke tests",
+            "adaptive_preflight": preflight_report()}
 
 
 async def inspect(agents: list[str]) -> dict:
@@ -172,6 +195,13 @@ def main() -> int:
         for row in report["results"]:
             print(f"{'PASS' if row['passed'] else 'FAIL'} {row['agent']}: {row.get('diagnosis', 'native config + MCP health + local tool')}")
         print(f"Native targets: {report['passed']}/{report['targets']} passed")
+        preflight = report.get("adaptive_preflight", {})
+        mode = preflight.get("effective_mode", "?")
+        note = preflight.get("diagnosis", "")
+        if preflight.get("api_key_present") is False:
+            note = (note + "; api key missing").strip("; ")
+        suffix = f" ({note})" if note else ""
+        print(f"Adaptive preflight: mode {mode}{suffix} [advisory]")
     return 0 if report["targets"] and not report["failed"] else 1
 
 

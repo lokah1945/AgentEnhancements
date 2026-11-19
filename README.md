@@ -74,7 +74,7 @@ cd AgentEnhancements
 The setup script will:
 1. Detect your installed AI coding assistants (Claude Code, Codex, OpenCode, Hermes, Cursor, Gemini CLI, Windsurf, Copilot, Kiro), honoring a saved host selection
 2. Aggregate skills from all sources into the unified registry (3,378 skills from 8 sources, official Anthropic copies winning name collisions) and regenerate `all-skills.json`
-3. Build the capability registry (`agent-registry.json`: skills + 40 plugins + 38 MCP servers + built-ins)
+3. Build the capability registry (`agent-registry.json`: skills + 40 plugins + 40 MCP servers + built-ins)
 4. Copy reference system-prompt files into `unified-integration/prompts/` (reference material — no agent is forced to load them; the written instruction files tell agents how to use the catalog)
 5. Set up memory persistence (parameterized-SQL Python hooks, `memory_type="session_context"` enforced)
 6. Enable context compression (headroom binary built by default; pure-Python fallback with 99%+ reduction for code/generic)
@@ -217,7 +217,7 @@ python3 unified-integration/scripts/registry.py show docx
 python3 unified-integration/scripts/registry.py stats
 ```
 
-Scoring understands format families ("word" -> docx, "excel" -> xlsx, "powerpoint" -> pptx) and stop words in English and Indonesian, so `map "buat dokumen word laporan keuangan"` returns the official `docx` skill first. The registry (`skills/agent-registry.json`) is rebuilt by `setup.sh` and covers 3,378 skills + 40 plugins + 38 MCP servers + 8 built-in capabilities.
+Scoring understands format families ("word" -> docx, "excel" -> xlsx, "powerpoint" -> pptx) and stop words in English and Indonesian, so `map "buat dokumen word laporan keuangan"` returns the official `docx` skill first. The registry (`skills/agent-registry.json`) is rebuilt by `setup.sh` and covers 3,378 skills + 40 plugins + 40 MCP servers + 8 built-in capabilities.
 
 ### Using Skills
 
@@ -318,6 +318,9 @@ Prompt files in `unified-integration/prompts/` are **reference copies** refreshe
 | `HEADROOM_BIN` | Compression binary | auto-detect (repo build, then PATH) |
 | `AE_MAX_SKILL_CARDS` | Max skill cards per prompt | `8` (configurable, was 3) |
 | `AGENT_ENHANCEMENTS_BUILD_HEADROOM` | Build headroom by default | `1` (set to `0` to skip) |
+| `AGENT_ENHANCEMENTS_MODEL_FILE` | Adaptive preflight model.json override (tests) | `~/.config/agentenhancements/model.json` |
+| `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY` | Adaptive preflight Mode 2 key | unset |
+| `AE_PREFLIGHT_DEADLINE_MS` | Adaptive preflight phase deadline | `2000` |
 
 ### Runtime Hooks (merged into each agent's native config)
 
@@ -326,12 +329,25 @@ All three primary agents (Claude Code, Codex, OpenCode) receive equivalent lifec
 | Hook Event | Purpose |
 |------------|---------|
 | `SessionStart` | Task Observer bootstrap + session memory recall (7-day TTL) |
-| `UserPromptSubmit` | Skill discovery — returns up to 8 relevant skill cards (configurable via `AE_MAX_SKILL_CARDS`) |
+| `UserPromptSubmit` | Skill discovery — up to 8 relevant skill cards (configurable via `AE_MAX_SKILL_CARDS`), or the validated [adaptive preflight](#adaptive-preflight-optional) package when a selector model is configured |
 | `PreToolUse` | Record tool name for session memory |
 | `PostToolUse` | Record tool name for session memory |
 | `Stop` | Save session summary + Task Observer flush |
 
 Hooks save with `memory_type="session_context"` — no corrupt entries.
+
+### Adaptive preflight (optional)
+
+`UserPromptSubmit` can delegate capability selection to an isolated selector
+model before the main agent's first inference. Off by default; configured in
+a user-scope `~/.config/agentenhancements/model.json` with modes 0 (default
+discovery cards), 1 (host-native selection supplied by an adapter) and 2
+(custom OpenAI- or Anthropic-compatible endpoint). The selector returns
+typed registry IDs; AE validates identity and readiness locally and renders
+a bounded package (≤400 tokens) that replaces the candidate cards. Every
+failure path — timeout, invalid output, unavailable capability — falls back
+to the default cards for that turn. See [docs/ADAPTIVE_PREFLIGHT.md](docs/ADAPTIVE_PREFLIGHT.md)
+and CONTRACT §8.5.
 
 All agent configurations are written in each tool's native format — see the [Agent Activation Matrix](#agent-activation-matrix) above and `docs/CONFIGURATION.md`.
 

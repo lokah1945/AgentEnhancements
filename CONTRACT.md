@@ -236,6 +236,9 @@ Rules:
 | `AGENT_MEMORY_ROOT` | Memory storage | `~/.agent-memory` |
 | `HEADROOM_BIN` | Compression binary | auto-detect |
 | `AGENT_SKILLS_DIR` | Skills registry | `$BASE_DIR/unified-integration/skills` |
+| `AGENT_ENHANCEMENTS_MODEL_FILE` | Adaptive preflight model.json override (isolated tests) | `$XDG_CONFIG_HOME/agentenhancements/model.json` |
+| `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY` | Adaptive preflight Mode 2 key | unset |
+| `AE_PREFLIGHT_DEADLINE_MS` | Adaptive preflight phase deadline | `2000` |
 
 **Agents MUST NOT** introduce new required env vars without updating `docs/CONFIGURATION.md` and this contract.
 
@@ -373,3 +376,22 @@ migrated via `--migrate`); the catalog stays fully reachable through
 `registry.py search/map/show` cards and lifecycle-hook suggestions;
 scale fixture (1×/5×/10×) must keep L0 growth ≤ 200 tokens. Measurement:
 tiktoken o200k_base proxy unless host usage telemetry is available.
+
+### 8.5 Adaptive preflight contract (capability selection)
+
+Optional pre-inference capability selection (docs/ADAPTIVE_PREFLIGHT.md).
+Defaults are context-frugal and fail-closed; every rule below is enforced
+by `unified-integration/scripts/adaptive_preflight.py` and tested by
+`tests/test_adaptive_preflight.py`.
+
+| Aspect | Contract |
+|---|---|
+| Configuration | One user-scope `model.json` at `$XDG_CONFIG_HOME/agentenhancements/` (fallback `~/.config/agentenhancements/`), outside project checkouts. `adaptive_preflight_mode` is the exact integer 0, 1 or 2; anything else (bool, numeric string, float, duplicate field, malformed JSON) runs Mode 0 with a stderr diagnosis. Mode 2 additionally requires a HTTPS `endpoint`, `sdk` ∈ {openai, anthropic} and a non-empty `model`; on Modes 0/1 those fields are ignored. |
+| Secrets | model.json and ui.api.json never carry the Mode 2 key. Resolution: `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY` → OS keyring (`agentenhancements.preflight`, account = endpoint origin) → 0600 `<config dir>/preflight.key`. Missing key → Mode 0 before any network attempt. |
+| Mode 0 parity | Missing file, explicit 0 and every failure path render the legacy discovery cards byte-identically; memory effects run exactly once per prompt; zero egress (asserted by tests). |
+| Selector | Never executes, never sees history/tool payloads/memory/credentials. Input: bounded intent + compact catalog cards + locally served lookup pages. Output: `selected` (1-12 typed registry IDs), `abstain` (inject nothing), `lookup` (1-4 queries, one extra round) or `unresolved`. At most two inference rounds. |
+| Validation | Typed IDs resolve exactly (no name-surface aliasing); skill delivery requires an existing file under allowed roots (`loaded` only when natively linked); MCP requires `api_config.server_state` visibility; one unavailable required item → Mode 0 fallback with diagnosis; optional items are dropped. |
+| Package | One render inside the UserPromptSubmit slot (MAX_SKILL_CARDS, 400 tokens): purpose, minimum instruction, exact tool names/references, `direct_read` vs `loaded` vs `callable` distinguished, registry revision digest included. Structured shrinking before any clamp; never a post-serialization cut. |
+| Deadline | One monotonic deadline per prompt (default 2 s, `AE_PREFLIGHT_DEADLINE_MS`), socket timeouts derived from the remainder, no automatic retries (HTTP 429/5xx/timeout/refusal/invalid JSON → Mode 0 for the turn); redirects refused. |
+| Mode 1 | Adapter supplies `ae_native_selection` on the hook event, validated by the same handler. No native payload → Mode 0 for the turn. Mode 1 never switches to Mode 2 automatically. |
+| Diagnostics | One bounded stderr line per fallback (requested mode, effective mode, reason code); stdout stays the context channel. `doctor.py` reports an advisory summary; secrets never appear. |

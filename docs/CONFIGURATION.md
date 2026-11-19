@@ -1,7 +1,7 @@
 ---
 title: Configuration
-version: 1.6
-last_updated: 2026-11-16
+version: 1.7
+last_updated: 2026-11-19
 audience: users, maintainers
 ---
 
@@ -50,7 +50,7 @@ For optional diagnostics, `python3 unified-integration/scripts/api_config.py
 status` prints key-presence booleans and hidden reasons, never secret values.
 Agents do not need to run it. Runtime session notes redact configured secrets.
 
-The template contains 15 MCP secret slots and mappings for the 38 catalog
+The template contains 15 MCP secret slots and mappings for the 40 catalog
 entries. `OPENAI_API_KEY` and its model/endpoint fields apply only to the
 embeddings/vision MCP implementations; they do not configure the host agent.
 The same MCP configuration works for any compatible client, independently
@@ -69,6 +69,32 @@ catalog during a turn. The gateway still rechecks every call and immediately
 rejects revoked credentials, but a newly available tool can require a fresh
 session to appear. Claude/OpenCode passed live empty → populated → empty
 catalog tests without a reconnect command. No CLI permissions are bypassed.
+
+## Adaptive preflight — `~/.config/agentenhancements/model.json`
+
+The optional capability-selection preflight (CONTRACT §8.5) is configured in
+a user-scope file that never carries secrets and never lives inside a
+project checkout:
+
+```
+$XDG_CONFIG_HOME/agentenhancements/model.json   # fallback ~/.config/agentenhancements/model.json
+```
+
+```json
+{"adaptive_preflight_mode": 0}
+```
+
+`0` (or a missing file) keeps the default discovery cards. `1` lets a host
+adapter supply a native selection; adapters without that integration simply
+stay on the default path. `2` adds `endpoint` (HTTPS base URL), `sdk`
+(`openai` or `anthropic`) and `model`, and calls that endpoint from the
+existing prompt hook - no adapter change required. The Mode 2 key resolves
+from `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`, the OS keyring (service
+`agentenhancements.preflight`), or a 0600 `<config dir>/preflight.key` -
+never from model.json or ui.api.json. Every failure falls back to the
+default cards for that turn with one stderr diagnosis line.
+See [ADAPTIVE_PREFLIGHT.md](ADAPTIVE_PREFLIGHT.md) for the full contract,
+protocols, deadlines and verification.
 
 ## Environment variables (immutable interface, CONTRACT §8.1)
 
@@ -90,6 +116,9 @@ catalog tests without a reconnect command. No CLI permissions are bypassed.
 | `AGENT_COMPRESSION_CONFIG` | Compression config path | `<UNIFIED_DIR>/compression/config.yaml` |
 | `AGENT_PROMPTS_DIR` | Prompts directory | `<UNIFIED_DIR>/prompts` |
 | `AGENT_SKILLS_NATIVE_TARGETS` | Colon-separated native skill link targets (link-skills.sh) | `~/.claude/skills:$HOME/.agents/skills` |
+| `AGENT_ENHANCEMENTS_MODEL_FILE` | Optional adaptive-preflight model.json override for isolated tests | `$XDG_CONFIG_HOME/agentenhancements/model.json` |
+| `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY` | Adaptive preflight Mode 2 key (overrides keyring and preflight.key) | unset |
+| `AE_PREFLIGHT_DEADLINE_MS` | Adaptive preflight total phase deadline (pilot knob) | `2000` |
 
 All shipped scripts resolve their installation root from their own file
 location first and let the environment override it - nothing requires the

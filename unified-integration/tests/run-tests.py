@@ -24,6 +24,7 @@ for mod in [
     "test_setup_static",
     "test_ci",
     "test_registry",
+    "test_adaptive_preflight",
     "test_link_skills",
     "test_dispatch_anthropic",
     "test_hardening",

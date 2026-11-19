@@ -55,6 +55,9 @@ class RuntimeTests(unittest.TestCase):
             env={
                 "AGENT_MEMORY_ROOT": str(self.memory),
                 "AGENT_SKILLS_DIR": str(self.root / "skills"),
+                # Keep the Mode 0 baseline deterministic even on a machine
+                # that has a user-scope preflight model.json (CONTRACT 8.5).
+                "AGENT_ENHANCEMENTS_MODEL_FILE": str(self.root / "absent-model.json"),
             },
             input_text=json.dumps(payload),
         )

@@ -164,18 +164,7 @@ in `unified-integration/scripts/`.
 
 ## Quick Start
 
-### One-Line Install (Recommended)
-
-```bash
-curl -fsSL \
-  https://raw.githubusercontent.com/lokah1945/AgentEnhancements/\
-master/unified-integration/setup.sh | bash
-```
-
-> The one-liner runs `setup.sh` directly. For a reviewable install, use the
-> manual method below.
-
-### Manual Installation
+### Install from a checkout (recommended)
 
 ```bash
 # Clone the repository
@@ -185,6 +174,13 @@ cd AgentEnhancements
 # Run the unified setup
 ./unified-integration/setup.sh
 ```
+
+Review `CONTRACT.md` and the setup script before installation. AE-owned
+runtime, configuration, memory and caches stay in this checkout's ignored
+`.agentenhancements/` directory. Native agent configuration contains the
+bridge to this checkout. Setup rejects external state/model/API overrides;
+it never imports global AE state implicitly. See
+[checkout-local storage](docs/CONFIGURATION.md#checkout-local-ae-storage).
 
 The setup script will:
 

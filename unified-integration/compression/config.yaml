@@ -6,7 +6,7 @@ compression:
 
   # Headroom settings
   headroom:
-    binary_path: "headroom"
+    binary_path: "${HEADROOM_BIN:-headroom}"
     # Compression modes
     modes:
       code: "smart"        # Preserve code structure, compress comments/whitespace

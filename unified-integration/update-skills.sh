@@ -132,7 +132,7 @@ main() {
     # Rebuild headroom if updated
     if [ -f "$BASE_DIR/headroom/Cargo.toml" ] && [ "${AGENT_ENHANCEMENTS_BUILD_HEADROOM:-0}" = "1" ]; then
         log_info "Rebuilding headroom..."
-        (cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -5) || log_warn "headroom: rebuild failed"
+        (cd "$BASE_DIR/headroom" && cargo build --locked --release -p headroom-cli 2>&1 | tail -5) || log_warn "headroom: rebuild failed"
         if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
             log_success "headroom rebuilt"
         fi

@@ -8,6 +8,7 @@
 #   bash audit-trail.sh decision <slug> <decision_text>
 
 set -euo pipefail
+umask 077
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNIFIED_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -18,8 +19,21 @@ log_info()  { echo -e "\033[0;34m[audit]\033[0m $1"; }
 append_entry() {
     local log_file="$1"
     local entry="$2"
+    if [ -L "$UNIFIED_DIR/memory" ] || [ -L "$(dirname "$log_file")" ] || [ -L "$log_file" ]; then
+        echo "Refusing symlinked audit storage" >&2
+        return 1
+    fi
     mkdir -p "$(dirname "$log_file")"
+    chmod 700 "$(dirname "$log_file")"
     touch "$log_file"
+    chmod 600 "$log_file"
+    entry=$(python3 -c '
+import json, sys
+sys.path.insert(0, sys.argv[1])
+from api_config import redact
+entry = json.load(sys.stdin)
+print(json.dumps({key: redact(value) if isinstance(value, str) else value for key, value in entry.items()}, ensure_ascii=False))
+' "$SCRIPT_DIR" <<< "$entry")
     echo "$entry" >> "$log_file"
     log_info "logged to $log_file"
 }

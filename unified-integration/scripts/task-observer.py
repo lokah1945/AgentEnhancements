@@ -49,6 +49,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
+from api_config import redact as redact_credentials
+
 UNIFIED_DIR = SCRIPT_DIR.parent
 BASE_DIR = UNIFIED_DIR.parent
 
@@ -63,17 +66,9 @@ UPSTREAM_STATUSES = ("open", "actioned", "declined", "superseded", "parked")
 
 MAX_OBSERVATION_BODY = 64_000  # bounded: observations are prose, not transcripts
 
-_SECRET = re.compile(
-    r"(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+|sk-(?:ant-)?[A-Za-z0-9_-]{16,}"
-    r"|\bAKIA[A-Z0-9]{16}\b"
-    r"|(?i:(?:api[_-]?key|access[_-]?token|password|secret|authorization)"
-    r"\s*[:=]\s*[\"']?[^\s\"',}]+)"
-)
-
-
 def redact(value: str) -> str:
     """Redact recognizable credentials before anything is persisted."""
-    return _SECRET.sub("[redacted]", value)
+    return redact_credentials(value)
 
 
 def _now_date() -> str:
@@ -121,7 +116,8 @@ def disabled_marker(root: Path) -> Path:
 # ---------------------------------------------------------------------------
 
 def set_disabled(root: Path, disabled: bool) -> str:
-    root.mkdir(parents=True, exist_ok=True)
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    root.chmod(0o700)
     marker = disabled_marker(root)
     if disabled:
         marker.write_text(
@@ -242,6 +238,8 @@ def bootstrap_workspace(root: Path) -> str:
             "observations can be logged"
         )
     try:
+        root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        root.chmod(0o700)
         state.mkdir(parents=True, exist_ok=True)
         (log_dir(root) / "archive").mkdir(parents=True, exist_ok=True)
         last = state / "last-review-date.txt"

@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import sys
 import threading
@@ -41,6 +42,13 @@ BUILTINS = (
 # shell - so exposing it to the model must be an explicit user choice
 # (docs/SAFETY.md). Setting "enabled": true in ui.api.json overrides this.
 DEFAULT_DISABLED = frozenset({"task-router-mcp"})
+SECRET_PATTERN = re.compile(
+    r"(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+|sk-(?:ant-)?[A-Za-z0-9_-]{16,}"
+    r"|\bAKIA[A-Z0-9]{16}\b"
+    r"|(?i:\b(?:Bearer|Basic)\s+[^\s\"',}]+)"
+    r"|(?i:(?:api[_-]?key|access[_-]?token|password|secret|authorization)"
+    r"[\"']?\s*[:=]\s*[\"']?(?:(?:Bearer|Basic)\s+)?[^\s\"',}]+)"
+)
 
 
 def config_path() -> Path:
@@ -136,7 +144,7 @@ def value(name: str, config: dict | None = None) -> str:
 
 
 def redact(text: str, config: dict | None = None) -> str:
-    """Remove configured secret values from project-generated diagnostics/notes."""
+    """Remove configured and recognizable secrets from diagnostics and notes."""
     if config is None:
         config, _ = read_config()
     secrets = {
@@ -145,10 +153,23 @@ def redact(text: str, config: dict | None = None) -> str:
         for s in (raw, raw.strip())
         if s
     }
+    # External search workers can receive rotated keys from the secondary
+    # provider store. Those keys need the same protection as ui.api.json keys,
+    # including inactive keys that a provider may still echo in an error.
+    for provider in _load_search_providers().values():
+        if not isinstance(provider, dict):
+            continue
+        keys = provider.get("keys", [])
+        if not isinstance(keys, list):
+            continue
+        for entry in keys:
+            raw = entry.get("api_key", "") if isinstance(entry, dict) else ""
+            if isinstance(raw, str) and raw.strip():
+                secrets.update((raw, raw.strip()))
     for secret in sorted(secrets, key=len, reverse=True):
         if secret:
             text = text.replace(secret, "[redacted]")
-    return text
+    return SECRET_PATTERN.sub("[redacted]", text)
 
 
 def server_state(name: str, config: dict | None = None) -> dict:
@@ -201,7 +222,7 @@ def _load_search_providers() -> dict:
     try:
         if SEARCH_PROVIDERS_PATH.exists():
             doc = json.loads(SEARCH_PROVIDERS_PATH.read_text(encoding="utf-8"))
-            if isinstance(doc, dict) and "providers" in doc:
+            if isinstance(doc, dict) and isinstance(doc.get("providers"), dict):
                 return doc["providers"]
     except (OSError, ValueError, TypeError, UnicodeError):
         pass

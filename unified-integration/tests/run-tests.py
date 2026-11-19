@@ -35,6 +35,7 @@ for mod in [
     "test_task_observer",
     "test_audit_remediation",
     "test_native_hosts",
+    "test_security_regressions",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))
 

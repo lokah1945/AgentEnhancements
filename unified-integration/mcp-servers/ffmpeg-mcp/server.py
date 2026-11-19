@@ -15,6 +15,7 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any, Callable
 
@@ -51,7 +52,7 @@ def _validate_path(raw: str, must_exist: bool) -> tuple[Path | None, str | None]
     if must_exist and not path.is_file():
         return None, f"input file not found: {raw}"
     allowed = _allowed_roots()
-    if not any(str(path).startswith(str(root)) for root in allowed):
+    if not any(path.is_relative_to(root) for root in allowed):
         return None, (f"path {raw} is outside the allowed roots "
                       f"({', '.join(str(r) for r in allowed)}); extend via "
                       f"AE_FFMPEG_ALLOWED_ROOTS")
@@ -163,16 +164,27 @@ def concat(paths: list[str], out: str) -> dict:
         target, err = _validate_path(raw, must_exist=True)
         if err:
             return {"error": err}
+        if any(character in str(target) for character in ("\r", "\n", "\0")):
+            return {"error": "concat input paths cannot contain line breaks or NUL"}
         resolved.append(target)
     output, err = _validate_path(out, must_exist=False)
     if err:
         return {"error": err}
-    list_file = output.with_suffix(".concat.txt")
-    list_file.write_text(
-        "\n".join(f"file '{p}'" for p in resolved) + "\n", encoding="utf-8")
-    result = _run([FFMPEG, "-y", "-f", "concat", "-safe", "0",
-                   "-i", str(list_file), "-c", "copy", str(output)])
-    list_file.unlink(missing_ok=True)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    # A predictable sibling filename can be a symlink to unrelated user data.
+    # mkstemp atomically claims a private file; quote paths for ffconcat's
+    # parser, whose single-quoted tokens otherwise allow directive injection.
+    descriptor, scratch = tempfile.mkstemp(prefix=".ae-concat-", suffix=".txt", dir=output.parent)
+    list_file = Path(scratch)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            for path in resolved:
+                escaped = str(path).replace("'", "'\\''")
+                stream.write(f"file '{escaped}'\n")
+        result = _run([FFMPEG, "-y", "-f", "concat", "-safe", "0",
+                       "-i", str(list_file), "-c", "copy", str(output)])
+    finally:
+        list_file.unlink(missing_ok=True)
     if "error" in result:
         return result
     return {"ok": True, "out": str(output), "clips": len(resolved)}

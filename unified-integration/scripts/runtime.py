@@ -13,7 +13,6 @@ import importlib.util
 import json
 import os
 from pathlib import Path
-import re
 import sys
 
 from memory import AgentMemory
@@ -27,17 +26,11 @@ from context_budget import (
 
 MAX_INPUT = 2_000_000
 MAX_CONTEXT = 12_000
-SECRET = re.compile(
-    r"(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+|sk-(?:ant-)?[A-Za-z0-9_-]{16,}"
-    r"|\bAKIA[A-Z0-9]{16}\b"
-    r"|(?i:(?:api[_-]?key|access[_-]?token|password|secret|authorization)"
-    r"\s*[:=]\s*[\"']?[^\s\"',}]+)"
-)
 
 
 def redact(value: str) -> str:
     """Remove recognizable credentials before saving any natural language."""
-    return SECRET.sub("[redacted]", redact_configured(value))
+    return redact_configured(value)
 
 
 def skill_context(agent: str, prompt: str) -> str:

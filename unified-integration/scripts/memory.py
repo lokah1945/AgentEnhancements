@@ -7,6 +7,7 @@ Manages persistent memory across sessions and agents
 import sqlite3
 import json
 import os
+import stat
 import sys
 from pathlib import Path
 from typing import Optional, List, Dict, Any
@@ -24,6 +25,19 @@ class AgentMemory:
     def _init_db(self):
         """Initialize database"""
         MEMORY_ROOT.mkdir(parents=True, exist_ok=True, mode=0o700)
+        MEMORY_ROOT.chmod(0o700)
+        # Claim a private regular file before SQLite opens it. A pre-existing
+        # symlink must never redirect schema/data writes or chmod to another
+        # database, and a permissive umask must not expose a new database.
+        descriptor = os.open(
+            DB_PATH, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600
+        )
+        try:
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise OSError("memory database must be a regular file")
+            os.fchmod(descriptor, 0o600)
+        finally:
+            os.close(descriptor)
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS memories (

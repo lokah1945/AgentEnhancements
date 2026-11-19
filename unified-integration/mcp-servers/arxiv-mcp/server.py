@@ -3,12 +3,13 @@
 
 Paper search + metadata fetch from the public arXiv Atom API for
 understand-anything and agent-reach (plugin-catalog/mcp-servers.json →
-arxiv-mcp, P2, reference). No API key required. Responses are cached in
-/tmp/ae-arxiv-cache with a 1-hour TTL (idempotent re-queries are free).
+arxiv-mcp, P2, reference). No API key required. Responses are cached
+privately under AGENT_MEMORY_ROOT with a 1-hour TTL.
 """
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import tempfile
 import time
@@ -25,7 +26,7 @@ VERSION = "1.0.0"
 API_URL = "https://export.arxiv.org/api/query"
 NS = {"atom": "http://www.w3.org/2005/Atom",
       "arxiv": "http://arxiv.org/schemas/atom"}
-CACHE_DIR = Path(tempfile.gettempdir()) / "ae-arxiv-cache"
+CACHE_DIR = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory")) / "mcp" / "arxiv-cache"
 CACHE_TTL = 3600
 TIMEOUT = 30
 
@@ -41,15 +42,23 @@ def _tool(fn):
 
 def _cache_get(key: str) -> str | None:
     path = CACHE_DIR / f"{key}.xml"
-    if path.is_file() and time.time() - path.stat().st_mtime < CACHE_TTL:
+    if not path.is_symlink() and path.is_file() and time.time() - path.stat().st_mtime < CACHE_TTL:
         return path.read_text()
     return None
 
 
 def _cache_put(key: str, body: str) -> None:
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    CACHE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    CACHE_DIR.chmod(0o700)
     path = CACHE_DIR / f"{key}.xml"
-    path.write_text(body)
+    descriptor, temporary = tempfile.mkstemp(dir=CACHE_DIR, prefix=".response-")
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(body)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def _fetch(url: str) -> str | dict:

@@ -118,6 +118,83 @@ class NativeHostTests(unittest.TestCase):
         self.assertEqual({path: path.read_bytes() for path in paths}, original)
         self.assertEqual(set(folder.glob("*.backup.*")), backups)
 
+    def test_checkout_move_refreshes_codex_gateway_and_retires_old_direct_server(self):
+        import tomlkit
+        old = self.home / 'removed checkout/unified-integration'
+        path = self.home / '.codex/config.toml'
+        path.parent.mkdir()
+        path.write_text(tomlkit.dumps({'mcp_servers': {
+            'agent-enhancements': {'command': 'old-python',
+                'args': [str(old / 'mcp-servers/gateway.py')],
+                'tool_timeout_sec': 91, 'env': {'CUSTOM': 'preserved'}},
+            'embeddings-mcp': {'command': 'old-python',
+                'args': [str(old / 'mcp-servers/embeddings-mcp/server.py')]},
+            'personal': {'command': 'personal-command'},
+        }}))
+        self.install('codex')
+        servers = tomlkit.parse(path.read_text())['mcp_servers']
+        self.assertEqual(list(servers['agent-enhancements']['args']),
+                         [str(UI_DIR / 'mcp-servers/gateway.py')])
+        self.assertEqual(servers['agent-enhancements']['tool_timeout_sec'], 91)
+        self.assertEqual(servers['agent-enhancements']['env']['CUSTOM'], 'preserved')
+        self.assertNotIn('embeddings-mcp', servers)
+        self.assertEqual(servers['personal']['command'], 'personal-command')
+
+    def test_checkout_move_replaces_opencode_plugin_and_instruction_paths(self):
+        old = self.home / 'removed checkout/unified-integration'
+        path = self.home / '.config/opencode/opencode.json'
+        path.parent.mkdir(parents=True)
+        path.write_text(json.dumps({
+            'plugins': [str(old / 'opencode-plugin'), 'personal-plugin'],
+            'instructions': [str(old / 'prompts/opencode-system-prompt.txt'), 'personal.md'],
+            'skills': [str(old / 'skills/by-category'), 'personal-skills'],
+        }))
+        self.install('opencode')
+        doc = json.loads(path.read_text())
+        self.assertEqual(doc['plugins'], ['personal-plugin', str(UI_DIR / 'opencode-plugin')])
+        self.assertEqual(doc['skills'], ['personal-skills'])
+        self.assertNotIn(str(old), json.dumps(doc))
+        self.assertIn('personal.md', doc['instructions'])
+
+    def test_checkout_move_refreshes_hermes_plugin_but_preserves_foreign_link(self):
+        target = self.home / '.hermes/plugins/agent-enhancements'
+        target.parent.mkdir(parents=True)
+        target.symlink_to(self.home / 'removed checkout/unified-integration/hermes-plugin',
+                          target_is_directory=True)
+        self.install('hermes')
+        self.assertEqual(target.resolve(), (UI_DIR / 'hermes-plugin').resolve())
+        target.unlink()
+        foreign = self.home / 'personal-plugin'
+        foreign.mkdir()
+        target.symlink_to(foreign, target_is_directory=True)
+        self.install('hermes')
+        self.assertEqual(target.resolve(), foreign.resolve())
+
+    def test_checkout_move_refreshes_native_skill_link_without_overwriting_foreign_link(self):
+        registry = self.home / 'current/unified-integration/skills'
+        bundle = registry / 'by-category/general/probe'
+        bundle.mkdir(parents=True)
+        (bundle / 'SKILL.md').write_text('Fixture instructions')
+        (registry / 'all-skills.json').write_text(json.dumps({'skills': [
+            {'name': 'probe', 'category': 'general', 'source': 'Superpowers'}]}))
+        target = self.home / 'native/skills'
+        target.mkdir(parents=True)
+        link = target / 'probe'
+        link.symlink_to(self.home / 'removed/unified-integration/skills/by-category/general/probe',
+                        target_is_directory=True)
+        env = dict(self.env, AGENT_SKILLS_DIR=str(registry), AGENT_SKILLS_NATIVE_TARGETS=str(target))
+        command = ['bash', str(UI_DIR / 'scripts/link-skills.sh'), '--quiet']
+        first = subprocess.run(command, env=env, capture_output=True, text=True, timeout=20)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertEqual(link.resolve(), bundle.resolve())
+        link.unlink()
+        foreign = self.home / 'personal-skill'
+        foreign.mkdir()
+        link.symlink_to(foreign, target_is_directory=True)
+        second = subprocess.run(command, env=env, capture_output=True, text=True, timeout=20)
+        self.assertEqual(second.returncode, 0, second.stderr)
+        self.assertEqual(link.resolve(), foreign.resolve())
+
     def test_opencode_preserves_disabled_gateway_and_codemode(self):
         path = self.home / ".config/opencode/opencode.jsonc"
         path.parent.mkdir(parents=True)

@@ -14,6 +14,7 @@ try {
   }] }))
   process.env.AGENT_SKILLS_DIR = skills
   process.env.AGENT_MEMORY_ROOT = join(root, "memory")
+  process.env.AGENT_ENHANCEMENTS_STATE_DIR = join(root, "ae-state")
   const { default: plugin } = await import("../opencode-plugin/index.js")
   const hooks = new Map()
   let disposed = 0

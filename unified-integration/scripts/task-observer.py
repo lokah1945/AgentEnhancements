@@ -22,7 +22,7 @@ pinned commit in task-observer/VENDORED.json). It implements:
 
 Conventions:
 - The observation workspace root defaults to $AGENT_MEMORY_ROOT/task-observer
-  (persistent, outside any checkout and outside skill-discovery trees;
+  (persistent, in ignored checkout state outside skill-discovery trees;
   AGENT_MEMORY_ROOT is the documented cross-agent memory root).
 - User state is private: nothing here is committed by setup; the workspace
   contains user data only.
@@ -84,10 +84,8 @@ def workspace_root(explicit: Optional[str] = None) -> Path:
         if env:
             root = Path(env).expanduser()
         else:
-            memory = os.environ.get(
-                "AGENT_MEMORY_ROOT", str(Path.home() / ".agent-memory")
-            )
-            root = Path(memory).expanduser() / DEFAULT_ROOT
+            from project_paths import memory_root
+            root = memory_root() / DEFAULT_ROOT
     if not root.is_absolute():
         raise ValueError(f"workspace root must be absolute, got {root}")
     return root

@@ -3,7 +3,8 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNIFIED_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/agentenhancements"
+eval "$(python3 "$SCRIPT_DIR/project_paths.py" shell)"
+DATA_DIR="$(python3 "$SCRIPT_DIR/project_paths.py" runtime)"
 PYTHON_BIN="$DATA_DIR/venv/bin/python"
 MODE="${1:-install}"
 log() { printf '[setup-mcp] %s\n' "$*" >&2; }

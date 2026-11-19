@@ -20,6 +20,7 @@ class NativeHostTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory(prefix="ae host's ")
         self.home = Path(self.tmp.name)
         self.env = {**os.environ, "HOME": str(self.home),
+                    "AGENT_ENHANCEMENTS_STATE_DIR": str(self.home / 'ae-state'),
                     "XDG_CONFIG_HOME": str(self.home / ".config"),
                     "XDG_DATA_HOME": str(self.home / ".local/share"),
                     "HERMES_HOME": str(self.home / ".hermes"),

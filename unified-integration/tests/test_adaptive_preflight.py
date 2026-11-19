@@ -168,6 +168,7 @@ class PreflightTestCase(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.model_file = self.root / "model.json"
         self.env = {
+            "AGENT_ENHANCEMENTS_STATE_DIR": str(self.root / 'ae-state'),
             "AGENT_ENHANCEMENTS_MODEL_FILE": str(self.model_file),
             "AGENT_ENHANCEMENTS_API_FILE": str(self.root / "ui.api.json"),
             "AGENT_MEMORY_ROOT": str(self.root / "memory"),
@@ -278,9 +279,9 @@ class ModelConfigTests(PreflightTestCase):
         self.model_file.unlink()
         self.assertEqual(self.module.load_model_config().mode, 0)
 
-    def test_default_path_follows_xdg(self):
+    def test_default_path_follows_checkout_state_and_ignores_global_xdg(self):
         os.environ.pop("AGENT_ENHANCEMENTS_MODEL_FILE")
-        home = self.root / "home" / ".config" / "agentenhancements"
+        home = self.root / 'ae-state/config'
         home.mkdir(parents=True, exist_ok=True)
         (home / "model.json").write_text('{"adaptive_preflight_mode": 1}')
         self.assertEqual(self.module.load_model_config().mode, 1)
@@ -935,7 +936,7 @@ class CredentialResolverTests(PreflightTestCase):
 
     def test_key_file_requires_owner_only_permissions(self):
         os.environ.pop("AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY", None)
-        directory = self.root / "home" / ".config" / "agentenhancements"
+        directory = self.module.config_dir()
         directory.mkdir(parents=True, exist_ok=True)
         key_file = directory / "preflight.key"
         key_file.write_text("file-secret\nsecond-line-ignored\n")

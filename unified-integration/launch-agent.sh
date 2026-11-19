@@ -12,6 +12,7 @@ fi
 # variables take precedence.
 UNIFIED_DIR="${AGENT_ENHANCEMENTS_UNIFIED_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(dirname "$UNIFIED_DIR")}"
+eval "$(python3 "$UNIFIED_DIR/scripts/project_paths.py" shell)"
 
 # Detected agents (written by setup.sh); pre-declared so the script also
 # works when the file is missing.
@@ -35,7 +36,7 @@ else
 fi
 
 # Set environment variables
-export AGENT_MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}"
+export AGENT_MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$BASE_DIR/.agentenhancements/memory}"
 export AGENT_SKILLS_DIR="$UNIFIED_DIR/skills"
 export AGENT_COMPRESSION_CONFIG="$UNIFIED_DIR/compression/config.yaml"
 export AGENT_PROMPTS_DIR="$UNIFIED_DIR/prompts"

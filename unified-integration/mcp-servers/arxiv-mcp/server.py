@@ -22,11 +22,15 @@ from typing import Callable
 
 from mcp.server.fastmcp import FastMCP
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
+from project_paths import memory_root
+
 VERSION = "1.0.0"
 API_URL = "https://export.arxiv.org/api/query"
 NS = {"atom": "http://www.w3.org/2005/Atom",
       "arxiv": "http://arxiv.org/schemas/atom"}
-CACHE_DIR = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory")) / "mcp" / "arxiv-cache"
+CACHE_DIR = memory_root() / "mcp" / "arxiv-cache"
 CACHE_TTL = 3600
 TIMEOUT = 30
 

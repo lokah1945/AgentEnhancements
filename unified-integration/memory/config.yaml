@@ -3,7 +3,7 @@
 memory:
   # Storage backend
   backend: "sqlite"  # or "file", "redis"
-  path: "~/.agent-memory"
+  path: "${AGENT_ENHANCEMENTS_BASE_DIR}/.agentenhancements/memory"
 
   # Memory types
   types:

@@ -50,3 +50,6 @@ unified-integration/opencode-plugin/node_modules/
 /ui.api.json.*
 /.ui-api-*
 /search_providers.json
+
+# AE-owned runtime, caches, model configuration and memory stay in this checkout.
+/.agentenhancements/

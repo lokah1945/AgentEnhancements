@@ -56,6 +56,7 @@ def isolated_environment(repo: Path) -> Iterator[dict[str, str]]:
         model_file.write_text('{"adaptive_preflight_mode":0}', encoding="utf-8")
         overrides = {
             "HOME": str(root), "AGENT_MEMORY_ROOT": str(root / "memory"),
+            "AGENT_ENHANCEMENTS_STATE_DIR": str(root / 'ae-state'),
             "XDG_CONFIG_HOME": str(config), "XDG_CACHE_HOME": str(root / "cache"),
             "XDG_DATA_HOME": str(root / "data"), "XDG_STATE_HOME": str(root / "state"),
             "CODEX_HOME": str(root / "codex"),

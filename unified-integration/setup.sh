@@ -1001,7 +1001,7 @@ setup_memory() {
 memory:
   # Storage backend
   backend: "sqlite"  # or "file", "redis"
-  path: "~/.agent-memory"
+  path: "${AGENT_ENHANCEMENTS_BASE_DIR}/.agentenhancements/memory"
 
   # Memory types
   types:
@@ -1078,7 +1078,8 @@ EOF
 
 set -euo pipefail
 umask 077
-MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+MEMORY_ROOT="${AGENT_MEMORY_ROOT:-${AGENT_ENHANCEMENTS_STATE_DIR:-$PROJECT_ROOT/.agentenhancements}/memory}"
 if [ -L "$MEMORY_ROOT" ] || [ -L "$MEMORY_ROOT/memory.db" ]; then
     echo "Refusing symlinked memory storage" >&2
     exit 1
@@ -1141,7 +1142,10 @@ import json
 from datetime import datetime, timezone
 
 AGENT = "AGENT_PLACEHOLDER"
-MEMORY_ROOT = os.environ.get("AGENT_MEMORY_ROOT", os.path.expanduser("~/.agent-memory"))
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+from project_paths import memory_root
+MEMORY_ROOT = str(memory_root())
 DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
 
 def init_db():
@@ -1367,9 +1371,6 @@ setup_compression() {
     if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
         log_success "headroom binary found at $BASE_DIR/headroom/target/release/headroom"
         HEADROOM_CMD="$BASE_DIR/headroom/target/release/headroom"
-    elif command -v headroom &> /dev/null; then
-        log_success "headroom binary found in PATH"
-        HEADROOM_CMD="headroom"
     elif [ -f "$BASE_DIR/headroom/Cargo.toml" ] && [ "${AGENT_ENHANCEMENTS_BUILD_HEADROOM:-1}" = "1" ]; then
         if command -v cargo &> /dev/null; then
             log_info "Building headroom from source..."
@@ -1943,6 +1944,7 @@ fi
 # variables take precedence.
 UNIFIED_DIR="${AGENT_ENHANCEMENTS_UNIFIED_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(dirname "$UNIFIED_DIR")}"
+eval "$(python3 "$UNIFIED_DIR/scripts/project_paths.py" shell)"
 
 # Detected agents (written by setup.sh); pre-declared so the script also
 # works when the file is missing.
@@ -1966,7 +1968,7 @@ else
 fi
 
 # Set environment variables
-export AGENT_MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}"
+export AGENT_MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$BASE_DIR/.agentenhancements/memory}"
 export AGENT_SKILLS_DIR="$UNIFIED_DIR/skills"
 export AGENT_COMPRESSION_CONFIG="$UNIFIED_DIR/compression/config.yaml"
 export AGENT_PROMPTS_DIR="$UNIFIED_DIR/prompts"
@@ -2160,7 +2162,10 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
-MEMORY_ROOT = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from project_paths import memory_root
+
+MEMORY_ROOT = memory_root()
 DB_PATH = MEMORY_ROOT / "memory.db"
 
 class AgentMemory:
@@ -2381,7 +2386,7 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-HEADROOM_BIN = os.environ.get("HEADROOM_BIN", "headroom")
+HEADROOM_BIN = os.environ.get("HEADROOM_BIN", "")
 
 
 def _default_fallback_bin() -> str:
@@ -2532,6 +2537,8 @@ main() {
     echo "Unified directory: $UNIFIED_DIR"
     echo ""
 
+    python3 "$UNIFIED_DIR/scripts/project_paths.py" validate
+    eval "$(python3 "$UNIFIED_DIR/scripts/project_paths.py" shell)"
     local runtime_python
     runtime_python="$(bash "$UNIFIED_DIR/scripts/setup-mcp.sh" --prepare)"
     export PATH="$(dirname "$runtime_python"):$PATH"
@@ -2590,7 +2597,7 @@ main() {
     echo ""
     echo "Environment variables for customization:"
     echo "  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: repository root detected from setup.sh location)"
-    echo "  AGENT_MEMORY_ROOT - Override memory storage location (default: ~/.agent-memory)"
+    echo "  AGENT_MEMORY_ROOT - Override memory storage location (default: checkout/.agentenhancements/memory)"
     echo "  HEADROOM_BIN - Override headroom binary path"
 }
 

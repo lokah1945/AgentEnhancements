@@ -40,6 +40,7 @@ class IsolatedSecurityTest(unittest.TestCase):
         self.root = Path(temporary.name)
         self.env = {
             "HOME": str(self.root / "home"),
+            "AGENT_ENHANCEMENTS_STATE_DIR": str(self.root / 'ae-state'),
             "AGENT_MEMORY_ROOT": str(self.root / "memory"),
             "XDG_CONFIG_HOME": str(self.root / "config"),
             "XDG_DATA_HOME": str(self.root / "data"),

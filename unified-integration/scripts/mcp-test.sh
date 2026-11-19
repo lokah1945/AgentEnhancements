@@ -26,7 +26,7 @@ done
 # use the existing isolated runtime when present, fall back to python3.
 # Pass --prepare as the FIRST argument to create/refresh it explicitly
 # (that variant performs network installs via pip).
-VENV_PY="${XDG_DATA_HOME:-$HOME/.local/share}/agentenhancements/venv/bin/python"
+VENV_PY="${AGENT_ENHANCEMENTS_STATE_DIR:-$BASE_DIR/.agentenhancements}/runtime/venv/bin/python"
 if [ "${1:-}" = "--prepare" ]; then
     PYTHON_BIN="$(bash "$SCRIPT_DIR/setup-mcp.sh" --prepare)"
     shift

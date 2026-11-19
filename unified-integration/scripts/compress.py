@@ -13,7 +13,7 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-HEADROOM_BIN = os.environ.get("HEADROOM_BIN", "headroom")
+HEADROOM_BIN = os.environ.get("HEADROOM_BIN", "")
 
 
 def _default_fallback_bin() -> str:

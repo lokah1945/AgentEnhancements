@@ -13,7 +13,8 @@ UI = Path(__file__).resolve().parent.parent
 
 def runtime(name: str, session_id: str, **extra: str) -> str:
     """Only explicit bounded event fields cross into the shared runtime."""
-    python = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "agentenhancements/venv/bin/python"
+    state = Path(os.environ.get('AGENT_ENHANCEMENTS_STATE_DIR', UI.parent / '.agentenhancements'))
+    python = state / 'runtime/venv/bin/python'
     event = {"hook_event_name": name, "session_id": session_id,
              "cwd": os.getcwd(), **extra}
     try:

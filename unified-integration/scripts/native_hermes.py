@@ -36,8 +36,9 @@ Use this host's native context compaction.
 
 
 def host_selection_path() -> Path:
-    """Machine-local preferences survive repository updates."""
-    return Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "agentenhancements/host-selection.json"
+    """Checkout-local preferences survive pulls and do not select another clone."""
+    from project_paths import config_root
+    return config_root() / "host-selection.json"
 
 
 def hermes_base() -> Path:

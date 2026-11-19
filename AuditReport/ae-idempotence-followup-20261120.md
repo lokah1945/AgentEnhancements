@@ -5,7 +5,7 @@ last_updated: '2026-11-20'
 audience: maintainers, auditors
 ---
 
-# Idempotensi YAML pada instalasi kedua — 20 November 2026
+## Idempotensi YAML pada instalasi kedua — 20 November 2026
 
 Lanjutan dari [audit utama](ae-end-to-end-audit-report-20261119.md).
 PR #9 sudah merge sebagai `115b65b3`; pengujian instalasi yang diperluas
@@ -14,7 +14,7 @@ diperbaiki menjadi 31: P0 0, P1 13, P2 17, P3 1. Delapan residual pada
 audit utama tetap dicatat; dua cacat iterasi publikasi CI terpisah dari
 hitungan temuan awal ini.
 
-## AE26-31 — P2 — Reinstall YAML mengubah format dan membuat backup
+### AE26-31 — P2 — Reinstall YAML mengubah format dan membuat backup
 
 - Lokasi: `unified-integration/setup.sh:1580`, `merge_yaml_config`.
 - Bukti: dua setup commit `2ea786cd` dengan HOME baru di dalam clone
@@ -39,7 +39,7 @@ hitungan temuan awal ini.
   perubahan hook yang riil tidak terabaikan serta backup mempertahankan
   konfigurasi pengguna asli.
 
-## Bukti dan gate publikasi
+### Bukti dan gate publikasi
 
 [Evidence terstruktur](evidence/ae-yaml-idempotence-20261120.json) memuat
 exit/timing/hash log tanpa nilai credential. Full integration suite pada

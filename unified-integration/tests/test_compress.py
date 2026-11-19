@@ -5,6 +5,7 @@ Regression coverage:
 """
 import sys
 import unittest
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -12,6 +13,19 @@ from helpers import UI_DIR, load_module
 
 
 class FallbackCompressTests(unittest.TestCase):
+    def test_binary_detection_skips_directories_and_uses_executable_fallback(self):
+        with tempfile.TemporaryDirectory(prefix="ae-compression-bin-") as directory:
+            root = Path(directory)
+            source_dir = root / "headroom"
+            source_dir.mkdir()
+            executable = root / "built-headroom"
+            executable.write_text("#!/bin/sh\nexit 0\n")
+            executable.chmod(0o755)
+            module = load_module("compress_bin_boundary", UI_DIR / "scripts/compress.py")
+            module.HEADROOM_BIN = str(source_dir)
+            module.FALLBACK_BIN = str(executable)
+            self.assertEqual(module.get_headroom_bin(), str(executable))
+
     @classmethod
     def setUpClass(cls):
         cls.mod = load_module("compress_test", UI_DIR / "scripts" / "compress.py")

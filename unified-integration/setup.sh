@@ -2352,6 +2352,7 @@ import sys
 import os
 import json
 import re
+import shutil
 from pathlib import Path
 from typing import Optional
 
@@ -2372,14 +2373,13 @@ FALLBACK_BIN = _default_fallback_bin()
 def get_headroom_bin() -> Optional[str]:
     """Find headroom binary"""
     for bin_path in [HEADROOM_BIN, FALLBACK_BIN]:
-        if bin_path and os.path.exists(bin_path):
-            return bin_path
-        try:
-            result = subprocess.run(["which", bin_path], capture_output=True)
-            if result.returncode == 0:
-                return result.stdout.decode().strip()
-        except:
-            pass
+        if not bin_path:
+            continue
+        if os.path.isfile(bin_path) and os.access(bin_path, os.X_OK):
+            return str(Path(bin_path).resolve())
+        executable = shutil.which(bin_path)
+        if executable:
+            return executable
     return None
 
 def compress_content(content: str, mode: str = "auto", agent: str = "claude-code") -> str:

@@ -1,0 +1,39 @@
+{
+  "finding": "AE26-31",
+  "severity": "P2",
+  "fix_commit": "1b3951edb80ff8cb7556f7339d6f4c53a453833c",
+  "tests_before": {
+    "total": 9,
+    "failures": 2
+  },
+  "tests_after": {
+    "total": 9,
+    "failures": 0
+  },
+  "commands": [
+    {
+      "stage": "red",
+      "exit_code": 1,
+      "elapsed_seconds": 2.482,
+      "log_sha256": "737ed73af78710ce06f7956c7d563d7db2d9d70171f4035bc73d10130ba70481",
+      "log_file": "audit-yaml-idempotence-red.log"
+    },
+    {
+      "stage": "green",
+      "exit_code": 0,
+      "elapsed_seconds": 3.083,
+      "log_sha256": "8b626b9c72b5d5dbf7d5e1df4fde712a99bca2c332a347e6828624223ca1fb96",
+      "log_file": "audit-yaml-idempotence-green.log"
+    }
+  ],
+  "expanded_probe_before": {
+    "setup_exit_codes": [
+      0,
+      0
+    ],
+    "changed_configuration": ".gemini/config.yaml",
+    "new_configuration_backups": 1,
+    "diagnostic_log_also_changed": true
+  },
+  "final_full_suite_and_installation_gate": "Recorded in final execution evidence and pull request checks; no pending result is asserted as passed."
+}

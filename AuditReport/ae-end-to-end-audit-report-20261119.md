@@ -24,6 +24,12 @@ isolasi tool audit dan batas pembandingan HOME dicatat di bawah.
 Temuan baru terverifikasi: **30**, P0 **0**, P1 **13**, P2 **16**, P3 **1**. Seluruh temuan baru pada daftar berikut ditangani dengan regression test.
 Risiko P2/P3 yang ditunda dipisahkan dari temuan yang sudah diperbaiki.
 
+Verifikasi yang diperluas menemukan satu P2 tambahan pada first-reinstall
+YAML. [Laporan lanjutan 20 November](ae-idempotence-followup-20261120.md)
+mencatat AE26-31 dan commit `1b3951ed`; total penutupan menjadi 31 temuan
+(13 P1, 17 P2, 1 P3). Angka 30 dan source/hasil pengujian di bawah merekam
+tahap PR #9 sebelum followup tersebut.
+
 ## Ringkasan sebelum dan sesudah
 
 | Ukuran | Sebelum | Sesudah |

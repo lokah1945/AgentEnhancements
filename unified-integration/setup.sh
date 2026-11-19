@@ -1603,7 +1603,9 @@ import os
 import yaml
 
 with open(os.environ['TARGET_FILE'], 'r') as f:
-    existing = yaml.safe_load(f) or {}
+    original = f.read()
+existing = yaml.safe_load(original) or {}
+before = yaml.safe_dump(existing, sort_keys=True)
 
 enhancement = yaml.safe_load(os.environ['ENHANCEMENT_YAML'])
 
@@ -1620,7 +1622,12 @@ def merge_configs(base, update):
             base[key] = value
 
 merge_configs(existing, enhancement)
-print(yaml.dump(existing, default_flow_style=False, sort_keys=False))
+# Preserve comments/quoting and avoid a backup when only serialization
+# would change. Canonical YAML also distinguishes bool/int value changes.
+if yaml.safe_dump(existing, sort_keys=True) == before:
+    print(original, end='')
+else:
+    print(yaml.dump(existing, default_flow_style=False, sort_keys=False))
 "); then
         log_error "Merge failed for $target_file (existing file not valid YAML?) - original kept, skipping this agent"
         return 0

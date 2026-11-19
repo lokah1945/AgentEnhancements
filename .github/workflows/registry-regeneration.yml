@@ -51,15 +51,19 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install pyyaml
 
-      - name: Regenerate library map
-        run: |
-          python3 unified-integration/scripts/build-library-map.py
-          echo "library-map.json regenerated"
-
       - name: Build capability registry
         run: |
           python3 unified-integration/scripts/registry.py build
           echo "agent-registry.json and all-skills.json regenerated"
+
+      - name: Regenerate library map
+        run: |
+          # Must run AFTER registry.py build: build-library-map.py reads its
+          # family counts from the agent-registry.json snapshot on disk, so
+          # the old order left the L0 map one stage behind (audit 2026-11-19
+          # §15; setup.sh already builds the registry first).
+          python3 unified-integration/scripts/build-library-map.py
+          echo "library-map.json regenerated"
 
       - name: Validate catalog
         run: |

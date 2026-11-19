@@ -7,9 +7,9 @@ Plugins: **4**
 | Slug | Name | Status | MCP servers | Source |
 |------|------|--------|-------------|--------|
 | [`bmad-method`](./bmad-method/) | BMAD Method | integrated-ready | linear-mcp, github-issues-mcp, memory-mcp | `bmad-code-org/BMAD-METHOD` |
-| [`caveman`](./caveman/) | Caveman | integrated-ready | — | `JuliusBrussee/Caveman` |
+| [`caveman`](./caveman/) | Caveman | integrated-ready | filesystem-mcp, style-mcp | `JuliusBrussee/Caveman` |
 | [`gsd`](./gsd/) | Get Shit Done (GSD) | integrated-ready | task-router-mcp, memory-mcp | `gsd-build/get-shit-done` |
-| [`gstack`](./gstack/) | GStack | integrated-ready | — | `garrytan/gstack` |
+| [`gstack`](./gstack/) | GStack | integrated-ready | filesystem-mcp | `garrytan/gstack` |
 
 ## Files in each plugin directory
 

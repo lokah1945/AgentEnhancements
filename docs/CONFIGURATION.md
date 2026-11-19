@@ -361,3 +361,7 @@ including when a caller has a global CARGO_TARGET_DIR. A normal install
 rejects target/binary symlinks that leave the checkout. Audit/consent helper
 logs retain their documented private `unified-integration/memory/audit/`
 location; those logs also stay inside the checkout.
+
+Repeated YAML merges preserve the original bytes, comments and quoting
+when managed values already match. Backups are created for actual value
+changes; normal CLI diagnostic logs may still grow on each invocation.

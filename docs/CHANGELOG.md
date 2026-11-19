@@ -9,12 +9,13 @@ audience: all
 
 ## 2026-11-20 — Audit and checkout-local execution
 
-Generated from the committed audit history through `57b96a97` using
+Generated from the committed audit history through `1b3951ed` using
 `git log --reverse --format="%h %s" b6e1c056..HEAD`. The maintainer explicitly
 requested checkout-local venv/cache/memory. State defaults changed with
 that approval; data schemas and supported host lists remain compatible.
 Regression evidence and remaining limitations are recorded in
-[the dated audit report](../AuditReport/ae-end-to-end-audit-report-20261119.md).
+[the dated audit report](../AuditReport/ae-end-to-end-audit-report-20261119.md)
+and [YAML followup](../AuditReport/ae-idempotence-followup-20261120.md).
 
 - `a37a6fb7` chore(audit): integrate additional upstream audit reports
 - `b1e4fc23` fix(security): protect runtime credentials and private storage
@@ -48,6 +49,10 @@ Regression evidence and remaining limitations are recorded in
 - `6d3cc309` fix(ci): install all command tools required by the integration
   suite
 - `57b96a97` fix(runtime): keep inherited Cargo targets inside the checkout
+- `2ea786cd` docs(audit): finalize verified CI evidence and runtime contract
+- `115b65b3` chore(audit): merge verified project-local runtime and audit
+  fixes (#9)
+- `1b3951ed` fix(installer): preserve unchanged YAML on first reinstall
 
 ## 2026-11-16 — Native Hermes profiles and installation verification
 

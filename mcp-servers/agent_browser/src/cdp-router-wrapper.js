@@ -6,11 +6,14 @@
 const { chromium } = require('playwright');
 const { SessionManager } = require('./session-manager');
 const { CDPRouter } = require('./cdp-router');
-const { buildLaunchArgs, buildCDPEmulationConfig, applyCDPEmulation, applyHeadlessDefense } = require('./launch-config');
+const { buildLaunchArgs, buildCDPEmulationConfig, applyCDPEmulation } = require('./launch-config');
+const { HEADLESS_DEFENSE_SCRIPT, applyHeadlessDefense } = require('./defense-script');
 
 let sessionManager = null;
 let cdpRouter = null;
 let activeBrowsers = new Map(); // sessionId -> { browser, context }
+// Track pending initializations to prevent race conditions
+const initLocks = new Map(); // sessionId -> Promise
 
 function getSessionManager() {
   if (!sessionManager) {
@@ -30,8 +33,15 @@ function getCDPRouter() {
  * Initialize browser for session
  */
 async function initializeBrowser(sessionId, config = {}) {
-  const mgr = getSessionManager();
-  const session = await mgr.getSession(sessionId);
+  // Prevent race condition: if initialization already in progress, wait for it
+  if (initLocks.has(sessionId)) {
+    console.log(`[BrowserLauncher] Session ${sessionId} initialization already in progress, waiting...`);
+    return initLocks.get(sessionId);
+  }
+
+  const initPromise = (async () => {
+    const mgr = getSessionManager();
+    const session = await mgr.getSession(sessionId);
 
   const launchConfig = {
     headless: config.headless !== false,
@@ -69,8 +79,9 @@ async function initializeBrowser(sessionId, config = {}) {
   const cdp = await browser.newCDPSession(page);
 
   // CRITICAL: Use Playwright's context.addInitScript() for CONTEXT-WIDE injection
-  // This fires on EVERY document in EVERY page/tab/popup in this context
-  // This is the PRIMARY guarantee that all pages get injected
+  // This fires on EVERY document in EVERY page/tab/popup/iframe in this context
+  // This is the PRIMARY guarantee that all pages/frames get injected with defense
+  // No browser-level CDP session needed - addInitScript covers all frames!
   const defenseScript = `
     (function() {
       'use strict';
@@ -272,18 +283,20 @@ async function initializeBrowser(sessionId, config = {}) {
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: defenseScript });
   console.log('[agent_browser] CDP per-page defense registered');
 
-  // Register with CDP router
-  const router = getCDPRouter();
-  router.registerSession(sessionId, { browser, context: browser, defaultPage: page });
-
-  // Apply CDP emulation
+  // Build emulation config
   const emulationConfig = buildCDPEmulationConfig({
     viewport: session.viewport,
     locale: session.locale,
     timezone: session.timezone,
     userAgent: config.userAgent
   });
+
+  // Apply CDP emulation to initial page
   await applyCDPEmulation(cdp, emulationConfig);
+
+  // Register with CDP router (pass emulationConfig for new pages)
+  const router = getCDPRouter();
+  router.registerSession(sessionId, { browser, context: browser, defaultPage: page, emulationConfig });
 
   // Store browser reference
   activeBrowsers.set(sessionId, { browser, context: browser });
@@ -293,6 +306,18 @@ async function initializeBrowser(sessionId, config = {}) {
 
   console.log(`[BrowserLauncher] Session ${sessionId} browser initialized`);
   return { browser, context: browser, page, cdp };
+  })();
+
+  // Store the promise in the lock map
+  initLocks.set(sessionId, initPromise);
+
+  try {
+    const result = await initPromise;
+    return result;
+  } finally {
+    // Release the lock
+    initLocks.delete(sessionId);
+  }
 }
 
 /**

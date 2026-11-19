@@ -2,6 +2,7 @@
  * agent_browser MCP Server - Pure CDP browser automation
  */
 const http = require('http');
+const EventEmitter = require('events');
 const {
   initializeBrowser,
   closeBrowser,
@@ -16,6 +17,75 @@ const {
   getSessionManagerInstance,
   activeBrowsers
 } = require('./cdp-router-wrapper');
+
+/**
+ * Notification manager for MCP server-to-client notifications
+ */
+class NotificationManager extends EventEmitter {
+  constructor() {
+    super();
+    this.notificationCallbacks = new Map(); // sessionId -> callback
+  }
+
+  /**
+   * Register a notification callback for a session
+   */
+  registerSessionCallback(sessionId, callback) {
+    this.notificationCallbacks.set(sessionId, callback);
+  }
+
+  /**
+   * Unregister notification callback
+   */
+  unregisterSessionCallback(sessionId) {
+    this.notificationCallbacks.delete(sessionId);
+  }
+
+  /**
+   * Send notification to client for a specific session
+   */
+  sendNotification(sessionId, method, params) {
+    const callback = this.notificationCallbacks.get(sessionId);
+    if (callback) {
+      try {
+        callback({ method, params });
+      } catch (e) {
+        console.error('[NotificationManager] Callback error:', e.message);
+      }
+    }
+    // Also emit for any global listeners
+    this.emit('notification', { sessionId, method, params });
+  }
+
+  /**
+   * Broadcast notification to all sessions
+   */
+  broadcastNotification(method, params) {
+    for (const [sessionId, callback] of this.notificationCallbacks) {
+      try {
+        callback({ method, params });
+      } catch (e) {
+        console.error('[NotificationManager] Broadcast callback error:', e.message);
+      }
+    }
+  }
+}
+
+// Global notification manager
+const notificationManager = new NotificationManager();
+
+/**
+ * Set the notification callback for stdio transport
+ * This is called when the server starts
+ */
+function setNotificationCallback(callback) {
+  // Global callback for all sessions (stdio mode)
+  notificationManager.on('notification', callback);
+}
+
+function getNotificationManager() {
+  return notificationManager;
+}
 
 const sessionTools = require('./tools/session');
 const navigationTools = require('./tools/navigation');
@@ -57,8 +127,12 @@ const TOOLS = {
   cdp_send: cdpDirectTools.cdpSend,
   cdp_evaluate: cdpDirectTools.cdpEvaluate,
   cdp_subscribe: cdpDirectTools.cdpSubscribe,
+  cdp_unsubscribe: cdpDirectTools.cdpUnsubscribe,
   cdp_network_capture: cdpDirectTools.cdpNetworkCapture,
   cdp_console_capture: cdpDirectTools.cdpConsoleCapture,
+  cdp_capture_stop: cdpDirectTools.cdpCaptureStop,
+  cdp_capture_get: cdpDirectTools.cdpCaptureGet,
+  cdp_capture_list: cdpDirectTools.cdpCaptureList,
   cdp_metrics: cdpDirectTools.cdpMetrics,
 
   extract: extractionTools.extract,
@@ -873,6 +947,67 @@ const TOOL_SCHEMAS = {
       ]
     }
   },
+  "cdp_unsubscribe": {
+    "name": "cdp_unsubscribe",
+    "description": "Unsubscribe from CDP events",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        },
+        "subscriptionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sessionId",
+        "subscriptionId"
+      ]
+    }
+  },
+  "cdp_capture_stop": {
+    "name": "cdp_capture_stop",
+    "description": "Stop a network or console capture and get entries",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "captureId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "captureId"
+      ]
+    }
+  },
+  "cdp_capture_get": {
+    "name": "cdp_capture_get",
+    "description": "Get capture entries without stopping",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "captureId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "captureId"
+      ]
+    }
+  },
+  "cdp_capture_list": {
+    "name": "cdp_capture_list",
+    "description": "List active captures",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        }
+      }
+    }
+  },
   "extract": {
     "name": "extract",
     "description": "Extract data via multiple strategies",
@@ -1270,6 +1405,17 @@ async function handleRequest(request) {
 
 function startStdioServer() {
   console.error('[agent_browser] Starting MCP server on stdio...');
+
+  // Set up notification callback for stdio transport
+  notificationManager.on('notification', ({ sessionId, method, params }) => {
+    // Send notification as JSON-RPC notification (no id)
+    process.stdout.write(JSON.stringify({
+      jsonrpc: '2.0',
+      method: method || 'notifications/cdp_event',
+      params: { sessionId, ...params }
+    }) + '\n');
+  });
+
   process.stdin.on('data', async (data) => {
     try {
       const lines = data.toString().trim().split('\n');
@@ -1314,4 +1460,4 @@ if (require.main === module) {
   else startStdioServer();
 }
 
-module.exports = { handleRequest, TOOLS, TOOL_SCHEMAS, startStdioServer, startHttpServer };
+module.exports = { handleRequest, TOOLS, TOOL_SCHEMAS, startStdioServer, startHttpServer, notificationManager, getNotificationManager };

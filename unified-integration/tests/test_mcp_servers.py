@@ -92,7 +92,7 @@ class TestMCPCatalog(unittest.TestCase):
 
     def test_catalog_built_entries_have_resolving_paths(self):
         built = [s for s in self.catalog["servers"] if s["status"] == "built"]
-        self.assertEqual(len(built), 9, "exactly 9 built servers expected")
+        self.assertEqual(len(built), 10, "exactly 10 built servers expected")
         for entry in built:
             impl = REPO_ROOT_PATH / entry["implementation"] \
                 if (REPO_ROOT_PATH := REPO_DIR) and entry.get("implementation") else None

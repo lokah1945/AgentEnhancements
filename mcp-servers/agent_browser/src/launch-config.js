@@ -6,6 +6,7 @@
  */
 
 const os = require('os');
+const { applyHeadlessDefense: applyHeadlessDefenseShared } = require('./defense-script');
 
 const PLATFORM = {
   isWindows: os.platform() === 'win32',
@@ -87,7 +88,7 @@ function buildLaunchArgs(config) {
     args.push('--enable-features=DefaultANGLEVulkan');
   } else if (PLATFORM.isLinux) {
     args.push('--use-angle=vulkan');
-    args.push('--enable-features=VulkanFromANGLE');
+    // --enable-features=VulkanFromANGLE already added above
   } else if (PLATFORM.isMac) {
     args.push('--use-angle=metal');
     args.push('--enable-features=MetalANGLE');
@@ -98,10 +99,7 @@ function buildLaunchArgs(config) {
   args.push('--webrtc-ip-handling-policy=default_public_interface_only');
 
   // === NETWORK / PERFORMANCE ===
-  args.push('--disable-background-networking');
-  args.push('--disable-background-timer-throttling');
-  args.push('--disable-renderer-backgrounding');
-  args.push('--disable-ipc-flooding-protection');
+  // (Already added above in HIDE AUTOMATION FLAGS section)
   args.push('--enable-tcp-fast-open');
   args.push('--enable-quic');
   args.push('--enable-features=NetworkService,NetworkServiceInProcess');
@@ -268,13 +266,12 @@ async function applyCDPEmulation(cdp, config = {}) {
     console.warn('[agent_browser] CDP: Timezone failed:', e.message);
   }
 
-  try {
-    // 5. Locale - CDP level
-    await cdp.send('Emulation.setLocaleOverride', emulation.locale);
-    console.log('[agent_browser] CDP: Locale applied');
-  } catch (e) {
-    console.warn('[agent_browser] CDP: Locale failed:', e.message);
-  }
+  // 5. Locale - CDP level
+  // NOTE: Playwright sets locale via launch option (--lang), so CDP override conflicts.
+  // Skip CDP locale override when using Playwright's locale option.
+  // The locale is already set correctly via --lang launch arg.
+  // await cdp.send('Emulation.setLocaleOverride', emulation.locale);
+  // console.log('[agent_browser] CDP: Locale applied (via Playwright --lang)');
 
   try {
     // 6. Hardware Concurrency - CDP native override (Chromium M110+)
@@ -301,16 +298,13 @@ async function applyCDPEmulation(cdp, config = {}) {
   }
 
   // 8. Headless Defense - Minimal fixes for headless-specific bugs (NOT spoofing)
-  await applyHeadlessDefense(cdp);
+  await applyHeadlessDefenseShared(cdp);
 
   return { success: true };
 }
 
 /**
- * Apply headless defense - fixes for headless-specific rendering bugs and missing Chrome internals
- * These fix Chromium headless differences from headed Chrome - NOT fingerprint spoofing
- */
-async function applyHeadlessDefense(cdp) {
+ * Build CDP emulation config from session config
   const defenseScript = `
     (function() {
       'use strict';
@@ -593,7 +587,7 @@ function buildCDPEmulationConfig(sessionConfig) {
 module.exports = {
   buildLaunchArgs,
   applyCDPEmulation,
-  applyHeadlessDefense,
+  applyHeadlessDefense: applyHeadlessDefenseShared,
   buildCDPEmulationConfig,
   CDP_EMULATION_DEFAULTS,
   PLATFORM

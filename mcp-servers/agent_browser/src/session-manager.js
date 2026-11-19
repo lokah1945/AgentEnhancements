@@ -154,7 +154,7 @@ class SessionManager {
     return session;
   }
 
-  async snapshotSession(sessionId, options = {}) {
+  async snapshotSession(sessionId, options = {}, cdpRouter = null) {
     const session = await this.getSession(sessionId);
     if (!session.persistent) {
       throw new Error('Cannot snapshot non-persistent session');
@@ -167,13 +167,17 @@ class SessionManager {
       metadata: { ...session }
     };
 
-    // Include cookies if requested
-    if (options.includeCookies !== false) {
+    // Include cookies if requested - use CDP for live cookies
+    if (options.includeCookies !== false && cdpRouter) {
+      snapshot.cookies = await this.extractCookiesCDP(cdpRouter, sessionId);
+    } else if (options.includeCookies !== false) {
       snapshot.cookies = await this.extractCookies(profilePath);
     }
 
-    // Include localStorage/IndexedDB if requested
-    if (options.includeStorage !== false) {
+    // Include localStorage/IndexedDB if requested - use CDP for live storage
+    if (options.includeStorage !== false && cdpRouter) {
+      snapshot.storage = await this.extractStorageCDP(cdpRouter, sessionId);
+    } else if (options.includeStorage !== false) {
       snapshot.storage = await this.extractStorage(profilePath);
     }
 
@@ -183,6 +187,81 @@ class SessionManager {
     }
 
     return snapshot;
+  }
+
+  /**
+   * Extract cookies using CDP Network.getCookies
+   */
+  async extractCookiesCDP(cdpRouter, sessionId) {
+    try {
+      const cdp = await cdpRouter.getPageCDP(sessionId, 'default');
+      const result = await cdp.send('Network.getCookies');
+      return {
+        cookies: result.cookies || [],
+        count: (result.cookies || []).length
+      };
+    } catch (e) {
+      console.warn('[SessionManager] CDP cookie extraction failed:', e.message);
+      return { note: 'Failed to extract cookies via CDP', error: e.message };
+    }
+  }
+
+  /**
+   * Extract localStorage and sessionStorage using CDP Storage.getStorageKeys and Storage.getStorageEntries
+   */
+  async extractStorageCDP(cdpRouter, sessionId) {
+    try {
+      const cdp = await cdpRouter.getPageCDP(sessionId, 'default');
+
+      // Get all origins
+      const originsResult = await cdp.send('Storage.getStorageKeys');
+      const origins = originsResult.storageKeys || [];
+
+      const localStorage = {};
+      const sessionStorage = {};
+      const indexedDB = {};
+
+      for (const origin of origins) {
+        try {
+          // Get localStorage entries
+          const lsResult = await cdp.send('Storage.getStorageEntries', {
+            storageId: { storageType: 'local_storage', securityOrigin: origin.securityOrigin }
+          });
+          if (lsResult.entries && lsResult.entries.length > 0) {
+            localStorage[origin.securityOrigin] = lsResult.entries.reduce((acc, e) => {
+              acc[e.key] = e.value;
+              return acc;
+            }, {});
+          }
+
+          // Get sessionStorage entries
+          const ssResult = await cdp.send('Storage.getStorageEntries', {
+            storageId: { storageType: 'session_storage', securityOrigin: origin.securityOrigin }
+          });
+          if (ssResult.entries && ssResult.entries.length > 0) {
+            sessionStorage[origin.securityOrigin] = ssResult.entries.reduce((acc, e) => {
+              acc[e.key] = e.value;
+              return acc;
+            }, {});
+          }
+
+          // Get IndexedDB (just metadata for now)
+          const idbResult = await cdp.send('Storage.getStorageEntries', {
+            storageId: { storageType: 'indexed_db', securityOrigin: origin.securityOrigin }
+          });
+          if (idbResult.entries && idbResult.entries.length > 0) {
+            indexedDB[origin.securityOrigin] = idbResult.entries.length + ' entries';
+          }
+        } catch (e) {
+          // Some origins may not have all storage types
+        }
+      }
+
+      return { localStorage, sessionStorage, indexedDB, origins: origins.map(o => o.securityOrigin) };
+    } catch (e) {
+      console.warn('[SessionManager] CDP storage extraction failed:', e.message);
+      return { note: 'Failed to extract storage via CDP', error: e.message };
+    }
   }
 
   async extractCookies(profilePath) {

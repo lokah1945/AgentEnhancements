@@ -3,6 +3,8 @@
  */
 
 const { SessionManager } = require('../session-manager');
+const { getCDPRouter } = require('../cdp-router-wrapper');
+const { sessionNotFound, withErrorHandling } = require('../errors');
 
 let sessionManager = null;
 
@@ -60,12 +62,15 @@ async function sessionGet(args, context) {
   const { sessionId } = args;
 
   const mgr = getSessionManager();
-  const session = await mgr.getSession(sessionId);
-
-  return {
-    success: true,
-    session
-  };
+  try {
+    const session = await mgr.getSession(sessionId);
+    return { success: true, session };
+  } catch (error) {
+    if (error.message.includes('not found')) {
+      return sessionNotFound(sessionId);
+    }
+    throw error;
+  }
 }
 
 /**
@@ -75,12 +80,15 @@ async function sessionDelete(args, context) {
   const { sessionId, force } = args;
 
   const mgr = getSessionManager();
-  await mgr.deleteSession(sessionId, { force });
-
-  return {
-    success: true,
-    sessionId
-  };
+  try {
+    await mgr.deleteSession(sessionId, { force });
+    return { success: true, sessionId };
+  } catch (error) {
+    if (error.message.includes('not found')) {
+      return sessionNotFound(sessionId);
+    }
+    throw error;
+  }
 }
 
 /**
@@ -90,16 +98,20 @@ async function sessionSnapshot(args, context) {
   const { sessionId, includeCookies, includeStorage, includeHistory } = args;
 
   const mgr = getSessionManager();
-  const snapshot = await mgr.snapshotSession(sessionId, {
-    includeCookies: includeCookies !== false,
-    includeStorage: includeStorage !== false,
-    includeHistory: includeHistory === true
-  });
-
-  return {
-    success: true,
-    snapshot
-  };
+  const router = getCDPRouter();
+  try {
+    const snapshot = await mgr.snapshotSession(sessionId, {
+      includeCookies: includeCookies !== false,
+      includeStorage: includeStorage !== false,
+      includeHistory: includeHistory === true
+    }, router);
+    return { success: true, snapshot };
+  } catch (error) {
+    if (error.message.includes('not found')) {
+      return sessionNotFound(sessionId);
+    }
+    throw error;
+  }
 }
 
 /**
@@ -109,14 +121,20 @@ async function sessionRestore(args, context) {
   const { snapshot, newSessionId } = args;
 
   const mgr = getSessionManager();
-  const result = await mgr.restoreSession(snapshot, newSessionId);
-
-  return {
-    success: true,
-    sessionId: result.sessionId,
-    metadata: result.metadata,
-    profilePath: result.profilePath
-  };
+  try {
+    const result = await mgr.restoreSession(snapshot, newSessionId);
+    return {
+      success: true,
+      sessionId: result.sessionId,
+      metadata: result.metadata,
+      profilePath: result.profilePath
+    };
+  } catch (error) {
+    if (error.message.includes('not found')) {
+      return sessionNotFound(snapshot?.sessionId || 'unknown');
+    }
+    throw error;
+  }
 }
 
 /**

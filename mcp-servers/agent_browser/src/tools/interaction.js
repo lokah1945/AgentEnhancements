@@ -98,8 +98,10 @@ async function click(args, context) {
   }
 
   // Human-like approach
+  let currentPos = { x: 960, y: 540 }; // Default center position
   if (humanize !== false) {
-    await humanMove(cdp, targetPos, { persona: args.persona });
+    const moveResult = await humanMove(cdp, targetPos, { persona: args.persona, currentPos });
+    currentPos = moveResult.finalPos;
   } else {
     // Direct move
     await cdp.send('Input.dispatchMouseEvent', {
@@ -110,6 +112,7 @@ async function click(args, context) {
       button: 'none',
       clickCount: 0
     });
+    currentPos = targetPos;
   }
 
   // Click
@@ -120,8 +123,8 @@ async function click(args, context) {
   for (let i = 0; i < (clickCount || 1); i++) {
     await cdp.send('Input.dispatchMouseEvent', {
       type: 'mousePressed',
-      x: targetPos.x,
-      y: targetPos.y,
+      x: currentPos.x,
+      y: currentPos.y,
       modifiers: modValue,
       button: buttonMap[button] || 'left',
       clickCount: i + 1
@@ -131,8 +134,8 @@ async function click(args, context) {
 
     await cdp.send('Input.dispatchMouseEvent', {
       type: 'mouseReleased',
-      x: targetPos.x,
-      y: targetPos.y,
+      x: currentPos.x,
+      y: currentPos.y,
       modifiers: modValue,
       button: buttonMap[button] || 'left',
       clickCount: i + 1
@@ -262,8 +265,10 @@ async function hover(args, context) {
     });
   }
 
+  let currentPos = { x: 960, y: 540 };
   if (humanize !== false) {
-    await humanMove(cdp, targetPos, { persona: args.persona });
+    const hoverResult = await humanHover(cdp, targetPos, { persona: args.persona, duration, currentPos });
+    currentPos = hoverResult.finalPos;
   } else {
     await cdp.send('Input.dispatchMouseEvent', {
       type: 'mouseMoved',
@@ -273,6 +278,7 @@ async function hover(args, context) {
       button: 'none',
       clickCount: 0
     });
+    currentPos = targetPos;
   }
 
   // Hold hover
@@ -292,9 +298,13 @@ async function scroll(args, context) {
   const router = getCDPRouter();
   const cdp = await router.getPageCDP(sessionId, 'default');
 
+  // Get viewport from session config
+  const session = router.getSession(sessionId);
+  const viewport = session?.emulationConfig?.deviceMetrics || { width: 1920, height: 1080 };
+
   const scrollConfig = {
     direction: direction || 'down',
-    viewportSize: { width: 1920, height: 1080 },
+    viewportSize: { width: viewport.width, height: viewport.height },
     persona: args.persona
   };
 
@@ -314,8 +324,8 @@ async function scroll(args, context) {
     const deltaY = direction === 'up' ? -(distance || 300) : (distance || 300);
     await cdp.send('Input.dispatchMouseEvent', {
       type: 'mouseWheel',
-      x: 960,
-      y: 540,
+      x: viewport.width / 2,
+      y: viewport.height / 2,
       deltaX: 0,
       deltaY,
       modifiers: 0,
@@ -354,8 +364,10 @@ async function dragDrop(args, context) {
     height: Math.max(...targetPoints.map(p => p.y)) - Math.min(...targetPoints.map(p => p.y))
   });
 
+  let currentPos = { x: 960, y: 540 };
   if (humanize !== false) {
-    await humanDragDrop(cdp, sourcePos, targetPos, { persona: args.persona });
+    const dragResult = await humanDragDrop(cdp, sourcePos, targetPos, { persona: args.persona, currentPos });
+    currentPos = dragResult.finalPos;
   } else {
     // Direct drag
     await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: sourcePos.x, y: sourcePos.y, modifiers: 0, button: 'none', clickCount: 0 });
@@ -364,6 +376,7 @@ async function dragDrop(args, context) {
     await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: targetPos.x, y: targetPos.y, modifiers: 0, button: 'left', clickCount: 1 });
     await new Promise(r => setTimeout(r, 100));
     await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: targetPos.x, y: targetPos.y, modifiers: 0, button: 'left', clickCount: 1 });
+    currentPos = targetPos;
   }
 
   return { success: true, source: sourcePos, target: targetPos };

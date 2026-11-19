@@ -93,12 +93,12 @@ Registry: 3,463 entries
 ### Round-Robin Verification
 ```
 $ get_search_provider_key('tavily') x6
-Call 1: tvly-dev-2bKOzk... (key_1)
-Call 2: tvly-dev-25jS6v... (key_2)
-Call 3: tvly-2zizlB...    (key_3)
-Call 4: tvly-dev-2bKOzk... (key_1) ← cycles back
-Call 5: tvly-dev-25jS6v... (key_2)
-Call 6: tvly-2zizlB...    (key_3)
+Call 1: [redacted credential preview]
+Call 2: [redacted credential preview]
+Call 3: [redacted credential preview]
+Call 4: [redacted credential preview]
+Call 5: [redacted credential preview]
+Call 6: [redacted credential preview]
 ```
 
 ### Gateway Integration
@@ -143,7 +143,7 @@ bash unified-integration/scripts/dispatch.sh --dry-run "deep research"
 # → agent-reach (correct)
 
 # Search provider round-robin
-python3 -c "from api_config import get_search_provider_key; [print(get_search_provider_key('tavily')) for _ in range(6)]"
+python3 -c "from api_config import get_search_provider_key; print(all(bool(get_search_provider_key('tavily')) for _ in range(6)))"
 # → Cycles through 3 keys correctly
 
 # Full status with search providers

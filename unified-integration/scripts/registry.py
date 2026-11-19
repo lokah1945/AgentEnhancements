@@ -165,6 +165,16 @@ chapter chapters plot story text file folder list item table row column
 halaman paragraf baris kata kalimat bab teks berkas folder daftar tabel
 """.split())
 
+# Direct translations keep the evidence strength of the original term.
+# These are vocabulary normalizations, not intent-to-capability rules.
+LEXICAL_ALIASES = {
+    "arsitektur": "architecture",
+    "graf": "graph",
+    "pengetahuan": "knowledge",
+    "entitas": "entities",
+    "hubungan": "relationships",
+}
+
 # Sources that link-skills.sh activates natively by default. Keep in sync
 # with DEFAULT_SOURCES in link-skills.sh.
 DEFAULT_NATIVE_SOURCES = ("Superpowers", "task-observer")
@@ -272,7 +282,8 @@ BUILT_IN_CAPABILITIES = [
 
 def _tokenize(text: str) -> List[str]:
     """Lowercase word tokens for scoring, minus stop words."""
-    return [t for t in re.findall(r"[a-z0-9]+", (text or "").lower())
+    normalized = re.sub(r"\bperangkat\s+lunak\b", "software", (text or "").casefold())
+    return [LEXICAL_ALIASES.get(t, t) for t in re.findall(r"[a-z0-9]+", normalized)
             if t not in STOP_WORDS]
 
 
@@ -346,6 +357,7 @@ def load_plugin_entries() -> List[Dict[str, Any]]:
 
 def load_mcp_entries() -> List[Dict[str, Any]]:
     """MCP server entries derived from the roadmap file."""
+    from api_config import BUILTINS
     roadmap = _read_json(MCP_JSON, {})
     entries: List[Dict[str, Any]] = []
     for server in roadmap.get("servers", []):
@@ -367,7 +379,7 @@ def load_mcp_entries() -> List[Dict[str, Any]]:
             "status": server.get("status", "roadmap"),
             "path": "plugin-catalog/mcp-servers.json",
             "activation": ("loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
-                           if server.get("status") == "built" else
+                           if server.get("status") == "built" and sid in BUILTINS else
                            "hidden until an installed command and required references are configured in ui.api.json"),
         })
     return entries
@@ -477,6 +489,13 @@ def score_skill(entry: Dict[str, Any], weights: Dict[str, float]) -> float:
         # field confirms the domain too.
         if not (re.search(r"[a-z]+-[a-z]+", name) and desc_tokens):
             score = 0
+    # Curated tags and a fully matched multi-term description are evidence
+    # even when a skill's short name is unrelated (e.g. a security tag).
+    # Synonym expansions and generic/layout words cannot clear this floor.
+    originals = {token for token, weight in weights.items() if weight >= 1.0
+                 and token not in GENERIC_ACTION_WORDS and token not in LAYOUT_NOUNS}
+    if originals & tags or (len(originals) >= 2 and originals <= desc_tokens):
+        score = max(score, CARD_MIN_SCORE)
     # Natively linked skills are already active in every harness: prefer
     # the zero-friction capability when relevance is otherwise equal.
     if score > 0 and entry.get("natively_linked_by_default"):
@@ -666,27 +685,46 @@ def cmd_build(out_path: Optional[str] = None, quiet: bool = False) -> int:
 
 
 def _skill_readiness(entry: Dict[str, Any]) -> Dict[str, str]:
-    """Live readiness for a skill entry: is it actually reachable now?
+    """Require a real instruction file under the same roots as preflight.
 
-    Natively linked skills are checked against the link-skills targets;
-    everything else is reachable on demand through the loader (the index
-    is present by construction), which is the default profile's intended
-    access path - on-demand is "ready", not a degraded state; "degraded"
-    is reserved for skills whose native-link profile exists but whose
-    link is missing on this host while the loader path is also unusable.
-    Never inherited from a parent or manifest.
+    Vendored source files remain readable before aggregation. A native
+    name only means loaded when it resolves to this entry's real file.
     """
+    roots = [REPO_ROOT.resolve()]
+    override = os.environ.get("AGENT_SKILLS_DIR")
+    if override:
+        roots.append(Path(override).expanduser().resolve())
+    files = set()
+    for field in ("path", "source_path"):
+        value = entry.get(field)
+        if not isinstance(value, str) or not value.strip():
+            continue
+        try:
+            candidate = Path(value).expanduser()
+            if not candidate.is_absolute():
+                candidate = REPO_ROOT / candidate
+            resolved = candidate.resolve()
+            if candidate.is_file() and any(resolved.is_relative_to(root) for root in roots):
+                files.add(resolved)
+        except (OSError, RuntimeError):
+            continue
+    if not files:
+        return {"ready": "no", "blocker": "skill_file_unavailable"}
     if entry.get("natively_linked_by_default"):
         targets = os.environ.get(
             "AGENT_SKILLS_NATIVE_TARGETS",
             f"{Path.home() / '.claude' / 'skills'}:{Path.home() / '.agents' / 'skills'}",
         ).split(":")
         for base in targets:
-            if (Path(base) / str(entry.get("name", ""))).is_dir():
-                return {"ready": "yes", "how": "natively linked"}
-    # Not natively present: the on-demand loader is the default access
-    # path for every catalog entry (context-frugal profile).
-    return {"ready": "yes", "how": "on-demand via the skills loader"}
+            if not base:
+                continue
+            try:
+                native = Path(base) / str(entry.get("name", "")) / "SKILL.md"
+                if native.is_file() and native.resolve() in files:
+                    return {"ready": "yes", "how": "natively linked"}
+            except (OSError, RuntimeError):
+                continue
+    return {"ready": "yes", "how": "on-demand read of SKILL.md"}
 
 
 def _mcp_readiness(entry: Dict[str, Any]) -> Dict[str, str]:

@@ -3,6 +3,7 @@
  */
 
 const { getCDPRouter } = require('../cdp-router-wrapper');
+const { notificationManager } = require('../index');
 
 /**
  * Send raw CDP command
@@ -46,18 +47,68 @@ async function cdpSubscribe(args, context) {
   const { sessionId, domain, event, filter } = args;
 
   const router = getCDPRouter();
+  const cdp = await router.getPageCDP(sessionId, 'default');
 
-  // This would need a notification system for MCP
-  // For now, return subscription info
-  await router.subscribe(sessionId, domain, event, filter);
+  // Create a subscription ID
+  const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  const handler = (...eventArgs) => {
+    // Send notification via MCP
+    notificationManager.sendNotification(sessionId, 'cdp/event', {
+      subscriptionId,
+      domain,
+      event,
+      data: eventArgs[0],
+      timestamp: Date.now()
+    });
+  };
+
+  cdp.on(`${domain}.${event}`, handler);
+
+  // Store handler for cleanup
+  const session = router.getSession(sessionId);
+  if (!session.eventHandlers) session.eventHandlers = [];
+  session.eventHandlers.push({ domain, event, handler, cdp, subscriptionId });
 
   return {
     success: true,
     subscribed: true,
+    subscriptionId,
     domain,
     event
   };
 }
+
+/**
+ * Unsubscribe from CDP events
+ */
+async function cdpUnsubscribe(args, context) {
+  const { sessionId, subscriptionId } = args;
+
+  const router = getCDPRouter();
+  const session = router.getSession(sessionId);
+
+  if (!session.eventHandlers) {
+    return { success: false, error: 'No subscriptions found' };
+  }
+
+  const index = session.eventHandlers.findIndex(h => h.subscriptionId === subscriptionId);
+  if (index === -1) {
+    return { success: false, error: 'Subscription not found' };
+  }
+
+  const { domain, event, handler, cdp } = session.eventHandlers[index];
+  try {
+    cdp.off(`${domain}.${event}`, handler);
+  } catch (e) {}
+
+  session.eventHandlers.splice(index, 1);
+
+  return { success: true, subscriptionId };
+}
+
+// Global capture registry for network/console captures
+const captureRegistry = new Map(); // captureId -> { type, entries, handlers, cdp, sessionId }
 
 /**
  * Capture network traffic
@@ -73,6 +124,7 @@ async function cdpNetworkCapture(args, context) {
 
   const entries = [];
   const max = maxEntries || 500;
+  const captureId = `capture_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   // Set up listeners
   const requestHandler = (params) => {
@@ -135,15 +187,19 @@ async function cdpNetworkCapture(args, context) {
   cdp.on('Network.requestWillBeSent', requestHandler);
   cdp.on('Network.responseReceived', responseHandler);
 
-  // Return a function to stop capture (in real implementation, this would be async)
+  // Store in registry
+  captureRegistry.set(captureId, {
+    type: 'network',
+    entries,
+    handlers: { requestHandler, responseHandler },
+    cdp,
+    sessionId
+  });
+
   return {
     success: true,
-    captureId: `capture_${Date.now()}`,
-    stopCapture: () => {
-      cdp.off('Network.requestWillBeSent', requestHandler);
-      cdp.off('Network.responseReceived', responseHandler);
-      return { entries };
-    }
+    captureId,
+    entries: 0
   };
 }
 
@@ -160,6 +216,7 @@ async function cdpConsoleCapture(args, context) {
 
   const entries = [];
   const max = maxEntries || 200;
+  const captureId = `console_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   const handler = (params) => {
     if (entries.length >= max) return;
@@ -176,13 +233,94 @@ async function cdpConsoleCapture(args, context) {
 
   cdp.on('Console.messageAdded', handler);
 
+  // Store in registry
+  captureRegistry.set(captureId, {
+    type: 'console',
+    entries,
+    handlers: { handler },
+    cdp,
+    sessionId
+  });
+
   return {
     success: true,
-    captureId: `console_${Date.now()}`,
-    stopCapture: () => {
-      cdp.off('Console.messageAdded', handler);
-      return { entries };
+    captureId,
+    entries: 0
+  };
+}
+
+/**
+ * Stop a capture and get entries
+ */
+async function cdpCaptureStop(args, context) {
+  const { captureId } = args;
+
+  const capture = captureRegistry.get(captureId);
+  if (!capture) {
+    return { success: false, error: 'Capture not found' };
+  }
+
+  // Remove event handlers
+  if (capture.type === 'network') {
+    capture.cdp.off('Network.requestWillBeSent', capture.handlers.requestHandler);
+    capture.cdp.off('Network.responseReceived', capture.handlers.responseHandler);
+  } else if (capture.type === 'console') {
+    capture.cdp.off('Console.messageAdded', capture.handlers.handler);
+  }
+
+  // Get entries and remove from registry
+  const resultEntries = [...capture.entries];
+  captureRegistry.delete(captureId);
+
+  return {
+    success: true,
+    captureId,
+    entries: resultEntries,
+    count: resultEntries.length
+  };
+}
+
+/**
+ * Get capture entries without stopping
+ */
+async function cdpCaptureGet(args, context) {
+  const { captureId } = args;
+
+  const capture = captureRegistry.get(captureId);
+  if (!capture) {
+    return { success: false, error: 'Capture not found' };
+  }
+
+  return {
+    success: true,
+    captureId,
+    entries: [...capture.entries],
+    count: capture.entries.length
+  };
+}
+
+/**
+ * List active captures
+ */
+async function cdpCaptureList(args, context) {
+  const { sessionId } = args;
+
+  const captures = [];
+  for (const [id, capture] of captureRegistry) {
+    if (!sessionId || capture.sessionId === sessionId) {
+      captures.push({
+        captureId: id,
+        type: capture.type,
+        entries: capture.entries.length,
+        sessionId: capture.sessionId
+      });
     }
+  }
+
+  return {
+    success: true,
+    captures,
+    count: captures.length
   };
 }
 

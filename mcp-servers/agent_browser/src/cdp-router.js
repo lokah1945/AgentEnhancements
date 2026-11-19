@@ -15,14 +15,15 @@ class CDPRouter {
   /**
    * Register a new browser session
    */
-  registerSession(sessionId, { browser, context, defaultPage }) {
+  registerSession(sessionId, { browser, context, defaultPage, emulationConfig }) {
     this.sessions.set(sessionId, {
       browser,
       context,
       pages: new Map(), // pageId -> { page, cdp, frameId, mainFrame }
       cdpClients: new Map(), // targetId -> cdpSession
       pageListeners: new Set(),
-      defaultPage: defaultPage
+      defaultPage: defaultPage,
+      emulationConfig: emulationConfig // Store for applying to new pages
     });
     console.log(`[CDPRouter] Registered session: ${sessionId}`);
   }
@@ -41,7 +42,7 @@ class CDPRouter {
   /**
    * Get or create CDP session for a page
    */
-  async getPageCDP(sessionId, pageId = 'default') {
+  async getPageCDP(sessionId, pageId = 'default', emulationConfig = null) {
     const session = this.getSession(sessionId);
     const pageData = session.pages.get(pageId);
 
@@ -67,6 +68,15 @@ class CDPRouter {
     // Enable required domains
     await this.enableRequiredDomains(cdp);
 
+    // Use provided emulationConfig or fall back to session's stored config
+    const effectiveEmulationConfig = emulationConfig || session.emulationConfig;
+    if (effectiveEmulationConfig) {
+      await applyCDPEmulation(cdp, effectiveEmulationConfig);
+    }
+
+    // Apply headless defense to new page session
+    await applyHeadlessDefense(cdp);
+
     // Store
     const pid = this.getPageId(page);
     session.pages.set(pid, { page, cdp, frameId: page.mainFrame()._id, mainFrame: true });
@@ -76,37 +86,46 @@ class CDPRouter {
 
   /**
    * Enable required CDP domains
+   * Note: Only page-level domains are enabled here.
+   * Browser-level domains (Target, Browser, etc.) require a browser-level CDP session.
    */
   async enableRequiredDomains(cdp) {
-    const domains = [
+    // Domains available on page-level CDP sessions
+    const pageDomains = [
       'Page',
       'Runtime',
       'DOM',
-      'Input',
       'Network',
       'Console',
       'Log',
-      'Target',
-      'Emulation',
       'Overlay',
       'Accessibility',
       'CSS',
-      'DOMSnapshot',
-      'Storage',
-      'ServiceWorker'
+      'DOMSnapshot'
     ];
 
-    for (const domain of domains) {
+    // Domains that require browser-level session (handled separately if needed)
+    // 'Input' - use Input.dispatchMouseEvent directly without enable
+    // 'Target' - browser level only
+    // 'Emulation' - handled by Playwright launch options + applyCDPEmulation
+    // 'Storage' - may not be available on all targets
+    // 'ServiceWorker' - browser level only
+
+    for (const domain of pageDomains) {
       try {
         await cdp.send(`${domain}.enable`);
       } catch (e) {
-        // Some domains may not be available
         console.debug(`[CDPRouter] Domain ${domain} not available:`, e.message);
       }
     }
 
-    // Set up auto-attach for iframes/workers
-    await this.setupAutoAttach(cdp);
+    // Input domain: commands work without explicit enable on page sessions
+    // Emulation: applied via applyCDPEmulation() after this
+    // Target.autoAttach: requires browser-level session (see setupAutoAttach)
+
+    // Set up auto-attach for iframes/workers (requires browser-level session)
+    // This will be called with browser-level session separately
+    // await this.setupAutoAttach(cdp); // Moved to initializeBrowser with browser session
   }
 
   /**
@@ -287,6 +306,12 @@ class CDPRouter {
     const cdp = await session.context.newCDPSession(page);
     await this.enableRequiredDomains(cdp);
 
+    // Apply emulation and defense to new page
+    if (session.emulationConfig) {
+      await applyCDPEmulation(cdp, session.emulationConfig);
+    }
+    await applyHeadlessDefense(cdp);
+
     session.pages.set(pid, { page, cdp, frameId: page.mainFrame()._id, mainFrame: true });
 
     // Update tab count
@@ -331,8 +356,13 @@ class CDPRouter {
    * Get page ID from page object
    */
   getPageId(page) {
-    // Use frame ID as page identifier
-    return page.mainFrame()._id;
+    // Generate stable page ID - use frame ID if available, otherwise generate UUID
+    const frame = page.mainFrame();
+    if (frame._id) {
+      return frame._id;
+    }
+    // Fallback: generate unique ID based on page GUID or timestamp
+    return `page_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
@@ -360,8 +390,23 @@ class CDPRouter {
     const session = this.sessions.get(sessionId);
     if (!session) return;
 
-    // Close all pages
+    // Clean up event handlers (subscriptions)
+    if (session.eventHandlers) {
+      for (const { domain, event, handler, cdp } of session.eventHandlers) {
+        try {
+          cdp.off(`${domain}.${event}`, handler);
+        } catch (e) {}
+      }
+      session.eventHandlers = [];
+    }
+
+    // Close all page CDP sessions
     for (const [pid, pageData] of session.pages) {
+      try {
+        if (pageData.cdp) {
+          await pageData.cdp.detach();
+        }
+      } catch (e) {}
       try {
         await pageData.page.close();
       } catch (e) {}
@@ -379,6 +424,34 @@ class CDPRouter {
 
     this.sessions.delete(sessionId);
     console.log(`[CDPRouter] Closed session: ${sessionId}`);
+  }
+
+  /**
+   * Clean up page CDP session and event handlers
+   */
+  async closePage(sessionId, pageId) {
+    const session = this.getSession(sessionId);
+    const pageData = session.pages.get(pageId);
+
+    if (pageData) {
+      // Clean up event handlers for this page's CDP
+      if (session.eventHandlers) {
+        session.eventHandlers = session.eventHandlers.filter(h => h.cdp !== pageData.cdp);
+      }
+      try {
+        if (pageData.cdp) {
+          await pageData.cdp.detach();
+        }
+      } catch (e) {}
+      try {
+        await pageData.page.close();
+      } catch (e) {}
+      session.pages.delete(pageId);
+      this.updateTabCount(sessionId);
+      return { success: true };
+    }
+
+    throw new Error(`Page not found: ${pageId}`);
   }
 
   /**

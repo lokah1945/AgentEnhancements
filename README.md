@@ -339,7 +339,7 @@ All agent configurations are written in each tool's native format — see the [A
 
 ## MCP Servers
 
-`plugin-catalog/mcp-servers.json` is a **roadmap** of 39 candidate MCP servers (P0-P2), not a pre-wired configuration. To enable a server, add it to your tool's MCP config (e.g. `.claude/mcp.json` for Claude Code) using the command documented in the roadmap entry, then verify with:
+`plugin-catalog/mcp-servers.json` is a **roadmap** of 40 candidate MCP servers (P0-P2), not a pre-wired configuration. To enable a server, add it to your tool's MCP config (e.g. `.claude/mcp.json` for Claude Code) using the command documented in the roadmap entry, then verify with:
 
 ```bash
 bash unified-integration/scripts/mcp-test.sh --priority P0

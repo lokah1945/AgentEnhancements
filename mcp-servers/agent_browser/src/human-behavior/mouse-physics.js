@@ -20,26 +20,15 @@ const {
 } = require('./math-utils');
 
 /**
- * Module-level mouse position tracker
+ * Get initial mouse position for a session
+ * @param {{width:number,height:number}} viewportSize
+ * @returns {{x:number,y:number}}
  */
-let _mousePos = { x: -1, y: -1 };
-
-function getMousePos(viewportSize) {
-  if (_mousePos.x < 0 && viewportSize) {
-    _mousePos = {
-      x: Math.round(viewportSize.width * 0.4),
-      y: Math.round(viewportSize.height * 0.3)
-    };
-  }
-  return { ..._mousePos };
-}
-
-function setMousePos(x, y) {
-  _mousePos = { x, y };
-}
-
-function resetMousePos() {
-  _mousePos = { x: -1, y: -1 };
+function getInitialMousePos(viewportSize) {
+  return {
+    x: Math.round(viewportSize.width * 0.4),
+    y: Math.round(viewportSize.height * 0.3)
+  };
 }
 
 /**
@@ -113,17 +102,19 @@ function generateControlPoints(start, end, persona = {}) {
  * @param {CDPSession} cdp - CDP session
  * @param {{x:number,y:number}} target - Target position
  * @param {Object} options - Movement options
- * @returns {Promise<{steps:number, duration:number}>}
+ * @param {{x:number,y:number}} options.currentPos - Current mouse position (required for per-session tracking)
+ * @returns {Promise<{steps:number, duration:number, finalPos:{x:number,y:number}}>}
  */
 async function humanMove(cdp, target, options = {}) {
   const {
     persona = {},
     viewportSize = { width: 1920, height: 1080 },
-    currentPos = getMousePos(viewportSize),
+    currentPos,
     onStep = null
   } = options;
 
-  const start = { ...currentPos };
+  // Use provided currentPos or initialize
+  const start = currentPos ? { ...currentPos } : getInitialMousePos(viewportSize);
   const end = { ...target };
 
   // Calculate movement parameters
@@ -189,9 +180,10 @@ async function humanMove(cdp, target, options = {}) {
   ];
 
   let totalSteps = 0;
+  let currentMousePos = { ...start };
 
   for (const phase of phases) {
-    const phaseStart = { ..._mousePos };
+    const phaseStart = { ...currentMousePos };
     const phaseEnd = phase.points[0];
     const phaseDist = distance(phaseStart, phaseEnd);
 
@@ -222,7 +214,7 @@ async function humanMove(cdp, target, options = {}) {
         clickCount: 0
       });
 
-      _mousePos = { x: finalX, y: finalY };
+      currentMousePos = { x: finalX, y: finalY };
 
       if (onStep) {
         onStep({ x: finalX, y: finalY, phase: phase.name, step: i, total: phaseSteps });
@@ -237,32 +229,37 @@ async function humanMove(cdp, target, options = {}) {
     }
   }
 
-  return { steps: totalSteps, duration: mtActual, overshoot: doOvershoot };
+  return { steps: totalSteps, duration: mtActual, overshoot: doOvershoot, finalPos: currentMousePos };
 }
 
 /**
  * Click at current position with human-like timing
  * @param {CDPSession} cdp - CDP session
  * @param {Object} options - Click options
+ * @param {{x:number,y:number}} options.currentPos - Current mouse position
+ * @returns {Promise<{finalPos:{x:number,y:number}}>}
  */
 async function humanClick(cdp, options = {}) {
   const {
     button = 'left',
     clickCount = 1,
     modifiers = [],
-    delay = 50
+    delay = 50,
+    currentPos = { x: 960, y: 540 }
   } = options;
 
   const modMap = { 'Alt': 1, 'Control': 2, 'Meta': 4, 'Shift': 8 };
   const modValue = modifiers.reduce((acc, m) => acc + (modMap[m] || 0), 0);
   const buttonMap = { 'left': 'left', 'right': 'right', 'middle': 'middle' };
 
+  let currentMousePos = { ...currentPos };
+
   for (let i = 0; i < clickCount; i++) {
     // Mouse down
     await cdp.send('Input.dispatchMouseEvent', {
       type: 'mousePressed',
-      x: _mousePos.x,
-      y: _mousePos.y,
+      x: currentMousePos.x,
+      y: currentMousePos.y,
       modifiers: modValue,
       button: buttonMap[button] || 'left',
       clickCount: i + 1
@@ -273,8 +270,8 @@ async function humanClick(cdp, options = {}) {
     // Mouse up
     await cdp.send('Input.dispatchMouseEvent', {
       type: 'mouseReleased',
-      x: _mousePos.x,
-      y: _mousePos.y,
+      x: currentMousePos.x,
+      y: currentMousePos.y,
       modifiers: modValue,
       button: buttonMap[button] || 'left',
       clickCount: i + 1
@@ -284,6 +281,8 @@ async function humanClick(cdp, options = {}) {
       await sleep(getRandomInt(80, 150)); // Between clicks
     }
   }
+
+  return { finalPos: currentMousePos };
 }
 
 /**
@@ -291,27 +290,35 @@ async function humanClick(cdp, options = {}) {
  * @param {CDPSession} cdp - CDP session
  * @param {{x:number,y:number}} target - Target position
  * @param {Object} options - Hover options
+ * @returns {Promise<{finalPos:{x:number,y:number}}>}
  */
 async function humanHover(cdp, target, options = {}) {
-  const { duration = 1000, persona = {} } = options;
+  const { duration = 1000, persona = {}, currentPos } = options;
 
-  await humanMove(cdp, target, { persona });
+  const moveResult = await humanMove(cdp, target, { persona, currentPos });
 
   // Settle - small micro-movements
   const settleSteps = 3;
+  let currentMousePos = moveResult.finalPos;
   for (let i = 0; i < settleSteps; i++) {
     const jitterX = gaussianRandom(0, 0.5);
     const jitterY = gaussianRandom(0, 0.5);
+    currentMousePos = {
+      x: clamp(Math.round(currentMousePos.x + jitterX), 0, 1920),
+      y: clamp(Math.round(currentMousePos.y + jitterY), 0, 1080)
+    };
     await cdp.send('Input.dispatchMouseEvent', {
       type: 'mouseMoved',
-      x: clamp(Math.round(_mousePos.x + jitterX), 0, 1920),
-      y: clamp(Math.round(_mousePos.y + jitterY), 0, 1080),
+      x: currentMousePos.x,
+      y: currentMousePos.y,
       modifiers: 0,
       button: 'none',
       clickCount: 0
     });
     await sleep(duration / settleSteps);
   }
+
+  return { finalPos: currentMousePos };
 }
 
 /**
@@ -320,18 +327,19 @@ async function humanHover(cdp, target, options = {}) {
  * @param {{x:number,y:number}} source
  * @param {{x:number,y:number}} target
  * @param {Object} options
+ * @returns {Promise<{finalPos:{x:number,y:number}}>}
  */
 async function humanDragDrop(cdp, source, target, options = {}) {
-  const { persona = {} } = options;
+  const { persona = {}, currentPos } = options;
 
   // Move to source
-  await humanMove(cdp, source, { persona });
+  const moveToSource = await humanMove(cdp, source, { persona, currentPos });
 
   // Mouse down
   await cdp.send('Input.dispatchMouseEvent', {
     type: 'mousePressed',
-    x: _mousePos.x,
-    y: _mousePos.y,
+    x: moveToSource.finalPos.x,
+    y: moveToSource.finalPos.y,
     modifiers: 0,
     button: 'left',
     clickCount: 1
@@ -340,25 +348,25 @@ async function humanDragDrop(cdp, source, target, options = {}) {
   await sleep(getRandomInt(100, 200));
 
   // Drag to target
-  await humanMove(cdp, target, { persona });
+  const moveToTarget = await humanMove(cdp, target, { persona, currentPos: moveToSource.finalPos });
 
   await sleep(getRandomInt(50, 150));
 
   // Mouse up
   await cdp.send('Input.dispatchMouseEvent', {
     type: 'mouseReleased',
-    x: _mousePos.x,
-    y: _mousePos.y,
+    x: moveToTarget.finalPos.x,
+    y: moveToTarget.finalPos.y,
     modifiers: 0,
     button: 'left',
     clickCount: 1
   });
+
+  return { finalPos: moveToTarget.finalPos };
 }
 
 module.exports = {
-  getMousePos,
-  setMousePos,
-  resetMousePos,
+  getInitialMousePos,
   calculateTargetPoint,
   generateControlPoints,
   humanMove,

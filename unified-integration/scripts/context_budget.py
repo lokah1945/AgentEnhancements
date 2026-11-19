@@ -102,6 +102,8 @@ def clamp_to_budget(text: str, max_tokens: int, *, label: str = "") -> str:
     """
     if not text:
         return text
+    if max_tokens <= 0:
+        return ""
     if approx_tokens(text) <= max_tokens:
         return text
     lines = text.splitlines(keepends=True)
@@ -109,15 +111,29 @@ def clamp_to_budget(text: str, max_tokens: int, *, label: str = "") -> str:
     used = 0
     note = f"\n[{label or 'context'} trimmed to the {max_tokens}-token budget; request the remainder explicitly]"
     note_cost = approx_tokens(note)
+    if note_cost > max_tokens:
+        return ""
     for line in lines:
         cost = approx_tokens(line)
         if used + cost > max_tokens - note_cost:
             break
         kept.append(line)
         used += cost
-    if not kept:  # single very long line
-        kept = [text[: int(max_tokens * CHARS_PER_TOKEN_FALLBACK)]]
-    return "".join(kept).rstrip() + note
+    prefix = "".join(kept).rstrip()
+    if not kept or approx_tokens(prefix + note) > max_tokens:
+        # Reserve the notice inside the bound, and measure the combined
+        # output. A fixed character slice can overflow for both the notice
+        # itself and scripts/Unicode whose token-to-character ratio differs.
+        source = prefix if kept else text
+        low, high = 0, len(source)
+        while low < high:
+            middle = (low + high + 1) // 2
+            if approx_tokens(source[:middle].rstrip() + note) <= max_tokens:
+                low = middle
+            else:
+                high = middle - 1
+        prefix = source[:low].rstrip()
+    return prefix + note
 
 
 def budget_report(channels: dict[str, int]) -> dict:

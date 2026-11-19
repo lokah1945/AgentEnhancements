@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-19T06:18:40.124916+00:00",
+  "generated_at": "2026-11-19T11:40:47.117313+00:00",
   "stats": {
     "total": 3466,
     "by_type": {
@@ -55197,7 +55197,7 @@
       ],
       "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
-      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
+      "activation": "hidden until an installed command and required references are configured in ui.api.json"
     },
     {
       "id": "mcp:lighthouse-mcp",

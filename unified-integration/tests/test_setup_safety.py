@@ -23,6 +23,44 @@ class SetupSafetyTests(unittest.TestCase):
                         AGENT_MEMORY_ROOT=str(self.root / 'memory'),
                         AGENT_ENHANCEMENTS_BASE_DIR=str(self.repo))
 
+    def merge_yaml(self, target, enhancement):
+        source = (UI_DIR / 'setup.sh').read_text().rsplit('\nmain "$@"', 1)[0]
+        script = self.unified / 'setup.sh'
+        script.write_text(source + '\nmerge_yaml_config "$1" "$2"\n')
+        env = dict(self.env, PATH=str(Path(sys.executable).parent) + os.pathsep +
+                   os.environ['PATH'])
+        return subprocess.run(['bash', str(script), str(target), enhancement],
+                              env=env, capture_output=True, text=True, timeout=20)
+
+    def test_yaml_reinstall_preserves_first_install_bytes_without_backup(self):
+        target = self.root / 'gemini.yaml'
+        enhancement = '\nmodel: "local"\nhooks:\n  stop: "python3 stop.py"\n'
+        created = self.merge_yaml(target, enhancement)
+        self.assertEqual(created.returncode, 0, created.stderr)
+        original = target.read_bytes()
+        repeated = self.merge_yaml(target, enhancement)
+        self.assertEqual(repeated.returncode, 0, repeated.stderr)
+        self.assertEqual(target.read_bytes(), original)
+        self.assertEqual(list(self.root.glob('gemini.yaml.backup.*')), [])
+
+    def test_yaml_merge_preserves_unchanged_comments_but_applies_real_update(self):
+        target = self.root / 'gemini.yaml'
+        original = '# Keep my configuration\ncustom: "private preference"\nhooks:\n  stop: "old"\n'
+        target.write_text(original)
+        unchanged = self.merge_yaml(target, 'hooks:\n  stop: old\n')
+        self.assertEqual(unchanged.returncode, 0, unchanged.stderr)
+        self.assertEqual(target.read_text(), original)
+        self.assertEqual(list(self.root.glob('gemini.yaml.backup.*')), [])
+        updated = self.merge_yaml(target, 'hooks:\n  stop: new\n')
+        self.assertEqual(updated.returncode, 0, updated.stderr)
+        import yaml
+        merged = yaml.safe_load(target.read_text())
+        self.assertEqual(merged['hooks'], {'stop': 'new'})
+        self.assertEqual(merged['custom'], 'private preference')
+        backups = list(self.root.glob('gemini.yaml.backup.*'))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_text(), original)
+
     def aggregate(self):
         bundle = self.repo / 'agentic-awesome-skills/skills/probe'
         bundle.mkdir(parents=True)

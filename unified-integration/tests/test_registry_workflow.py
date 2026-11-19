@@ -1,6 +1,7 @@
 """Run the registry CI build stage against controlled source and index files."""
 
 import os
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -10,6 +11,19 @@ import yaml
 
 
 class RegistryWorkflowTests(unittest.TestCase):
+    def test_job_environment_only_uses_contexts_available_before_runner_assignment(self):
+        # GitHub Contexts reference: jobs.<job_id>.env cannot use runner.*.
+        allowed = {'github', 'needs', 'strategy', 'matrix', 'vars', 'secrets', 'inputs'}
+        workflows = Path(__file__).resolve().parents[2] / '.github/workflows'
+        for workflow in workflows.glob('*.yml'):
+            doc = yaml.safe_load(workflow.read_text())
+            for name, job in doc.get('jobs', {}).items():
+                for key, value in job.get('env', {}).items():
+                    for expression in re.findall(r'\$\{\{(.*?)\}\}', str(value)):
+                        roots = set(re.findall(r'(?<![\w.])([A-Za-z_]\w*)\.', expression))
+                        with self.subTest(workflow=workflow.name, job=name, variable=key):
+                            self.assertLessEqual(roots, allowed)
+
     def test_vendor_changes_are_aggregated_before_registry_build(self):
         workflow = Path(__file__).resolve().parents[2] / ".github/workflows/registry-regeneration.yml"
         doc = yaml.safe_load(workflow.read_text())

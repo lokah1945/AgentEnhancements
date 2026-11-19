@@ -108,15 +108,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      HOME: ${{ runner.temp }}/ae-integration-home
-      XDG_CONFIG_HOME: ${{ runner.temp }}/ae-integration-config
-      XDG_DATA_HOME: ${{ runner.temp }}/ae-integration-data
+      HOME: ${{ github.workspace }}/.agentenhancements/ci-home
+      XDG_CONFIG_HOME: ${{ github.workspace }}/.agentenhancements/ci-home/.config
+      XDG_DATA_HOME: ${{ github.workspace }}/.agentenhancements/ci-home/.local/share
       AGENT_MEMORY_ROOT: ${{ github.workspace }}/.agentenhancements/memory
       AGENT_ENHANCEMENTS_BUILD_HEADROOM: "0"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+      - name: Prepare isolated HOME
+        run: mkdir -p "$HOME" && chmod 700 "$HOME"
       - name: Build modular skills tree (scaffold from catalog)
         run: |
           bash scripts/scaffold_modular_skills.sh

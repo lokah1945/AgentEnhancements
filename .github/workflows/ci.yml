@@ -119,6 +119,10 @@ jobs:
           persist-credentials: false
       - name: Prepare isolated HOME
         run: mkdir -p "$HOME" && chmod 700 "$HOME"
+      - name: Install integration test command-line tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ripgrep jq ffmpeg tesseract-ocr
       - name: Build modular skills tree (scaffold from catalog)
         run: |
           bash scripts/scaffold_modular_skills.sh

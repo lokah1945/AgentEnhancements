@@ -81,7 +81,7 @@ Sources: `docs/audit/AGENTENHANCEMENTS_E2E_AUDIT_2026-11-15.md` and
 | AE-14 | CLOSED | Timestamp-preserving registry/map generation and deterministic index tests; regeneration workflow checks all committed consumer artifacts. New count --write preserves unchanged mtime in behavioral test. |
 | AE-15 | CLOSED by documented limitation; comment-preserving writer deferred | OpenCode JSONC values/config arrays preserved; comments remain in private backup and limitation documented. Current docs do not claim comments survive serialization. |
 | AE-16 | CLOSED original false success; strengthened current privacy | initializer checks real DB availability; main adds mode/symlink refusal coverage in `test_setup_safety.test_memory_initializer_creates_private_storage_and_refuses_db_symlink`. |
-| AE-17 | CLOSED | `merge_yaml_config` backs up only content changes; `test_hardening.test_yaml_merge_backs_up_only_on_change`. |
+| AE-17 | REGRESSION then CLOSED | First reinstall still reformatted equivalent YAML and made a backup. AE26-31/`1b3951ed` preserves original bytes; two new regression tests fail before the fix and pass after it. |
 | AE-18 | CLOSED | `/usr/local/bin` launcher requires `INSTALL_SYSTEM_LAUNCHER=1`; default uses repository-local launcher. |
 | AE-19 | CLOSED | Catalog/roadmap reference validator and nexus path tests; catalog validation and current generated count check. Native default status mismatch independently covered by count generator. |
 | AE-20 | CLOSED original dead-code set | Unused merge_json_config removed; updater's impossible daemon rebuild removed; unsupported Continue removed from current guides. DOC-08 is a stale documentation name, not revived runtime code. |

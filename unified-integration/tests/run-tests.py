@@ -38,6 +38,8 @@ for mod in [
     "test_security_regressions",
     "test_context_budget_boundaries",
     "test_discovery_quality",
+    "test_setup_safety",
+    "test_runtime_dependencies",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))
 

@@ -14,12 +14,24 @@ if [ -z "${BASH_SOURCE[0]:-}" ]; then
     if [ ! -f "$INSTALL_DIR/unified-integration/setup.sh" ]; then
         git clone https://github.com/lokah1945/AgentEnhancements.git "$INSTALL_DIR"
         if [ -n "$AE_REF" ]; then
-            git -C "$INSTALL_DIR" checkout --quiet "$AE_REF" ||
-                echo "[agent-enhancements] ref '$AE_REF' not found; keeping default branch" >&2
+            if ! git -C "$INSTALL_DIR" fetch --quiet origin "$AE_REF" ||
+               ! git -C "$INSTALL_DIR" checkout --quiet --detach FETCH_HEAD; then
+                echo "[agent-enhancements] requested revision unavailable; refusing unpinned installation" >&2
+                exit 1
+            fi
         fi
     elif [ -d "$INSTALL_DIR/.git" ]; then
-        if ! git -C "$INSTALL_DIR" pull --ff-only --quiet origin "${AE_REF:-master}" 2>/dev/null; then
-            echo "[agent-enhancements] could not fast-forward $INSTALL_DIR to ${AE_REF:-master}; running the existing copy" >&2
+        if [ -n "$AE_REF" ]; then
+            if ! git -C "$INSTALL_DIR" diff --quiet ||
+               ! git -C "$INSTALL_DIR" diff --cached --quiet ||
+               ! git -C "$INSTALL_DIR" fetch --quiet origin "$AE_REF" ||
+               ! git -C "$INSTALL_DIR" checkout --quiet --detach FETCH_HEAD; then
+                echo "[agent-enhancements] cannot safely select requested revision; installation aborted" >&2
+                exit 1
+            fi
+        elif ! git -C "$INSTALL_DIR" pull --ff-only --quiet origin master 2>/dev/null; then
+            echo "[agent-enhancements] cannot fast-forward installation; existing files preserved" >&2
+            exit 1
         fi
     fi
     exec bash "$INSTALL_DIR/unified-integration/setup.sh" "$@"
@@ -415,7 +427,18 @@ aggregate_skills() {
     log_info "Aggregating skills from all sources..."
 
     SKILLS_DIR="$UNIFIED_DIR/skills"
-    mkdir -p "$SKILLS_DIR"
+    # Generated directories must not redirect removal/copy operations through
+    # a pre-existing directory symlink. Check each parent before creating it.
+    ensure_registry_directory() {
+        if [ -L "$1" ]; then
+            log_error "Refusing symlinked registry directory: $1"
+            return 1
+        fi
+        mkdir -p "$1"
+    }
+    ensure_registry_directory "$SKILLS_DIR"
+    ensure_registry_directory "$SKILLS_DIR/by-category"
+    ensure_registry_directory "$SKILLS_DIR/by-agent"
 
     # Create master skills index
     cat > "$SKILLS_DIR/README.md" << 'EOF'
@@ -423,22 +446,26 @@ aggregate_skills() {
 
 This directory contains aggregated skills from multiple sources:
 
-1. **agentic-awesome-skills** - 2,781 skills (primary source)
+1. **agentic-awesome-skills** - primary skill source
 2. **ECC** - Additional skills and commands
 3. **Ponytail** - Additional skills and hooks
 4. **Superpowers** - Additional skills
-5. **replica-skill** - 11 app-cloning sub-skills
-6. **anthropic-skills** - 19 official Anthropic skills (docx, pdf, pptx,
+5. **replica-skill** - app-cloning sub-skills
+6. **anthropic-skills** - official Anthropic skills (docx, pdf, pptx,
    xlsx, skill-creator, mcp-builder, webapp-testing, claude-api, ...)
-7. **agency-agents** - 283 AI-persona skills from The Agency (18 divisions,
+7. **agency-agents** - AI-persona skills from The Agency (division bundles,
    converted to Agent Skills format by scripts/convert_agency_agents.py)
 8. **task-observer** - vendored ambient skill-observation meta-skill
    (rebelytics/one-skill-to-rule-them-all, CC-BY-4.0, pinned; root-layout
    source: one skill bundle whose SKILL.md sits at the source root)
 
+Current counts are generated from the canonical index and catalogs in
+[the capability inventory](../../docs/CAPABILITY_COUNTS.md). The index below
+is the source of truth for the skills available in this installation.
+
 ## Structure
 
-```
+```text
 skills/
 ├── by-category/
 │   ├── security/
@@ -458,16 +485,20 @@ skills/
 │   ├── opencode/
 │   ├── copilot/
 │   ├── windsurf/
-│   └── kiro/
+│   ├── kiro/
+│   └── hermes/
 └── all-skills.json
 ```
 
 ## Usage
 
 Skills are in SKILL.md format with frontmatter:
-- name, description, risk, source, date_added, author, tags, tools (compatible agents)
+
+- name, description, risk, source, date_added, author, tags, tools (compatible
+  agents)
 
 To use a skill, the agent should:
+
 1. Match task keywords to skill's "When to Use" section
 2. Load the skill's detailed guide
 3. Apply the skill's patterns and procedures
@@ -476,13 +507,13 @@ EOF
     # Create category directories
     CATEGORIES=("security" "architecture" "testing" "refactoring" "code-review" "documentation" "devops" "ai-ml" "productivity" "general")
     for cat in "${CATEGORIES[@]}"; do
-        mkdir -p "$SKILLS_DIR/by-category/$cat"
+        ensure_registry_directory "$SKILLS_DIR/by-category/$cat"
     done
 
     # Create agent directories
     AGENT_LIST=("claude-code" "codex" "cursor" "gemini-cli" "opencode" "copilot" "windsurf" "kiro" "hermes")
     for agent in "${AGENT_LIST[@]}"; do
-        mkdir -p "$SKILLS_DIR/by-agent/$agent"
+        ensure_registry_directory "$SKILLS_DIR/by-agent/$agent"
     done
 
     # Accumulate skill metadata into a record file (fields separated by
@@ -551,7 +582,10 @@ EOF
                 target_dir="$SKILLS_DIR/by-category/$skill_category/$skill_name"
                 mkdir -p "$(dirname "$target_dir")"
                 rm -rf "$target_dir"
-                cp -r "$skill_dir" "$target_dir" 2>/dev/null || true
+                if ! cp -r "$skill_dir" "$target_dir"; then
+                    log_error "Failed to copy skill bundle: $skill_name"
+                    return 1
+                fi
 
                 # Also copy to by-agent/ for each compatible tool.
                 # Only the canonical agent directories are populated.
@@ -562,7 +596,10 @@ EOF
                                 agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
                                 mkdir -p "$(dirname "$agent_target_dir")"
                                 rm -rf "$agent_target_dir"
-                                cp -r "$skill_dir" "$agent_target_dir" 2>/dev/null || true
+                                if ! cp -r "$skill_dir" "$agent_target_dir"; then
+                                    log_error "Failed to copy agent skill bundle: $skill_name"
+                                    return 1
+                                fi
                                 ;;
                             *)
                                 # Unknown tool name: keep it in the index but
@@ -619,7 +656,10 @@ EOF
                 target_dir="$SKILLS_DIR/by-category/$skill_category/$skill_name"
                 mkdir -p "$(dirname "$target_dir")"
                 rm -rf "$target_dir"
-                cp -r "$skill_dir" "$target_dir" 2>/dev/null || true
+                if ! cp -r "$skill_dir" "$target_dir"; then
+                    log_error "Failed to copy skill bundle: $skill_name"
+                    return 1
+                fi
 
                 while IFS= read -r tool; do
                     if [ -n "$tool" ]; then
@@ -628,7 +668,10 @@ EOF
                                 agent_target_dir="$SKILLS_DIR/by-agent/$tool/$skill_name"
                                 mkdir -p "$(dirname "$agent_target_dir")"
                                 rm -rf "$agent_target_dir"
-                                cp -r "$skill_dir" "$agent_target_dir" 2>/dev/null || true
+                                if ! cp -r "$skill_dir" "$agent_target_dir"; then
+                                    log_error "Failed to copy agent skill bundle: $skill_name"
+                                    return 1
+                                fi
                                 ;;
                             *)
                                 ;;
@@ -1330,7 +1373,7 @@ setup_compression() {
     elif [ -f "$BASE_DIR/headroom/Cargo.toml" ] && [ "${AGENT_ENHANCEMENTS_BUILD_HEADROOM:-1}" = "1" ]; then
         if command -v cargo &> /dev/null; then
             log_info "Building headroom from source..."
-            if (cd "$BASE_DIR/headroom" && cargo build --release 2>&1 | tail -20); then
+            if (cd "$BASE_DIR/headroom" && cargo build --locked --release -p headroom-cli 2>&1 | tail -20); then
                 if [ -f "$BASE_DIR/headroom/target/release/headroom" ]; then
                     HEADROOM_CMD="$BASE_DIR/headroom/target/release/headroom"
                     log_success "headroom built successfully"
@@ -1352,7 +1395,7 @@ setup_compression() {
     fi
 
     # Create compression configuration
-    cat > "$COMPRESSION_DIR/config.yaml" << EOF
+    cat > "$COMPRESSION_DIR/config.yaml" << 'EOF'
 # Context Compression Configuration
 
 compression:
@@ -1361,7 +1404,7 @@ compression:
 
   # Headroom settings
   headroom:
-    binary_path: "${HEADROOM_CMD:-headroom}"
+    binary_path: "${HEADROOM_BIN:-headroom}"
     # Compression modes
     modes:
       code: "smart"        # Preserve code structure, compress comments/whitespace

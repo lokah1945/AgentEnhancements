@@ -81,7 +81,7 @@ AgentEnhancements/
 │
 ├── plugin-catalog/                     # canonical catalog + per-plugin manifests
 │   ├── catalog.json                    # 40 plugins, 6 categories, upstream URLs
-│   ├── mcp-servers.json                # 38 MCP servers, P0/P1/P2 priority
+│   ├── mcp-servers.json                # 40 MCP servers, P0/P1/P2 priority
 │   ├── code/, research/, ...           # original SKILL.md + manifest sources
 │   └── README.md
 │
@@ -166,9 +166,9 @@ Never edit the upper layers directly; regenerate from below.
 | Plugin | Purpose | MCP servers needed |
 |--------|---------|---------------------|
 | `graphify` | Extract entities + relations from unstructured text → knowledge graph | neo4j-mcp, graphrag-mcp, embeddings-mcp |
-| `agent-reach` | Deep multi-source research with citation tracking | brave-search-mcp, tavily-mcp, exa-mcp, firecrawl-mcp |
+| `agent-reach` | Deep multi-source research with citation tracking | tavily-mcp, exa-mcp, firecrawl-mcp |
 | `understand-anything` | Feynman-style concept explanation for onboarding | wikipedia-mcp, arxiv-mcp, embeddings-mcp |
-| `last-30-days` | Fresh-trend monitoring (last 30 days of news / releases) | brave-search-mcp, newsapi-mcp, google-news-mcp |
+| `last-30-days` | Fresh-trend monitoring (last 30 days of news / releases) | exa-mcp, newsapi-mcp, google-news-mcp |
 | `rea` | Reverse Engineer Anything — analyze how apps/binaries work (upstream `morluto/rea` MCP server, install separately) | rea MCP server (upstream) |
 
 #### Tokens / Optimization (`skills/tokens-optimization/`)
@@ -278,9 +278,15 @@ it merges rather than overwrites user customizations (post-H-1 audit fix).
 
 ## 5. Quality posture
 
-- **265 integration tests**, including 2 opt-in live network tests, plus
-  native CLI fixtures and installed-host checks. See the current
+- **323 integration tests**, including 3 opt-in live tests (2 network, 1
+  preflight model), plus native CLI fixtures and installed-host checks. See
+  the current
   [verification report](docs/audit/NATIVE_HOSTS_E2E_2026-11-16.md).
+- **Adaptive preflight** (capability selection before the main agent's first
+  inference): 58 dedicated regression tests cover the model.json contract,
+  Mode 0 byte-parity, zero-egress proofs, exact-ID resolution and a full
+  Mode 2 round against a local TLS fixture — see
+  [docs/ADAPTIVE_PREFLIGHT.md](docs/ADAPTIVE_PREFLIGHT.md).
 - **Static checks**: `bash -n`, `py_compile`, JSON schema validation —
   enforced in CI.
 - **End-to-end setup** verified against 8 stub agent CLIs in an isolated
@@ -316,17 +322,17 @@ For full options (dry-run, agent filter, no-vendored mode) see
 See **`docs/MCP_INTEGRATION_CHECKLIST.md`** for the step-by-step plan to
 finish the merger. Summary:
 
-- **38 MCP servers** declared across the 40 plugins (the agency persona packs
+- **40 MCP servers** declared across the 40 plugins (the agency persona packs
   need none); **5 P0** servers must be
   installed before Phase 1 is functional.
 - **9 servers built in-house** at `unified-integration/mcp-servers/`
   (embeddings, task-router, ffmpeg, vision, graphrag, arxiv,
   google-news, video, style) - installed by `setup-mcp.sh`, gated by
   CI job `mcp-servers`, covered by 39 regression tests.
-- **20 distinct API keys / env vars** required across the catalog: Brave,
-  Tavily, Exa, Firecrawl, Figma, HeyGen, ElevenLabs, Microsoft Graph,
+- **25 distinct API keys / env vars** required across the catalog: Serper,
+  You, Tavily, Exa, Firecrawl, Figma, HeyGen, ElevenLabs, Microsoft Graph,
   Google OAuth, NewsAPI, Linear, GitHub, OpenAI, Bing Image, Neo4j,
-  LanguageTool.
+  LanguageTool, agent_browser (Chromium path/profile/log level).
 
 ## 8. Related documents
 
@@ -337,5 +343,7 @@ finish the merger. Summary:
 | `.cursorrules` | Cursor / Claude Code / any agent reading system prompts |
 | `skills/README.md` | Plugin authors |
 | `docs/MCP_INTEGRATION_CHECKLIST.md` | Platform engineers building MCP servers |
+| `docs/ADAPTIVE_PREFLIGHT.md` | Architects wiring capability-selection preflight |
+| `docs/CONFIGURATION.md` | Operators managing credentials and env vars |
 | `docs/audit/E2E_AUDIT_2026-11.md` | Security / QA reviewers |
 | `CONTRACT.md` | Contributors |

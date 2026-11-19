@@ -272,7 +272,10 @@ class TestIntegrationReadmeCoverage(unittest.TestCase):
         doc = README_INTEGRATION.read_text()
         self.assertIn("17 / 17", doc)
         self.assertIn("**40 plugins**", doc)
-        self.assertIn("38 MCP servers", doc)
+        # Totals must track the source of truth, not a stale snapshot
+        # (audit 2026-11-19: the old "38" predated agent_browser).
+        servers = _load(CATALOG_PATH.parent / "mcp-servers.json")["servers"]
+        self.assertIn(f"**{len(servers)} MCP servers**", doc)
 
 
 if __name__ == "__main__":

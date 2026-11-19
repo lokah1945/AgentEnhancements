@@ -39,6 +39,10 @@ EVENTS = (
 
 def runtime_python() -> str:
     """Keep venv command paths stable across python/python3 entry points."""
+    from project_paths import runtime_root
+    local = runtime_root() / 'venv/bin/python3'
+    if local.is_file():
+        return str(local)
     canonical = Path(sys.prefix) / "bin/python3"
     if sys.prefix != sys.base_prefix and canonical.is_file():
         return str(canonical)
@@ -65,14 +69,13 @@ def merge_hooks(doc: dict, agent: str) -> None:
             if handlers:
                 retained.append({**group, "hooks": handlers})
         hooks[event] = retained
-    command = shlex.join([runtime_python(), str(UI / "scripts/runtime.py"), agent])
-    if os.environ.get("AGENT_MEMORY_ROOT"):
-        command = (
-            "env "
-            + shlex.quote("AGENT_MEMORY_ROOT=" + os.environ["AGENT_MEMORY_ROOT"])
-            + " "
-            + command
-        )
+    from project_paths import environment
+    variables = environment()
+    for name in ('AGENT_ENHANCEMENTS_API_FILE', 'AGENT_ENHANCEMENTS_MODEL_FILE'):
+        if os.environ.get(name):
+            variables[name] = os.environ[name]
+    command = shlex.join(['env', *[key+'='+value for key, value in variables.items()],
+                          runtime_python(), str(UI / "scripts/runtime.py"), agent])
     for event in EVENTS:
         hooks.setdefault(event, []).append(
             {
@@ -93,6 +96,8 @@ def mcp_block() -> dict:
     template = json.loads((UI / "mcp-servers/mcp.json.example").read_text())[
         "mcpServers"
     ]
+    from project_paths import environment
+    template['agent-enhancements'].setdefault('env', {}).update(environment())
     for name in (
         "AGENT_ENHANCEMENTS_API_FILE",
         "AGENT_MEMORY_ROOT",

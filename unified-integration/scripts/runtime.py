@@ -205,6 +205,8 @@ def main() -> None:
     parser.add_argument("--text", action="store_true")
     args = parser.parse_args()
     try:
+        from project_paths import environment
+        os.environ.update(environment())
         raw = sys.stdin.read(MAX_INPUT + 1)
         if len(raw) > MAX_INPUT:
             raise ValueError("hook input exceeds size limit")

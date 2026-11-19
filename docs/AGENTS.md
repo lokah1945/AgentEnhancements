@@ -5,14 +5,14 @@ last_updated: 2026-11-16
 audience: users
 ---
 
-# Agent Setup Guides
+## Agent Setup Guides
 
 `setup.sh` auto-detects installed agents by probing `PATH` and activates the
 enhancements through each tool's **native configuration format**. Backups are
 written next to every modified file, and marker-guarded instruction files
 preserve your personal content across re-runs.
 
-## Detection
+### Detection
 
 | Agent | Detected via |
 | ------- | -------------- |
@@ -40,10 +40,10 @@ bash unified-integration/setup.sh
 ```
 
 The selection is stored outside git at
-`${XDG_DATA_HOME:-~/.local/share}/agentenhancements/host-selection.json`.
+`.agentenhancements/config/host-selection.json`.
 Only existing Hermes profiles are selected; sibling profiles remain untouched.
 
-## Native skill activation (all agents)
+### Native skill activation (all agents)
 
 Regardless of which agent is detected, `setup.sh` symlinks a curated skill
 set into the directories that Agent Skills compatible harnesses read
@@ -56,8 +56,10 @@ automatically at runtime:
 | `~/.config/opencode/skills/` | OpenCode (native skills directory) |
 | `~/.agents/skills/` | cross-agent Agent Skills standard (agentskills.io) |
 
-The default links **task-observer** and the 15 **Superpowers** workflow skills (16 total).
-Other capabilities are discovered on demand through the library map and registry.
+The default links **task-observer** and the 15 **Superpowers** workflow skills
+(16 total).
+Other capabilities are discovered on demand through the library map and
+registry.
 `link-skills.sh --set curated` explicitly selects the 31-skill collection
 (anthropic-skills, replica-skill and task-observer). Extend or remove links with
 `unified-integration/scripts/link-skills.sh` (see [SKILLS.md](SKILLS.md)).
@@ -65,11 +67,13 @@ Other capabilities are discovered on demand through the library map and registry
 Claude Code can additionally consume the upstream marketplace:
 `/plugin marketplace add anthropics/skills` (vendored at `anthropic-skills/`).
 
-**Skill discovery is flexible**: default 8 skill cards per prompt, configurable via `AE_MAX_SKILL_CARDS` env var. Agents decide which skills to actually read/use from the suggestions.
+**Skill discovery is flexible**: default 8 skill cards per prompt, configurable
+via `AE_MAX_SKILL_CARDS` env var. Agents decide which skills to actually
+read/use from the suggestions.
 
-## Per-agent notes
+### Per-agent notes
 
-### Claude Code 2.1.202 (verified)
+#### Claude Code 2.1.202 (verified)
 
 Setup preserves user hooks while installing `SessionStart`, `UserPromptSubmit`,
 `PostToolUse` and `Stop` handlers in `~/.claude/settings.json`. Events are read
@@ -82,7 +86,7 @@ AgentEnhancements does not import its tokens, endpoints or helper into the
 project. The shared [MCP configuration](CONFIGURATION.md) is independent of
 the host agent's model-provider authentication.
 
-### Codex CLI 0.167.2 (verified)
+#### Codex CLI 0.167.2 (verified)
 
 Setup merges MCP servers into `~/.codex/config.toml`, lifecycle hooks into
 `~/.codex/hooks.json`, instructions into `~/.codex/AGENTS.md`, and **native
@@ -94,11 +98,14 @@ or managed policy can prevent activation. Older Codex versions are not covered
 by this check. Codex 0.169.0 was also tested in an isolated installation. Both
 versions retain the MCP tool catalog within a turn; credential revocation is
 enforced by the gateway even when the client still displays a cached name.
-Newly added tools may require a fresh session. See [configuration](CONFIGURATION.md).
+Newly added tools may require a fresh session. See
+[configuration](CONFIGURATION.md).
 
-**Full native integration**: 5/5 lifecycle hooks (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop), 16 native skills, MCP gateway, memory persistence, and compression — equivalent to Claude Code.
+**Full native integration**: 5/5 lifecycle hooks (SessionStart,
+UserPromptSubmit, PreToolUse, PostToolUse, Stop), 16 native skills, MCP gateway,
+memory persistence, and compression — equivalent to Claude Code.
 
-### OpenCode 2.3.0 (verified; 2.2.5 also tested)
+#### OpenCode 2.3.0 (verified; 2.2.5 also tested)
 
 Setup edits the existing `~/.config/opencode/opencode.jsonc`, or creates
 `opencode.json` if JSONC is absent. Personal instructions, plugins, providers
@@ -120,9 +127,10 @@ OpenCode 1 plugin APIs differ and
 are not supported by this adapter.
 Setup checks the installed version before changing the OpenCode configuration.
 
-**Full native integration**: lifecycle hooks, 16 native skills, MCP gateway, memory persistence, and compression — equivalent to Claude Code.
+**Full native integration**: lifecycle hooks, 16 native skills, MCP gateway,
+memory persistence, and compression — equivalent to Claude Code.
 
-### Hermes Agent (native profiles)
+#### Hermes Agent (native profiles)
 
 Setup installs the shared MCP gateway in each selected profile's `config.yaml`,
 adds a bounded library pointer to `SOUL.md`, and links the local
@@ -133,7 +141,8 @@ An explicitly disabled plugin or a conflicting user plugin causes an error.
 The plugin uses `pre_llm_call`, `post_llm_call` and `post_tool_call` to discover
 skills, recall notes and persist short task/session summaries. Conversation
 history and tool payloads are never forwarded to AE. Model providers, persona
-content and host approvals are preserved. `--mcp-only` installs only the gateway.
+content and host approvals are preserved. `--mcp-only` installs only the
+gateway.
 `HERMES_HOME` is respected, including setup from a terminal whose environment
 points at `<root>/profiles/<name>`. If `active_profile` points to a missing
 profile, setup repairs it using the saved explicit profile selection.
@@ -143,32 +152,32 @@ build reporting v0.17.0, upstream `f1345290`, passed native CLI tests for both
 profiles. Compatibility requires its public plugin hook API; the test command
 below verifies actual installation behavior rather than a version label alone.
 
-### Cursor (global rule)
+#### Cursor (global rule)
 
 Setup writes `~/.cursor/rules/agent-enhancements.mdc` (frontmatter-scoped
 global rule). Cursor's real `~/.cursor/settings.json` is no longer
 polluted with integration keys; fictional keys from older versions are
 cleaned up (signature-checked).
 
-### Gemini CLI (global context file)
+#### Gemini CLI (global context file)
 
 Setup writes a marker-guarded section into `~/.gemini/GEMINI.md` (the
 hierarchical global context file Gemini CLI loads at session start) and
 keeps `~/.gemini/config.yaml` as a reference summary.
 
-### Windsurf (global rule)
+#### Windsurf (global rule)
 
 Setup writes `~/.codeium/windsurf/rules/agent-enhancements.md`. The
 legacy `~/.windsurf/config.yaml` (never read by Windsurf) is removed
 (signature-checked) when found.
 
-### GitHub Copilot / Kiro (reference config)
+#### GitHub Copilot / Kiro (reference config)
 
 `~/.config/github-copilot/config.yaml` and `~/.kiro/config.yaml` carry a
 reference summary of the integration settings. Use these agents through
 the launcher to get the full environment.
 
-## Native verification
+### Native verification
 
 ```bash
 runtime_python="$(bash unified-integration/scripts/setup-mcp.sh --prepare)"
@@ -183,7 +192,7 @@ its report and exits nonzero on failure. These commands use local tools and
 isolated model fixtures; provider account authentication must also be verified
 through the native CLI. See [RUNBOOK.md](RUNBOOK.md).
 
-## Marker-guarded files
+### Marker-guarded files
 
 Instruction files written by setup are wrapped in:
 
@@ -196,7 +205,7 @@ Instruction files written by setup are wrapped in:
 Everything outside the markers is preserved verbatim, so personal
 instructions survive every re-run of `setup.sh`.
 
-## Launching agents
+### Launching agents
 
 ```bash
 unified-integration/launch-agent.sh <agent> [args...]
@@ -207,7 +216,7 @@ agent-enhanced <agent> [args...]
 The launcher validates the agent against the last detection run, initializes
 memory, exports the standard environment variables and execs the agent.
 
-## Customization
+### Customization
 
 - Override any path: see the environment variables in
   [CONFIGURATION.md](CONFIGURATION.md).

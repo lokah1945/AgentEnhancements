@@ -21,11 +21,15 @@ from typing import Callable
 
 from mcp.server.fastmcp import FastMCP
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
+from project_paths import memory_root
+
 VERSION = "1.0.0"
 BASE = "https://news.google.com/rss"
 LANGS = {"en": "en", "id": "id", "jp": "jp", "kr": "kr", "de": "de",
          "fr": "fr", "es": "es", "pt": "pt-BR", "zh": "zh-Hans"}
-CACHE_DIR = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory")) / "mcp" / "news-cache"
+CACHE_DIR = memory_root() / "mcp" / "news-cache"
 CACHE_TTL = 600
 TIMEOUT = 30
 MAX_LIMIT = 50

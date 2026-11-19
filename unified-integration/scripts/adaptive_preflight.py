@@ -24,10 +24,9 @@ OpenCode/Hermes use as the context channel). Mode 1 never switches to
 Mode 2 automatically; the model source follows the user's explicit
 choice.
 
-Configuration (user scope, outside any project checkout):
+Configuration (private, checkout-local state):
 
-  $XDG_CONFIG_HOME/agentenhancements/model.json (fallback
-  ~/.config/agentenhancements/model.json):
+  <checkout>/.agentenhancements/config/model.json:
 
     {"adaptive_preflight_mode": 0}                      # disabled
     {"adaptive_preflight_mode": 1}                      # native host
@@ -210,11 +209,9 @@ def _api_config():
 
 
 def config_dir() -> Path:
-    """User-scope configuration directory (XDG pattern, outside cwd)."""
-    xdg = os.environ.get("XDG_CONFIG_HOME")
-    if xdg:
-        return Path(xdg).expanduser() / "agentenhancements"
-    return Path.home() / ".config" / "agentenhancements"
+    """Private configuration in the active checkout, independent of cwd/XDG."""
+    from project_paths import config_root
+    return config_root()
 
 
 def model_config_path() -> Path:

@@ -25,8 +25,12 @@ from typing import Callable
 from mcp.server.fastmcp import FastMCP
 from filelock import FileLock
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
+from project_paths import memory_root
+
 VERSION = "1.0.0"
-STATE_ROOT = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory"))
+STATE_ROOT = memory_root()
 PROJECT_KEY = hashlib.sha256(str(Path.cwd().resolve()).encode()).hexdigest()[:24]
 STORE_DIR = STATE_ROOT / "mcp" / "video" / PROJECT_KEY
 TIMELINES = STORE_DIR / "timelines.json"

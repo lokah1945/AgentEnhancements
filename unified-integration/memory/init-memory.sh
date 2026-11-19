@@ -3,7 +3,8 @@
 
 set -euo pipefail
 umask 077
-MEMORY_ROOT="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+MEMORY_ROOT="${AGENT_MEMORY_ROOT:-${AGENT_ENHANCEMENTS_STATE_DIR:-$PROJECT_ROOT/.agentenhancements}/memory}"
 if [ -L "$MEMORY_ROOT" ] || [ -L "$MEMORY_ROOT/memory.db" ]; then
     echo "Refusing symlinked memory storage" >&2
     exit 1

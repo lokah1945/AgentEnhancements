@@ -27,6 +27,7 @@ import subprocess
 import tempfile
 import time
 import uuid
+from pathlib import Path
 from typing import Any, Callable
 
 from mcp.server.fastmcp import FastMCP
@@ -203,7 +204,11 @@ def dispatch(kind: str, command: str | None = None, code: str | None = None,
         "id": task_id, "status": "queued", "created_at": time.time(),
         "spec": {"kind": kind, "timeout": effective_timeout},
     }
-    _WORKSPACES[task_id] = tempfile.mkdtemp(prefix=f"ae-task-{task_id}-")
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
+    from project_paths import prepare
+    workspaces = prepare() / 'cache/tasks'
+    workspaces.mkdir(mode=0o700, exist_ok=True)
+    _WORKSPACES[task_id] = tempfile.mkdtemp(prefix=f"ae-task-{task_id}-", dir=workspaces)
     future = _POOL.submit(_run_task, task_id, spec)
     future.add_done_callback(lambda _f: None)
     return {"task_id": task_id, "status": "queued",

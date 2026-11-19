@@ -13,7 +13,10 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
-MEMORY_ROOT = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from project_paths import memory_root
+
+MEMORY_ROOT = memory_root()
 DB_PATH = MEMORY_ROOT / "memory.db"
 
 class AgentMemory:

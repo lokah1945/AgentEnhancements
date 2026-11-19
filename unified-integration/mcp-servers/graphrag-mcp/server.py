@@ -29,10 +29,14 @@ from typing import Callable
 
 from mcp.server.fastmcp import FastMCP
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
+from project_paths import memory_root
+
 VERSION = "1.0.0"
 # Corpus evidence may contain private source text. Do not store it in a
 # world-readable shared /tmp namespace or collide across working directories.
-STATE_ROOT = Path(os.environ.get("AGENT_MEMORY_ROOT", Path.home() / ".agent-memory"))
+STATE_ROOT = memory_root()
 PROJECT_KEY = hashlib.sha256(str(Path.cwd().resolve()).encode()).hexdigest()[:24]
 STORE_DIR = STATE_ROOT / "mcp" / "graphrag" / PROJECT_KEY
 STOPWORDS = {

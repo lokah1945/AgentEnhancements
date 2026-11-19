@@ -40,6 +40,7 @@ for mod in [
     "test_discovery_quality",
     "test_setup_safety",
     "test_runtime_dependencies",
+    "test_project_local_state",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))
 

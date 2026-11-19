@@ -1054,8 +1054,8 @@
     },
     {
       "slug": "rea",
-      "role": "research",
-      "for_mode": "hipotesis-driven, multi-step"
+      "role": "reverse-engineering",
+      "for_mode": "binary, APK and application analysis"
     }
   ],
   "last_updated": "2026-11-15"

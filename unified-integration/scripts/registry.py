@@ -895,41 +895,134 @@ def cmd_map(task: str, limit: int = 8, as_json: bool = False) -> int:
     return 0
 
 
+def find_entry(identifier: str) -> Optional[Dict[str, Any]]:
+    """Resolve one entry: exact typed ID first, then the name/slug surface.
+
+    Typed IDs are unambiguous and MUST resolve to their own entry: the
+    audit's alias probe showed ``show capability:task-observer`` binding
+    to ``skill:task-observer`` because the old single pass stripped the
+    prefix and stopped at the first same-named entry. Preflight
+    selection relies on this exactness, so ID resolution and the CLI
+    name surface are now two deliberate passes.
+    """
+    needle = (identifier or "").strip()
+    if not needle:
+        return None
+    entries = load_all_entries()
+    for entry in entries:
+        if entry["id"].lower() == needle.lower():
+            return entry
+    stripped = needle
+    for prefix in ("skill:", "plugin:", "mcp:", "capability:"):
+        if stripped.lower().startswith(prefix):
+            stripped = stripped[len(prefix):]
+            break
+    for entry in entries:
+        if entry.get("name", "").lower() == stripped.lower() or \
+                entry.get("slug", "").lower() == stripped.lower():
+            return entry
+    return None
+
+
+def _lookup_card(entry: Dict[str, Any]) -> Dict[str, Any]:
+    """Compact card for the internal preflight read surface (no pointers
+    to CLI commands the selector cannot run; readiness travels with the
+    card so blockers stay visible - audit §8.3 exploration path)."""
+    ready = entry_readiness(entry)
+    card = {
+        "id": entry.get("id", ""),
+        "type": entry.get("type", ""),
+        "name": entry.get("name", ""),
+        "summary": (entry.get("description") or "").strip()[:100],
+        "ready": ready.get("ready", "unknown"),
+    }
+    if ready.get("ready") != "yes" and ready.get("blocker"):
+        card["blocker"] = ready["blocker"][:80]
+    return card
+
+
+def paged_search(query: str, entry_type: str = "", offset: int = 0,
+                 limit: int = 5) -> Dict[str, Any]:
+    """Internal paginated search over the live sources (audit §8.3).
+
+    Unlike the public ``cmd_search`` (which hides unconfigured MCP
+    servers), this read surface is for the preflight selector: every
+    page states how many matched, how many were sent and whether more
+    remain, so a selector can page without a relevance threshold.
+    """
+    offset = max(0, int(offset))
+    limit = max(1, min(int(limit), MAX_SEARCH_CARDS * 2))
+    entries = load_all_entries()
+    if entry_type:
+        entries = [e for e in entries if e["type"] == entry_type]
+    ranked_all = rank_entries(entries, query, limit=len(entries) or 1)
+    page = ranked_all[offset:offset + limit]
+    return {
+        "query": query,
+        "matched": len(ranked_all),
+        "sent": len(page),
+        "offset": offset,
+        "has_more": offset + limit < len(ranked_all),
+        "cards": [_lookup_card(entry) for _, entry in page],
+    }
+
+
+def paged_list(entry_type: str = "", source: str = "", prefix: str = "",
+               offset: int = 0, limit: int = 50) -> Dict[str, Any]:
+    """Internal paginated list by type, source or ID prefix (audit §8.3).
+
+    Stable ordering (sorted by ID) makes a page position a valid
+    reference inside one registry revision; counts and has_more keep
+    the enumeration honest without loading a threshold.
+    """
+    offset = max(0, int(offset))
+    limit = max(1, min(int(limit), 200))
+    entries = load_all_entries()
+    if entry_type:
+        entries = [e for e in entries if e["type"] == entry_type]
+    if source:
+        entries = [e for e in entries if (e.get("source") or "built-in") == source]
+    if prefix:
+        low = prefix.lower()
+        entries = [e for e in entries if e["id"].lower().startswith(low)]
+    entries = sorted(entries, key=lambda e: e["id"])
+    page = entries[offset:offset + limit]
+    return {
+        "matched": len(entries),
+        "sent": len(page),
+        "offset": offset,
+        "has_more": offset + limit < len(entries),
+        "cards": [_lookup_card(entry) for entry in page],
+    }
+
+
 def cmd_show(identifier: str, as_json: bool = False) -> int:
     """Show one entry by id or name (L2 detail, bounded).
 
     The detail page carries the usage contract, dependencies, pointers and
     live readiness. Output is clamped to MAX_DETAIL_PAGE tokens with an
     explicit truncation note pointing at the on-disk source; nothing is
-    silently cut.
+    silently cut. Typed IDs resolve to their own entry (find_entry).
     """
-    entries = load_all_entries()
-    needle = identifier.lower()
-    for prefix in ("skill:", "plugin:", "mcp:", "capability:"):
-        if needle.startswith(prefix):
-            needle = needle[len(prefix):]
-            break
-    for entry in entries:
-        if entry["id"].lower() == identifier.lower() or \
-                entry.get("name", "").lower() == needle or \
-                entry.get("slug", "").lower() == needle:
-            detail = dict(entry)
-            detail["readiness"] = entry_readiness(entry)
-            if as_json:
-                print(clamp_to_budget(
-                    json.dumps(detail, indent=2), MAX_DETAIL_PAGE,
-                    label="registry detail"))
-                return 0
-            text = _format_entry(entry)
-            if entry.get("activation"):
-                text += f"\n    activation: {entry['activation']}"
-            ready = detail["readiness"]
-            text += (f"\n    readiness: {ready.get('ready', '?')}"
-                     + (f" ({ready.get('how')})" if ready.get("how") else "")
-                     + (f" - {ready['blocker']}" if ready.get("blocker") else ""))
-            print(clamp_to_budget(text, MAX_DETAIL_PAGE,
-                                  label="registry detail"))
+    entry = find_entry(identifier)
+    if entry is not None:
+        detail = dict(entry)
+        detail["readiness"] = entry_readiness(entry)
+        if as_json:
+            print(clamp_to_budget(
+                json.dumps(detail, indent=2), MAX_DETAIL_PAGE,
+                label="registry detail"))
             return 0
+        text = _format_entry(entry)
+        if entry.get("activation"):
+            text += f"\n    activation: {entry['activation']}"
+        ready = detail["readiness"]
+        text += (f"\n    readiness: {ready.get('ready', '?')}"
+                 + (f" ({ready.get('how')})" if ready.get("how") else "")
+                 + (f" - {ready['blocker']}" if ready.get("blocker") else ""))
+        print(clamp_to_budget(text, MAX_DETAIL_PAGE,
+                              label="registry detail"))
+        return 0
     print(f"not found: {identifier}", file=sys.stderr)
     return 1
 

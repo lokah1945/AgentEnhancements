@@ -22,6 +22,12 @@ TEST_MODULES = [
     "test_stage_detector",
     "test_subagent_handler",
     "test_host_adapters",
+    "test_quality_checks",
+    "test_evidence_store",
+    "test_correction_loop",
+    "test_review_coordinator",
+    "test_feature_flags",
+    "test_effectiveness_tracker",
 ]
 
 

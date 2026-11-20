@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "updated": 1795215912.8084388,
+  "flags": {
+    "preflight_mode": {
+      "enabled": true,
+      "host_overrides": {},
+      "rollout_percentage": 100.0,
+      "description": "Adaptive preflight mode (0=legacy, 1=native, 2=custom)",
+      "min_version": ""
+    },
+    "quality_guidance": {
+      "enabled": true,
+      "host_overrides": {
+        "claude-code": true
+      },
+      "rollout_percentage": 100.0,
+      "description": "Evidence-based quality guidance and verification checks",
+      "min_version": ""
+    },
+    "stage_hints": {
+      "enabled": false,
+      "host_overrides": {},
+      "rollout_percentage": 50.0,
+      "description": "Stage/role-aware capability hints",
+      "min_version": ""
+    },
+    "subagent_support": {
+      "enabled": false,
+      "host_overrides": {
+        "claude-code": true,
+        "codex": false
+      },
+      "rollout_percentage": 0.0,
+      "description": "Subagent-specific capability injection",
+      "min_version": ""
+    },
+    "effectiveness_tracking": {
+      "enabled": false,
+      "host_overrides": {},
+      "rollout_percentage": 0.0,
+      "description": "Track capability effectiveness (recommended/used/outcome)",
+      "min_version": ""
+    },
+    "mcp_gateway": {
+      "enabled": true,
+      "host_overrides": {},
+      "rollout_percentage": 100.0,
+      "description": "MCP server gateway and tool routing",
+      "min_version": ""
+    },
+    "memory_persistence": {
+      "enabled": true,
+      "host_overrides": {},
+      "rollout_percentage": 100.0,
+      "description": "Cross-session SQLite memory",
+      "min_version": ""
+    },
+    "context_compression": {
+      "enabled": true,
+      "host_overrides": {},
+      "rollout_percentage": 100.0,
+      "description": "Context compression with headroom/Python fallback",
+      "min_version": ""
+    },
+    "native_hooks": {
+      "enabled": true,
+      "host_overrides": {},
+      "rollout_percentage": 100.0,
+      "description": "Native lifecycle hooks for supported agents",
+      "min_version": ""
+    },
+    "skill_discovery": {
+      "enabled": true,
+      "host_overrides": {},
+      "rollout_percentage": 100.0,
+      "description": "Skill registry and discovery",
+      "min_version": ""
+    }
+  }
+}

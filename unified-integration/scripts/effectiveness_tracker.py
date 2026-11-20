@@ -6,13 +6,14 @@ Integrates with Task Observer for skill improvement recommendations.
 """
 
 import json
+import re
 import sqlite3
 import threading
 import time
 import uuid
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from contextlib import contextmanager
 from enum import Enum
 

@@ -592,6 +592,20 @@ class CheckRunner:
             stderr = str(e)
             status = CheckStatus.BLOCKED
 
+        # On Windows, shell returns exit code 1 for command not found
+        # Check stderr for common "command not found" patterns
+        if status == CheckStatus.FAIL and exit_code != 0:
+            stderr_lower = stderr.lower()
+            not_found_patterns = [
+                "not recognized",
+                "not found",
+                "no such file",
+                "command not found",
+                "is not recognized",
+            ]
+            if any(pattern in stderr_lower for pattern in not_found_patterns):
+                status = CheckStatus.BLOCKED
+
         duration_ms = int((time.time() - start) * 1000)
 
         # Generate error signature for FAIL

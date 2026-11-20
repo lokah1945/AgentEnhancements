@@ -118,12 +118,14 @@ def test_token_estimation():
 
 def test_config_loading():
     """Test config loading from ui.api.json."""
-    base_dir = Path(__file__).parent.parent.parent
-    registry = SkillRegistry(base_dir)
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        base_dir = Path(tmpdir)
+        registry = SkillRegistry(base_dir)
 
-    # Should not crash even without ui.api.json
-    preflight = AdaptivePreflight(base_dir, registry)
-    assert preflight.config.mode == PreflightMode.LEGACY
+        # Should not crash even without ui.api.json
+        preflight = AdaptivePreflight(base_dir, registry)
+        assert preflight.config.mode == PreflightMode.LEGACY
     print("✓ Config loading works")
 
 

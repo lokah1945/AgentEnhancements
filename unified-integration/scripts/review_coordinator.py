@@ -5,6 +5,7 @@ Coordinates review for high-risk changes: security, data loss, migrations, relea
 """
 
 import json
+import re
 import hashlib
 from pathlib import Path
 from typing import Dict, List, Optional, Any
@@ -96,10 +97,11 @@ class ReviewTriggerDetector:
         migration_patterns = [
             r"alembic|migration",
             r"schema.*change",
-            r"create\s+table|alter\s+table",
+            r"create\s+table",
+            r"alter\s+table",
             r"migrate",
         ]
-        migration_count = sum(1 for p in migration_patterns if re.search(p, diff_lower))
+        migration_count = sum(len(re.findall(p, diff_lower)) for p in migration_patterns)
         if migration_count >= 2:
             triggers.append(ReviewTrigger.LARGE_MIGRATION)
 
@@ -109,6 +111,9 @@ class ReviewTriggerDetector:
         for line in diff.split("\n"):
             if line.startswith("+++") or line.startswith("---"):
                 path = line[4:].strip()
+                # Skip git diff prefixes (a/, b/)
+                if path.startswith(("a/", "b/")):
+                    path = path[2:]
                 if "/" in path:
                     diff_dirs.add(path.split("/")[0])
         if len(diff_dirs) >= 3:
@@ -126,11 +131,11 @@ class ReviewTriggerDetector:
         # Config critical
         config_patterns = [
             r"config\.yaml|config\.json|\.env|settings\.py",
-            r"dockerfile|docker-compose",
+            r"dockerfile|docker[-\s]compose",
             r"kubernetes|k8s|helm",
             r"ci/cd|pipeline|workflow",
         ]
-        if any(re.search(p, diff_lower) for p in config_patterns):
+        if any(re.search(p, diff_lower) or re.search(p, request_lower) for p in config_patterns):
             triggers.append(ReviewTrigger.CONFIG_CRITICAL)
 
         return list(set(triggers))  # Deduplicate

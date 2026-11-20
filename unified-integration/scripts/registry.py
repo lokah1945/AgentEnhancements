@@ -375,6 +375,8 @@ def load_mcp_entries() -> List[Dict[str, Any]]:
             "command": " ".join([server.get("command", "")] + server.get("args", [])),
             "env_required": server.get("env_required", []),
             "env_optional": server.get("env_optional", []),
+            # Any one of these references suffices (search-mcp providers).
+            **({"env_any_of": server["env_any_of"]} if server.get("env_any_of") else {}),
             "for_plugins": server.get("for_plugins", []),
             "status": server.get("status", "roadmap"),
             "path": "plugin-catalog/mcp-servers.json",
@@ -828,6 +830,8 @@ def _format_entry(entry: Dict[str, Any], score: Optional[int] = None) -> str:
         lines.append(f"    run: {entry['command']}")
     if entry.get("env_required"):
         lines.append(f"    env: {', '.join(entry['env_required'])}")
+    if entry.get("env_any_of"):
+        lines.append(f"    env (any one of): {', '.join(entry['env_any_of'])}")
     if entry.get("natively_linked_by_default"):
         lines.append("    natively linked by default: yes")
     return "\n".join(lines)

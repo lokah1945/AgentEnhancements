@@ -20,8 +20,9 @@ Fail-closed rules:
   never more than ``MAX_ATTEMPTS`` requests; other failures return at once;
 - error text never contains a key, a request header or a raw response body.
 
-Serper is deliberately absent: its request contract could not be verified
-from an official, publicly readable page (UNVERIFIED, see docs).
+Serper has no publicly readable official API reference (its playground
+needs a login); its adapter follows the contract observed in authorized
+live calls on 2026-11-20 (see docs/SEARCH_PROVIDER_APIS.md).
 """
 from __future__ import annotations
 
@@ -242,6 +243,26 @@ def _newsapi_items(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
     return items
 
 
+_SERPER_TBS = {"day": "qdr:d", "week": "qdr:w", "month": "qdr:m", "year": "qdr:y"}
+
+
+def _serper_request(key: str, query: str, count: int, freshness: Optional[str]):
+    body: Dict[str, Any] = {"q": query, "num": count}
+    if freshness:
+        body["tbs"] = _SERPER_TBS[freshness]
+    return _json_request("https://google.serper.dev/search", {"X-API-KEY": key}, body)
+
+
+def _serper_items(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    organic = payload.get("organic") or []
+    return [
+        _item("serper", entry.get("title"), entry.get("link"), entry.get("snippet"),
+              entry.get("date"), position=entry.get("position"))
+        for entry in (organic if isinstance(organic, list) else [])
+        if isinstance(entry, dict)
+    ]
+
+
 ProviderSpec = Tuple[str, Callable[..., urllib.request.Request], Callable[[Dict[str, Any]], List[Dict[str, Any]]], Tuple[int, ...]]
 
 #: provider -> (credential reference, request builder, result mapper,
@@ -252,6 +273,7 @@ PROVIDERS: Dict[str, ProviderSpec] = {
     "exa": ("EXA_API_KEY", _exa_request, _exa_items, (401, 402, 403, 429)),
     "firecrawl": ("FIRECRAWL_API_KEY", _firecrawl_request, _firecrawl_items, (401, 402, 403, 429)),
     "newsapi": ("NEWSAPI_KEY", _newsapi_request, _newsapi_items, (401, 429)),
+    "serper": ("SERPER_API_KEY", _serper_request, _serper_items, (401, 402, 403, 429)),
 }
 PROVIDER_ORDER = tuple(PROVIDERS)
 PROVIDER_REFS = tuple(spec[0] for spec in PROVIDERS.values())

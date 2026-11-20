@@ -648,8 +648,8 @@
       "command": "python",
       "args": ["-m", "search_mcp"],
       "env_required": [],
-      "env_any_of": ["YOU_API_KEY", "TAVILY_API_KEY", "EXA_API_KEY", "FIRECRAWL_API_KEY", "NEWSAPI_KEY"],
-      "purpose": "First-party web search adapters (You.com, Tavily, Exa, Firecrawl, NewsAPI) with per-request multi-key rotation from ui.api.json; hidden until at least one provider key is set. Serper: UNVERIFIED, not offered.",
+      "env_any_of": ["YOU_API_KEY", "TAVILY_API_KEY", "EXA_API_KEY", "FIRECRAWL_API_KEY", "NEWSAPI_KEY", "SERPER_API_KEY"],
+      "purpose": "First-party web search adapters (You.com, Tavily, Exa, Firecrawl, NewsAPI, Serper) with per-request multi-key rotation from ui.api.json; hidden until at least one provider key is set.",
       "status": "built",
       "implementation": "unified-integration/mcp-servers/search-mcp/server.py"
     },

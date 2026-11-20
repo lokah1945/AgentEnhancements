@@ -14,9 +14,7 @@ evidence ledger is in [docs/SEARCH_PROVIDER_APIS.md](../../../docs/SEARCH_PROVID
 | `exa` | `EXA_API_KEY` | `POST https://api.exa.ai/search` |
 | `firecrawl` | `FIRECRAWL_API_KEY` | `POST https://api.firecrawl.dev/v2/search` |
 | `newsapi` | `NEWSAPI_KEY` | `GET https://newsapi.org/v2/everything` |
-
-Serper is **not** offered: its request contract could not be verified from
-an official public page (UNVERIFIED).
+| `serper` | `SERPER_API_KEY` | `POST https://google.serper.dev/search` (contract observed live; no public API reference) |
 
 ## Tools
 

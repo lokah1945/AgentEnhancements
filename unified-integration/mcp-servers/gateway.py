@@ -44,7 +44,7 @@ from api_config import (
 
 
 # search-mcp provider names, aligned with api_config.BUILTIN_ANY_OF order.
-SEARCH_PROVIDERS = ("you", "tavily", "exa", "firecrawl", "newsapi")
+SEARCH_PROVIDERS = ("you", "tavily", "exa", "firecrawl", "newsapi", "serper")
 
 
 def public_name(server: str, tool: str) -> str:

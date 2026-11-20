@@ -58,7 +58,7 @@
       "env": {
         "SERPER_API_KEY": "SERPER_API_KEY"
       },
-      "note": "Catalog entry only. No verified upstream MCP package; the previous npx package name is unpublished/nonexistent. Use search-mcp (You.com adapter) or configure a verified installed command."
+      "note": "Catalog entry only. No verified upstream MCP package; the previous npx package name is unpublished. Use search-mcp (provider serper) or configure a verified installed command."
     },
     "you-mcp": {
       "enabled": true,
@@ -413,7 +413,8 @@
         "TAVILY_API_KEY",
         "EXA_API_KEY",
         "FIRECRAWL_API_KEY",
-        "NEWSAPI_KEY"
+        "NEWSAPI_KEY",
+        "SERPER_API_KEY"
       ]
     }
   }

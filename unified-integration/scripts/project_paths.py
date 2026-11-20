@@ -48,8 +48,7 @@ def validate_installation_scope() -> None:
     """A normal install must not capture legacy paths from a different checkout."""
     paths = [state_root(), memory_root(), ROOT / 'headroom/target',
              ROOT / 'headroom/target/release/headroom',
-             Path(os.environ.get('AGENT_ENHANCEMENTS_API_FILE', ROOT / 'ui.api.json')).expanduser(),
-             Path(os.environ.get('AGENT_ENHANCEMENTS_MODEL_FILE', config_root() / 'model.json')).expanduser()]
+             Path(os.environ.get('AGENT_ENHANCEMENTS_API_FILE', ROOT / 'ui.api.json')).expanduser()]
     observer = os.environ.get('TASK_OBSERVER_WORKSPACE')
     if observer:
         paths.append(Path(observer).expanduser())
@@ -57,7 +56,7 @@ def validate_installation_scope() -> None:
     if headroom:
         paths.append(Path(shutil.which(headroom) or headroom).expanduser())
     if any(not path.resolve().is_relative_to(ROOT) for path in paths):
-        raise ValueError('AE installation requires state, memory, API/model files and headroom inside this checkout; clear external overrides')
+        raise ValueError('AE installation requires state, memory, the API file and headroom inside this checkout; clear external overrides')
 
 
 def environment() -> dict[str, str]:
@@ -68,7 +67,6 @@ def environment() -> dict[str, str]:
         'AGENT_ENHANCEMENTS_STATE_DIR': str(root),
         'AGENT_MEMORY_ROOT': str(memory_root()),
         'AGENT_ENHANCEMENTS_API_FILE': str(Path(os.environ.get('AGENT_ENHANCEMENTS_API_FILE', ROOT / 'ui.api.json')).expanduser()),
-        'AGENT_ENHANCEMENTS_MODEL_FILE': str(Path(os.environ.get('AGENT_ENHANCEMENTS_MODEL_FILE', config_root() / 'model.json')).expanduser()),
         'TASK_OBSERVER_WORKSPACE': str(Path(os.environ.get('TASK_OBSERVER_WORKSPACE', memory_root() / 'task-observer')).expanduser()),
         'HEADROOM_BIN': os.environ.get('HEADROOM_BIN', str(ROOT / 'headroom/target/release/headroom')),
         'XDG_CACHE_HOME': str(cache),

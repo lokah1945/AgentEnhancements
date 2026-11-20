@@ -50,8 +50,6 @@ class IsolatedSecurityTest(unittest.TestCase):
             "HERMES_HOME": str(self.root / "hermes"),
             "TASK_OBSERVER_WORKSPACE": str(self.root / "observer"),
             "AGENT_ENHANCEMENTS_API_FILE": str(self.root / "ui.api.json"),
-            "AGENT_ENHANCEMENTS_MODEL_FILE": str(self.root / "model.json"),
-            "AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY": "",
         }
         environment = patch.dict(os.environ, self.env)
         environment.start()
@@ -148,8 +146,8 @@ class PreflightSecurityTests(IsolatedSecurityTest):
     def test_selector_response_details_cannot_leak_credentials_into_stderr(self):
         token = "opaque-diagnostic-fixture-credential"
         self.config["api_keys"]["OPENAI_API_KEY"] = token
+        self.config["preflight"] = {"mode": 1}
         self.write_config()
-        Path(self.env["AGENT_ENHANCEMENTS_MODEL_FILE"]).write_text('{"adaptive_preflight_mode":1}')
         errors = io.StringIO()
         event = {"ae_native_selection": {"decision": "unresolved", "reason": token + "\nforged-log-line"}}
         with contextlib.redirect_stderr(errors):
@@ -159,9 +157,10 @@ class PreflightSecurityTests(IsolatedSecurityTest):
         self.assertEqual(len(errors.getvalue().splitlines()), 1)
 
     def test_late_abstain_result_falls_back_after_deadline(self):
-        Path(self.env["AGENT_ENHANCEMENTS_MODEL_FILE"]).write_text(json.dumps({
-            "adaptive_preflight_mode": 2, "endpoint": "https://fixture.invalid/v1", "sdk": "openai", "model": "fixture"}))
-        os.environ["AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY"] = "fixture-only"
+        self.config["preflight"] = {
+            "mode": 2, "endpoint": "https://fixture.invalid/v1", "sdk": "openai", "model": "fixture"}
+        self.config["api_keys"]["PREFLIGHT_API_KEY"] = "fixture-only"
+        self.write_config()
         os.environ["AE_PREFLIGHT_DEADLINE_MS"] = "100"
 
         def delayed(*args):
@@ -177,21 +176,41 @@ class PreflightSecurityTests(IsolatedSecurityTest):
         self.assertEqual(result.effective_mode, 0)
         self.assertEqual(result.context, "fallback")
 
-    def test_key_file_symlink_is_not_treated_as_a_private_key_file(self):
+    def test_legacy_key_sources_and_model_json_are_ignored_at_runtime(self):
         directory = self.preflight.config_dir()
         directory.mkdir(parents=True)
+        (directory / "model.json").write_text(json.dumps({
+            "adaptive_preflight_mode": 2, "endpoint": "https://fixture.invalid/v1",
+            "sdk": "openai", "model": "fixture"}))
+        key_file = directory / "preflight.key"
+        key_file.write_text("legacy-file-fixture")
+        key_file.chmod(0o600)
+        with patch.dict(os.environ, {
+                "AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY": "ambient-env-fixture",
+                "AGENT_ENHANCEMENTS_MODEL_FILE": str(directory / "model.json")}):
+            config = self.preflight.load_model_config()
+            self.assertEqual((config.mode, config.diagnosis), (0, ""))
+            forced = self.preflight.ModelConfig(
+                mode=2, endpoint="https://fixture.invalid/v1", sdk="openai", model="fixture")
+            self.assertEqual(self.preflight.resolve_api_key(forced), "")
+
+    def test_migration_never_imports_a_symlinked_legacy_key(self):
+        api = self.module("migrate_symlink", SCRIPTS / "api_config.py")
+        directory = self.root / "legacy"
+        directory.mkdir()
         target = self.root / "other-owner-key-fixture"
         target.write_text("fixture-only")
         target.chmod(0o600)
         (directory / "preflight.key").symlink_to(target)
-        with patch.dict(sys.modules, {"keyring": None}):
-            self.assertEqual(self.preflight.resolve_api_key("https://fixture.invalid/v1"), "")
+        result = api.migrate(legacy_dir=directory)
+        self.assertNotIn("legacy_preflight_key", result)
+        self.assertNotIn("fixture-only", Path(self.env["AGENT_ENHANCEMENTS_API_FILE"]).read_text())
 
-    def test_non_utf8_model_config_falls_back_with_a_diagnosis(self):
-        Path(self.env["AGENT_ENHANCEMENTS_MODEL_FILE"]).write_bytes(b"\xffinvalid")
+    def test_non_utf8_api_config_falls_back_with_a_diagnosis(self):
+        Path(self.env["AGENT_ENHANCEMENTS_API_FILE"]).write_bytes(b"\xffinvalid")
         config = self.preflight.load_model_config()
         self.assertEqual(config.mode, 0)
-        self.assertIn("model_json_invalid", config.diagnosis)
+        self.assertIn("ui_api_json_invalid", config.diagnosis)
 
     def test_expired_deadline_prevents_protocol_compatibility_request(self):
         calls = []
@@ -457,15 +476,41 @@ class ObserverSecurityTests(IsolatedSecurityTest):
 
 
 class CredentialRedactionTests(IsolatedSecurityTest):
-    def test_secondary_provider_keys_are_redacted_in_gateway_responses(self):
+    def test_every_key_of_a_multi_key_reference_is_redacted(self):
         api = self.module("provider_redact", SCRIPTS / "api_config.py")
-        provider_file = self.root / "search-fixture.json"
-        provider_file.write_text(json.dumps({"providers": {"tavily": {"keys": [
-            {"api_key": "opaque-secondary-provider-fixture", "status": "active"}
-        ]}}}))
-        with patch.object(api, "SEARCH_PROVIDERS_PATH", provider_file):
-            cleaned = api.redact("upstream error opaque-secondary-provider-fixture", self.config)
-        self.assertEqual(cleaned, "upstream error [redacted]")
+        self.config = {"version": 2, "api_keys": {"TAVILY_API_KEY": [
+            "opaque-first-provider-fixture", " opaque-second-provider-fixture "]},
+            "connections": {}, "mcp": {}}
+        self.write_config()
+        config, _ = api.read_config()
+        # A cooling-down key is still a secret and must still be redacted.
+        api.report_key_failure("TAVILY_API_KEY", "opaque-second-provider-fixture", 60)
+        cleaned = api.redact(
+            "upstream error opaque-first-provider-fixture / opaque-second-provider-fixture", config)
+        self.assertEqual(cleaned, "upstream error [redacted] / [redacted]")
+
+    def test_personal_search_provider_file_is_never_opened(self):
+        """A sentinel search_providers.json at the checkout root stays untouched."""
+        api = self.module("provider_isolation", SCRIPTS / "api_config.py")
+        sentinel = str(api.ROOT / "search_providers.json")
+        real_open = open
+        opened = []
+
+        def guarded(file, *args, **kwargs):
+            if str(file) == sentinel:
+                opened.append(file)
+            return real_open(file, *args, **kwargs)
+
+        # Path.read_text/Path.open resolve io.open at call time.
+        with patch("builtins.open", guarded), patch("io.open", guarded):
+            api.status()
+            api.redact("text")
+            api.server_state("search-mcp")
+            api.migrate(legacy_dir=self.root / "no-legacy")
+        self.assertEqual(opened, [])
+        source = (SCRIPTS / "api_config.py").read_text()
+        gateway = (SERVERS / "gateway.py").read_text()
+        self.assertNotIn("search_providers", source + gateway)
 
 
 class SearchCacheSecurityTests(IsolatedSecurityTest):

@@ -1,6 +1,6 @@
 # In-house MCP Servers
 
-Nine MCP servers built inside AgentEnhancements (the `to-build` entries of
+Ten MCP servers built inside AgentEnhancements (the `to-build` entries of
 `plugin-catalog/mcp-servers.json`). Each directory is a self-contained
 stdio server following the
 `anthropic-skills/skills/mcp-builder` house pattern: schema'd tools,
@@ -18,6 +18,7 @@ deterministic outputs where possible, actionable error envelopes, a
 | [`google-news-mcp`](./google-news-mcp/) | P2 | news | last-30-days | no (open RSS, no key) |
 | [`video-mcp`](./video-mcp/) | P2 | media | openmontage, hyperframes | timeline/edl yes |
 | [`style-mcp`](./style-mcp/) | P2 | writing | humanizer | yes |
+| [`search-mcp`](./search-mcp/) | P0 | search | — (gateway tool `search_web`) | no (needs one provider key; hidden without) |
 
 ## Common conventions
 

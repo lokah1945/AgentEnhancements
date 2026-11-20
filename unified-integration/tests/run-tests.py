@@ -44,6 +44,7 @@ for mod in [
     "test_discovery_quality",
     "test_modular_docs",
     "test_project_local_state",
+    "test_credential_pool",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))
 

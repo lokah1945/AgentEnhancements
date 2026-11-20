@@ -29,9 +29,17 @@ def configuration():
 
 
 def edit(path, change):
-    """Model an atomic editor save rather than leaving partial fixture JSON."""
+    """Model an atomic editor save rather than leaving partial fixture JSON.
+
+    Fixtures may set a credential with the single-key shorthand; it is
+    stored the way a user edits schema v2: a one-element array ("" -> []).
+    """
     doc = json.loads(path.read_text())
     change(doc)
+    doc["api_keys"] = {
+        name: ([raw] if raw.strip() else []) if isinstance(raw, str) else raw
+        for name, raw in doc.get("api_keys", {}).items()
+    }
     temp = path.with_suffix(".tmp")
     temp.write_text(json.dumps(doc))
     temp.replace(path)
@@ -57,15 +65,18 @@ class ConfigurationTests(unittest.TestCase):
         required = set()
         self.assertEqual(len(template["mcp"]), len(catalog["servers"]))
         for server in catalog["servers"]:
-            required.update(server.get("env_required", []))
-            required.update(server.get("env_optional", []))
-            self.assertTrue(set(server.get("env_required", [])) <= refs, server["id"])
-            self.assertTrue(set(server.get("env_optional", [])) <= refs, server["id"])
-        # Every default secret belongs to an MCP requirement; agent login and
-        # model-provider credentials must never be imported into this file.
+            for field in ("env_required", "env_optional", "env_any_of"):
+                required.update(server.get(field, []))
+                self.assertTrue(set(server.get(field, [])) <= refs, server["id"])
+        # Every default secret belongs to an MCP requirement or to the
+        # preflight selector reference; agent login and model-provider
+        # credentials must never be imported into this file.
         self.assertEqual(
-            set(template["api_keys"]), required - set(template["connections"])
+            set(template["api_keys"]) - {template["preflight"]["api_key_ref"]},
+            required - set(template["connections"]),
         )
+        self.assertEqual(template["version"], api.CONFIG_VERSION)
+        self.assertTrue(all(v == [] for v in template["api_keys"].values()))
 
     def test_blank_overrides_inherited_key_and_status_never_leaks_values(self):
         with configuration() as path, patch.dict(

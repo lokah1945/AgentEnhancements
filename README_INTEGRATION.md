@@ -13,11 +13,11 @@
   records before name collisions are resolved.
 - **40 catalog plugins** from **22 unique upstream repositories**
   (`integrated`: 1, `integrated-ready`: 39); 21 entries have vendored source.
-- **40 MCP servers** (`built`: 10, `to-install`: 30); **9 bundled Python
-  backends**, 8 enabled by default before host configuration.
+- **41 MCP servers** (`built`: 11, `to-install`: 30); **10 bundled Python
+  backends**, 9 enabled by default before host configuration.
 - **8 built-in capabilities**; **16 default native skills**; 31 skills in the
   optional curated set.
-- **3,466 registry entries** in total; **11 vendored projects** listed in the
+- **3,467 registry entries** in total; **11 vendored projects** listed in the
   root license notice.
 
 <!-- ae:counts:summary:end -->
@@ -239,7 +239,7 @@ AgentEnhancements/
 # manifests
 │   ├── catalog.json                    # 40 plugins, 6 categories, upstream
 │ # URLs
-│   ├── mcp-servers.json                # 40 MCP servers, P0/P1/P2 priority
+│   ├── mcp-servers.json                # 41 MCP servers, P0/P1/P2 priority
 │   ├── code/, research/, ...           # original SKILL.md + manifest sources
 │   └── README.md
 │
@@ -528,7 +528,8 @@ it merges rather than overwrites user customizations (post-H-1 audit fix).
   native CLI fixtures. Totals change with the suite; consult the dated
   [verification report](docs/audit/NATIVE_HOSTS_E2E_2026-11-16.md).
 - **Adaptive preflight** (capability selection before the main agent's first
-  inference): 58 dedicated regression tests cover the model.json contract,
+  inference): dedicated regression tests cover the `ui.api.json` preflight
+  contract,
   Mode 0 byte-parity, zero-egress proofs, exact-ID resolution and a full
   Mode 2 round against a local TLS fixture — see
   [docs/ADAPTIVE_PREFLIGHT.md](docs/ADAPTIVE_PREFLIGHT.md).

@@ -1,7 +1,7 @@
 ---
 title: Environment Variables Reference
-version: 1.1
-last_updated: 2026-11-15
+version: 1.2
+last_updated: 2026-11-20
 audience: users, maintainers
 ---
 
@@ -155,11 +155,13 @@ privileges. It is **hidden by default** and must be enabled explicitly in
 
 ### Recommended provisioning
 
-Run setup to create the ignored, private `ui.api.json`, then edit credential
-string values and connection fields locally. Keep secrets out of host-native
-MCP command arguments and tracked files. The optional ignored
-`search_providers.json` stores multiple keys for the supported search-provider
-rotation path; see [configuration](CONFIGURATION.md).
+Run setup to create the ignored, private `ui.api.json`, then edit the
+credential arrays (one or more keys per reference) and connection fields
+locally. Keep secrets out of host-native MCP command arguments and tracked
+files. Provider and preflight keys are never read from the shell environment:
+an exported `TAVILY_API_KEY` or `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY` has no
+effect. See [configuration](CONFIGURATION.md) for the version 2 schema,
+multi-key rotation and the one-time `api_config.py migrate` upgrade.
 
 Use `python3 unified-integration/scripts/api_config.py status` for safe
-presence/readiness diagnostics. Never print raw keys to test rotation.
+key-count/readiness diagnostics. Never print raw keys to test rotation.

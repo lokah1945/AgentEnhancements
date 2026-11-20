@@ -2550,6 +2550,10 @@ main() {
     runtime_python="$(bash "$UNIFIED_DIR/scripts/setup-mcp.sh" --prepare)"
     export PATH="$(dirname "$runtime_python"):$PATH"
     python3 "$UNIFIED_DIR/scripts/api_config.py" init
+    # One-time, idempotent upgrade to ui.api.json v2 (string keys -> arrays,
+    # legacy preflight model.json/key imported). Backup first; never fatal.
+    python3 "$UNIFIED_DIR/scripts/api_config.py" migrate >/dev/null \
+        || log_warn "ui.api.json migration skipped: run 'python3 unified-integration/scripts/api_config.py migrate' to see why"
     detect_agents
     setup_prompts
     aggregate_skills

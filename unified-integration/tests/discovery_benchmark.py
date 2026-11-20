@@ -50,10 +50,9 @@ def isolated_environment(repo: Path) -> Iterator[dict[str, str]]:
         config.mkdir()
         api_file = root / "ui.api.json"
         api_file.write_text(json.dumps({
-            "version": 1, "api_keys": {}, "connections": {}, "mcp": {},
+            "version": 2, "api_keys": {}, "connections": {}, "mcp": {},
+            "preflight": {"mode": 0},
         }), encoding="utf-8")
-        model_file = config / "model.json"
-        model_file.write_text('{"adaptive_preflight_mode":0}', encoding="utf-8")
         overrides = {
             "HOME": str(root), "AGENT_MEMORY_ROOT": str(root / "memory"),
             "AGENT_ENHANCEMENTS_STATE_DIR": str(root / 'ae-state'),
@@ -65,8 +64,6 @@ def isolated_environment(repo: Path) -> Iterator[dict[str, str]]:
             "AGENT_ENHANCEMENTS_BASE_DIR": str(repo),
             "AGENT_SKILLS_DIR": str(repo / "unified-integration/skills"),
             "AGENT_ENHANCEMENTS_API_FILE": str(api_file),
-            "AGENT_ENHANCEMENTS_MODEL_FILE": str(model_file),
-            "AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY": "",
             "AGENT_SKILLS_NATIVE_TARGETS": str(root / "native-skills"),
             "AE_MAX_SKILL_CARDS": "8", "PYTHONDONTWRITEBYTECODE": "1",
         }

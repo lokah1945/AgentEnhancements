@@ -51,13 +51,31 @@ information for maintainers; they are not runtime connectivity probes.
 
 ### Credential configuration and native MCP gateway
 
-`scripts/api_config.py init` creates the private root `ui.api.json` once.
-`status` returns only credential-presence booleans and readiness reasons.
-Importable functions: `read_config()`, `value(name, config=None)`,
-`server_state(name, config=None)`, `cloud_available(server, key, config=None)`
-and `redact(text, config=None)`. Missing/invalid config never falls back to
-shell API credentials. `AGENT_ENHANCEMENTS_API_FILE` is an optional override.
-This API is scoped to MCP services only. It has no host-auth migration or
+`scripts/api_config.py init` creates the private root `ui.api.json` once;
+`migrate` upgrades it to schema version 2 once (idempotent, private backup,
+atomic replace, value-free JSON report; exit code 1 when refused).
+`status` returns only per-reference key counts and readiness reasons.
+Importable functions:
+
+- `read_config()`: validated snapshot; `api_keys` is normalized to
+  `{reference: [usable keys]}` for version 1 and 2 files.
+- `keys(name, config=None)`, `value(name, config=None)` (first usable key,
+  stable) and `has_usable_key(name, config=None)`: pure lookups that never
+  move the rotation pointer.
+- `request_keys(name, config=None)` / `select_key_for_request(name,
+  config=None)`: key candidates for one outgoing request; the per-reference
+  pointer advances exactly once per call. `report_key_failure(name, key,
+  seconds)` pauses one key (1-300 s); `key_health(name, config=None)`
+  returns counts only.
+- `all_keys_for_redaction(config=None)` and `redact(text, config=None)`.
+- `server_state(name, config=None)` (honours `required`, `any_of`,
+  `enabled`, built-in `BUILTIN_ANY_OF`), `cloud_available(server, key,
+  config=None)` and `migrate(legacy_dir=None)`.
+
+Missing/invalid config never falls back to shell API credentials.
+`AGENT_ENHANCEMENTS_API_FILE` is an optional override. This API covers AE
+services and the adaptive-preflight selector key only. It has no host-auth
+migration or
 credential-output command, and never reads agent settings/provider credentials.
 
 `mcp-servers/gateway.py` speaks MCP stdio and advertises `tools.listChanged`.
@@ -188,7 +206,7 @@ the CLI. Memory lookup still enforces agent/project isolation and expiry.
 `native-integration.py --agent <agent|all> [--mcp-only]` installs native
 configuration. Run it using the interpreter returned by
 `bash scripts/setup-mcp.sh --prepare`. `setup.sh` invokes it automatically.
-`setup-mcp.sh --check` tests the actual stdio protocol of all nine built
+`setup-mcp.sh --check` tests the actual stdio protocol of all ten built
 servers.
 
 ### Compression - `unified-integration/scripts/compress.py`

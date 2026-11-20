@@ -121,7 +121,6 @@ class NativeHostTests(unittest.TestCase):
 
     def test_checkout_move_refreshes_codex_gateway_and_retires_old_direct_server(self):
         import tomlkit
-        self.env.pop('AGENT_ENHANCEMENTS_MODEL_FILE', None)
         self.env.pop('TASK_OBSERVER_WORKSPACE', None)
         old = self.home / 'removed checkout/unified-integration'
         path = self.home / '.codex/config.toml'
@@ -142,8 +141,8 @@ class NativeHostTests(unittest.TestCase):
                          [str(UI_DIR / 'mcp-servers/gateway.py')])
         self.assertEqual(servers['agent-enhancements']['tool_timeout_sec'], 91)
         self.assertEqual(servers['agent-enhancements']['env']['CUSTOM'], 'preserved')
-        self.assertEqual(servers['agent-enhancements']['env']['AGENT_ENHANCEMENTS_MODEL_FILE'],
-                         str(Path(self.env['AGENT_ENHANCEMENTS_STATE_DIR']) / 'config/model.json'))
+        # Preflight settings live in ui.api.json; the retired path is removed.
+        self.assertNotIn('AGENT_ENHANCEMENTS_MODEL_FILE', servers['agent-enhancements']['env'])
         self.assertEqual(servers['agent-enhancements']['env']['TASK_OBSERVER_WORKSPACE'],
                          str(Path(self.env['AGENT_MEMORY_ROOT']) / 'task-observer'))
         self.assertNotIn('embeddings-mcp', servers)

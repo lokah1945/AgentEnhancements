@@ -1,41 +1,78 @@
 ---
 title: Search Provider Integration
-version: 2.0
-last_updated: 2026-11-19
+version: 3.0
+last_updated: 2026-11-20
 audience: users, maintainers
 ---
 
+## Search Provider Integration
 
-AE configures external MCP subprocesses and credential references. It does
-not implement the providers' public HTTP search APIs. Authentication headers,
-query fields, result shapes, quotas and pricing belong to the installed MCP
-implementation and its upstream API version. Verify those upstream contracts
-when selecting or updating a server.
+AE ships one first-party search server, `search-mcp`
+(`unified-integration/mcp-servers/search-mcp/server.py`), with direct HTTPS
+adapters for providers whose request contract was checked against the
+provider's own documentation. It is exposed through the existing MCP gateway
+as one tool, `search_web`. Keyless alternatives stay separate: `arxiv-mcp`
+(arXiv API) and `google-news-mcp` (Google News RSS).
 
-## Repository configuration
+The `you-mcp`, `serper-mcp`, `tavily-mcp`, `exa-mcp`, `firecrawl-mcp` and
+`newsapi-mcp` entries in `plugin-catalog/mcp-servers.json` remain `to-install`
+roadmap entries for *external* MCP servers. They are not installed servers,
+and their status is unchanged by `search-mcp`.
 
-The active search candidates and their suggested commands are declared in
-`plugin-catalog/mcp-servers.json`. Plugin suggestions are recorded in their
-manifests. The catalog currently references You.com, Serper, Tavily, Exa,
-Firecrawl and NewsAPI; bundled Google News uses RSS and arXiv queries its
-own service. Network success is independent of local installation status.
+## Keys and readiness
 
-The private ignored `ui.api.json` stores MCP credential slots and connection
-fields. An external server also needs an installed `command` array and `env`
-reference mapping. A nonempty key alone does not install a server, complete
-OAuth or prove that an external command implements the expected protocol.
-Empty central slots do not inherit API credentials from the shell.
+Keys live only in `ui.api.json` `api_keys`, one array per reference
+([configuration](CONFIGURATION.md)):
 
-The optional ignored `search_providers.json` provides multiple key slots for
-supported search-provider rotation. `api_config.py` resolves these slots and
-the gateway maps the chosen credential into the external subprocess environment.
-Rotation state is local to a process; it is not a distributed load balancer,
-provider quota manager, automatic retry policy or account failover guarantee.
+| Provider (`provider` argument) | Reference |
+| --- | --- |
+| `you` | `YOU_API_KEY` |
+| `tavily` | `TAVILY_API_KEY` |
+| `exa` | `EXA_API_KEY` |
+| `firecrawl` | `FIRECRAWL_API_KEY` |
+| `newsapi` | `NEWSAPI_KEY` |
 
-Use the current schema/template and [configuration](CONFIGURATION.md) for
-reference names. Both credential files are user data and must stay private.
-The repository root is discovered from the script location; an absolute
-`/root/credential/` path is not required.
+- `search-mcp` is visible only while at least one of these references holds
+  a usable key (`any_of`). The `provider` enum of `search_web` lists only
+  providers that currently have a key; every call is re-validated against a
+  fresh snapshot, so a removed key rejects the next call even if the host
+  still shows the tool.
+- Each HTTP request takes its key from the credential pool: three keys are
+  used round-robin per request. Readiness checks and `status` never move the
+  rotation pointer.
+- Bounded failover (read-only search only): HTTP 401/402/403/429 (Tavily also
+  432/433, NewsAPI 401/429) pauses that key (429: `Retry-After` bounded to
+  1-300 s, else 60 s; auth/quota: 300 s) and retries the same query on the
+  next key, at most 3 requests per call. Other errors return immediately.
+  Several keys do not guarantee a higher quota.
+- Redirects are refused, so a key header is never replayed to another
+  origin. Errors, health output and diagnostics never contain key values.
+- A personal `search_providers.json` is not part of AE. Nothing in AE reads,
+  imports, migrates, copies or deletes it; its `.gitignore` rule stays only to
+  protect the owner's private file.
+
+## Evidence ledger (verified 2026-11-20)
+
+| Provider | Official source | Request contract used | Result mapping | Status |
+| --- | --- | --- | --- | --- |
+| You.com | [v1 search](https://you.com/docs/api-reference/search/v1-search), [authentication](https://you.com/docs/using-the-api/authentication) | `POST https://ydc-index.io/v1/search`, header `X-API-Key`, body `query`, `count`, `freshness` | `results.web[]`: `title`, `url`, `description` (else `snippets[0]`), `page_age` | adapter + mock tests |
+| Tavily | [search endpoint](https://docs.tavily.com/documentation/api-reference/endpoint/search) | `POST https://api.tavily.com/search`, `Authorization: Bearer`, body `query`, `max_results`, `time_range` | `results[]`: `title`, `url`, `content`, `published_date`, `score` | adapter + mock tests |
+| Exa | [search reference](https://docs.exa.ai/reference/search) | `POST https://api.exa.ai/search`, header `x-api-key`, body `query`, `numResults`, `contents.text.maxCharacters`, `startPublishedDate` | `results[]`: `title`, `url`, `text`, `publishedDate`, `author` | adapter + mock tests (docs show no example response; mapping follows the schema) |
+| Firecrawl | [v2 search](https://docs.firecrawl.dev/api-reference/endpoint/search), [rate limits](https://docs.firecrawl.dev/rate-limits) | `POST https://api.firecrawl.dev/v2/search`, `Authorization: Bearer`, body `query`, `limit`, `tbs` (`qdr:d`/`qdr:w` only) | `data.web[]`: `title`, `url`, `description` (no date) | adapter + mock tests; `month`/`year` freshness rejected (not in the official examples) |
+| NewsAPI | [everything](https://newsapi.org/docs/endpoints/everything), [authentication](https://newsapi.org/docs/authentication), [errors](https://newsapi.org/docs/errors) | `GET https://newsapi.org/v2/everything`, header `X-Api-Key` (never the URL), `q`, `pageSize`, `sortBy=publishedAt`, `from` | `articles[]`: `title`, `url`, `description`, `publishedAt`, `source.name` | adapter + mock tests; free tier is development-only per NewsAPI pricing |
+| Serper | [serper.dev](https://serper.dev/) (playground needs a login) | **UNVERIFIED**: no official public page shows the endpoint, auth header or body | — | **not implemented, not offered** |
+
+Package check (2026-11-20): `you-mcp` does not exist on npm and
+`serper-mcp` is unpublished. The template no longer suggests `npx -y you-mcp`
+or `npx -y serper-mcp`; installing an unverified package name is a
+supply-chain risk.
+
+Status levels are kept separate: *catalogued* (roadmap entry), *adapter
+implemented*, *local mock-tested* (contract fixtures in
+`tests/test_credential_pool.py`), *host-observed* (a real stdio MCP session
+lists `search_web` only while a key exists; no credentialed call is made in
+tests) and *live verified*. **No provider is live verified**: that needs real
+keys and explicit permission to spend quota.
 
 ## Verify safely
 
@@ -45,26 +82,18 @@ python3 unified-integration/scripts/registry.py search "web search" --type mcp
 bash unified-integration/scripts/mcp-test.sh --priority P0
 ```
 
-Status reports presence and readiness without printing keys. Use synthetic
-keys and isolated fixtures to inspect rotation. Never print the return value
-of `get_search_provider_key()` with real configuration. The gateway has no
-`--help` diagnostic interface; starting it runs the stdio protocol server.
+`status` prints key counts and readiness reasons, never values. The
+`search-mcp` `health` result (through `ae_health`) lists the available
+providers and per-provider key/cooldown counts. Use synthetic keys and
+isolated fixtures (`AGENT_ENHANCEMENTS_API_FILE`) to inspect rotation. The
+gateway has no `--help` interface; starting it runs the stdio server.
 
 ## Readiness failures
 
-- `missing_credentials`: populate the required private reference.
-- `runtime_not_configured`: configure the installed command.
+- `missing_credentials` (`missing` or `missing_any_of`): add a key to the
+  listed reference(s).
+- `runtime_not_configured`: configure an installed `command` (external entries).
 - `executable_not_installed`: verify and install the chosen executable.
 - `disabled`: review the user's explicit setting.
-
-## Upstream API documentation
-
-Consult the selected server's own documentation and provider reference:
-[You.com](https://docs.you.com/), [Tavily](https://docs.tavily.com/),
-[Serper](https://serper.dev/), [Exa](https://docs.exa.ai/),
-[Firecrawl](https://docs.firecrawl.dev/) and
-[NewsAPI](https://newsapi.org/docs).
-These references are not an AE compatibility certification or a statement of
-current plan quotas. See the [MCP deployment
-checklist](MCP_INTEGRATION_CHECKLIST.md)
-for installation and authorization checks.
+- `search_web` call error `provider_unavailable`: the provider has no usable
+  key; `all_tried_keys_failed`: every tried key was rejected or rate limited.

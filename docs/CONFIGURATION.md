@@ -1,6 +1,6 @@
 ---
 title: Configuration
-version: 1.8
+version: 1.9
 last_updated: 2026-11-20
 audience: users, maintainers
 ---
@@ -9,20 +9,69 @@ audience: users, maintainers
 
 ### Central credentials — `ui.api.json`
 
-This file is exclusively for **AgentEnhancements MCP service credentials**.
-For example, `TAVILY_API_KEY` belongs here. Agent login tokens, model-provider
+This file is the **only AE-managed configuration file** for AgentEnhancements
+service credentials, connections, adaptive-preflight settings and MCP
+overrides. For example, `TAVILY_API_KEY` belongs here. Agent login tokens, model-provider
 credentials, custom endpoints, `apiKeyHelper` and settings files remain owned
 by Claude Code, Codex, OpenCode or any other host agent. The MCP credential
 loader never reads, imports or changes that host configuration.
 
 Setup creates **one private file at the repository root**, using
 [the empty template](../unified-integration/config/ui.api.example.json).
-Edit its `api_keys` string values and `connections` endpoints/client IDs.
-The file is ignored by git and created with mode `0600`. Native CLI configs
+Edit its `api_keys` arrays and `connections` endpoints/client IDs.
+The file is ignored by git and created with mode `0600`.
+
+Schema version 2 stores every credential reference as an **array of keys**,
+so one provider can hold several keys:
+
+```json
+{
+  "version": 2,
+  "api_keys": {
+    "TAVILY_API_KEY": ["key-a", "key-b", "key-c"],
+    "YOU_API_KEY": ["key-d"],
+    "EXA_API_KEY": []
+  },
+  "connections": {},
+  "preflight": {"mode": 0, "sdk": "", "endpoint": "", "model": "",
+                "api_key_ref": "PREFLIGHT_API_KEY"},
+  "mcp": {}
+}
+```
+
+`[]`, a missing reference, `""` and whitespace-only entries are not
+credentials. Entries are trimmed and identical keys are de-duplicated; at
+most 32 keys per reference. A version 2 file with a plain string value is
+rejected (fail closed). First-party adapters (`search-mcp`) choose a key per
+HTTP request, round-robin, and pause a key for a bounded time after a
+401/402/403/429-style answer; external stdio MCP servers receive the first
+usable key when they start, so they are not described as rotating. Rotation
+and cooldown state lives in the gateway process memory only. Several keys
+are not a promise of a higher provider quota.
+
+**Migration.** Version 1 files (string credentials) keep working and
+`api_config.py status` reports `"migration_pending": true`. Setup runs the
+one-time, idempotent upgrade; it can also be run by hand:
+
+```bash
+python3 unified-integration/scripts/api_config.py migrate
+```
+
+It writes a private `ui.api.json.backup.<timestamp>` first, replaces the file
+atomically (the original stays untouched on any failure), converts strings to
+arrays (`""` becomes `[]`) and preserves unknown fields. When `ui.api.json`
+has no `preflight` section yet, it also imports a legacy adaptive-preflight
+`.agentenhancements/config/model.json` and an owner-only `preflight.key` from
+the same directory; those legacy files are left in place and are no longer
+read. Restore by copying the backup over `ui.api.json`. A personal
+`search_providers.json` is not an AE file: AE never reads, imports, migrates
+or deletes it. Native CLI configs
 contain the gateway command, not copies of its secrets. The JSON schema
 provides editor validation. Setup preserves populated values.
 
-`mcp.<server>.required` maps each server to central value names.
+`mcp.<server>.required` maps each server to central value names; every
+listed reference must hold a usable value. `mcp.<server>.any_of` needs at
+least one of its references; `optional` never gates visibility.
 An empty/whitespace key disables its dependent cloud tools, even when the
 parent shell has a populated API environment variable. Invalid or missing
 JSON also disables cloud access. Local tools remain available. The gateway
@@ -30,7 +79,11 @@ watches edits every 0.5 seconds and emits MCP tool-list notifications;
 every call rechecks credentials to reject stale cached tools immediately.
 Calls already sent to a provider cannot be withdrawn by clearing a key.
 
-Nine bundled servers expose enabled local tools with all keys empty.
+Nine bundled servers expose enabled local tools with all keys empty. The
+tenth, `search-mcp`, has only credentialed tools and stays hidden until at
+least one of `YOU_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`,
+`FIRECRAWL_API_KEY` or `NEWSAPI_KEY` holds a key; keyless arXiv and Google
+News RSS remain available ([search providers](SEARCH_PROVIDER_APIS.md)).
 GraphRAG is local and requires no API key. Embeddings default to local vectors;
 the `openai` backend is permitted only with `OPENAI_API_KEY`. Semantic
 `vision_describe` is hidden without that key; image comparison and OCR stay
@@ -47,7 +100,7 @@ OAuth authorization. Google/Microsoft client IDs and secrets alone do not
 constitute a completed OAuth login.
 
 For optional diagnostics, `python3 unified-integration/scripts/api_config.py
-status` prints key-presence booleans and hidden reasons, never secret values.
+status` prints per-reference key counts and hidden reasons, never secret values.
 Agents do not need to run it. Runtime session notes redact configured secrets.
 
 The template contains MCP secret slots and mappings for the catalog
@@ -71,30 +124,24 @@ rejects revoked credentials, but a newly available tool can require a fresh
 session to appear. Claude/OpenCode passed live empty → populated → empty
 catalog tests without a reconnect command. No CLI permissions are bypassed.
 
-### Adaptive preflight — `.agentenhancements/config/model.json`
+### Adaptive preflight — `ui.api.json` `preflight`
 
 The optional capability-selection preflight (CONTRACT §8.5) is configured in
-a user-scope file that never carries secrets and never lives inside a
-project checkout:
-
-```text
-.agentenhancements/config/model.json   # fallback
-# .agentenhancements/config/model.json
-```
+the `preflight` section of the same private `ui.api.json`:
 
 ```json
-{"adaptive_preflight_mode": 0}
+"preflight": {"mode": 0, "sdk": "", "endpoint": "", "model": "",
+              "api_key_ref": "PREFLIGHT_API_KEY"}
 ```
 
-`0` (or a missing file) keeps the default discovery cards. `1` lets a host
-adapter supply a native selection; adapters without that integration simply
-stay on the default path. `2` adds `endpoint` (HTTPS base URL), `sdk`
-(`openai` or `anthropic`) and `model`, and calls that endpoint from the
-existing prompt hook - no adapter change required. The Mode 2 key resolves
-from `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`, the OS keyring (service
-`agentenhancements.preflight`), or a 0600 `<config dir>/preflight.key` -
-never from model.json or ui.api.json. Every failure falls back to the
-default cards for that turn with one stderr diagnosis line.
+`0` (or a missing section) keeps the default discovery cards. `1` lets a
+host adapter supply a native selection (Claude Code and Codex only); without
+that handoff the turn stays on the default path. `2` uses `endpoint` (HTTPS
+base URL), `sdk` (`openai` or `anthropic`), `model` and the key held in
+`api_keys[api_key_ref]` of this file. On modes 0/1 the Mode 2 fields are kept
+but unused. No environment variable, keyring, key file or `model.json` is a
+runtime key or settings source. Every failure falls back to the default cards
+for that turn with one stderr diagnosis line.
 See [ADAPTIVE_PREFLIGHT.md](ADAPTIVE_PREFLIGHT.md) for the full contract,
 protocols, deadlines and verification.
 
@@ -168,15 +215,16 @@ protocols, deadlines and verification.
   - **Default:**
     `~/.claude/skills:~/.agents/skills:~/.codex/skills:~/.config/opencode/skills`
 
-- **Variable:** `AGENT_ENHANCEMENTS_MODEL_FILE`
-  - **Purpose:** Optional adaptive-preflight model.json override for isolated
-    tests
-  - **Default:** `.agentenhancements/config/model.json`
+- **Variable:** `AGENT_ENHANCEMENTS_API_FILE`
+  - **Purpose:** Optional `ui.api.json` override for isolated tests (inside
+    the checkout for normal installs)
+  - **Default:** `<checkout>/ui.api.json`
 
-- **Variable:** `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`
-  - **Purpose:** Adaptive preflight Mode 2 key (overrides keyring and
-    preflight.key)
-  - **Default:** unset
+- **Retired (pending CONTRACT §8.2 amendment):**
+  `AGENT_ENHANCEMENTS_MODEL_FILE` and `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`
+  are no longer read. Preflight settings and its key moved into
+  `ui.api.json`; `api_config.py migrate` imports a legacy `model.json` /
+  `preflight.key` once. Isolated tests use `AGENT_ENHANCEMENTS_API_FILE`.
 
 - **Variable:** `AE_PREFLIGHT_DEADLINE_MS`
   - **Purpose:** Adaptive preflight total phase deadline (pilot knob)
@@ -331,14 +379,17 @@ AE-owned dependencies and state live under the active checkout's ignored
 independently of the current working directory or global XDG settings:
 
 - `runtime/venv/`: the Python interpreter and MCP dependencies.
-- `config/model.json`, `config/preflight.key`: optional adaptive selector.
+- `config/model.json`, `config/preflight.key`: legacy adaptive-selector
+  files, imported once by `api_config.py migrate` and no longer read.
 - `config/host-selection.json`: native host/profile preferences.
 - `memory/`: SQLite session notes and the task-observer workspace.
 - `cache/`: Python/uv/pip/npm/Cargo/model caches and temporary task workspaces.
 
 The directory is private (0700); credentials and memory files remain0600.
-`ui.api.json` and `search_providers.json` stay ignored at the checkout root.
-They are never copied from another checkout automatically.
+`ui.api.json` (and its backups) stays ignored at the checkout root. It is
+never copied from another checkout automatically. The `.gitignore` rule for a
+personal `search_providers.json` remains only to protect that private file;
+AE does not use it.
 
 Native agent configuration is owned by the host application. Setup merges
 only the AE bridge into that configuration: commands, hooks and symlinks

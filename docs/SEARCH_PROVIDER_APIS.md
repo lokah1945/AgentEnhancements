@@ -81,7 +81,9 @@ provider, 2-result queries): You.com, Tavily, Exa and Serper answered through
 `run_search` with and without `freshness` and through a real stdio gateway
 session (`search_web`, one call per provider). Serper also proved live
 failover: `[invalid, valid]` returned results with `attempts: 2`. Revoking the
-keys removed `search_web` and rejected the stale call. **Firecrawl and
+keys removed `search_web` and rejected the stale call. With three keys per
+provider, three consecutive live calls used each key once (HTTP 200 each),
+confirming per-request round-robin against the real APIs. **Firecrawl and
 NewsAPI are not live verified** (no key available). Re-run with:
 
 ```bash

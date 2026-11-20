@@ -140,6 +140,13 @@ first attempt. Real stdio gateway: `search_web` enum = keyed providers, one
 call per provider OK, Serper failover OK, `ae_health` OK, revocation hides the
 tool and rejects the stale call, no key in any output or gateway stderr.
 
+Deployment check (same day): the maintainer's 12 search keys (3 each for
+You.com, Tavily, Exa, Serper) were written as arrays into the checkout's
+private `ui.api.json` at the maintainer's request (0600, private backup
+first). Three consecutive `run_search` calls per provider used key #1, #2
+and #3 in order and each returned HTTP 200: live per-request round-robin
+confirmed for all four providers.
+
 ### Residual limitations and maintainer decisions
 
 - `docs/repository-description.txt` now says 41 MCP catalog entries; the CI

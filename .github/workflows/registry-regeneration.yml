@@ -1,0 +1,73 @@
+name: Registry Regeneration
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly on Sunday 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force regeneration even if no changes'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  regenerate:
+    name: Regenerate Skill Registry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -q pyyaml
+
+      - name: Regenerate catalog
+        run: |
+          python3 unified-integration/scripts/registry.py rebuild
+          python3 unified-integration/scripts/generate_skills_index.py
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet unified-integration/skills/ skills/manifest.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create PR if changed
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(registry): regenerate skill catalog [skip ci]"
+          title: "chore: Weekly skill registry regeneration"
+          body: |
+            Automated regeneration of skill catalog from source skills.
+
+            Changes:
+            - Updated `unified-integration/skills/all-skills.json`
+            - Updated `unified-integration/skills/agent-registry.json`
+            - Updated `skills/manifest.json`
+            - Updated `skills/README.md`
+
+            This PR is auto-generated. Review changes and merge if correct.
+          branch: chore/registry-regeneration
+          delete-branch: true
+          labels: |
+            automated
+            registry
+            chore

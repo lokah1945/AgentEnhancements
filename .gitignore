@@ -1,0 +1,55 @@
+# Agent-specific local settings (machine-specific, never commit)
+.claude/settings.local.json
+.claude/*.tmp.*
+.claude/settings.local.json.tmp.*
+
+# Editor / OS junk
+*.bak
+*.tmp
+*.tmp.*
+*.swp
+.DS_Store
+
+# Aggregation temp files (unified-integration/skills)
+unified-integration/skills/.skills-meta.tmp
+unified-integration/skills/all-skills.json.tmp
+
+# Machine-specific detection state written by setup.sh at install time
+# (which agents happen to be installed on THIS machine - committing it
+# only produces permanent cross-machine drift)
+unified-integration/config/detected-agents.sh
+
+# Generated skill registry trees: populated by setup.sh at install time
+# (see docs/audit/AUDIT_REPORT.md F-28). The committed flat samples in
+# by-category/general/ stay tracked; everything generated is ignored.
+unified-integration/skills/by-agent/
+unified-integration/skills/by-category/*
+!unified-integration/skills/by-category/general/
+unified-integration/skills/by-category/general/*
+!unified-integration/skills/by-category/general/*.md
+
+# Config backups created by setup.sh merges
+*.backup.*
+
+# Generated modular skills tree: per-plugin symlink dirs are produced by
+# scripts/scaffold_modular_skills.sh from plugin-catalog/catalog.json
+# (policy mirrors unified-integration/skills/by-category above: commit the
+# index + docs, not the generated tree). Track READMEs + manifest.json.
+skills/*/*/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Runtime dependencies and local audit state
+unified-integration/.venv/
+unified-integration/opencode-plugin/node_modules/
+
+# Canonical machine-local credentials; only the empty template is tracked.
+/ui.api.json
+/ui.api.json.*
+/.ui-api-*
+/search_providers.json
+
+# AE-owned runtime, caches, model configuration and memory stay in this checkout.
+/.agentenhancements/

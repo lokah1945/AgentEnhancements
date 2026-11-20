@@ -1,0 +1,106 @@
+{
+  "mcp-servers": {
+    "github-mcp": {
+      "command": "python",
+      "args": ["-m", "mcp_github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "description": "GitHub API access via MCP — repos, issues, PRs, actions",
+      "tools": ["health", "get_repo", "list_issues", "create_issue", "create_pr", "list_prs", "get_file", "search_code"],
+      "status": "planned"
+    },
+    "filesystem-mcp": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"],
+      "env": {},
+      "description": "Local filesystem operations — read, write, list, search",
+      "tools": ["health", "read_file", "write_file", "list_dir", "search_files", "glob"],
+      "status": "available"
+    },
+    "sqlite-mcp": {
+      "command": "python",
+      "args": ["-m", "mcp_sqlite"],
+      "env": {
+        "SQLITE_DB_PATH": "${SQLITE_DB_PATH:-./data.db}"
+      },
+      "description": "SQLite database operations — query, schema, migrations",
+      "tools": ["health", "query", "execute", "schema", "tables"],
+      "status": "planned"
+    },
+    "postgres-mcp": {
+      "command": "python",
+      "args": ["-m", "mcp_postgres"],
+      "env": {
+        "POSTGRES_DSN": "${POSTGRES_DSN}"
+      },
+      "description": "PostgreSQL database operations",
+      "tools": ["health", "query", "execute", "schema", "tables", "explain"],
+      "status": "planned"
+    },
+    "web-search-mcp": {
+      "command": "python",
+      "args": ["-m", "mcp_web_search"],
+      "env": {
+        "SEARCH_API_KEY": "${SEARCH_API_KEY}",
+        "SEARCH_ENGINE": "google"
+      },
+      "description": "Web search via search APIs",
+      "tools": ["health", "search", "fetch"],
+      "status": "planned"
+    },
+    "browser-mcp": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-browser"],
+      "env": {},
+      "description": "Browser automation — navigate, click, extract, screenshot",
+      "tools": ["health", "navigate", "click", "type", "extract", "screenshot", "wait_for"],
+      "status": "available"
+    },
+    "git-mcp": {
+      "command": "python",
+      "args": ["-m", "mcp_git"],
+      "env": {
+        "GIT_REPO_PATH": "${GIT_REPO_PATH:-.}"
+      },
+      "description": "Git operations — log, diff, status, commit, branch",
+      "tools": ["health", "log", "diff", "status", "branch", "show", "blame"],
+      "status": "planned"
+    },
+    "docker-mcp": {
+      "command": "python",
+      "args": ["-m", "mcp_docker"],
+      "env": {},
+      "description": "Docker operations — containers, images, compose, logs",
+      "tools": ["health", "ps", "images", "logs", "exec", "build", "compose_up"],
+      "status": "planned"
+    },
+    "kubernetes-mcp": {
+      "command": "python",
+      "args": ["-m", "mcp_k8s"],
+      "env": {
+        "KUBECONFIG": "${KUBECONFIG:-~/.kube/config}"
+      },
+      "description": "Kubernetes operations — pods, services, deployments, logs",
+      "tools": ["health", "get_pods", "get_services", "logs", "exec", "apply", "rollout"],
+      "status": "planned"
+    },
+    "aws-mcp": {
+      "command": "python",
+      "args": ["-m", "mcp_aws"],
+      "env": {
+        "AWS_PROFILE": "${AWS_PROFILE:-default}",
+        "AWS_REGION": "${AWS_REGION:-us-east-1}"
+      },
+      "description": "AWS operations — EC2, S3, Lambda, CloudFormation, IAM",
+      "tools": ["health", "ec2_list", "s3_list", "lambda_invoke", "cfn_deploy", "iam_list"],
+      "status": "planned"
+    }
+  },
+  "notes": [
+    "Env vars with ${VAR} syntax are required at runtime — configure in shell/profile",
+    "Status 'available' = published npm/pypi package exists; 'planned' = needs implementation",
+    "Run 'mcp dev <server.py>' to test locally before registering",
+    "Add new servers following mcp-builder skill pattern"
+  ]
+}

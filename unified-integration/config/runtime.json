@@ -1,0 +1,26 @@
+{
+  "base_dir": "",
+  "memory_root": "",
+  "max_skill_cards": 8,
+  "compression_budget": 200000,
+  "compression_trigger": 0.75,
+  "preflight_mode": 0,
+  "preflight_deadline_ms": 2000,
+  "preflight_max_rounds": 2,
+  "mcp_auto_start_priority": 1,
+  "mcp_health_check_interval": 30,
+  "mcp_default_timeout": 30,
+  "memory_ttl_days": {
+    "session_context": 7,
+    "persistent": null,
+    "user_preference": 365,
+    "skill_usage": 30,
+    "task_observer": 14
+  },
+  "logging": {
+    "level": "INFO",
+    "file": ".agentenhancements/logs/ae.log",
+    "max_size_mb": 10,
+    "backup_count": 5
+  }
+}

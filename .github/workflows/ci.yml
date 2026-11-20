@@ -1,0 +1,283 @@
+name: AgentEnhancements CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+
+jobs:
+  # Lint and static checks
+  lint:
+    name: Lint & Static Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -q pyyaml
+
+      - name: Check Python syntax
+        run: |
+          find . -name "*.py" -not -path "./.*" -not -path "./venv/*" | xargs python3 -m py_compile
+
+      - name: Check JSON syntax
+        run: |
+          find . -name "*.json" -not -path "./.*" -not -path "./venv/*" | xargs -I {} python3 -m json.tool {} > /dev/null
+
+      - name: Check YAML syntax
+        run: |
+          find . -name "*.yaml" -o -name "*.yml" | xargs -I {} python3 -c "import yaml; yaml.safe_load(open('{}'))"
+
+      - name: Check Bash syntax
+        run: |
+          find . -name "*.sh" -not -path "./.*" | xargs bash -n
+
+      - name: Check for placeholders
+        run: |
+          if grep -r "XXX\|TODO\|FIXME\|待补充\|【…】" --include="*.py" --include="*.md" --include="*.sh" --include="*.yaml" --include="*.json" .; then
+            echo "Placeholders found!"
+            exit 1
+          fi
+
+  # Unit tests
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -q pyyaml
+
+      - name: Run integration tests
+        run: |
+          cd unified-integration
+          python3 tests/run_tests.py
+
+  # Schema validation
+  validate:
+    name: Schema Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -q pyyaml jsonschema
+
+      - name: Validate catalog.json
+        run: |
+          python3 -c "
+          import json, jsonschema
+          with open('plugin-catalog/catalog.json') as f:
+              catalog = json.load(f)
+          # Basic structure validation
+          assert 'skills' in catalog
+          assert 'categories' in catalog
+          for slug, skill in catalog['skills'].items():
+              assert skill['slug'] == slug
+              assert 'category' in skill
+              assert 'version' in skill
+              assert 'status' in skill
+              assert 'trigger_keywords' in skill
+          print('catalog.json valid')
+          "
+
+      - name: Validate mcp-servers.json
+        run: |
+          python3 -c "
+          import json
+          with open('plugin-catalog/mcp-servers.json') as f:
+              data = json.load(f)
+          assert 'mcp-servers' in data
+          for sid, server in data['mcp-servers'].items():
+              assert 'command' in server
+              assert 'status' in server
+              assert server['status'] in ['planned', 'available', 'built']
+          print('mcp-servers.json valid')
+          "
+
+      - name: Validate skill frontmatter
+        run: |
+          python3 -c "
+          import yaml, sys
+          from pathlib import Path
+          for skill_file in Path('skills').rglob('SKILL.md'):
+              content = skill_file.read_text()
+              if content.startswith('---'):
+                  parts = content.split('---', 2)
+                  if len(parts) >= 3:
+                      fm = yaml.safe_load(parts[1])
+                      required = ['slug', 'category', 'version', 'status', 'trigger_keywords']
+                      for req in required:
+                          if req not in fm:
+                              print(f'Missing {req} in {skill_file}')
+                              sys.exit(1)
+          print('All skill frontmatter valid')
+          "
+
+  # Build verification
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -q pyyaml
+
+      - name: Test setup.py dry-run
+        run: |
+          python3 unified-integration/setup.py install --dry-run
+
+      - name: Test registry rebuild
+        run: |
+          python3 unified-integration/scripts/registry.py rebuild
+
+      - name: Verify output files
+        run: |
+          test -f unified-integration/skills/all-skills.json
+          test -f unified-integration/skills/agent-registry.json
+          python3 -m json.tool unified-integration/skills/all-skills.json > /dev/null
+          python3 -m json.tool unified-integration/skills/agent-registry.json > /dev/null
+
+      - name: Test native integration list
+        run: |
+          python3 unified-integration/scripts/native_integration.py list
+
+  # Security checks
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for secrets
+        run: |
+          # Check for common secret patterns
+          if grep -r -i "api_key\|secret\|password\|token" --include="*.py" --include="*.sh" --include="*.json" --include="*.yaml" . | grep -v ".example" | grep -v "test_" | grep -v "placeholder" | grep -v "\${"; then
+            echo "Potential secrets found!"
+            exit 1
+          fi
+
+      - name: Check for hardcoded credentials
+        run: |
+          if grep -r "sk-\|ghp_\|glpat-\|gho_\|github_pat_" . --include="*.py" --include="*.sh" --include="*.json" --include="*.yaml" 2>/dev/null; then
+            echo "Hardcoded credentials found!"
+            exit 1
+          fi
+
+      - name: Verify .gitignore
+        run: |
+          test -f .gitignore
+          grep -q "ui.api.json" .gitignore
+          grep -q ".agentenhancements/" .gitignore
+          grep -q "*.pyc" .gitignore
+          grep -q "__pycache__" .gitignore
+
+  # Documentation checks
+  docs:
+    name: Documentation Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required docs exist
+        run: |
+          test -f README.md
+          test -f README_INTEGRATION.md
+          test -f CONTRACT.md
+          test -f docs/MCP_INTEGRATION_CHECKLIST.md
+          test -f docs/audit/E2E_AUDIT_2026-11.md
+
+      - name: Check README has required sections
+        run: |
+          grep -q "Quick Start" README.md
+          grep -q "Agent Activation Matrix" README.md
+          grep -q "Architecture" README.md
+
+  # Integration test (smoke)
+  smoke:
+    name: Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -q pyyaml
+
+      - name: Test registry map
+        run: |
+          python3 unified-integration/scripts/registry.py map "typescript refactor"
+
+      - name: Test memory save/load
+        run: |
+          python3 unified-integration/scripts/memory.py save test_key '{"test": "value"}' --type persistent
+          python3 unified-integration/scripts/memory.py load test_key --type persistent
+
+      - name: Test compression
+        run: |
+          echo "test content" | python3 unified-integration/scripts/compression.py compress --budget 1000
+
+      - name: Test gateway status
+        run: |
+          python3 unified-integration/scripts/gateway.py status
+
+      - name: Test adaptive preflight
+        run: |
+          python3 unified-integration/scripts/adaptive_preflight.py "build an mcp server" --mode 0
+
+  # Overall status
+  status:
+    name: CI Status
+    needs: [lint, test, validate, build, security, docs, smoke]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]] ||
+             [[ "${{ needs.test.result }}" != "success" ]] ||
+             [[ "${{ needs.validate.result }}" != "success" ]] ||
+             [[ "${{ needs.build.result }}" != "success" ]] ||
+             [[ "${{ needs.security.result }}" != "success" ]] ||
+             [[ "${{ needs.docs.result }}" != "success" ]] ||
+             [[ "${{ needs.smoke.result }}" != "success" ]]; then
+            echo "Some jobs failed"
+            exit 1
+          fi
+          echo "All CI checks passed!"

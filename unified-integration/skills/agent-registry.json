@@ -1,0 +1,1894 @@
+{
+  "skills": {
+    "academic": {
+      "slug": "academic",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "worldbuilding",
+        "narrative",
+        "academic",
+        "research paper",
+        "literature"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\academic\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "design": {
+      "slug": "design",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "ui",
+        "ux",
+        "brand",
+        "designer",
+        "user experience",
+        "interface"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\design\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "engineering": {
+      "slug": "engineering",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "frontend",
+        "backend",
+        "devops",
+        "engineering",
+        "software engineer",
+        "architecture"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\engineering\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "finance": {
+      "slug": "finance",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "finance",
+        "fp&a",
+        "budget",
+        "forecast",
+        "financial modeling",
+        "cfo"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\finance\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "game-development": {
+      "slug": "game-development",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "unity",
+        "unreal",
+        "godot",
+        "roblox",
+        "game dev",
+        "game development"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\game-development\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "gis": {
+      "slug": "gis",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "gis",
+        "geospatial",
+        "maps",
+        "spatial",
+        "qgis",
+        "arcgis"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\gis\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "healthcare": {
+      "slug": "healthcare",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "healthcare",
+        "hipaa",
+        "compliance",
+        "clinical",
+        "medical",
+        "fhir"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\healthcare\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "marketing": {
+      "slug": "marketing",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "growth",
+        "seo",
+        "social",
+        "marketing",
+        "content marketing",
+        "organic"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\marketing\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "nexus": {
+      "slug": "nexus",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "multi-agent orchestration",
+        "nexus",
+        "agent orchestration",
+        "workflow"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\nexus\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "paid-media": {
+      "slug": "paid-media",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "ppc",
+        "paid social",
+        "ads",
+        "advertising",
+        "facebook ads",
+        "google ads"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\paid-media\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "product": {
+      "slug": "product",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "product",
+        "pm",
+        "product manager",
+        "roadmap",
+        "prd",
+        "feature"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\product\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "project-management": {
+      "slug": "project-management",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "project management",
+        "pm",
+        "jira",
+        "agile",
+        "scrum",
+        "sprint"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\project-management\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "research": {
+      "slug": "research",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "literature synthesis",
+        "systematic review",
+        "meta-analysis",
+        "research"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\research\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "sales": {
+      "slug": "sales",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "sales",
+        "meddpicc",
+        "rfp",
+        "enterprise sales",
+        "deal",
+        "pipeline"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\sales\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "security": {
+      "slug": "security",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "threat model",
+        "pentest",
+        "dfir",
+        "security",
+        "vulnerability",
+        "audit"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\security\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "spatial-computing": {
+      "slug": "spatial-computing",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "visionos",
+        "webxr",
+        "ar",
+        "vr",
+        "xr",
+        "spatial",
+        "apple vision pro"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\spatial-computing\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "specialized": {
+      "slug": "specialized",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "multi-domain",
+        "specialist",
+        "cross-functional",
+        "generalist"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\specialized\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "support": {
+      "slug": "support",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "support",
+        "analytics",
+        "customer success",
+        "helpdesk",
+        "observability"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\support\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "testing": {
+      "slug": "testing",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "qa",
+        "e2e",
+        "performance testing",
+        "testing",
+        "test automation",
+        "playwright"
+      ],
+      "mcp_servers": [],
+      "path": "agency\\testing\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "agent-skills-addyosmani": {
+      "slug": "agent-skills-addyosmani",
+      "category": "code",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "frontend performance",
+        "accessibility",
+        "web vitals",
+        "core web vitals",
+        "a11y"
+      ],
+      "mcp_servers": [],
+      "path": "code\\agent-skills-addyosmani\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "karpathy-skills": {
+      "slug": "karpathy-skills",
+      "category": "code",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "minimal",
+        "first principles",
+        "vectorize",
+        "numpy",
+        "pytorch",
+        "code review",
+        "delete over refactor"
+      ],
+      "mcp_servers": [],
+      "path": "code\\karpathy-skills\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "mattpocock-skills": {
+      "slug": "mattpocock-skills",
+      "category": "code",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "typescript",
+        "type-safe",
+        "ts-refactor",
+        "generics",
+        "type inference"
+      ],
+      "mcp_servers": [],
+      "path": "code\\mattpocock-skills\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "replica-skill": {
+      "slug": "replica-skill",
+      "category": "code",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "reverse engineer",
+        "replica",
+        "decompile",
+        "analyze binary",
+        "app analysis"
+      ],
+      "mcp_servers": [],
+      "path": "code\\replica-skill\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "diagram-design": {
+      "slug": "diagram-design",
+      "category": "design",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "diagram",
+        "architecture diagram",
+        "flowchart",
+        "sequence diagram",
+        "mermaid"
+      ],
+      "mcp_servers": [],
+      "path": "design\\diagram-design\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "impeccable": {
+      "slug": "impeccable",
+      "category": "design",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "visual polish",
+        "polish",
+        "refine",
+        "pixel perfect",
+        "visual quality"
+      ],
+      "mcp_servers": [],
+      "path": "design\\impeccable\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "ppt-master": {
+      "slug": "ppt-master",
+      "category": "design",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "slide deck",
+        "presentation",
+        "powerpoint",
+        "pptx",
+        "slides"
+      ],
+      "mcp_servers": [],
+      "path": "design\\ppt-master\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "ui-ux-pro-max": {
+      "slug": "ui-ux-pro-max",
+      "category": "design",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "ui design tokens",
+        "design system",
+        "tokens",
+        "figma",
+        "design tokens"
+      ],
+      "mcp_servers": [],
+      "path": "design\\ui-ux-pro-max\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "anthropic-skills": {
+      "slug": "anthropic-skills",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "skill",
+        "mcp",
+        "mcp-builder",
+        "skill-creator",
+        "docx",
+        "pdf",
+        "pptx",
+        "xlsx",
+        "webapp-testing",
+        "typescript"
+      ],
+      "mcp_servers": [],
+      "path": "multimedia-writing\\anthropic-skills\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "mcp-builder": {
+      "slug": "mcp-builder",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "build an mcp server",
+        "create mcp tool",
+        "mcp integration",
+        "fastmcp",
+        "model context protocol"
+      ],
+      "mcp_servers": [],
+      "path": "multimedia-writing\\anthropic-skills\\skills\\mcp-builder\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "skill-creator": {
+      "slug": "skill-creator",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "write a new skill",
+        "create skill",
+        "add skill",
+        "skill authoring"
+      ],
+      "mcp_servers": [],
+      "path": "multimedia-writing\\anthropic-skills\\skills\\skill-creator\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "humanizer": {
+      "slug": "humanizer",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "humanize text",
+        "rewrite",
+        "natural language",
+        "tone",
+        "style transfer"
+      ],
+      "mcp_servers": [],
+      "path": "multimedia-writing\\humanizer\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "hyperframes": {
+      "slug": "hyperframes",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "talking head",
+        "avatar",
+        "heygen",
+        "elevenlabs",
+        "video generation",
+        "consent"
+      ],
+      "mcp_servers": [],
+      "path": "multimedia-writing\\hyperframes\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "openmontage": {
+      "slug": "openmontage",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "video montage",
+        "video editing",
+        "montage",
+        "ffmpeg",
+        "video composition"
+      ],
+      "mcp_servers": [],
+      "path": "multimedia-writing\\openmontage\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "agent-reach": {
+      "slug": "agent-reach",
+      "category": "research",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "deep research",
+        "agent research",
+        "multi-source",
+        "synthesis",
+        "fact check"
+      ],
+      "mcp_servers": [],
+      "path": "research\\agent-reach\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "graphify": {
+      "slug": "graphify",
+      "category": "research",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "knowledge graph",
+        "graph",
+        "entity extraction",
+        "relationship extraction",
+        "neo4j"
+      ],
+      "mcp_servers": [],
+      "path": "research\\graphify\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "last-30-days": {
+      "slug": "last-30-days",
+      "category": "research",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "recent trends",
+        "last 30 days",
+        "current events",
+        "trending",
+        "news"
+      ],
+      "mcp_servers": [],
+      "path": "research\\last-30-days\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "rea": {
+      "slug": "rea",
+      "category": "research",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "multi-step reasoning",
+        "reasoning",
+        "chain of thought",
+        "planning",
+        "rea"
+      ],
+      "mcp_servers": [],
+      "path": "research\\rea\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "understand-anything": {
+      "slug": "understand-anything",
+      "category": "research",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "feynman",
+        "explain",
+        "teach",
+        "understand",
+        "learn",
+        "concept"
+      ],
+      "mcp_servers": [],
+      "path": "research\\understand-anything\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "bmad-method": {
+      "slug": "bmad-method",
+      "category": "tokens-optimization",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "multi-persona",
+        "persona",
+        "bmad",
+        "multi-agent",
+        "collaborative"
+      ],
+      "mcp_servers": [],
+      "path": "tokens-optimization\\bmad-method\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "caveman": {
+      "slug": "caveman",
+      "category": "tokens-optimization",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "token compression",
+        "compress context",
+        "summarize",
+        "reduce tokens"
+      ],
+      "mcp_servers": [],
+      "path": "tokens-optimization\\caveman\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "gsd": {
+      "slug": "gsd",
+      "category": "tokens-optimization",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "parallel checklist",
+        "checklist",
+        "parallel execution",
+        "task decomposition"
+      ],
+      "mcp_servers": [],
+      "path": "tokens-optimization\\gsd\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    },
+    "gstack": {
+      "slug": "gstack",
+      "category": "tokens-optimization",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "token budgeting",
+        "token budget",
+        "context window",
+        "token management"
+      ],
+      "mcp_servers": [],
+      "path": "tokens-optimization\\gstack\\SKILL.md",
+      "source": "catalog",
+      "content_preview": "",
+      "capabilities": [],
+      "framework_tags": [],
+      "estimated_tokens": 100
+    }
+  },
+  "plugins": {
+    "bmad-method": {
+      "slug": "bmad-method",
+      "category": "tokens-optimization",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "multi-persona",
+        "persona",
+        "bmad",
+        "multi-agent",
+        "collaborative"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "tokens-optimization\\bmad-method\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "caveman": {
+      "slug": "caveman",
+      "category": "tokens-optimization",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "token compression",
+        "compress context",
+        "summarize",
+        "reduce tokens"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "tokens-optimization\\caveman\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "gsd": {
+      "slug": "gsd",
+      "category": "tokens-optimization",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "parallel checklist",
+        "checklist",
+        "parallel execution",
+        "task decomposition"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "tokens-optimization\\gsd\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "gstack": {
+      "slug": "gstack",
+      "category": "tokens-optimization",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "token budgeting",
+        "token budget",
+        "context window",
+        "token management"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "tokens-optimization\\gstack\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "agent-reach": {
+      "slug": "agent-reach",
+      "category": "research",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "deep research",
+        "agent research",
+        "multi-source",
+        "synthesis",
+        "fact check"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "research\\agent-reach\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "graphify": {
+      "slug": "graphify",
+      "category": "research",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "knowledge graph",
+        "graph",
+        "entity extraction",
+        "relationship extraction",
+        "neo4j"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "research\\graphify\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "last-30-days": {
+      "slug": "last-30-days",
+      "category": "research",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "recent trends",
+        "last 30 days",
+        "current events",
+        "trending",
+        "news"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "research\\last-30-days\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "rea": {
+      "slug": "rea",
+      "category": "research",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "multi-step reasoning",
+        "reasoning",
+        "chain of thought",
+        "planning",
+        "rea"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "research\\rea\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "understand-anything": {
+      "slug": "understand-anything",
+      "category": "research",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "feynman",
+        "explain",
+        "teach",
+        "understand",
+        "learn",
+        "concept"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "research\\understand-anything\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "anthropic-skills": {
+      "slug": "anthropic-skills",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "skill",
+        "mcp",
+        "mcp-builder",
+        "skill-creator",
+        "docx",
+        "pdf",
+        "pptx",
+        "xlsx",
+        "webapp-testing",
+        "typescript"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "multimedia-writing\\anthropic-skills\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "humanizer": {
+      "slug": "humanizer",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "humanize text",
+        "rewrite",
+        "natural language",
+        "tone",
+        "style transfer"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "multimedia-writing\\humanizer\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "hyperframes": {
+      "slug": "hyperframes",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "talking head",
+        "avatar",
+        "heygen",
+        "elevenlabs",
+        "video generation",
+        "consent"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "multimedia-writing\\hyperframes\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "openmontage": {
+      "slug": "openmontage",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "video montage",
+        "video editing",
+        "montage",
+        "ffmpeg",
+        "video composition"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "multimedia-writing\\openmontage\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "mcp-builder": {
+      "slug": "mcp-builder",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "build an mcp server",
+        "create mcp tool",
+        "mcp integration",
+        "fastmcp",
+        "model context protocol"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "multimedia-writing\\anthropic-skills\\skills\\mcp-builder\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "skill-creator": {
+      "slug": "skill-creator",
+      "category": "multimedia-writing",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "write a new skill",
+        "create skill",
+        "add skill",
+        "skill authoring"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "multimedia-writing\\anthropic-skills\\skills\\skill-creator\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "diagram-design": {
+      "slug": "diagram-design",
+      "category": "design",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "diagram",
+        "architecture diagram",
+        "flowchart",
+        "sequence diagram",
+        "mermaid"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "design\\diagram-design\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "impeccable": {
+      "slug": "impeccable",
+      "category": "design",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "visual polish",
+        "polish",
+        "refine",
+        "pixel perfect",
+        "visual quality"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "design\\impeccable\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "ppt-master": {
+      "slug": "ppt-master",
+      "category": "design",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "slide deck",
+        "presentation",
+        "powerpoint",
+        "pptx",
+        "slides"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "design\\ppt-master\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "ui-ux-pro-max": {
+      "slug": "ui-ux-pro-max",
+      "category": "design",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "ui design tokens",
+        "design system",
+        "tokens",
+        "figma",
+        "design tokens"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "design\\ui-ux-pro-max\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "agent-skills-addyosmani": {
+      "slug": "agent-skills-addyosmani",
+      "category": "code",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "frontend performance",
+        "accessibility",
+        "web vitals",
+        "core web vitals",
+        "a11y"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "code\\agent-skills-addyosmani\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "karpathy-skills": {
+      "slug": "karpathy-skills",
+      "category": "code",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "minimal",
+        "first principles",
+        "vectorize",
+        "numpy",
+        "pytorch",
+        "code review",
+        "delete over refactor"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "code\\karpathy-skills\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "mattpocock-skills": {
+      "slug": "mattpocock-skills",
+      "category": "code",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "typescript",
+        "type-safe",
+        "ts-refactor",
+        "generics",
+        "type inference"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "code\\mattpocock-skills\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "replica-skill": {
+      "slug": "replica-skill",
+      "category": "code",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "reverse engineer",
+        "replica",
+        "decompile",
+        "analyze binary",
+        "app analysis"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "code\\replica-skill\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "academic": {
+      "slug": "academic",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "worldbuilding",
+        "narrative",
+        "academic",
+        "research paper",
+        "literature"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\academic\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "design": {
+      "slug": "design",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "ui",
+        "ux",
+        "brand",
+        "designer",
+        "user experience",
+        "interface"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\design\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "engineering": {
+      "slug": "engineering",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "frontend",
+        "backend",
+        "devops",
+        "engineering",
+        "software engineer",
+        "architecture"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\engineering\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "finance": {
+      "slug": "finance",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "finance",
+        "fp&a",
+        "budget",
+        "forecast",
+        "financial modeling",
+        "cfo"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\finance\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "game-development": {
+      "slug": "game-development",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "unity",
+        "unreal",
+        "godot",
+        "roblox",
+        "game dev",
+        "game development"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\game-development\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "gis": {
+      "slug": "gis",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "gis",
+        "geospatial",
+        "maps",
+        "spatial",
+        "qgis",
+        "arcgis"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\gis\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "healthcare": {
+      "slug": "healthcare",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "healthcare",
+        "hipaa",
+        "compliance",
+        "clinical",
+        "medical",
+        "fhir"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\healthcare\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "marketing": {
+      "slug": "marketing",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "growth",
+        "seo",
+        "social",
+        "marketing",
+        "content marketing",
+        "organic"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\marketing\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "nexus": {
+      "slug": "nexus",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "multi-agent orchestration",
+        "nexus",
+        "agent orchestration",
+        "workflow"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\nexus\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "paid-media": {
+      "slug": "paid-media",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "ppc",
+        "paid social",
+        "ads",
+        "advertising",
+        "facebook ads",
+        "google ads"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\paid-media\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "product": {
+      "slug": "product",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "product",
+        "pm",
+        "product manager",
+        "roadmap",
+        "prd",
+        "feature"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\product\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "project-management": {
+      "slug": "project-management",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "project management",
+        "pm",
+        "jira",
+        "agile",
+        "scrum",
+        "sprint"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\project-management\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "research": {
+      "slug": "research",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "literature synthesis",
+        "systematic review",
+        "meta-analysis",
+        "research"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\research\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "sales": {
+      "slug": "sales",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "sales",
+        "meddpicc",
+        "rfp",
+        "enterprise sales",
+        "deal",
+        "pipeline"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\sales\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "security": {
+      "slug": "security",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "threat model",
+        "pentest",
+        "dfir",
+        "security",
+        "vulnerability",
+        "audit"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\security\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "spatial-computing": {
+      "slug": "spatial-computing",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "visionos",
+        "webxr",
+        "ar",
+        "vr",
+        "xr",
+        "spatial",
+        "apple vision pro"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\spatial-computing\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "specialized": {
+      "slug": "specialized",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "multi-domain",
+        "specialist",
+        "cross-functional",
+        "generalist"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\specialized\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "support": {
+      "slug": "support",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "support",
+        "analytics",
+        "customer success",
+        "helpdesk",
+        "observability"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\support\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    },
+    "testing": {
+      "slug": "testing",
+      "category": "agency",
+      "version": "0.1.0",
+      "status": "draft",
+      "trigger_keywords": [
+        "qa",
+        "e2e",
+        "performance testing",
+        "testing",
+        "test automation",
+        "playwright"
+      ],
+      "mcp_servers": [],
+      "source_url": "",
+      "vendored": false,
+      "guide_path": "agency\\testing\\SKILL.md",
+      "framework_tags": [],
+      "readiness": "guide_only"
+    }
+  },
+  "mcp_servers": {
+    "github-mcp": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "description": "GitHub API access via MCP \u00e2\u20ac\u201d repos, issues, PRs, actions",
+      "tools": [
+        "health",
+        "get_repo",
+        "list_issues",
+        "create_issue",
+        "create_pr",
+        "list_prs",
+        "get_file",
+        "search_code"
+      ],
+      "status": "planned",
+      "id": "github-mcp"
+    },
+    "filesystem-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem"
+      ],
+      "env": {},
+      "description": "Local filesystem operations \u00e2\u20ac\u201d read, write, list, search",
+      "tools": [
+        "health",
+        "read_file",
+        "write_file",
+        "list_dir",
+        "search_files",
+        "glob"
+      ],
+      "status": "available",
+      "id": "filesystem-mcp"
+    },
+    "sqlite-mcp": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_sqlite"
+      ],
+      "env": {
+        "SQLITE_DB_PATH": "${SQLITE_DB_PATH:-./data.db}"
+      },
+      "description": "SQLite database operations \u00e2\u20ac\u201d query, schema, migrations",
+      "tools": [
+        "health",
+        "query",
+        "execute",
+        "schema",
+        "tables"
+      ],
+      "status": "planned",
+      "id": "sqlite-mcp"
+    },
+    "postgres-mcp": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_postgres"
+      ],
+      "env": {
+        "POSTGRES_DSN": "${POSTGRES_DSN}"
+      },
+      "description": "PostgreSQL database operations",
+      "tools": [
+        "health",
+        "query",
+        "execute",
+        "schema",
+        "tables",
+        "explain"
+      ],
+      "status": "planned",
+      "id": "postgres-mcp"
+    },
+    "web-search-mcp": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_web_search"
+      ],
+      "env": {
+        "SEARCH_API_KEY": "${SEARCH_API_KEY}",
+        "SEARCH_ENGINE": "google"
+      },
+      "description": "Web search via search APIs",
+      "tools": [
+        "health",
+        "search",
+        "fetch"
+      ],
+      "status": "planned",
+      "id": "web-search-mcp"
+    },
+    "browser-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-browser"
+      ],
+      "env": {},
+      "description": "Browser automation \u00e2\u20ac\u201d navigate, click, extract, screenshot",
+      "tools": [
+        "health",
+        "navigate",
+        "click",
+        "type",
+        "extract",
+        "screenshot",
+        "wait_for"
+      ],
+      "status": "available",
+      "id": "browser-mcp"
+    },
+    "git-mcp": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_git"
+      ],
+      "env": {
+        "GIT_REPO_PATH": "${GIT_REPO_PATH:-.}"
+      },
+      "description": "Git operations \u00e2\u20ac\u201d log, diff, status, commit, branch",
+      "tools": [
+        "health",
+        "log",
+        "diff",
+        "status",
+        "branch",
+        "show",
+        "blame"
+      ],
+      "status": "planned",
+      "id": "git-mcp"
+    },
+    "docker-mcp": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_docker"
+      ],
+      "env": {},
+      "description": "Docker operations \u00e2\u20ac\u201d containers, images, compose, logs",
+      "tools": [
+        "health",
+        "ps",
+        "images",
+        "logs",
+        "exec",
+        "build",
+        "compose_up"
+      ],
+      "status": "planned",
+      "id": "docker-mcp"
+    },
+    "kubernetes-mcp": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_k8s"
+      ],
+      "env": {
+        "KUBECONFIG": "${KUBECONFIG:-~/.kube/config}"
+      },
+      "description": "Kubernetes operations \u00e2\u20ac\u201d pods, services, deployments, logs",
+      "tools": [
+        "health",
+        "get_pods",
+        "get_services",
+        "logs",
+        "exec",
+        "apply",
+        "rollout"
+      ],
+      "status": "planned",
+      "id": "kubernetes-mcp"
+    },
+    "aws-mcp": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_aws"
+      ],
+      "env": {
+        "AWS_PROFILE": "${AWS_PROFILE:-default}",
+        "AWS_REGION": "${AWS_REGION:-us-east-1}"
+      },
+      "description": "AWS operations \u00e2\u20ac\u201d EC2, S3, Lambda, CloudFormation, IAM",
+      "tools": [
+        "health",
+        "ec2_list",
+        "s3_list",
+        "lambda_invoke",
+        "cfn_deploy",
+        "iam_list"
+      ],
+      "status": "planned",
+      "id": "aws-mcp"
+    }
+  },
+  "builtins": [
+    "registry_search",
+    "memory_save",
+    "memory_load",
+    "compression"
+  ]
+}

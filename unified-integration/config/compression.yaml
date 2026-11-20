@@ -1,0 +1,10 @@
+# AgentEnhancements Context Compression Configuration
+# This file is loaded by compression.py
+
+mode: "auto"              # auto, headroom, python, none
+budget: 200000            # Token budget for compressed context
+trigger: 0.75             # Trigger compression at 75% of budget
+headroom_binary: ""       # Path to headroom binary (empty = auto-detect)
+max_input_chars: 50000    # Max input chars for Python fallback
+preserve_recent: 10       # Preserve last N messages in Python fallback
+strip_thinking: true      # Strip thinking/analysis blocks

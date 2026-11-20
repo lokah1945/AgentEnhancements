@@ -1,0 +1,77 @@
+{
+  "api_keys": [
+    {
+      "ref": "openai-primary",
+      "provider": "openai",
+      "env_var": "OPENAI_API_KEY",
+      "description": "Primary OpenAI API key for selector model",
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "ref": "anthropic-primary",
+      "provider": "anthropic",
+      "env_var": "ANTHROPIC_API_KEY",
+      "description": "Primary Anthropic API key for selector model",
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "ref": "github-token",
+      "provider": "github",
+      "env_var": "GITHUB_TOKEN",
+      "description": "GitHub token for github-mcp server",
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "ref": "tavily-api",
+      "provider": "tavily",
+      "env_var": "TAVILY_API_KEY",
+      "description": "Tavily API key for web search",
+      "enabled": false,
+      "priority": 2
+    },
+    {
+      "ref": "exa-api",
+      "provider": "exa",
+      "env_var": "EXA_API_KEY",
+      "description": "Exa API key for deep research",
+      "enabled": false,
+      "priority": 2
+    }
+  ],
+  "connections": {
+    "mcp": {
+      "github": {
+        "server": "github-mcp",
+        "required_keys": ["github-token"]
+      },
+      "filesystem": {
+        "server": "filesystem-mcp",
+        "required_keys": []
+      },
+      "web-search": {
+        "server": "web-search-mcp",
+        "required_keys": ["tavily-api", "exa-api"]
+      }
+    }
+  },
+  "preflight": {
+    "mode": 0,
+    "native_adapter": "",
+    "endpoint_url": "https://api.openai.com/v1/chat/completions",
+    "model_name": "gpt-4o-mini",
+    "api_key_ref": "openai-primary",
+    "max_rounds": 2,
+    "deadline_ms": 2000,
+    "max_skill_cards": 8,
+    "token_budget": 400,
+    "fallback_on_error": true
+  },
+  "mcp": {
+    "auto_start_priority": 1,
+    "health_check_interval": 30,
+    "default_timeout": 30
+  }
+}

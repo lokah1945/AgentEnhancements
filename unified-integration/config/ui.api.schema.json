@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentEnhancements UI API Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "api_keys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "provider", "env_var", "enabled", "priority"],
+        "properties": {
+          "ref": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "provider": { "type": "string", "enum": ["openai", "anthropic", "github", "tavily", "exa", "firecrawl", "newsapi", "serper", "google-news", "custom"] },
+          "env_var": { "type": "string" },
+          "value": { "type": "string" },
+          "description": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "priority": { "type": "integer", "minimum": 1, "maximum": 10 },
+          "cooldown_seconds": { "type": "integer", "minimum": 0 },
+          "rate_limit": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "connections": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mcp": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["server", "required_keys"],
+            "properties": {
+              "server": { "type": "string" },
+              "required_keys": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "preflight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "max_rounds", "deadline_ms", "max_skill_cards", "token_budget", "fallback_on_error"],
+      "properties": {
+        "mode": { "type": "integer", "enum": [0, 1, 2] },
+        "native_adapter": { "type": "string", "enum": ["", "claude-code", "codex", "opencode"] },
+        "endpoint_url": { "type": "string", "format": "uri" },
+        "model_name": { "type": "string" },
+        "api_key_ref": { "type": "string" },
+        "max_rounds": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "deadline_ms": { "type": "integer", "minimum": 500, "maximum": 30000 },
+        "max_skill_cards": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "token_budget": { "type": "integer", "minimum": 100, "maximum": 5000 },
+        "fallback_on_error": { "type": "boolean" }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["auto_start_priority", "health_check_interval", "default_timeout"],
+      "properties": {
+        "auto_start_priority": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "health_check_interval": { "type": "integer", "minimum": 5, "maximum": 300 },
+        "default_timeout": { "type": "integer", "minimum": 5, "maximum": 300 }
+      }
+    }
+  },
+  "required": ["api_keys", "connections", "preflight", "mcp"]
+}

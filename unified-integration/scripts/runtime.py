@@ -203,6 +203,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("agent", choices=["claude-code", "codex", "opencode", "hermes"])
     parser.add_argument("--text", action="store_true")
+    parser.add_argument("--bridge", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
         from project_paths import environment
@@ -214,7 +215,16 @@ def main() -> None:
         if not isinstance(event, dict):
             raise ValueError("hook input must be a JSON object")
         context = handle(args.agent, event)
-        if context:
+        if args.bridge:
+            # Private OpenCode adapter envelope. Prepare a legacy render for
+            # host-side snapshot invalidation without another lifecycle event
+            # or memory effect. Existing --text/native JSON outputs are intact.
+            fallback = context
+            if (event.get("hook_event_name") == "UserPromptSubmit"
+                    and context.startswith("AgentEnhancements preflight")):
+                fallback = skill_context(args.agent, str(event.get("prompt") or ""))
+            print(json.dumps({"context": context, "fallback": fallback}))
+        elif context:
             if args.text:
                 print(context)
             else:

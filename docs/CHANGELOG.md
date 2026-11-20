@@ -23,8 +23,8 @@ approved by the maintainer on 2026-11-20 (CONTRACT v2.4), see the
   keyring and `preflight.key` are no longer runtime sources.
 - New built-in `search-mcp` (gateway tool `search_web`) with adapters for
   You.com, Tavily, Exa, Firecrawl and NewsAPI per their official docs and
-  Serper per authorized live observation; You.com, Tavily, Exa and Serper
-  live-verified.
+  Serper per authorized live observation; all six providers live-verified
+  (Firecrawl and NewsAPI after the merge of PR #11).
 - CONTRACT v2.4 (maintainer-approved): §8.2/§8.5/§8.6 amended.
 - All runtime use of the personal `search_providers.json` removed; the
   unverifiable `npx -y you-mcp` / `npx -y serper-mcp` template commands

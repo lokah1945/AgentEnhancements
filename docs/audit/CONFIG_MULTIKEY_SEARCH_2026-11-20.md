@@ -1,6 +1,6 @@
 ---
 title: ui.api.json consolidation, multi-key pool and search adapters
-version: 1.0
+version: 1.1
 last_updated: 2026-11-20
 audience: maintainers
 ---
@@ -11,9 +11,10 @@ Agent: Claude Code (Claude Opus 5.5) | Session:
 `19d3065f-e968-406c-84e3-86a49942413d` | Branch:
 `feat/ui-api-v2-credential-pool` | Base: `master@6c36fd2e`.
 
-**Status: PARTIAL — implementation and tests complete; merge blocked on
-maintainer approval of a CONTRACT §8.2/§8.5 amendment (see below). No
-provider is live-verified.**
+**Status: implementation, tests and documentation complete. CONTRACT
+amendment approved by the maintainer on 2026-11-20 and applied (v2.4).
+Live-verified: You.com, Tavily, Exa, Serper. Not live-verified (no key):
+Firecrawl, NewsAPI.**
 
 ### Outcome
 
@@ -32,8 +33,8 @@ provider is live-verified.**
   longer runtime sources. Mode 0/1/2 semantics and every fallback are
   unchanged; Mode 1 remains Claude Code/Codex only and is not certified.
 - New built-in `search-mcp` (gateway tool `search_web`): You.com, Tavily,
-  Exa, Firecrawl, NewsAPI adapters per official docs. Serper: UNVERIFIED,
-  not implemented.
+  Exa, Firecrawl, NewsAPI adapters per official docs; Serper adapter per the
+  contract observed in authorized live calls (no public API reference).
 - `any_of` credential requirements (`mcp.<server>.any_of`, built-in
   `BUILTIN_ANY_OF`, catalog `env_any_of`).
 - The personal `search_providers.json` is fully decoupled: no runtime,
@@ -54,10 +55,10 @@ provider is live-verified.**
 | F7 | P2 | `api_config.server_state` | No `any_of` semantics | Added for MCP entries and built-ins |
 | F8 | P3 | `project_paths.py:52,71`; native env | `AGENT_ENHANCEMENTS_MODEL_FILE` written into host gateway env | No longer written; refresh retires the stale value |
 
-### Contract conflict and requested amendment
+### Contract amendment (approved 2026-11-20, CONTRACT v2.4)
 
 CONTRACT §4.2 ("Modify environment variable contracts") and §9.2 require
-human approval. This branch changes:
+human approval; the maintainer approved it on 2026-11-20. Applied changes:
 
 - §8.2: remove `AGENT_ENHANCEMENTS_MODEL_FILE` and
   `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`; add `AGENT_ENHANCEMENTS_API_FILE`
@@ -71,22 +72,21 @@ human approval. This branch changes:
   is consulted. Missing key → Mode 0 before any network attempt."
 - §8.6: `config/model.json` / `preflight.key` become legacy, imported once.
 
-`CONTRACT.md` itself was **not** edited. The PR must not be merged until a
-maintainer approves (or rejects) this amendment. Impact if merged: anyone
+Applied to `CONTRACT.md` (v2.4 change-log entry). Impact: anyone
 exporting `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY` or relying on the keyring
 loses Mode 2 until the key is copied into `api_keys.PREFLIGHT_API_KEY`
 (Mode 0 fallback, documented diagnosis `api_key_unavailable`).
 
 ### Provider matrix
 
-| Provider | Catalogued | Adapter | Local mock tests | Gateway-observed (no host CLI) | Live verified |
+| Provider | Catalogued | Adapter | Local mock tests | Gateway-observed (stdio MCP client) | Live verified |
 | --- | --- | --- | --- | --- | --- |
-| You.com | yes (`you-mcp`, to-install) | yes | yes | stdio MCP session: listed with key, hidden/rejected without | no |
-| Tavily | yes (`tavily-mcp`, to-install) | yes | yes | in-process gateway enum + calls (mocked wire) | no |
-| Exa | yes (`exa-mcp`, to-install) | yes | yes | in-process gateway enum + calls (mocked wire) | no |
+| You.com | yes (`you-mcp`, to-install) | yes | yes | live stdio call; listed with key, hidden/rejected without | **yes** |
+| Tavily | yes (`tavily-mcp`, to-install) | yes | yes | live stdio call | **yes** |
+| Exa | yes (`exa-mcp`, to-install) | yes | yes | live stdio call | **yes** |
 | Firecrawl | yes (`firecrawl-mcp`, to-install) | yes (`/v2/search`) | yes | in-process gateway enum + calls (mocked wire) | no |
 | NewsAPI | yes (`newsapi-mcp`, to-install) | yes (`/v2/everything`) | yes | in-process gateway enum + calls (mocked wire) | no |
-| Serper | yes (`serper-mcp`, to-install) | **no — UNVERIFIED** | — | — | no |
+| Serper | yes (`serper-mcp`, to-install) | yes (empirical contract) | yes | live stdio call incl. failover `[invalid, valid]` → `attempts: 2` | **yes** |
 | arXiv / Google News RSS (keyless) | built | existing | existing | existing | existing opt-in |
 
 Evidence ledger with official URLs: [SEARCH_PROVIDER_APIS.md](../SEARCH_PROVIDER_APIS.md).
@@ -130,14 +130,25 @@ rejection; real stdio session (no credentialed call). A mutation that froze
 the rotation pointer failed 5 tests. `test_security_regressions.py` now
 asserts that a sentinel root `search_providers.json` is never opened.
 
+### Live verification (2026-11-20, maintainer-authorized keys)
+
+One key per provider, copied into a private 0600 temporary `ui.api.json`
+(values never printed or committed). `LiveSearchTests` (opt-in
+`AE_SEARCH_LIVE=1`): OK. Per provider, 2-result queries with and without
+`freshness=month`: You.com, Tavily, Exa, Serper all returned results on the
+first attempt. Real stdio gateway: `search_web` enum = keyed providers, one
+call per provider OK, Serper failover OK, `ae_health` OK, revocation hides the
+tool and rejects the stale call, no key in any output or gateway stderr.
+
 ### Residual limitations and maintainer decisions
 
-- Approve/reject the CONTRACT §8.2/§8.5/§8.6 amendment above.
 - `docs/repository-description.txt` now says 41 MCP catalog entries; the CI
   step comparing it with the GitHub repository description fails until the
   maintainer updates the GitHub description (outward-facing, not done here).
-- Live provider calls, Serper and the external `*-mcp` roadmap servers are
-  unverified. Tool-schema budget: default profile unchanged (1,658 tokens);
+- Firecrawl and NewsAPI adapters are mock-tested only (no key); the external
+  `*-mcp` roadmap servers remain `to-install` and unverified. Serper's
+  contract is empirical (no public reference) and should be re-checked if
+  Serper publishes documentation. Tool-schema budget: default profile unchanged (1,658 tokens);
   all search keys 1,763; search keys plus `OPENAI_API_KEY` 1,889, above the
   1,800 default-profile allocation (OpenAI alone was already 1,784).
 - Keyring-stored preflight keys are not migrated automatically.

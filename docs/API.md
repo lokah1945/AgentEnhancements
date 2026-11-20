@@ -74,7 +74,8 @@ Importable functions:
 
 Missing/invalid config never falls back to shell API credentials.
 `AGENT_ENHANCEMENTS_API_FILE` is an optional override. This API covers AE
-services and the adaptive-preflight selector key only. It has no host-auth migration or
+services and the adaptive-preflight selector key only. It has no host-auth
+migration or
 credential-output command, and never reads agent settings/provider credentials.
 
 `mcp-servers/gateway.py` speaks MCP stdio and advertises `tools.listChanged`.

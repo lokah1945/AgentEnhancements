@@ -288,7 +288,10 @@ calling the gateway; its 32×32 synthetic video result returns to the main
 endpoint. Fixture database triggers count task INSERT/UPDATE operations,
 including replacements, and establish one task write per prompt.
 
-| Requested / effective | Scenario | Selector / main requests | Main catalog searches | Detail reads | Prompt slot / AE cold tokens |
+Columns: requested/effective mode; selector/main-agent requests; main-agent
+catalog searches; detail reads; prompt-slot / AE cold-start tokens.
+
+| Mode | Scenario | Sel/main req | Searches | Reads | Slot/cold tokens |
 | --- | --- | ---: | ---: | ---: | ---: |
 | 0 / 0 | Paired baseline | 0 / 4 | 1 | 1 | 269 / 3,943 |
 | 2 / 2 | Same prompt and profile | 1 / 3 | 0 | 1 | 186 / 3,483 |

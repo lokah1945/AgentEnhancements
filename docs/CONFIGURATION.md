@@ -82,7 +82,8 @@ Calls already sent to a provider cannot be withdrawn by clearing a key.
 Nine bundled servers expose enabled local tools with all keys empty. The
 tenth, `search-mcp`, has only credentialed tools and stays hidden until at
 least one of `YOU_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`,
-`FIRECRAWL_API_KEY` or `NEWSAPI_KEY` holds a key; keyless arXiv and Google
+`FIRECRAWL_API_KEY`, `NEWSAPI_KEY` or `SERPER_API_KEY` holds a key; keyless
+arXiv and Google
 News RSS remain available ([search providers](SEARCH_PROVIDER_APIS.md)).
 GraphRAG is local and requires no API key. Embeddings default to local vectors;
 the `openai` backend is permitted only with `OPENAI_API_KEY`. Semantic
@@ -220,7 +221,7 @@ protocols, deadlines and verification.
     the checkout for normal installs)
   - **Default:** `<checkout>/ui.api.json`
 
-- **Retired (pending CONTRACT §8.2 amendment):**
+- **Retired (CONTRACT v2.4 §8.2):**
   `AGENT_ENHANCEMENTS_MODEL_FILE` and `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`
   are no longer read. Preflight settings and its key moved into
   `ui.api.json`; `api_config.py migrate` imports a legacy `model.json` /

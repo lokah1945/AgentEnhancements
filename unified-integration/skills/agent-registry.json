@@ -1,13 +1,13 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-19T11:40:47.117313+00:00",
+  "generated_at": "2026-11-20T05:20:15.951589+00:00",
   "stats": {
-    "total": 3466,
+    "total": 3467,
     "by_type": {
       "skill": 3378,
       "plugin": 40,
-      "mcp": 40,
+      "mcp": 41,
       "capability": 8
     },
     "by_source": {
@@ -20,7 +20,7 @@
       "replica-skill": 11,
       "task-observer": 1,
       "plugin-catalog": 40,
-      "plugin-catalog/mcp-servers.json": 40,
+      "plugin-catalog/mcp-servers.json": 41,
       "built-in": 8
     }
   },
@@ -55680,6 +55680,30 @@
       "for_plugins": [
         "last-30-days"
       ],
+      "status": "built",
+      "path": "plugin-catalog/mcp-servers.json",
+      "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"
+    },
+    {
+      "id": "mcp:search-mcp",
+      "type": "mcp",
+      "name": "search-mcp",
+      "source": "plugin-catalog/mcp-servers.json",
+      "priority": "P0",
+      "category": "search",
+      "description": "First-party web search adapters (You.com, Tavily, Exa, Firecrawl, NewsAPI, Serper) with per-request multi-key rotation from ui.api.json; hidden until at least one provider key is set.",
+      "command": "python -m search_mcp",
+      "env_required": [],
+      "env_optional": [],
+      "env_any_of": [
+        "YOU_API_KEY",
+        "TAVILY_API_KEY",
+        "EXA_API_KEY",
+        "FIRECRAWL_API_KEY",
+        "NEWSAPI_KEY",
+        "SERPER_API_KEY"
+      ],
+      "for_plugins": [],
       "status": "built",
       "path": "plugin-catalog/mcp-servers.json",
       "activation": "loaded automatically by the native agent-enhancements gateway; ui.api.json controls cloud availability"

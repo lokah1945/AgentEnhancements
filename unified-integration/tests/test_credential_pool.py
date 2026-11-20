@@ -352,6 +352,11 @@ NEWSAPI_PAYLOAD = {"status": "ok", "totalResults": 1, "articles": [
      "description": "news", "publishedAt": "2026-11-19T10:00:00Z"}]}
 
 
+SERPER_PAYLOAD = {"searchParameters": {"q": "q", "type": "search", "engine": "google"},
+                  "organic": [{"title": "S", "link": "https://s.example", "snippet": "serp",
+                               "position": 1, "date": "2 days ago"}], "credits": 1}
+
+
 class AdapterTests(IsolatedConfig):
     def setUp(self):
         super().setUp()
@@ -363,7 +368,8 @@ class AdapterTests(IsolatedConfig):
 
     def test_each_provider_uses_its_documented_contract(self):
         refs = {"you": "YOU_API_KEY", "tavily": "TAVILY_API_KEY", "exa": "EXA_API_KEY",
-                "firecrawl": "FIRECRAWL_API_KEY", "newsapi": "NEWSAPI_KEY"}
+                "firecrawl": "FIRECRAWL_API_KEY", "newsapi": "NEWSAPI_KEY",
+                "serper": "SERPER_API_KEY"}
         self.write({ref: [f"{name}-fixture"] for name, ref in refs.items()})
         cases = {
             "you": (YOU_PAYLOAD, "https://ydc-index.io/v1/search", "POST",
@@ -377,6 +383,8 @@ class AdapterTests(IsolatedConfig):
                           ("authorization", "Bearer firecrawl-fixture"),
                           {"query": "q", "limit": 3, "tbs": "qdr:w"}),
             "newsapi": (NEWSAPI_PAYLOAD, None, "GET", ("x-api-key", "newsapi-fixture"), None),
+            "serper": (SERPER_PAYLOAD, "https://google.serper.dev/search", "POST",
+                       ("x-api-key", "serper-fixture"), {"q": "q", "num": 3, "tbs": "qdr:w"}),
         }
         for provider, (payload, url, method, header, body) in cases.items():
             with self.subTest(provider=provider):
@@ -478,10 +486,9 @@ class AdapterTests(IsolatedConfig):
     def test_provider_table_matches_readiness_and_gateway_order(self):
         gateway_source = (SERVERS / "gateway.py").read_text()
         self.assertEqual(self.search.PROVIDER_REFS, api.BUILTIN_ANY_OF["search-mcp"])
-        self.assertIn('SEARCH_PROVIDERS = ("you", "tavily", "exa", "firecrawl", "newsapi")',
-                      gateway_source)
-        self.assertEqual(self.search.PROVIDER_ORDER, ("you", "tavily", "exa", "firecrawl", "newsapi"))
-        self.assertNotIn("serper", self.search.PROVIDERS, "Serper contract is UNVERIFIED")
+        order = ("you", "tavily", "exa", "firecrawl", "newsapi", "serper")
+        self.assertIn(f"SEARCH_PROVIDERS = {order!r}".replace("'", '"'), gateway_source)
+        self.assertEqual(self.search.PROVIDER_ORDER, order)
 
 
 # ---------------------------------------------------------------------------
@@ -611,6 +618,37 @@ class GatewayStdioTests(IsolatedConfig):
                     self.assertTrue(denied.isError)
             errors.seek(0)
             self.assertNotIn("fixture-only-never-sent", errors.read())
+
+
+class LiveSearchTests(unittest.TestCase):
+    """Opt-in paid calls: AE_SEARCH_LIVE=1 and AGENT_ENHANCEMENTS_API_FILE
+    pointing at a private ui.api.json with real keys. One small query per
+    configured provider; outputs are checked for shape and key leakage."""
+
+    @unittest.skipUnless(os.environ.get("AE_SEARCH_LIVE") == "1",
+                         "set AE_SEARCH_LIVE=1 with a private ui.api.json holding real keys")
+    def test_each_configured_provider_answers_live(self):
+        search = load_module("search_mcp_live", SERVERS / "search-mcp/server.py")
+        config, error = api.read_config()
+        self.assertIsNone(error)
+        providers = search.available_providers(config)
+        self.assertTrue(providers, "no provider key configured")
+        secrets = api.all_keys_for_redaction(config)
+        for provider in providers:
+            for freshness in (None, "week"):
+                if provider == "firecrawl" and freshness == "week":
+                    freshness = "day"
+                with self.subTest(provider=provider, freshness=freshness):
+                    result = search.run_search(provider, "python programming language",
+                                               2, freshness, config)
+                    self.assertNotIn("error", result, result)
+                    self.assertGreaterEqual(result["count"], 1)
+                    for item in result["results"]:
+                        self.assertTrue(item["url"].startswith("http"), item)
+                        self.assertTrue(item["title"], item)
+                    text = json.dumps(result)
+                    for secret in secrets:
+                        self.assertNotIn(secret, text)
 
 
 if __name__ == "__main__":

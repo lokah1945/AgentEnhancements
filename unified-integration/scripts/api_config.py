@@ -69,6 +69,7 @@ BUILTIN_ANY_OF = {
         "EXA_API_KEY",
         "FIRECRAWL_API_KEY",
         "NEWSAPI_KEY",
+        "SERPER_API_KEY",
     ),
 }
 SECRET_PATTERN = re.compile(

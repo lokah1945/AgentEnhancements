@@ -1,7 +1,7 @@
 # AgentEnhancements Development Contract
 
 **Project**: AgentEnhancements  
-**Version**: 2.3\
+**Version**: 2.4\
 **Effective Date**: 2026-11-20\
 **Status**: BINDING - All agents MUST comply
 
@@ -345,13 +345,10 @@ Rules:
   - **Purpose:** Skills registry
   - **Default:** `$BASE_DIR/unified-integration/skills`
 
-- **Variable:** `AGENT_ENHANCEMENTS_MODEL_FILE`
-  - **Purpose:** Adaptive preflight model.json override (isolated tests)
-  - **Default:** `.agentenhancements/config/model.json`
-
-- **Variable:** `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`
-  - **Purpose:** Adaptive preflight Mode 2 key
-  - **Default:** unset
+- **Variable:** `AGENT_ENHANCEMENTS_API_FILE`
+  - **Purpose:** `ui.api.json` override (isolated tests; inside the checkout
+    for normal installs)
+  - **Default:** `<checkout>/ui.api.json`
 
 - **Variable:** `AE_PREFLIGHT_DEADLINE_MS`
   - **Purpose:** Adaptive preflight phase deadline
@@ -429,6 +426,15 @@ unified-integration/
 ---
 
 ## 10. Change Log
+
+- **Version:** 2.4
+  - **Date:** 2026-11-20
+  - **Author:** Claude Code, session 19d3065f-e968-406c-84e3-86a49942413d
+  - **Changes:** Maintainer-approved (2026-11-20) consolidation of AE
+    configuration into `ui.api.json` schema v2: §8.2 retires
+    `AGENT_ENHANCEMENTS_MODEL_FILE` and `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`
+    and lists `AGENT_ENHANCEMENTS_API_FILE`; §8.5 preflight configuration and
+    Mode 2 key move into `ui.api.json`; §8.6 legacy files imported once.
 
 - **Version:**2.3
   - **Date:**2026-11-20
@@ -548,20 +554,23 @@ by `unified-integration/scripts/adaptive_preflight.py` and tested by
 `tests/test_adaptive_preflight.py`.
 
 - **Aspect:** Configuration
-  - **Contract:** One checkout-local `model.json` at
-    `<checkout>/.agentenhancements/config/model.json`, inside ignored
-    checkout state.
-    `adaptive_preflight_mode` is the exact integer 0, 1 or 2; anything else
-    (bool, numeric string, float, duplicate field, malformed JSON) runs Mode 0
-    with a stderr diagnosis. Mode 2 additionally requires a HTTPS `endpoint`,
-    `sdk` ∈ {openai, anthropic} and a non-empty `model`; on Modes 0/1 those
-    fields are ignored.
+  - **Contract:** The `preflight` section of the ignored checkout-root
+    `ui.api.json` (schema version 2, the single AE-managed configuration
+    file). `mode` is the exact integer 0, 1 or 2; anything else (bool,
+    numeric string, float) runs Mode 0 with a stderr diagnosis; malformed
+    JSON, duplicate fields or a non-object section invalidate the whole file
+    (fail closed). Mode 2 additionally requires a HTTPS `endpoint`, `sdk` ∈
+    {openai, anthropic}, a non-empty `model` and a valid `api_key_ref`; on
+    Modes 0/1 those fields are ignored. A legacy
+    `.agentenhancements/config/model.json` is never read at runtime;
+    `api_config.py migrate` imports it once.
 
 - **Aspect:** Secrets
-  - **Contract:** model.json and ui.api.json never carry the Mode 2 key.
-    Resolution: `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY` → OS keyring
-    (`agentenhancements.preflight`, account = endpoint origin) → 0600 `<config
-    dir>/preflight.key`. Missing key → Mode 0 before any network attempt.
+  - **Contract:** The Mode 2 key is `api_keys[api_key_ref]` of `ui.api.json`
+    (default reference `PREFLIGHT_API_KEY`). No environment variable, OS
+    keyring, key file or `model.json` is consulted; the key never enters the
+    selector or main-agent context. Missing key → Mode 0 before any network
+    attempt.
 
 - **Aspect:** Mode 0 parity
   - **Contract:** Missing file, explicit 0 and every failure path render the
@@ -613,13 +622,15 @@ supersedes previous user-scope defaults; schemas and selection modes stay
 compatible. Canonical defaults are resolved from the installed source:
 
 - `.agentenhancements/runtime/venv`: managed Python dependencies.
-- `.agentenhancements/config`: model/key file and host/profile selection.
+- `.agentenhancements/config`: host/profile selection (legacy preflight
+  `model.json`/`preflight.key` are imported once into `ui.api.json` and no
+  longer read).
 - `.agentenhancements/memory`: shared notes and observer data.
 - `.agentenhancements/cache`: all AE-managed caches and temporary work.
 
 The state directory is ignored by git and private0700. The optional
 `AGENT_ENHANCEMENTS_STATE_DIR` provides an absolute isolation override;
-existing explicit memory/API/model overrides remain available for tests.
+existing explicit memory/API overrides remain available for tests.
 Project-local deployments keep overrides under the checkout. Native host
 configuration is a bridge to project code, not storage for AE dependencies.
 Setup refreshes owned paths after relocation and preserves unrelated

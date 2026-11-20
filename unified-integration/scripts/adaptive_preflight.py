@@ -149,7 +149,9 @@ SELECTOR_SYSTEM = (
     f"(1-{MAX_LOOKUP_QUERIES} focused catalog queries when the cards shown "
     "are not enough); decision=abstain when no catalog capability is "
     "needed; decision=unresolved when the catalog cannot satisfy a stated "
-    "requirement."
+    "requirement. Plugin catalog entries are integration guides, not proof "
+    "of an installed runtime. Mark guide-only plugin suggestions optional; "
+    "a required plugin runtime without host evidence must be unresolved."
 )
 
 
@@ -460,15 +462,74 @@ def _file_under_roots(candidate: Path, roots: List[Path]) -> bool:
     return any(resolved.is_relative_to(root) for root in roots)
 
 
-def _natively_linked(entry: Dict[str, Any]) -> bool:
-    if not entry.get("natively_linked_by_default"):
-        return False
-    targets = os.environ.get(
-        "AGENT_SKILLS_NATIVE_TARGETS",
-        f"{Path.home() / '.claude' / 'skills'}:{Path.home() / '.agents' / 'skills'}",
-    ).split(":")
-    name = str(entry.get("name", ""))
-    return any((Path(base) / name).is_dir() for base in targets if base)
+def api_revision() -> str:
+    """Nonsecret file identity, shared with the private host bridge."""
+    try:
+        info = _api_config().config_path().stat()
+        return f"{info.st_size}:{info.st_mtime_ns}"
+    except OSError:
+        return "missing"
+
+
+def _host_tools(agent: str, event: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Consume session-bound host observations, never a static tool catalog.
+
+    OpenCode's supported tool.list surface is currently the only adapter
+    supplying this private metadata. Other hosts fail closed for MCP delivery
+    until their own session tool observation is demonstrated.
+    """
+    inventory = event.get("ae_host_inventory")
+    if inventory is None:
+        return []
+    if (not isinstance(inventory, dict) or agent != "opencode"
+            or inventory.get("host") != agent
+            or not event.get("session_id")
+            or inventory.get("session_id") != event["session_id"]
+            or inventory.get("source") != "ctx.tool.list"
+            or inventory.get("gateway") != "agent-enhancements"):
+        raise PreflightError("host_inventory_invalid")
+    observed = inventory.get("observed_at")
+    if (type(observed) not in (float, int)
+            or not 0 <= time.time() - observed <= MAX_DEADLINE_SECONDS + 1
+            or inventory.get("api_revision") != api_revision()):
+        raise PreflightError("host_inventory_stale")
+    tools = inventory.get("tools")
+    if not isinstance(tools, list):
+        raise PreflightError("host_inventory_invalid")
+    return [tool for tool in tools if isinstance(tool, dict)
+            and isinstance(tool.get("name"), str)
+            and tool.get("namespace") == "agent-enhancements"
+            and tool.get("id") == f"agent-enhancements_{tool['name']}"
+            and type(tool.get("codemode")) is bool
+            and isinstance(tool.get("input_schema"), dict)]
+
+
+def _server_tools(server: str, tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Match exact observed gateway names using the gateway's own mapping."""
+    if not tools:
+        return []
+    if "gateway_mapping" not in _MODULE_CACHE:
+        spec = importlib.util.spec_from_file_location(
+            "ae_preflight_gateway_mapping", SCRIPT_DIR.parent / "mcp-servers/gateway.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _MODULE_CACHE["gateway_mapping"] = module
+    gateway = _MODULE_CACHE["gateway_mapping"]
+    public_name = gateway.public_name
+    config, _ = _api_config().read_config()
+    prefix = public_name(server, "")
+    return [tool for tool in tools if tool["name"].startswith(prefix)
+            and tool["name"] == public_name(server, tool["name"][len(prefix):])
+            and gateway.tool_available(server, tool["name"][len(prefix):], config)]
+
+
+def _tool_ref(tool: Dict[str, Any]) -> str:
+    """Preserve the host's direct name or Code Mode namespace exactly."""
+    if not tool["codemode"]:
+        return tool["id"]
+    name = tool["name"]
+    access = "." + name if name.isidentifier() else "[" + json.dumps(name) + "]"
+    return 'tools["agent-enhancements"]' + access
 
 
 @dataclass
@@ -484,7 +545,8 @@ class ResolvedItem:
     required: bool = True
 
 
-def _resolve_entry(entry: Dict[str, Any], required: bool) -> ResolvedItem:
+def _resolve_entry(entry: Dict[str, Any], required: bool,
+                   tools: Optional[List[Dict[str, Any]]] = None) -> ResolvedItem:
     registry = _registry()
     entry_type = entry.get("type", "")
     purpose = (entry.get("description") or "").strip().split("\n")[0][:100]
@@ -497,13 +559,6 @@ def _resolve_entry(entry: Dict[str, Any], required: bool) -> ResolvedItem:
                 continue
             candidate = (REPO_ROOT / value) if not value.startswith("/") else Path(value)
             if candidate.is_file() and _file_under_roots(candidate, roots):
-                if _natively_linked(entry):
-                    return ResolvedItem(
-                        id=entry["id"], type="skill", ref=str(candidate),
-                        delivery="loaded", purpose=purpose,
-                        note="already natively linked by the host profile",
-                        required=required,
-                    )
                 return ResolvedItem(
                     id=entry["id"], type="skill", ref=str(candidate),
                     delivery="direct_read", purpose=purpose,
@@ -517,6 +572,12 @@ def _resolve_entry(entry: Dict[str, Any], required: bool) -> ResolvedItem:
         )
 
     if entry_type == "plugin":
+        if required:
+            return ResolvedItem(
+                id=entry["id"], type="plugin", ref="", delivery="unavailable",
+                purpose=purpose, required=True,
+                note="required plugin runtime entry point is not proven in this host session",
+            )
         guide = entry.get("path") or ""
         candidate = (REPO_ROOT / guide) if guide else None
         if candidate and candidate.is_file() and _file_under_roots(candidate, [REPO_ROOT.resolve()]):
@@ -537,18 +598,18 @@ def _resolve_entry(entry: Dict[str, Any], required: bool) -> ResolvedItem:
         api = _api_config()
         config, _ = api.read_config()
         state = api.server_state(str(entry.get("name", "")), config)
-        if state.get("visible"):
+        observed = _server_tools(str(entry.get("name", "")), tools or [])
+        if state.get("visible") and observed:
             return ResolvedItem(
-                id=entry["id"], type="mcp", ref=str(entry.get("name", "")),
+                id=entry["id"], type="mcp", ref=", ".join(_tool_ref(tool) for tool in observed),
                 delivery="callable", purpose=purpose,
-                note=f"gateway: {state.get('reason', 'visible')}; schema is "
-                     "published on the session toolset",
+                note="exact tools observed in this host session; calls retain gateway permission checks",
                 required=required,
             )
         return ResolvedItem(
             id=entry["id"], type="mcp", ref="", delivery="unavailable",
             purpose=purpose,
-            note=str(state.get("reason", "not visible")),
+            note="no exact tools proven in this host session",
             required=required,
         )
 
@@ -567,10 +628,8 @@ def _resolve_entry(entry: Dict[str, Any], required: bool) -> ResolvedItem:
     )
 
 
-def _resolve_tool_id(item: SelectionItem) -> ResolvedItem:
-    """tool:<server>/<tool-name>: server-level visibility proof; the
-    tool schema itself is published by the gateway on the session
-    toolset (review 11 - final proof lives on the real request)."""
+def _resolve_tool_id(item: SelectionItem, tools: List[Dict[str, Any]]) -> ResolvedItem:
+    """Resolve an exact gateway tool name against this host's current view."""
     server, _, tool = item.id[len("tool:"):].partition("/")
     server = server.strip()
     tool = tool.strip()
@@ -583,22 +642,31 @@ def _resolve_tool_id(item: SelectionItem) -> ResolvedItem:
             purpose=f"tool {tool} on {server}",
             note="unknown MCP server", required=item.required,
         )
-    resolved = _resolve_entry(entry, item.required)
+    resolved = _resolve_entry(entry, item.required, tools)
     if resolved.delivery == "unavailable":
         return ResolvedItem(
             id=item.id, type="tool", ref="", delivery="unavailable",
             purpose=f"tool {tool} on {server}", note=resolved.note,
             required=item.required,
         )
+    match = next((observed for observed in _server_tools(server, tools)
+                  if observed["name"] == tool), None)
+    if match is None:
+        return ResolvedItem(
+            id=item.id, type="tool", ref="", delivery="unavailable",
+            purpose=f"tool {tool} on {server}",
+            note="exact tool absent from this host session", required=item.required,
+        )
     return ResolvedItem(
-        id=item.id, type="tool", ref=f"{server}/{tool}",
+        id=item.id, type="tool", ref=_tool_ref(match),
         delivery="callable", purpose=f"tool {tool} on {server} "
         f"({resolved.purpose[:60]})",
         note=resolved.note, required=item.required,
     )
 
 
-def build_package(selection: Selection) -> Tuple[List[ResolvedItem], List[str]]:
+def build_package(selection: Selection, *, agent: str = "",
+                  event: Optional[Dict[str, Any]] = None) -> Tuple[List[ResolvedItem], List[str]]:
     """Resolve every selected ID to a canonical, readiness-checked item.
 
     Returns (package_items, unmet) where unmet lists required items
@@ -607,11 +675,12 @@ def build_package(selection: Selection) -> Tuple[List[ResolvedItem], List[str]]:
     Optional items that fail are simply dropped, with a note.
     """
     registry = _registry()
+    tools = _host_tools(agent, event or {})
     package: List[ResolvedItem] = []
     unmet: List[str] = []
     for item in selection.items:
         if item.id.startswith("tool:"):
-            resolved = _resolve_tool_id(item)
+            resolved = _resolve_tool_id(item, tools)
         else:
             entry = registry.find_entry(item.id)
             if entry is None:
@@ -622,7 +691,7 @@ def build_package(selection: Selection) -> Tuple[List[ResolvedItem], List[str]]:
                     required=item.required,
                 )
             else:
-                resolved = _resolve_entry(entry, item.required)
+                resolved = _resolve_entry(entry, item.required, tools)
         if resolved.delivery == "unavailable":
             if item.required:
                 unmet.append(f"{item.id} ({resolved.note})")
@@ -639,19 +708,28 @@ def build_package(selection: Selection) -> Tuple[List[ResolvedItem], List[str]]:
 def render_package(items: List[ResolvedItem], revision: str,
                    budget: Optional[int] = None) -> str:
     """One compact render for the main agent inside the shared
-    UserPromptSubmit slot (MAX_SKILL_CARDS). Structured shrinking
-    first (drop optional items, shorten notes), clamp_to_budget only
-    as the final guard - never a post-serialization cut."""
+    UserPromptSubmit slot (MAX_SKILL_CARDS). Shrink structured items,
+    never serialized text: every required ID and reference is atomic.
+    An oversized minimum package must take the ordinary Mode 0 fallback.
+    """
     ctx_budget = _budget()
     limit = budget if budget is not None else ctx_budget.MAX_SKILL_CARDS
 
-    def render(all_items: List[ResolvedItem], with_notes: bool) -> str:
+    def render(all_items: List[ResolvedItem], with_notes: bool,
+               compact: bool = False) -> str:
         lines = [
             "AgentEnhancements preflight: selected capability package "
             f"(validated locally; registry rev {revision})."
         ]
+        if compact:
+            lines = [f"AgentEnhancements preflight: registry rev {revision}. "
+                     "Read files before related work; use exact callable names."]
         for item in all_items:
             tag = "" if item.required else " (optional)"
+            if compact:
+                verb = "read" if item.delivery == "direct_read" else "use"
+                lines.append(f"- {item.id} [{item.delivery}] {verb}: {item.ref}")
+                continue
             lines.append(f"- {item.id} [{item.type}]{tag}: {item.purpose}")
             if item.delivery == "direct_read":
                 lines.append(f"  read before related work: {item.ref}")
@@ -661,21 +739,30 @@ def render_package(items: List[ResolvedItem], revision: str,
                 lines.append(f"  use: {item.ref}")
                 if with_notes and item.note:
                     lines.append(f"  note: {item.note[:110]}")
-        lines.append(
-            "Everything else: ordinary tools. Detail pages stay on disk; "
-            "the registry (registry.py show <id>) is unchanged."
-        )
+        if not compact:
+            lines.append(
+                "Everything else: ordinary tools. Detail pages stay on disk; "
+                "the registry (registry.py show <id>) is unchanged."
+            )
         return "\n".join(lines)
 
-    text = render(items, with_notes=True)
+    remaining = list(items)
+    for with_notes in (True, False):
+        text = render(remaining, with_notes)
+        if ctx_budget.approx_tokens(text) <= limit:
+            return text
+    for item in reversed(items):
+        if not item.required:
+            remaining.remove(item)
+            if not remaining:
+                return ""
+            text = render(remaining, with_notes=False)
+            if ctx_budget.approx_tokens(text) <= limit:
+                return text
+    text = render(remaining, with_notes=False, compact=True)
     if ctx_budget.approx_tokens(text) <= limit:
         return text
-    text = render(items, with_notes=False)
-    if ctx_budget.approx_tokens(text) <= limit:
-        return text
-    required_only = [item for item in items if item.required]
-    text = render(required_only, with_notes=False)
-    return ctx_budget.clamp_to_budget(text, limit, label="preflight package")
+    raise PreflightError("package_budget_exceeded")
 
 
 # ---------------------------------------------------------------------------
@@ -1053,7 +1140,10 @@ def preflight_context(
         # network attempt (review 12 fallback table).
         api_key = resolve_api_key(config.endpoint)
     try:
+        revision = registry_revision()
         if config.mode == MODE_NATIVE:
+            if agent not in ("claude-code", "codex"):
+                raise PreflightError("mode1_host_unsupported")
             # The adapter supplies the native selection through the
             # event (its own sanctioned inference surface). The
             # runtime itself never calls the host model.
@@ -1061,6 +1151,8 @@ def preflight_context(
             if not isinstance(native, dict):
                 raise PreflightError("mode1_native_selection_unavailable")
             selection = parse_selection(native)
+            if selection.decision == "lookup":
+                raise PreflightError("mode1_selection_not_final")
         else:
             if not api_key:
                 raise PreflightError("api_key_unavailable")
@@ -1074,7 +1166,7 @@ def preflight_context(
         if selection.decision == "unresolved":
             raise PreflightError("selection_unresolved", selection.reason[:80])
 
-        items, unmet = build_package(selection)
+        items, unmet = build_package(selection, agent=agent, event=event)
         if unmet:
             raise PreflightError(
                 "required_capability_unavailable",
@@ -1086,11 +1178,18 @@ def preflight_context(
                 context="", requested_mode=config.mode,
                 effective_mode=config.mode,
             )
-        revision = registry_revision()
+        if registry_revision() != revision:
+            raise PreflightError("registry_changed")
+        if deadline.expired:
+            raise PreflightError("timeout")
+        context = render_package(items, revision)
+        _host_tools(agent, event)
+        if registry_revision() != revision:
+            raise PreflightError("registry_changed")
         if deadline.expired:
             raise PreflightError("timeout")
         return PreflightResult(
-            context=render_package(items, revision),
+            context=context,
             requested_mode=config.mode,
             effective_mode=config.mode,
         )

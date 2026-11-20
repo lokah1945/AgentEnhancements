@@ -51,6 +51,14 @@ def public_name(server: str, tool: str) -> str:
     return safe
 
 
+def tool_available(server: str, original: str, config: dict) -> bool:
+    """Shared current availability gate, also used to reject stale host views."""
+    return original != "health" and not (
+        server == "vision-mcp" and original == "describe"
+        and not cloud_available(server, config=config)
+    )
+
+
 def slim_schema(definition: types.Tool) -> types.Tool:
     """Drop wire-redundant weight from a tool definition.
 
@@ -318,14 +326,7 @@ class Gateway:
             if not server_state(name, config)["visible"]:
                 continue
             for original in definitions:
-                if original.name == "health":
-                    # Consolidated below; never advertise per-server copies.
-                    continue
-                if (
-                    name == "vision-mcp"
-                    and original.name == "describe"
-                    and not cloud_available(name, config=config)
-                ):
+                if not tool_available(name, original.name, config):
                     continue
                 tool = slim_schema(original)
                 tool.name = public_name(name, original.name)

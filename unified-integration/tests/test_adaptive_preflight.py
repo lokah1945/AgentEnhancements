@@ -102,11 +102,13 @@ class SelectorFixture:
 
             def do_POST(self):
                 body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-                outer.requests.append({
+                record = {
+                    "received_at": time.monotonic(),
                     "path": self.path,
                     "headers": {k.lower(): v for k, v in self.headers.items()},
                     "payload": body,
-                })
+                }
+                outer.requests.append(record)
                 if outer.delay:
                     time.sleep(outer.delay)
                 item = outer.responses.pop(0) if outer.responses else None
@@ -118,12 +120,15 @@ class SelectorFixture:
                 else:  # a bare response document means HTTP 200
                     status, document = 200, item
                 raw = json.dumps(document).encode()
+                record["response"] = document
+                record["status"] = status
                 try:
                     self.send_response(status)
                     self.send_header("Content-Type", "application/json")
                     self.send_header("Content-Length", str(len(raw)))
                     self.end_headers()
                     self.wfile.write(raw)
+                    record["completed_at"] = time.monotonic()
                 except (BrokenPipeError, ConnectionResetError):
                     # A client that hit its deadline walks away; the
                     # response nobody reads must not spam the suite.
@@ -441,7 +446,7 @@ class PackageResolutionTests(PreflightTestCase):
         self.assertEqual(item.delivery, "direct_read")
         self.assertTrue(Path(item.ref).is_file())
 
-    def test_natively_linked_skill_reports_loaded(self):
+    def test_directory_link_alone_does_not_prove_a_loaded_skill(self):
         registry = self.module._registry()
         linked = next(e for e in registry.load_skill_entries()
                       if e.get("natively_linked_by_default")
@@ -452,7 +457,7 @@ class PackageResolutionTests(PreflightTestCase):
                 package, unmet = self.module.build_package(self.select(
                     [{"id": linked["id"]}]))
         self.assertEqual(unmet, [])
-        self.assertEqual(package[0].delivery, "loaded")
+        self.assertEqual(package[0].delivery, "direct_read")
 
     def test_plugin_resolves_guide(self):
         package, unmet = self.module.build_package(self.select(
@@ -462,27 +467,99 @@ class PackageResolutionTests(PreflightTestCase):
         self.assertEqual(package[0].delivery, "direct_read")
         self.assertTrue(package[0].ref.endswith("SKILL.md"))
 
+    def test_required_plugin_runtime_without_entrypoint_falls_back(self):
+        package, unmet = self.module.build_package(self.select(
+            [{"id": "plugin:openmontage"}]))
+        self.assertEqual(package, [])
+        self.assertEqual(len(unmet), 1)
+        self.assertIn("runtime", unmet[0])
+
     def test_mcp_visibility_gates_delivery(self):
-        # Built-in servers stay visible with an empty credential file.
+        # Server visibility alone cannot prove delivery in a host session.
         package, unmet = self.module.build_package(self.select(
             [{"id": "mcp:ffmpeg-mcp"}]))
-        self.assertEqual(unmet, [])
-        self.assertEqual(package[0].delivery, "callable")
+        self.assertEqual(package, [])
+        self.assertEqual(len(unmet), 1)
         # An unconfigured external server is honestly unavailable.
         package, unmet = self.module.build_package(self.select(
             [{"id": "mcp:serper-mcp", "required": False}]))
         self.assertEqual(package, [])
         self.assertEqual(unmet, [])
 
-    def test_tool_id_resolves_through_server_visibility(self):
+    def test_visible_server_does_not_prove_real_or_fictitious_tools(self):
         package, unmet = self.module.build_package(self.select(
-            [{"id": "tool:ffmpeg-mcp/ffmpeg_probe"}]))
-        self.assertEqual(unmet, [])
-        self.assertEqual(package[0].type, "tool")
-        self.assertEqual(package[0].ref, "ffmpeg-mcp/ffmpeg_probe")
+            [{"id": "tool:ffmpeg-mcp/ffmpeg_probe"},
+             {"id": "tool:ffmpeg-mcp/ae_missing_fixture_tool"},
+             {"id": "tool:vision-mcp/vision_describe"}]))
+        self.assertEqual(package, [])
+        self.assertEqual(len(unmet), 3)
         package, unmet = self.module.build_package(self.select(
             [{"id": "tool:unknown-server/some_tool", "required": False}]))
         self.assertEqual(package, [])
+
+    def host_event(self):
+        """The private bridge view, matching actual OpenCode 2 ToolInfo fields."""
+        path = Path(self.env["AGENT_ENHANCEMENTS_API_FILE"])
+        revision = f"{path.stat().st_size}:{path.stat().st_mtime_ns}" if path.exists() else "missing"
+        return {"session_id": "fixture-session", "ae_host_inventory": {
+            "host": "opencode", "session_id": "fixture-session",
+            "source": "ctx.tool.list", "observed_at": time.time(),
+            "api_revision": revision, "gateway": "agent-enhancements",
+            "tools": [{"name": "ffmpeg_probe", "id": "agent-enhancements_ffmpeg_probe",
+                       "namespace": "agent-enhancements", "codemode": True,
+                       "input_schema": {"type": "object", "properties": {"path": {"type": "string"}},
+                                        "required": ["path"]}}],
+        }}
+
+    def test_exact_host_tool_proof_maps_to_the_executable_reference(self):
+        event = self.host_event()
+        package, unmet = self.module.build_package(self.select([
+            {"id": "tool:ffmpeg-mcp/ffmpeg_probe"},
+            {"id": "tool:vision-mcp/vision_describe", "required": False},
+            {"id": "tool:ffmpeg-mcp/ae_missing_fixture_tool", "required": False},
+        ]), agent="opencode", event=event)
+        self.assertEqual(unmet, [])
+        self.assertEqual(len(package), 1)
+        self.assertEqual(package[0].ref, 'tools["agent-enhancements"].ffmpeg_probe')
+        self.assertEqual(package[0].delivery, "callable")
+
+    def test_mcp_delivery_names_only_tools_observed_in_this_session(self):
+        package, unmet = self.module.build_package(self.select([
+            {"id": "mcp:ffmpeg-mcp"}]), agent="opencode", event=self.host_event())
+        self.assertEqual(unmet, [])
+        self.assertEqual(package[0].ref, 'tools["agent-enhancements"].ffmpeg_probe')
+
+    def test_host_inventory_cannot_cross_sessions_or_survive_config_changes(self):
+        for mutate in (lambda e: e.update(session_id="another-session"),
+                       lambda e: e["ae_host_inventory"].update(observed_at=0),
+                       lambda e: e["ae_host_inventory"].update(api_revision="stale")):
+            event = self.host_event()
+            mutate(event)
+            with self.assertRaises(self.module.PreflightError):
+                self.module.build_package(self.select([
+                    {"id": "tool:ffmpeg-mcp/ffmpeg_probe"}]), agent="opencode", event=event)
+
+    def test_wrong_namespace_server_prefix_or_schema_is_not_callable(self):
+        for key, value in [("namespace", "other-gateway"), ("input_schema", None),
+                           ("id", "other-server_ffmpeg_probe")]:
+            event = self.host_event()
+            event["ae_host_inventory"]["tools"][0][key] = value
+            package, unmet = self.module.build_package(self.select([
+                {"id": "tool:ffmpeg-mcp/ffmpeg_probe"}]), agent="opencode", event=event)
+            self.assertEqual(package, [])
+            self.assertEqual(len(unmet), 1)
+
+    def test_cached_cloud_tool_is_rejected_when_its_credential_is_absent(self):
+        event = self.host_event()
+        event["ae_host_inventory"]["tools"].append({
+            "name": "vision_describe", "id": "agent-enhancements_vision_describe",
+            "namespace": "agent-enhancements", "codemode": True,
+            "input_schema": {"type": "object"},
+        })
+        package, unmet = self.module.build_package(self.select([
+            {"id": "tool:vision-mcp/vision_describe"}]), agent="opencode", event=event)
+        self.assertEqual(package, [])
+        self.assertEqual(len(unmet), 1)
 
     def test_required_unavailable_goes_to_unmet(self):
         _, unmet = self.module.build_package(self.select(
@@ -490,24 +567,48 @@ class PackageResolutionTests(PreflightTestCase):
              {"id": "skill:totally-fictitious"}]))
         self.assertEqual(len(unmet), 2)
 
-    def test_render_fits_the_shared_injection_slot(self):
+    def test_render_preserves_more_than_eight_compact_required_items(self):
+        items = [self.module.ResolvedItem(
+            id=f"skill:s{i}", type="skill", ref=f"/s/{i}/SKILL.md",
+            delivery="direct_read", purpose="Inspect", required=True,
+        ) for i in range(12)]
+        text = self.module.render_package(items, "rev0123456789")
+        budget = self.module._budget()
+        self.assertLessEqual(budget.approx_tokens(text), budget.MAX_SKILL_CARDS)
+        for item in items:
+            self.assertIn(item.id + " ", text)
+            self.assertIn(item.ref, text)
+        self.assertNotIn("trimmed", text)
+
+    def test_render_rejects_overflow_instead_of_losing_required_references(self):
         items = [
             self.module.ResolvedItem(
                 id=f"skill:fixture-{i}", type="skill",
-                ref="/long/path/to/some/checkout/skills/fixture/SKILL.md",
+                ref="/long/path/to/some/checkout/skills/fixture/" * 5 + "SKILL.md",
                 delivery="direct_read",
                 purpose=("Purpose line that keeps going and going to "
                          "stress the token budget " * 3)[:120],
                 note="note " * 20, required=True)
             for i in range(12)
         ]
-        text = self.module.render_package(items, "rev0123456789")
-        budget = self.module._budget()
-        self.assertLessEqual(budget.approx_tokens(text),
-                             budget.MAX_SKILL_CARDS)
-        # markers the main agent needs (review 11 render rules)
-        self.assertIn("read before related work", text)
-        self.assertIn("registry rev rev0123456789", text)
+        with self.assertRaisesRegex(self.module.PreflightError,
+                                    "package_budget_exceeded"):
+            self.module.render_package(items, "rev0123456789")
+
+    def test_render_drops_optional_items_before_required_instructions(self):
+        required = [self.module.ResolvedItem(
+            id=f"skill:s{i}", type="skill", ref=f"/s/{i}/SKILL.md",
+            delivery="direct_read", purpose="Inspect", required=True,
+        ) for i in range(10)]
+        optional = self.module.ResolvedItem(
+            id="skill:optional", type="skill", ref="/" + "long/" * 400,
+            delivery="direct_read", purpose="Optional", required=False,
+        )
+        text = self.module.render_package([optional, *required], "rev")
+        self.assertNotIn(optional.id, text)
+        for item in required:
+            self.assertIn(item.id + " ", text)
+            self.assertIn(item.ref, text)
 
     def test_render_marks_optional_items(self):
         item = self.module.ResolvedItem(
@@ -590,6 +691,17 @@ class Mode0ParityTests(PreflightTestCase):
             context = self.runtime.prompt_context("codex", PROMPT, {})
         self.assertEqual(context, self.legacy_render())
 
+    def test_private_bridge_envelope_keeps_mode0_context_and_one_memory_effect(self):
+        rc, out, err = run([sys.executable, str(RUNTIME), "opencode", "--bridge"],
+                           env=self.env, input_text=json.dumps(self.event))
+        self.assertEqual(rc, 0, err)
+        envelope = json.loads(out)
+        expected = self.runtime.skill_context("opencode", PROMPT)
+        self.assertEqual(envelope["context"], expected)
+        self.assertEqual(envelope["fallback"], expected)
+        tasks = [r for r in self.memory_rows() if r[0].endswith(":task")]
+        self.assertEqual(len(tasks), 1)
+
 
 # ---------------------------------------------------------------------------
 # Mode 1: adapter-supplied native selection (review 5 / 10)
@@ -639,6 +751,74 @@ class Mode1Tests(PreflightTestCase):
             "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
         self.assertEqual(result.context, self.legacy)
         self.assertEqual(result.effective_mode, 0)
+
+    def test_auto_on_opencode_is_unsupported_even_with_a_fixture_payload(self):
+        event = dict(self.event, ae_native_selection={"decision": "abstain"})
+        result = self.module.preflight_context(
+            "opencode", PROMPT, event, fallback=lambda a, p: self.legacy)
+        self.assertEqual(result.context, self.legacy)
+        self.assertEqual(result.fallback_reason, "mode1_host_unsupported")
+
+    def test_native_handoff_must_be_a_final_selection(self):
+        event = dict(self.event, ae_native_selection={
+            "decision": "lookup", "queries": ["PostgreSQL"],
+        })
+        result = self.module.preflight_context(
+            "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
+        self.assertEqual(result.context, self.legacy)
+        self.assertEqual(result.fallback_reason, "mode1_selection_not_final")
+
+    def test_registry_change_during_selection_discards_the_package(self):
+        event = dict(self.event, ae_native_selection={
+            "decision": "selected", "items": [{"id": "skill:postgresql-optimization"}],
+        })
+        with patch.object(self.module, "registry_revision", side_effect=["before", "after"]):
+            result = self.module.preflight_context(
+                "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
+        self.assertEqual(result.context, self.legacy)
+        self.assertEqual(result.fallback_reason, "registry_changed")
+
+    def test_registry_change_during_render_also_discards_the_package(self):
+        event = dict(self.event, ae_native_selection={
+            "decision": "selected", "items": [{"id": "skill:postgresql-optimization"}],
+        })
+        with patch.object(self.module, "registry_revision", side_effect=["same", "same", "changed"]):
+            result = self.module.preflight_context(
+                "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
+        self.assertEqual(result.context, self.legacy)
+        self.assertEqual(result.fallback_reason, "registry_changed")
+
+    def test_required_package_overflow_returns_the_complete_legacy_fallback(self):
+        item = self.module.ResolvedItem(
+            id="skill:fixture", type="skill", ref="/long/" * 400 + "SKILL.md",
+            delivery="direct_read", purpose="Inspect", required=True,
+        )
+        event = dict(self.event, ae_native_selection={
+            "decision": "selected", "items": [{"id": "skill:fixture"}],
+        })
+        with patch.object(self.module, "build_package", return_value=([item], [])):
+            result = self.module.preflight_context(
+                "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
+        self.assertEqual(result.context, self.legacy)
+        self.assertEqual(result.effective_mode, 0)
+        self.assertEqual(result.fallback_reason, "package_budget_exceeded")
+
+    def test_result_expiring_during_render_is_discarded(self):
+        event = dict(self.event, ae_native_selection={
+            "decision": "selected", "items": [{"id": "skill:postgresql-optimization"}],
+        })
+        render = self.module.render_package
+
+        def slow_render(*args, **kwargs):
+            time.sleep(0.12)
+            return render(*args, **kwargs)
+
+        with patch.dict(os.environ, {"AE_PREFLIGHT_DEADLINE_MS": "100"}), \
+                patch.object(self.module, "render_package", side_effect=slow_render):
+            result = self.module.preflight_context(
+                "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
+        self.assertEqual(result.context, self.legacy)
+        self.assertEqual(result.fallback_reason, "timeout")
 
     def test_mode1_never_switches_to_mode2(self):
         # Even with a fully configured custom endpoint stored alongside,
@@ -703,7 +883,7 @@ class Mode2EndToEndTests(PreflightTestCase):
     def test_selected_package_replaces_the_candidate_cards(self):
         fixture = self.start([SelectorFixture.selection("selected", items=[
             {"id": "skill:postgresql-optimization", "reason": "planner"},
-            {"id": "mcp:ffmpeg-mcp", "required": False},
+            {"id": "plugin:openmontage", "required": False},
         ])])
         rc, out, err = self.run_event()
         self.assertEqual(rc, 0, err)

@@ -1,7 +1,7 @@
 ---
 title: Adaptive Preflight Capability Selection
-version: 1.0
-last_updated: 2026-11-19
+version: 1.1
+last_updated: 2026-11-20
 audience: users, maintainers
 ---
 
@@ -38,8 +38,8 @@ lookup pages served by the local registry. Its output is a small JSON
 document that names typed registry IDs. AgentEnhancements then:
 
 1. resolves every ID to its canonical entry (exact typed-ID match),
-2. proves what is actually usable right now (skill files that exist,
-   gateway-visible MCP servers, built-ins),
+2. proves delivery (readable skill references, exact tools observed in the
+   current host session, built-ins),
 3. renders one bounded package for the main agent, inside the same
    UserPromptSubmit slot the legacy cards occupied (400 tokens).
 
@@ -135,12 +135,22 @@ items, optional `required` flags. A Mode 1 failure never switches to
 Mode 2; the turn falls back to Mode 0 and the model source follows the
 user's explicit choice.
 
-Wiring an adapter's native inference (for example OpenCode's
-`ctx.experimental.generate` at the prompt hook) is the staged pilot
-work: the runtime contract above is ready, and adapters that do not
-supply the field simply run Mode 0 until their host-side integration
-is proven. Mode 2 needs no adapter change - the runtime performs the
-call inside the existing hook.
+Auto is targeted only at Claude Code and Codex. Neither installed hook
+currently produces a certified native handoff: both use Mode 0 when the
+payload is absent. A handoff must contain the final decision; a native
+`lookup` payload falls back. OpenCode rejects Auto even if supplied a test
+payload, and uses Custom for preflight inference.
+
+Native authentication, a resolvable lightweight model, tool restrictions,
+recursion prevention, an adapter deadline starting before inference, and
+delivery before the first main request remain certification gates. A
+fixture payload does not satisfy them. Claude's documented agent hook is a
+verifier with tools and a verification response schema; no arbitrary
+selection handoff was demonstrated. No headless wrapper or subscription
+inference was attempted in the local-fixture-only implementation scope.
+Installed versions inspected: Claude Code 2.1.327 and Codex CLI 0.167.2.
+See the official [Claude hooks](https://code.claude.com/docs/en/hooks) and
+[Codex hooks](https://developers.openai.com/codex/hooks) references.
 
 ### Output contract
 
@@ -157,23 +167,28 @@ Validation and resolution then prove, per item:
 
 - **Type:** skill
   - **Proof before the main request:** the SKILL.md exists under an allowed root
-  - **Delivery:** `direct_read` (exact path to read before related work) or
-    `loaded` when the host profile already links it natively
+  - **Delivery:** `direct_read` with the exact path and a read-before-work
+    instruction. Directory links do not prove the body was loaded into this
+    request. No current adapter supplies enough proof to emit `loaded`.
 
 - **Type:** plugin
-  - **Proof before the main request:** the guide file exists; status is recorded
-  - **Delivery:** `direct_read` (guidance; runtime entry points follow the
-    guide)
+  - **Proof before the main request:** the optional guide file exists
+  - **Delivery:** optional `direct_read` guidance only. Required plugin IDs
+    conservatively fall back because a catalog-plugin runtime entry point is
+    not proven. This also limits required guide-only contributions; request
+    such guidance through the existing discovery/read workflow. Nothing is
+    installed or enabled from a selector result.
 
 - **Type:** mcp
-  - **Proof before the main request:** `api_config.server_state` reports the
-    server visible
-  - **Delivery:** `callable` (the gateway publishes the schema on the session
-    toolset)
+  - **Proof before the main request:** current configuration permits the
+    server and exact tools from it occur in a session-bound host inventory
+  - **Delivery:** `callable` references name only those observed tools
 
 - **Type:** `tool:<server>/<name>`
-  - **Proof before the main request:** the server is visible
-  - **Delivery:** `callable` with the exact tool reference
+  - **Proof before the main request:** the exact gateway tool name, server
+    mapping, host name/namespace, schema and current availability agree
+  - **Delivery:** `callable` with the host's executable reference, e.g.
+    `tools["agent-enhancements"].ffmpeg_probe` in OpenCode Code Mode
 
 - **Type:** capability
   - **Proof before the main request:** built-in descriptor
@@ -189,6 +204,35 @@ name-surface alias that `registry.py show` used to allow).
 
 The rendered package carries the local `registry_revision` digest so a
 host can detect catalog changes between selection and dispatch.
+The renderer keeps complete required IDs and references together. It drops
+notes and optional items, then uses a compact required render. If that still
+exceeds 400 tokens, the whole turn falls back with `package_budget_exceeded`;
+there is no final text truncation. Twelve compact items can fit. Registry
+changes during selection or rendering also discard the package.
+
+### OpenCode 2 delivery boundary
+
+The existing bridge obtains private evidence from supported `ctx.tool.list()`
+and `ctx.mcp.list()` APIs, bound to the current session and configuration
+revision. It starts no second gateway. Exact naming and cloud-tool gates reuse
+the gateway implementation. A host inventory is not sent to the selector.
+
+The prompt hook runs `UserPromptSubmit` once. A private runtime envelope
+also prepares the legacy fallback without another lifecycle/memory effect;
+existing native JSON and `--text` outputs are unchanged. The context hook
+checks the snapshot and outgoing declaration before injecting the package.
+Schema drift, missing declarations or changed snapshots use the prepared
+fallback. Host reads have 750 ms bounds; MCP readiness uses a 1.5 s polling
+window. The existing runtime subprocess timeout remains eight seconds.
+
+Private inventories are capped at 64,000 characters and are omitted if they
+would exceed the existing hook input limit. Large metadata cannot suppress a
+normally valid Mode 0 prompt. Direct tools require matching JSON schemas.
+Code Mode proof is currently limited to primitive object signatures without
+unsupported constraints, as exercised by `ffmpeg_probe(path: string)`; complex
+or hidden Code Mode declarations fall back. This is not certification of every
+tool advertised by the gateway. See the supported
+[OpenCode plugin APIs](https://opencode.ai/docs/build/plugins/server/).
 
 ### Fallbacks and deadline
 
@@ -203,45 +247,91 @@ stderr. Stdout stays reserved for the context channel (OpenCode and
 Hermes read it as the injection surface). Memory effects run exactly
 once per prompt regardless of mode.
 
-Mode 0 is provably egress-free: no credentials are read, no network
-module is exercised, and the regression suite asserts no socket is
-ever opened.
+Mode 0 makes no selector request and does not resolve the Custom key. The
+regression suite blocks sockets on the runtime path; ordinary host MCP startup
+and the existing memory redactor retain their normal behavior.
 
 ### Cost notes
 
-Measured on the audit's fixtures, a rendered package replaces the
-eight candidate cards (about 220-230 tokens) with a typically smaller,
-exact pointer set (43-134 tokens for one to six items), and `abstain`
-injects zero tokens. Mode 2 additionally spends its own inference
-tokens (bounded: one catalog view + at most two rounds, 500 output
-tokens each). Whether that trade wins depends on the task shape -
-cross-domain tasks and rare capabilities benefit most; simple tasks
-are better served by Mode 0, which is exactly why it stays the
-default and the fallback.
+Preflight replaces the existing candidate slot; abstain leaves it empty.
+Custom also consumes up to two selector inference rounds, each capped at
+500 output tokens. The following scripted fixtures measure wiring and actual
+host actions, not semantic relevance, inference quality or provider pricing.
 
 ### Verification
 
-- `tests/test_adaptive_preflight.py` - 58 regression tests: config
+- `tests/test_adaptive_preflight.py` - 73 regression tests: config
   contract, Mode 0 parity (byte-identical renders, single memory
   effect, zero egress), selection parsing, exact-ID resolution,
   package rendering inside the 400-token slot, and a full Mode 2
   end-to-end run against a local TLS fixture (structured output,
   lookup round, compatibility re-issue, no-retry, deadline, refusal,
   invalid JSON, required-vs-optional, OpenCode `--text` bridge).
-- Live model check: `AE_PREFLIGHT_LIVE=1` with a real user-scope
+- Live model check: `AE_PREFLIGHT_LIVE=1` with a real checkout-local
   model.json and key (mirrors `AE_MCP_NETWORK_TESTS`).
 - `scripts/doctor.py` prints an advisory preflight summary (requested
   and effective mode, diagnosis code, key presence - never the key).
 
+Actual host pilot: OpenCode v2.3.2, one AE gateway per standalone host, an
+HTTPS selector fixture (`fixture-selector`) and a separate local main-model
+fixture (`ae-fixture/fixture`, OpenAI-compatible streaming). The first main
+request contains the unchanged decoded user prompt, the selected package and
+the exact Code Mode declaration. The host reads the selected SKILL.md before
+calling the gateway; its 32×32 synthetic video result returns to the main
+endpoint. Fixture database triggers count task INSERT/UPDATE operations,
+including replacements, and establish one task write per prompt.
+
+| Requested / effective | Scenario | Selector / main requests | Main catalog searches | Detail reads | Prompt slot / AE cold tokens |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 0 / 0 | Paired baseline | 0 / 4 | 1 | 1 | 269 / 3,943 |
+| 2 / 2 | Same prompt and profile | 1 / 3 | 0 | 1 | 186 / 3,483 |
+| 2 / 2 | Abstain | 1 / 1 | 0 | 0 | 0 / 3,296 |
+| 2 / 2 | Cross-domain focused lookup | 2 / 4 | 0 | 2 | 256 / 3,552 |
+| 2 / 0 | Toolset changed after selection | 1 / 4 | 1 | 1 | 269 / 3,971 |
+| 2 / 0 | Nonexistent required tool | 1 / 4 | 1 | 1 | 269 / 3,945 |
+| 2 / 2 | Optional plugin guide | 1 / 4 | 0 | 2 | 238 / 3,534 |
+
+Each row has one sample. Paired time from CLI launch to the first main request
+was 5.222 s (Mode 0) and 6.875 s (Mode 2), including host startup. No p50/p95 is
+inferred from those single samples. Token figures use the existing documented
+chars/4 counter; raw provider usage and costs are unavailable. Per-request input
+and output proxies are retained separately. The cold ledger includes duplicate
+bootstrap pointers, all native skill descriptions conservatively, AE Code Mode
+declarations plus the shared execute schema, observer/memory, prompt slot and
+actual additional catalog results. Task detail bodies arrive after selection.
+
+The lookup case verifies that `skill:postgresql-optimization` is absent from
+the first eight candidates, finds it through the same registry's focused page,
+and delivers only the selected capabilities to the main agent. The guide case
+reads OpenMontage's integration file; it does not prove an OpenMontage runtime.
+`ctx.plugin.list()` and actual prompt/context effects prove the existing AE
+OpenCode bridge entry point is active. Catalog-plugin runtime readiness is
+explicitly not certified.
+
+Reproduce with the checkout venv, a fresh output directory under ignored
+checkout state, installed OpenCode 2 and ffmpeg. No user credentials are needed:
+
+```bash
+AE_PYTHON=".agentenhancements/runtime/venv/bin/python"
+"$AE_PYTHON" unified-integration/tests/smoke-adaptive-preflight.py \
+  --output .agentenhancements/cache/preflight-proof --mode 2
+"$AE_PYTHON" unified-integration/tests/smoke-adaptive-preflight.py \
+  --output .agentenhancements/cache/preflight-proof --mode 0
+# Additional independent cases: --scenario abstain|lookup|stale|unavailable|guide
+```
+
+Synthetic main/selector bodies are redacted and saved privately without auth
+headers. Host metadata identifies the session and active bridge. The 50-case
+discovery benchmark passes with a maximum 304-token hook slot and unchanged
+sources during measurement; its lexical ranking quality is not a selector
+quality evaluation.
+
 ### What is deliberately not claimed
 
-- A package item marked `callable` is proven against the gateway's
-  published surface and the current configuration; the final proof
-  that the host actually placed the tool schema on the request belongs
-  to the live host pilot (review stage 2), not to the repository
-  suite.
+- Only the demonstrated OpenCode version/path and simple exact tool declaration
+  have actual first-request proof. Other hosts need their own supported session
+  inventory and delivery checks; MCP-only installation remains ordinary MCP.
 - Plugin delivery is guidance. Reading an integration guide is not
   activating a plugin runtime; the package says so explicitly.
-- Selector quality (recall on rare capabilities, abstain precision) is
-  a benchmark concern for the pilot on real hosts, not a claim of this
-  implementation.
+- Selector relevance, abstain precision and native Auto authentication remain
+  unmeasured. No real model comparison or user-credential inference was run.

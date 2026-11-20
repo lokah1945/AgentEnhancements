@@ -60,8 +60,8 @@ Keys live only in `ui.api.json` `api_keys`, one array per reference
 | You.com | [v1 search](https://you.com/docs/api-reference/search/v1-search), [authentication](https://you.com/docs/using-the-api/authentication) | `POST https://ydc-index.io/v1/search`, header `X-API-Key`, body `query`, `count`, `freshness` | `results.web[]`: `title`, `url`, `description` (else `snippets[0]`), `page_age` | adapter + mock tests |
 | Tavily | [search endpoint](https://docs.tavily.com/documentation/api-reference/endpoint/search) | `POST https://api.tavily.com/search`, `Authorization: Bearer`, body `query`, `max_results`, `time_range` | `results[]`: `title`, `url`, `content`, `published_date`, `score` | adapter + mock tests |
 | Exa | [search reference](https://docs.exa.ai/reference/search) | `POST https://api.exa.ai/search`, header `x-api-key`, body `query`, `numResults`, `contents.text.maxCharacters`, `startPublishedDate` | `results[]`: `title`, `url`, `text`, `publishedDate`, `author` | adapter + mock tests (docs show no example response; mapping follows the schema) |
-| Firecrawl | [v2 search](https://docs.firecrawl.dev/api-reference/endpoint/search), [rate limits](https://docs.firecrawl.dev/rate-limits) | `POST https://api.firecrawl.dev/v2/search`, `Authorization: Bearer`, body `query`, `limit`, `tbs` (`qdr:d`/`qdr:w` only) | `data.web[]`: `title`, `url`, `description` (no date) | adapter + mock tests; `month`/`year` freshness rejected (not in the official examples) |
-| NewsAPI | [everything](https://newsapi.org/docs/endpoints/everything), [authentication](https://newsapi.org/docs/authentication), [errors](https://newsapi.org/docs/errors) | `GET https://newsapi.org/v2/everything`, header `X-Api-Key` (never the URL), `q`, `pageSize`, `sortBy=publishedAt`, `from` | `articles[]`: `title`, `url`, `description`, `publishedAt`, `source.name` | adapter + mock tests; free tier is development-only per NewsAPI pricing |
+| Firecrawl | [v2 search](https://docs.firecrawl.dev/api-reference/endpoint/search), [rate limits](https://docs.firecrawl.dev/rate-limits) | `POST https://api.firecrawl.dev/v2/search`, `Authorization: Bearer`, body `query`, `limit`, `tbs` (`qdr:d`/`qdr:w` only) | `data.web[]`: `title`, `url`, `description` (no date) | adapter + mock + live tests; `month`/`year` freshness rejected (not in the official examples) |
+| NewsAPI | [everything](https://newsapi.org/docs/endpoints/everything), [authentication](https://newsapi.org/docs/authentication), [errors](https://newsapi.org/docs/errors) | `GET https://newsapi.org/v2/everything`, header `X-Api-Key` (never the URL), `q`, `pageSize`, `sortBy=publishedAt`, `from` | `articles[]`: `title`, `url`, `description`, `publishedAt`, `source.name` | adapter + mock + live tests; free tier is development-only per NewsAPI pricing |
 | Serper | [serper.dev](https://serper.dev/) (no public API reference; playground needs a login) | Observed in authorized live calls 2026-11-20: `POST https://google.serper.dev/search`, header `X-API-KEY`, body `q`, `num`, `tbs` (`qdr:d`/`qdr:y` echoed in `searchParameters`); invalid key → 403 `{"message":"Unauthorized."}` | `organic[]`: `title`, `link`, `snippet`, `date` (optional), `position` | adapter + mock + live tests; contract is empirical, not documented |
 
 Package check (2026-11-20): `you-mcp` does not exist on npm and
@@ -83,8 +83,11 @@ session (`search_web`, one call per provider). Serper also proved live
 failover: `[invalid, valid]` returned results with `attempts: 2`. Revoking the
 keys removed `search_web` and rejected the stale call. With three keys per
 provider, three consecutive live calls used each key once (HTTP 200 each),
-confirming per-request round-robin against the real APIs. **Firecrawl and
-NewsAPI are not live verified** (no key available). Re-run with:
+confirming per-request round-robin against the real APIs. Firecrawl
+(`/v2/search`, `tbs=qdr:d`) and NewsAPI (`/v2/everything`, `from`) were
+live-verified the same day with four keys each: every key answered HTTP 200
+in rotation and the documented result mapping held. All six providers are
+live-verified. Re-run with:
 
 ```bash
 AE_SEARCH_LIVE=1 AGENT_ENHANCEMENTS_API_FILE=/path/to/private/ui.api.json \

@@ -13,8 +13,8 @@ Agent: Claude Code (Claude Opus 5.5) | Session:
 
 **Status: implementation, tests and documentation complete. CONTRACT
 amendment approved by the maintainer on 2026-11-20 and applied (v2.4).
-Live-verified: You.com, Tavily, Exa, Serper. Not live-verified (no key):
-Firecrawl, NewsAPI.**
+Live-verified: all six providers (You.com, Tavily, Exa, Serper, Firecrawl,
+NewsAPI). Merged as PR #11; master CI green after merge.**
 
 ### Outcome
 
@@ -84,8 +84,8 @@ loses Mode 2 until the key is copied into `api_keys.PREFLIGHT_API_KEY`
 | You.com | yes (`you-mcp`, to-install) | yes | yes | live stdio call; listed with key, hidden/rejected without | **yes** |
 | Tavily | yes (`tavily-mcp`, to-install) | yes | yes | live stdio call | **yes** |
 | Exa | yes (`exa-mcp`, to-install) | yes | yes | live stdio call | **yes** |
-| Firecrawl | yes (`firecrawl-mcp`, to-install) | yes (`/v2/search`) | yes | in-process gateway enum + calls (mocked wire) | no |
-| NewsAPI | yes (`newsapi-mcp`, to-install) | yes (`/v2/everything`) | yes | in-process gateway enum + calls (mocked wire) | no |
+| Firecrawl | yes (`firecrawl-mcp`, to-install) | yes (`/v2/search`) | yes | in-process gateway enum + calls (mocked wire) | **yes** (4 keys) |
+| NewsAPI | yes (`newsapi-mcp`, to-install) | yes (`/v2/everything`) | yes | in-process gateway enum + calls (mocked wire) | **yes** (4 keys) |
 | Serper | yes (`serper-mcp`, to-install) | yes (empirical contract) | yes | live stdio call incl. failover `[invalid, valid]` → `attempts: 2` | **yes** |
 | arXiv / Google News RSS (keyless) | built | existing | existing | existing | existing opt-in |
 
@@ -152,8 +152,9 @@ confirmed for all four providers.
 - `docs/repository-description.txt` now says 41 MCP catalog entries; the CI
   step comparing it with the GitHub repository description fails until the
   maintainer updates the GitHub description (outward-facing, not done here).
-- Firecrawl and NewsAPI adapters are mock-tested only (no key); the external
-  `*-mcp` roadmap servers remain `to-install` and unverified. Serper's
+- The external `*-mcp` roadmap servers remain `to-install` and unverified
+  (`search-mcp` covers those providers first-party). Firecrawl and NewsAPI
+  were live-verified after merge with four keys each (HTTP 200 per key). Serper's
   contract is empirical (no public reference) and should be re-checked if
   Serper publishes documentation. Tool-schema budget: default profile unchanged (1,658 tokens);
   all search keys 1,763; search keys plus `OPENAI_API_KEY` 1,889, above the

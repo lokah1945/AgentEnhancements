@@ -50,7 +50,8 @@ function assertNoNodeModulesInAncestry(dir) {
       );
     }
     const parent = path.dirname(current);
-    if (parent === current) break;
+    // Stop at filesystem root - root node_modules is not a project dependency concern
+    if (parent === current || parent === '/') break;
     current = parent;
   }
 }

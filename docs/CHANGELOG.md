@@ -1,11 +1,33 @@
 ---
 title: Changelog
-version: 1.6
+version: 1.7
 last_updated: 2026-11-20
 audience: all
 ---
 
 ## Changelog
+
+## 2026-11-20 — Single ui.api.json configuration, multi-key pool, search-mcp
+
+Branch `feat/ui-api-v2-credential-pool` (pending maintainer review; changes
+CONTRACT §8.2/§8.5 interfaces, see the
+[audit report](audit/CONFIG_MULTIKEY_SEARCH_2026-11-20.md)).
+
+- `ui.api.json` schema version 2: every `api_keys` reference is an array;
+  `api_config.py migrate` upgrades version 1 once with a private backup.
+- Credential pool in `api_config.py`: per-request round-robin, bounded
+  cooldown, readiness probes that never rotate, redaction of every key.
+- Adaptive preflight reads the `preflight` section and
+  `api_keys[api_key_ref]` of `ui.api.json`; `model.json`,
+  `AGENT_ENHANCEMENTS_MODEL_FILE`, `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`,
+  keyring and `preflight.key` are no longer runtime sources.
+- New built-in `search-mcp` (gateway tool `search_web`) with adapters for
+  You.com, Tavily, Exa, Firecrawl and NewsAPI per their official docs;
+  Serper is UNVERIFIED and not offered.
+- All runtime use of the personal `search_providers.json` removed; the
+  unverifiable `npx -y you-mcp` / `npx -y serper-mcp` template commands
+  removed.
+- `any_of` credential requirements for MCP entries and built-ins.
 
 ## 2026-11-20 — Audit and checkout-local execution
 

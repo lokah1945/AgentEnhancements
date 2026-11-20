@@ -111,7 +111,7 @@ and skill-index schemas are unchanged.
    agent's own config (`~/.claude/settings.json`, `~/.codex/AGENTS.md`,
    ...). The four native adapters preserve user hooks, MCP servers, providers
    and instruction/plugin arrays. Backups are written next to changed files.
-   One native `agent-enhancements` gateway loads the nine built MCP servers.
+   One native `agent-enhancements` gateway loads the ten built MCP servers.
    OpenCode 2 uses `mcp.servers`, `disabled` and `environment`; the adapter
    migrates legacy flat entries. Its prompt hook waits for the managed MCP
    connection before the first model request captures available tools.
@@ -184,7 +184,9 @@ zero-friction boost for natively linked skills.
 
 ### Invariants
 
-The private root `ui.api.json` is the credential source for project MCPs.
+The private root `ui.api.json` (schema version 2) is the single AE-managed
+configuration source: MCP credentials (arrays of keys per reference),
+connections, the adaptive-preflight `preflight` section and MCP overrides.
 It is not an agent credential store: native authentication, provider settings
 and login helpers are outside its scope. The loader and gateway have no
 agent-specific authentication or process-coordination logic.
@@ -193,7 +195,9 @@ configuration and sends `notifications/tools/list_changed`. Calls revalidate
 the current schema and credential state, including previously cached names.
 Offline tool subsets remain available with empty keys. External subprocesses
 start only with configured requirements and commands, receive only their
-mapped credentials, and are replaced on key rotation. The registry snapshot
+mapped credentials (the first usable key), and are replaced on key rotation.
+First-party adapters such as `search-mcp` pick a key per HTTP request from
+the in-process credential pool instead. The registry snapshot
 retains the full catalog; agent-facing search/map/list filters unavailable
 MCPs using the live API configuration.
 

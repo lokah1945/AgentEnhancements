@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
-version: 1.5
-last_updated: 2026-11-16
+version: 1.6
+last_updated: 2026-11-20
 audience: users
 ---
 
@@ -60,13 +60,34 @@ Enhancement setup does not create provider accounts. Claude Code requires its
 own login; an expired OpenCode Console/provider key must be replaced through
 that provider's account flow. Native hooks and local MCP health can be tested
 without making paid model calls. Run
-`bash unified-integration/scripts/setup-mcp.sh --check` for the nine built
+`bash unified-integration/scripts/setup-mcp.sh --check` for the ten built
 servers' actual protocol tests.
 `doctor.py` additionally checks each selected native host, but does not test
 provider authentication. For Hermes, run `hermes -p <profile> chat -q
 'Return exactly READY' --quiet --max-turns 1`. A missing Nous token requires
 that profile's native login or a deliberately selected working provider;
 installing MCP does not repair an unavailable model slug.
+
+**`search_web` (or another credentialed tool) is missing**
+Run `python3 unified-integration/scripts/api_config.py status`. A reason of
+`missing_credentials` lists `missing` or `missing_any_of` references: add at
+least one key to that `api_keys` array in `ui.api.json` (`[]`, `""` and
+whitespace do not count, and shell environment variables are ignored). Hosts
+that keep their tool list for a whole session (Codex) may need a new session
+before a newly enabled tool appears; revoked tools are rejected immediately.
+
+**`ui.api.json` reports `migration_pending` or setup skipped the migration**
+Run `python3 unified-integration/scripts/api_config.py migrate`. It prints a
+value-free JSON report; `refused` with `config_unavailable_or_invalid` means
+the file is not valid JSON or violates the schema, and it is left untouched.
+To roll back, copy the newest `ui.api.json.backup.<timestamp>` over
+`ui.api.json`.
+
+**Adaptive preflight stopped using my Mode 2 key or `model.json`**
+Preflight now reads only `ui.api.json` (`preflight` section and
+`api_keys[api_key_ref]`). Run `api_config.py migrate` once to import a legacy
+`model.json`/`preflight.key`; a key that lived only in the shell environment
+or the OS keyring must be copied into `api_keys.PREFLIGHT_API_KEY` by hand.
 
 **Existing JSONC comments disappeared**
 Merged JSONC is serialized as JSON to preserve its values safely. The original

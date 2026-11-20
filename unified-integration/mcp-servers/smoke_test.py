@@ -16,6 +16,7 @@ HERE = Path(__file__).resolve().parent
 SERVERS = [
     "embeddings-mcp", "task-router-mcp", "ffmpeg-mcp", "vision-mcp",
     "graphrag-mcp", "arxiv-mcp", "google-news-mcp", "video-mcp", "style-mcp",
+    "search-mcp",
 ]
 
 
@@ -157,7 +158,7 @@ def main() -> int:
     if failures:
         print(f"SMOKE TEST FAILED: {failures}")
         return 1
-    print("SMOKE TEST PASSED: 9/9 servers healthy, functional tools verified.")
+    print(f"SMOKE TEST PASSED: {len(SERVERS)}/{len(SERVERS)} servers healthy, functional tools verified.")
     return 0
 
 

@@ -12,7 +12,8 @@ package (architecture review 2026-11-19, "Adaptive Preflight"):
           produced through its own sanctioned inference surface before
           the agent's first request. The runtime only validates.
   Mode 2  custom model - this module calls the user-configured
-          endpoint (model.json) with a bounded, structured request.
+          endpoint (ui.api.json "preflight") with a bounded, structured
+          request.
 
 The selector never executes anything. It returns typed registry IDs;
 AgentEnhancements resolves each ID to its canonical source, checks
@@ -24,22 +25,21 @@ OpenCode/Hermes use as the context channel). Mode 1 never switches to
 Mode 2 automatically; the model source follows the user's explicit
 choice.
 
-Configuration (private, checkout-local state):
+Configuration: the "preflight" section of the private ui.api.json
+(the single AE configuration file, api_config.config_path()):
 
-  <checkout>/.agentenhancements/config/model.json:
+    "preflight": {"mode": 0}                            # disabled
+    "preflight": {"mode": 1}                            # native host
+    "preflight": {"mode": 2,                            # custom model
+                  "endpoint": "https://openrouter.ai/api/v1",
+                  "sdk": "openai",                      # or anthropic
+                  "model": "provider/model-id",
+                  "api_key_ref": "PREFLIGHT_API_KEY"}
 
-    {"adaptive_preflight_mode": 0}                      # disabled
-    {"adaptive_preflight_mode": 1}                      # native host
-    {"adaptive_preflight_mode": 2,                      # custom model
-     "endpoint": "https://openrouter.ai/api/v1",
-     "sdk": "openai",                                   # or anthropic
-     "model": "provider/model-id"}
-
-  The file holds NO secrets. The Mode 2 key is resolved from
-  AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY, the OS keyring (service
-  "agentenhancements.preflight", account = endpoint origin), or a
-  0600 key file at <config dir>/preflight.key - never from
-  ui.api.json (MCP credentials) or model.json.
+  The Mode 2 key is api_keys[api_key_ref] of the same file (first usable
+  key in rotation order). No environment variable, keyring, key file or
+  legacy model.json is consulted at runtime; `api_config.py migrate`
+  imports a legacy model.json/preflight.key once.
 
 Deadline: the whole preflight phase shares one monotonic deadline
 (2.0s pilot default; AE_PREFLIGHT_DEADLINE_MS overrides) and at most
@@ -57,7 +57,6 @@ import hashlib
 import importlib.util
 import json
 import os
-import stat
 import sys
 import time
 import urllib.error
@@ -92,10 +91,8 @@ MAX_OUTPUT_TOKENS = 500
 MAX_SEARCH_HINTS = 8
 HTTP_TIMEOUT_CAP_SECONDS = 10.0
 
-ENV_MODEL_FILE = "AGENT_ENHANCEMENTS_MODEL_FILE"
 ENV_DEADLINE_MS = "AE_PREFLIGHT_DEADLINE_MS"
-ENV_API_KEY = "AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY"
-KEYRING_SERVICE = "agentenhancements.preflight"
+DEFAULT_KEY_REF = "PREFLIGHT_API_KEY"
 
 SELECTION_DECISIONS = ("selected", "abstain", "lookup", "unresolved")
 DELIVERIES = ("loaded", "callable", "direct_read", "unavailable")
@@ -206,7 +203,7 @@ def _api_config():
 
 
 # ---------------------------------------------------------------------------
-# model.json contract (review 9)
+# Preflight configuration contract: ui.api.json "preflight" (review 9)
 # ---------------------------------------------------------------------------
 
 
@@ -217,20 +214,8 @@ def config_dir() -> Path:
 
 
 def model_config_path() -> Path:
-    """Canonical model.json location; env override mirrors api_config."""
-    override = os.environ.get(ENV_MODEL_FILE)
-    if override:
-        return Path(override).expanduser()
-    return config_dir() / "model.json"
-
-
-def _reject_duplicate_keys(pairs: List[Tuple[str, Any]]) -> Dict[str, Any]:
-    result: Dict[str, Any] = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"duplicate field: {key}")
-        result[key] = value
-    return result
+    """The single AE configuration file that carries the preflight section."""
+    return _api_config().config_path()
 
 
 def _valid_endpoint(endpoint: str) -> bool:
@@ -250,12 +235,13 @@ def _valid_endpoint(endpoint: str) -> bool:
 
 @dataclass
 class ModelConfig:
-    """One snapshot of model.json, read fresh per UserPromptSubmit."""
+    """One snapshot of ui.api.json "preflight", read fresh per prompt."""
 
     mode: int = MODE_DISABLED
     endpoint: str = ""
     sdk: str = ""
     model: str = ""
+    api_key_ref: str = DEFAULT_KEY_REF
     #: non-empty when a requested mode was rejected and Mode 0 runs
     diagnosis: str = ""
 
@@ -264,33 +250,30 @@ class ModelConfig:
         return self.mode
 
 
-def load_model_config(path: Optional[Path] = None) -> ModelConfig:
-    """Parse and validate model.json; every rejection falls back to
+def load_model_config(config: Optional[Dict[str, Any]] = None) -> ModelConfig:
+    """Validate the preflight section; every rejection falls back to
     Mode 0 with a diagnosis code (review 12, fallback table)."""
-    target = Path(path) if path else model_config_path()
-    try:
-        with target.open("rb") as stream:
-            raw_bytes = stream.read(64 * 1024 + 1)
-    except OSError:
-        return ModelConfig()  # missing file == Mode 0, no diagnosis
-    if len(raw_bytes) > 64 * 1024:
-        return ModelConfig(diagnosis="model_json_too_large")
-    try:
-        raw = raw_bytes.decode("utf-8")
-        doc = json.loads(raw, object_pairs_hook=_reject_duplicate_keys)
-    except (ValueError, TypeError) as exc:
-        return ModelConfig(diagnosis=f"model_json_invalid:{type(exc).__name__}")
+    if config is None:
+        config, error = _api_config().read_config()
+        if error:
+            if not _api_config().config_path().exists():
+                return ModelConfig()  # missing file == Mode 0, no diagnosis
+            return ModelConfig(diagnosis="ui_api_json_invalid")
+    doc = config.get("preflight", {})
     if not isinstance(doc, dict):
-        return ModelConfig(diagnosis="model_json_invalid:not_an_object")
+        return ModelConfig(diagnosis="preflight_invalid:not_an_object")
+    if not doc:
+        return ModelConfig()  # absent section == Mode 0, no diagnosis
 
-    mode = doc.get("adaptive_preflight_mode", MODE_DISABLED)
+    mode = doc.get("mode", MODE_DISABLED)
     # bool is an int subclass; the contract requires an exact integer.
     if type(mode) is not int or mode not in VALID_MODES:
-        return ModelConfig(diagnosis="model_json_invalid:mode_not_0_1_or_2")
+        return ModelConfig(diagnosis="preflight_invalid:mode_not_0_1_or_2")
 
     endpoint = doc.get("endpoint", "")
     sdk = doc.get("sdk", "")
     model = doc.get("model", "")
+    key_ref = doc.get("api_key_ref", DEFAULT_KEY_REF)
     if mode == MODE_CUSTOM:
         # Only Mode 2 reads the custom settings; on Mode 0/1 they are
         # stored but ignored (review 9, "Field tersebut diabaikan").
@@ -300,11 +283,14 @@ def load_model_config(path: Optional[Path] = None) -> ModelConfig:
             return ModelConfig(diagnosis="mode2_settings_invalid:sdk")
         if not isinstance(model, str) or not model.strip():
             return ModelConfig(diagnosis="mode2_settings_invalid:model")
+        if not isinstance(key_ref, str) or not _api_config().REFERENCE_PATTERN.match(key_ref):
+            return ModelConfig(diagnosis="mode2_settings_invalid:api_key_ref")
     return ModelConfig(
         mode=mode,
         endpoint=endpoint if isinstance(endpoint, str) else "",
         sdk=sdk if isinstance(sdk, str) else "",
         model=model.strip() if isinstance(model, str) else "",
+        api_key_ref=key_ref if isinstance(key_ref, str) else DEFAULT_KEY_REF,
     )
 
 
@@ -766,53 +752,19 @@ def render_package(items: List[ResolvedItem], revision: str,
 
 
 # ---------------------------------------------------------------------------
-# Credential resolution (review 9/14: never in model.json)
+# Credential resolution: ui.api.json api_keys only
 # ---------------------------------------------------------------------------
 
 
-def resolve_api_key(endpoint: str) -> str:
-    """Mode 2 key, bound to the configured origin:
+def resolve_api_key(config: ModelConfig) -> str:
+    """Mode 2 key from ui.api.json ``api_keys[config.api_key_ref]``.
 
-    1. AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY
-    2. OS keyring (service agentenhancements.preflight, account = origin)
-    3. <config dir>/preflight.key (0600, first non-empty line)
-
-    ui.api.json is deliberately NOT consulted: it carries MCP
-    credentials, and agent-login follows the host (review 14).
+    One key per prompt, chosen by the shared credential pool (round-robin
+    across the reference's keys). Shell environment variables, keyrings,
+    key files and model.json are never consulted; the key never enters
+    the selector prompt or the main-agent context.
     """
-    env_key = os.environ.get(ENV_API_KEY, "").strip()
-    if env_key:
-        return env_key
-    origin = urlsplit(endpoint).netloc
-    try:  # keyring is optional; its absence must never be fatal
-        import keyring  # type: ignore
-
-        stored = keyring.get_password(KEYRING_SERVICE, origin)
-        if isinstance(stored, str) and stored.strip():
-            return stored.strip()
-    except Exception:  # noqa: BLE001 - advisory resolver
-        pass
-    key_file = config_dir() / "preflight.key"
-    try:
-        descriptor = os.open(
-            key_file, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
-            | getattr(os, "O_NONBLOCK", 0),
-        )
-        with os.fdopen(descriptor, "r", encoding="utf-8") as stream:
-            info = os.fstat(stream.fileno())
-            if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077:
-                return ""
-            if hasattr(os, "getuid") and info.st_uid != os.getuid():
-                return ""
-            raw = stream.read(64 * 1024 + 1)
-            if len(raw) > 64 * 1024:
-                return ""
-            for line in raw.splitlines():
-                if line.strip():
-                    return line.strip()
-    except (OSError, UnicodeError):
-        pass
-    return ""
+    return _api_config().select_key_for_request(config.api_key_ref)
 
 
 # ---------------------------------------------------------------------------
@@ -1124,7 +1076,7 @@ def preflight_context(
     """
     config = load_model_config()
     if config.diagnosis:
-        _diagnose(f"model.json rejected ({config.diagnosis}); running Mode 0")
+        _diagnose(f"preflight config rejected ({config.diagnosis}); running Mode 0")
     if config.mode == MODE_DISABLED:
         return PreflightResult(
             context=fallback(agent, prompt),
@@ -1138,7 +1090,7 @@ def preflight_context(
     if config.mode == MODE_CUSTOM:
         # Resolve once per prompt; a missing key falls back before any
         # network attempt (review 12 fallback table).
-        api_key = resolve_api_key(config.endpoint)
+        api_key = resolve_api_key(config)
     try:
         revision = registry_revision()
         if config.mode == MODE_NATIVE:
@@ -1218,7 +1170,7 @@ def status_report() -> Dict[str, Any]:
     """Redacted, doctor-friendly summary of the preflight config."""
     config = load_model_config()
     report: Dict[str, Any] = {
-        "model_config": str(model_config_path()),
+        "config_file": str(model_config_path()),
         "requested_mode": config.mode,
         "effective_mode": config.mode if not config.diagnosis else MODE_DISABLED,
         "diagnosis": config.diagnosis,
@@ -1227,7 +1179,8 @@ def status_report() -> Dict[str, Any]:
         report["endpoint"] = config.endpoint
         report["sdk"] = config.sdk
         report["model"] = config.model
-        report["api_key_present"] = bool(resolve_api_key(config.endpoint))
+        report["api_key_ref"] = config.api_key_ref
+        report["api_key_present"] = _api_config().has_usable_key(config.api_key_ref)
     return report
 
 

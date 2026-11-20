@@ -56,9 +56,9 @@ class RuntimeTests(unittest.TestCase):
                 "AGENT_MEMORY_ROOT": str(self.memory),
                 "AGENT_ENHANCEMENTS_STATE_DIR": str(self.root / 'ae-state'),
                 "AGENT_SKILLS_DIR": str(self.root / "skills"),
-                # Keep the Mode 0 baseline deterministic even on a machine
-                # that has a user-scope preflight model.json (CONTRACT 8.5).
-                "AGENT_ENHANCEMENTS_MODEL_FILE": str(self.root / "absent-model.json"),
+                # Keep the Mode 0 baseline deterministic even when the
+                # checkout's ui.api.json enables adaptive preflight.
+                "AGENT_ENHANCEMENTS_API_FILE": str(self.root / "absent-ui.api.json"),
             },
             input_text=json.dumps(payload),
         )
@@ -310,7 +310,8 @@ class NativeConfigurationTests(unittest.TestCase):
                 api = json.loads(
                     Path(self.env["AGENT_ENHANCEMENTS_API_FILE"]).read_text()
                 )
-                self.assertTrue(all(value == "" for value in api["api_keys"].values()))
+                # Schema v2: an unconfigured reference is an empty array.
+                self.assertTrue(all(value == [] for value in api["api_keys"].values()))
                 self.assertNotIn("ANTHROPIC_API_KEY", api["api_keys"])
                 self.assertNotIn("ANTHROPIC_BASE_URL", api["connections"])
 

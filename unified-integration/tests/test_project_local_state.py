@@ -29,8 +29,7 @@ class ProjectLocalStateTests(unittest.TestCase):
                         XDG_CONFIG_HOME=str(self.home / '.config'),
                         XDG_DATA_HOME=str(self.home / '.local/share'),
                         XDG_CACHE_HOME=str(self.home / '.cache'))
-        for key in ('AGENT_MEMORY_ROOT', 'AGENT_ENHANCEMENTS_MODEL_FILE',
-                    'AGENT_ENHANCEMENTS_API_FILE',
+        for key in ('AGENT_MEMORY_ROOT', 'AGENT_ENHANCEMENTS_API_FILE',
                     'AGENT_ENHANCEMENTS_STATE_DIR', 'TASK_OBSERVER_WORKSPACE',
                     'AGENT_ENHANCEMENTS_BASE_DIR'):
             self.env.pop(key, None)

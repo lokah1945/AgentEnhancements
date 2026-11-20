@@ -196,14 +196,15 @@ class TestMcpServerManifest(unittest.TestCase):
         cls.catalog = _load(CATALOG_PATH)
 
     def test_known_server_count(self):
-        self.assertEqual(len(self.mcp["servers"]), 40)
+        # 40 roadmap entries + the built-in first-party search-mcp.
+        self.assertEqual(len(self.mcp["servers"]), 41)
 
     def test_priority_split_sums(self):
         by_p = {}
         for s in self.mcp["servers"]:
             by_p[s["priority"]] = by_p.get(s["priority"], 0) + 1
-        self.assertEqual(sum(by_p.values()), 40)
-        self.assertEqual(by_p.get("P0"), 7)
+        self.assertEqual(sum(by_p.values()), 41)
+        self.assertEqual(by_p.get("P0"), 8)
         self.assertTrue(by_p.get("P1", 0) >= 22)
 
     def test_description_mentions_plugin_count(self):

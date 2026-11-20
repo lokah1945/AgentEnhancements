@@ -71,7 +71,7 @@ def merge_hooks(doc: dict, agent: str) -> None:
         hooks[event] = retained
     from project_paths import environment
     variables = environment()
-    for name in ('AGENT_ENHANCEMENTS_API_FILE', 'AGENT_ENHANCEMENTS_MODEL_FILE'):
+    for name in ('AGENT_ENHANCEMENTS_API_FILE',):
         if os.environ.get(name):
             variables[name] = os.environ[name]
     command = shlex.join(['env', *[key+'='+value for key, value in variables.items()],
@@ -119,6 +119,12 @@ def mcp_block() -> dict:
     }
 
 
+# Variables AE itself used to write into the gateway entry and no longer
+# reads (preflight settings moved into ui.api.json). Refresh removes them so
+# a moved checkout does not keep a dangling path; user variables stay.
+RETIRED_GATEWAY_ENV = frozenset({"AGENT_ENHANCEMENTS_MODEL_FILE"})
+
+
 def merge_servers(existing: dict, block: dict) -> None:
     """Refresh managed servers; keep name collisions belonging to the user."""
     # Retire only our previous direct entries. Leaving those active would
@@ -150,7 +156,10 @@ def merge_servers(existing: dict, block: dict) -> None:
                 merged[field] = old[field]
         for field in ("env", "environment"):
             if field in cfg and old and isinstance(old.get(field), dict):
-                merged[field] = {**old[field], **cfg[field]}
+                merged[field] = {
+                    key: value for key, value in {**old[field], **cfg[field]}.items()
+                    if key not in RETIRED_GATEWAY_ENV
+                }
         existing[name] = merged
 
 

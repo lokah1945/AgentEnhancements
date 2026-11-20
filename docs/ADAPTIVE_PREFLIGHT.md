@@ -1,6 +1,6 @@
 ---
 title: Adaptive Preflight Capability Selection
-version: 1.1
+version: 1.2
 last_updated: 2026-11-20
 audience: users, maintainers
 ---
@@ -29,7 +29,8 @@ One selector role, three modes, one validated package:
 
 - **Mode:** 2 - custom
   - **Who assigns:** The AE hook calls the user-configured endpoint.
-  - **Model used by the selector:** The endpoint/sdk/model triple in model.json.
+  - **Model used by the selector:** The endpoint/sdk/model triple in the
+    `ui.api.json` `preflight` section.
 
 The selector never executes anything and never sees history, tool
 payloads, memory, observations or credentials. Its input is the task
@@ -48,42 +49,45 @@ only prepares guidance and names; execution stays with the host.
 
 ### Configuration
 
-Private state under the active checkout, independent of cwd and global XDG:
+The `preflight` section of the private, ignored `<checkout>/ui.api.json`
+(the single AE configuration file, see [configuration](CONFIGURATION.md)):
 
-```text
-.agentenhancements/config/model.json
+```json
+"preflight": {"mode": 0}
 ```
 
 ```json
-{"adaptive_preflight_mode": 0}
+"preflight": {"mode": 1}
 ```
 
 ```json
-{"adaptive_preflight_mode": 1}
-```
-
-```json
-{
-  "adaptive_preflight_mode": 2,
+"preflight": {
+  "mode": 2,
   "endpoint": "https://openrouter.ai/api/v1",
   "sdk": "openai",
-  "model": "provider/model-id"
+  "model": "provider/model-id",
+  "api_key_ref": "PREFLIGHT_API_KEY"
 }
 ```
 
 Rules (enforced by `scripts/adaptive_preflight.py` and its tests):
 
-- `adaptive_preflight_mode` must be the exact integer 0, 1 or 2.
-  Booleans, numeric strings, floats, out-of-range values, duplicate
-  fields and malformed JSON are rejected: the run falls back to Mode 0
-  and a diagnosis code is printed to stderr.
+- A missing file or missing `preflight` section is Mode 0 without a
+  diagnosis.
+- `mode` must be the exact integer 0, 1 or 2. Booleans, numeric strings,
+  floats and out-of-range values fall back to Mode 0 with a diagnosis code
+  on stderr. Malformed JSON, duplicate fields or a non-object section make
+  the whole `ui.api.json` invalid (`ui_api_json_invalid`), which also hides
+  credentialed MCP tools: fail closed.
 - Mode 2 additionally requires `endpoint` (an HTTPS base URL without
-  credentials or fragments), `sdk` (`openai` or `anthropic`) and a
-  non-empty `model`. On Mode 0/1 these fields are stored but ignored,
+  credentials or fragments), `sdk` (`openai` or `anthropic`), a non-empty
+  `model` and an `api_key_ref` naming an `api_keys` reference (default
+  `PREFLIGHT_API_KEY`). On Mode 0/1 these fields are stored but ignored,
   so switching modes never loses the custom setup.
 - The file is re-read once per UserPromptSubmit. Writers should use
   atomic replace; changes apply from the next prompt.
-- The file must never contain secrets.
+- A legacy `.agentenhancements/config/model.json` is no longer read;
+  `api_config.py migrate` imports it once (see below).
 
 #### Protocol details (Mode 2)
 
@@ -104,13 +108,16 @@ Rules (enforced by `scripts/adaptive_preflight.py` and its tests):
 
 #### Credentials (Mode 2)
 
-The key never lives in model.json or ui.api.json. Resolution order:
-
-1. `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY` environment variable
-2. the OS keyring, service `agentenhancements.preflight`, account =
-   the endpoint's origin
-3. a 0600 key file at `<config dir>/preflight.key` (first non-empty
-   line; looser permissions are refused)
+The key is `api_keys[api_key_ref]` in the same `ui.api.json` (an array;
+one key is chosen per prompt, round-robin when several are listed). It is
+never read from the shell environment, an OS keyring, a key file or
+`model.json`, and it never enters the selector prompt or the main-agent
+context. The previous sources (`AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`,
+keyring service `agentenhancements.preflight`, `<config dir>/preflight.key`)
+are retired; `python3 unified-integration/scripts/api_config.py migrate`
+imports an owner-only `preflight.key` and the legacy `model.json` once when
+`ui.api.json` has no `preflight` section. Keyring entries are not imported:
+copy that key into `api_keys.PREFLIGHT_API_KEY` by hand.
 
 A missing key falls back to Mode 0 before any network attempt.
 
@@ -240,7 +247,7 @@ The whole preflight phase shares one monotonic deadline - 2 seconds by
 default (`AE_PREFLIGHT_DEADLINE_MS`), at most two inference rounds -
 leaving room for the Mode 0 render inside the hosts' 8-10 second hook
 budgets. Late results are discarded. Every failure path (missing or
-broken model.json, missing key, timeout, HTTP error, refusal, invalid
+broken preflight config, missing key, timeout, HTTP error, refusal, invalid
 JSON, truncation, unprovable selection) renders the legacy candidate
 cards byte-identically and prints one bounded diagnosis line to
 stderr. Stdout stays reserved for the context channel (OpenCode and
@@ -268,7 +275,7 @@ host actions, not semantic relevance, inference quality or provider pricing.
   lookup round, compatibility re-issue, no-retry, deadline, refusal,
   invalid JSON, required-vs-optional, OpenCode `--text` bridge).
 - Live model check: `AE_PREFLIGHT_LIVE=1` with a real checkout-local
-  model.json and key (mirrors `AE_MCP_NETWORK_TESTS`).
+  ui.api.json preflight Mode 2 and key (mirrors `AE_MCP_NETWORK_TESTS`).
 - `scripts/doctor.py` prints an advisory preflight summary (requested
   and effective mode, diagnosis code, key presence - never the key).
 
@@ -281,7 +288,10 @@ calling the gateway; its 32×32 synthetic video result returns to the main
 endpoint. Fixture database triggers count task INSERT/UPDATE operations,
 including replacements, and establish one task write per prompt.
 
-| Requested / effective | Scenario | Selector / main requests | Main catalog searches | Detail reads | Prompt slot / AE cold tokens |
+Columns: requested/effective mode; selector/main-agent requests; main-agent
+catalog searches; detail reads; prompt-slot / AE cold-start tokens.
+
+| Mode | Scenario | Sel/main req | Searches | Reads | Slot/cold tokens |
 | --- | --- | ---: | ---: | ---: | ---: |
 | 0 / 0 | Paired baseline | 0 / 4 | 1 | 1 | 269 / 3,943 |
 | 2 / 2 | Same prompt and profile | 1 / 3 | 0 | 1 | 186 / 3,483 |

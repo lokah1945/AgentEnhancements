@@ -33,13 +33,18 @@ sys.path.insert(0, str(UI / "scripts"))
 from api_config import (
     BUILTINS,
     ROOT,
+    BUILTIN_ANY_OF,
     cloud_available,
-    get_search_provider_key,
+    has_usable_key,
     read_config,
     redact,
     server_state,
     value,
 )
+
+
+# search-mcp provider names, aligned with api_config.BUILTIN_ANY_OF order.
+SEARCH_PROVIDERS = ("you", "tavily", "exa", "firecrawl", "newsapi", "serper")
 
 
 def public_name(server: str, tool: str) -> str:
@@ -153,22 +158,14 @@ class External:
             for arg in self.settings["command"]
         ]
         # MCP SDK supplies a minimal platform environment. Only references from
-        # this backend are added; unrelated API keys are never forwarded.
-        # For search providers, use round-robin to distribute load across keys.
+        # this backend are added; unrelated API keys are never forwarded. A
+        # stdio subprocess receives one secret at start (the stable first
+        # key of a multi-key reference): per-request rotation is only
+        # claimed for first-party adapters such as search-mcp.
         from project_paths import environment
         env = environment()
         for name, ref in self.settings.get("env", {}).items():
-            # Search provider round-robin: TAVILY_API_KEY, EXA_API_KEY, SERPER_API_KEY, YOU_API_KEY
-            if ref in ("TAVILY_API_KEY", "EXA_API_KEY", "SERPER_API_KEY", "YOU_API_KEY"):
-                provider = ref.replace("_API_KEY", "").lower()
-                rr_key = get_search_provider_key(provider)
-                if rr_key:
-                    env[name] = rr_key
-                else:
-                    # Fallback to static value if round-robin unavailable
-                    env[name] = value(ref, self.config)
-            else:
-                env[name] = value(ref, self.config)
+            env[name] = value(ref, self.config)
         params = StdioServerParameters(
             command=command[0], args=command[1:], env=env, cwd=str(ROOT)
         )
@@ -349,6 +346,26 @@ class Gateway:
                         + ", ".join(choices)
                         + "."
                     )
+                if name == "search-mcp" and original.name == "web":
+                    # Offer only providers with a usable key right now; the
+                    # call path re-validates against this fresh enum.
+                    providers = [
+                        provider
+                        for provider, ref in zip(
+                            SEARCH_PROVIDERS, BUILTIN_ANY_OF["search-mcp"]
+                        )
+                        if has_usable_key(ref, config)
+                    ]
+                    if not providers:
+                        continue
+                    tool.inputSchema["properties"]["provider"] = {
+                        "enum": providers,
+                        "default": providers[0],
+                    }
+                    tool.inputSchema["properties"]["freshness"] = {
+                        "enum": ["", "day", "week", "month", "year"],
+                        "default": "",
+                    }
                 result[tool.name] = (name, original.name, tool)
         result["ae_health"] = ("__gateway__", "ae_health", self._health_tool())
         return result

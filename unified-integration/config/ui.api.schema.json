@@ -10,12 +10,31 @@
   ],
   "properties": {
     "version": {
-      "const": 1
+      "enum": [
+        1,
+        2
+      ],
+      "description": "2 is current; 1 (string credentials) is accepted until `api_config.py migrate` upgrades the file."
     },
     "api_keys": {
       "type": "object",
+      "propertyNames": {
+        "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+      },
       "additionalProperties": {
-        "type": "string"
+        "oneOf": [
+          {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "string",
+            "description": "version 1 only"
+          }
+        ]
       }
     },
     "connections": {
@@ -55,10 +74,45 @@
             "additionalProperties": {
               "type": "string"
             }
+          },
+          "any_of": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "At least one reference must hold a usable key."
           }
         },
         "additionalProperties": true
       }
+    },
+    "preflight": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            0,
+            1,
+            2
+          ]
+        },
+        "sdk": {
+          "type": "string",
+          "description": "openai or anthropic (Mode 2)"
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "HTTPS origin/path without credentials (Mode 2)"
+        },
+        "model": {
+          "type": "string"
+        },
+        "api_key_ref": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+        }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": true

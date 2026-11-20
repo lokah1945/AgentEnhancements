@@ -641,6 +641,19 @@
       "implementation": "unified-integration/mcp-servers/google-news-mcp/server.py"
     },
     {
+      "id": "search-mcp",
+      "priority": "P0",
+      "category": "search",
+      "for_plugins": [],
+      "command": "python",
+      "args": ["-m", "search_mcp"],
+      "env_required": [],
+      "env_any_of": ["YOU_API_KEY", "TAVILY_API_KEY", "EXA_API_KEY", "FIRECRAWL_API_KEY", "NEWSAPI_KEY"],
+      "purpose": "First-party web search adapters (You.com, Tavily, Exa, Firecrawl, NewsAPI) with per-request multi-key rotation from ui.api.json; hidden until at least one provider key is set. Serper: UNVERIFIED, not offered.",
+      "status": "built",
+      "implementation": "unified-integration/mcp-servers/search-mcp/server.py"
+    },
+    {
       "id": "filesystem-mcp",
       "priority": "P0",
       "category": "core",

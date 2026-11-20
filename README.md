@@ -13,11 +13,11 @@ each component individually.
   records before name collisions are resolved.
 - **40 catalog plugins** from **22 unique upstream repositories**
   (`integrated`: 1, `integrated-ready`: 39); 21 entries have vendored source.
-- **40 MCP servers** (`built`: 10, `to-install`: 30); **9 bundled Python
-  backends**, 8 enabled by default before host configuration.
+- **41 MCP servers** (`built`: 11, `to-install`: 30); **10 bundled Python
+  backends**, 9 enabled by default before host configuration.
 - **8 built-in capabilities**; **16 default native skills**; 31 skills in the
   optional curated set.
-- **3,466 registry entries** in total; **11 vendored projects** listed in the
+- **3,467 registry entries** in total; **11 vendored projects** listed in the
   root license notice.
 
 <!-- ae:counts:summary:end -->
@@ -191,7 +191,7 @@ The setup script will:
    from 8 sources, official Anthropic copies winning name collisions) and
    regenerate `all-skills.json`
 3. Build the capability registry (`agent-registry.json`: skills + 40 plugins +
-   40 MCP servers + built-ins)
+   41 MCP servers + built-ins)
 4. Copy reference system-prompt files into `unified-integration/prompts/`
    (reference material — no agent is forced to load them; the written
    instruction files tell agents how to use the catalog)
@@ -583,13 +583,9 @@ how to discover skills, memory and compression on demand:
   - **Purpose:** Build headroom by default
   - **Default:** `1` (set to `0` to skip)
 
-- **Variable:** `AGENT_ENHANCEMENTS_MODEL_FILE`
-  - **Purpose:** Adaptive preflight model.json override (tests)
-  - **Default:** `.agentenhancements/config/model.json`
-
-- **Variable:** `AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY`
-  - **Purpose:** Adaptive preflight Mode 2 key
-  - **Default:** unset
+- **Variable:** `AGENT_ENHANCEMENTS_API_FILE`
+  - **Purpose:** `ui.api.json` override for isolated tests (keys, preflight)
+  - **Default:** `<checkout>/ui.api.json`
 
 - **Variable:** `AE_PREFLIGHT_DEADLINE_MS`
   - **Purpose:** Adaptive preflight phase deadline
@@ -624,7 +620,7 @@ Hooks save with `memory_type="session_context"` — no corrupt entries.
 
 `UserPromptSubmit` can delegate capability selection to an isolated selector
 model before the main agent's first inference. Off by default; configured in
-a checkout-local `.agentenhancements/config/model.json` with modes 0 (default
+the `preflight` section of the private `ui.api.json` with modes 0 (default
 discovery cards), 1 (host-native selection supplied by an adapter) and 2
 (custom OpenAI- or Anthropic-compatible endpoint). The selector returns
 typed registry IDs; AE validates identity and readiness locally and renders
@@ -642,7 +638,7 @@ All agent configurations are written in each tool's native format — see the
 
 ## MCP Servers
 
-`plugin-catalog/mcp-servers.json` is a **roadmap** of 40 candidate MCP servers
+`plugin-catalog/mcp-servers.json` is a **roadmap** of 41 candidate MCP servers
 (P0-P2). Setup registers one native gateway for the bundled backends. External
 servers need a verified installed executable, an explicit `command` array, and
 the required credential references in the private `ui.api.json`; a roadmap entry

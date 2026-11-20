@@ -1,28 +1,30 @@
 {
   "$schema": "./unified-integration/config/ui.api.schema.json",
-  "version": 1,
+  "version": 2,
   "_help": {
-    "api_keys": "Credentials for AgentEnhancements MCP services only. Empty or whitespace hides dependent cloud tools, even when a host agent has an environment key. Do not copy agent login/provider credentials here. Never commit this file.",
+    "api_keys": "Credentials for AgentEnhancements MCP services and the adaptive preflight selector. Each reference is an array of keys, e.g. \"TAVILY_API_KEY\": [\"key-a\", \"key-b\"]. [] or blank strings mean not configured and hide dependent cloud tools, even when a host agent has an environment key. First-party adapters (search-mcp) rotate keys per request; external stdio servers receive the first key. Do not copy agent login/provider credentials here. Never commit this file.",
     "connections": "MCP service endpoints, client IDs and model names only. OPENAI_BASE_URL applies to embeddings/vision MCP, not the agent's model provider, and includes /v1.",
-    "mcp": "Shared by any MCP-compatible agent. Built-in local tools start automatically. External entries stay hidden until their required references and an installed command array are configured. Changes are watched by the MCP gateway."
+    "preflight": "Adaptive preflight: mode 0 (off, default), 1 (host-native selection, Claude Code/Codex only) or 2 (custom model). Mode 2 needs an HTTPS endpoint, sdk openai|anthropic, a model and a key in api_keys[api_key_ref]. Ignored fields on modes 0/1 are kept but unused.",
+    "mcp": "Shared by any MCP-compatible agent. Built-in local tools start automatically; search-mcp appears when any_of its provider keys is set. External entries stay hidden until their required references and an installed command array are configured. Changes are watched by the MCP gateway."
   },
   "api_keys": {
-    "BING_IMAGE_API_KEY": "",
-    "ELEVENLABS_API_KEY": "",
-    "EXA_API_KEY": "",
-    "FIGMA_TOKEN": "",
-    "FIRECRAWL_API_KEY": "",
-    "GITHUB_TOKEN": "",
-    "GOOGLE_OAUTH_CLIENT_SECRET": "",
-    "HEYGEN_API_KEY": "",
-    "LINEAR_API_KEY": "",
-    "MICROSOFT_CLIENT_SECRET": "",
-    "NEO4J_PASSWORD": "",
-    "NEWSAPI_KEY": "",
-    "OPENAI_API_KEY": "",
-    "SERPER_API_KEY": "",
-    "TAVILY_API_KEY": "",
-    "YOU_API_KEY": ""
+    "BING_IMAGE_API_KEY": [],
+    "ELEVENLABS_API_KEY": [],
+    "EXA_API_KEY": [],
+    "FIGMA_TOKEN": [],
+    "FIRECRAWL_API_KEY": [],
+    "GITHUB_TOKEN": [],
+    "GOOGLE_OAUTH_CLIENT_SECRET": [],
+    "HEYGEN_API_KEY": [],
+    "LINEAR_API_KEY": [],
+    "MICROSOFT_CLIENT_SECRET": [],
+    "NEO4J_PASSWORD": [],
+    "NEWSAPI_KEY": [],
+    "OPENAI_API_KEY": [],
+    "PREFLIGHT_API_KEY": [],
+    "SERPER_API_KEY": [],
+    "TAVILY_API_KEY": [],
+    "YOU_API_KEY": []
   },
   "connections": {
     "GOOGLE_OAUTH_CLIENT_ID": "",
@@ -38,6 +40,13 @@
     "AGENT_BROWSER_LOG_LEVEL": "",
     "AGENT_BROWSER_CHROMIUM_PATH": ""
   },
+  "preflight": {
+    "mode": 0,
+    "sdk": "",
+    "endpoint": "",
+    "model": "",
+    "api_key_ref": "PREFLIGHT_API_KEY"
+  },
   "mcp": {
     "serper-mcp": {
       "enabled": true,
@@ -45,14 +54,11 @@
         "SERPER_API_KEY"
       ],
       "optional": [],
-      "command": [
-        "npx",
-        "-y",
-        "serper-mcp"
-      ],
+      "command": [],
       "env": {
         "SERPER_API_KEY": "SERPER_API_KEY"
-      }
+      },
+      "note": "Catalog entry only. No verified upstream MCP package; the previous npx package name is unpublished/nonexistent. Use search-mcp (You.com adapter) or configure a verified installed command."
     },
     "you-mcp": {
       "enabled": true,
@@ -60,14 +66,11 @@
         "YOU_API_KEY"
       ],
       "optional": [],
-      "command": [
-        "npx",
-        "-y",
-        "you-mcp"
-      ],
+      "command": [],
       "env": {
         "YOU_API_KEY": "YOU_API_KEY"
-      }
+      },
+      "note": "Catalog entry only. No verified upstream MCP package; the previous npx package name is unpublished/nonexistent. Use search-mcp (You.com adapter) or configure a verified installed command."
     },
     "tavily-mcp": {
       "enabled": true,
@@ -400,6 +403,18 @@
       "env": {
         "LANGUAGE_TOOL_URL": "LANGUAGE_TOOL_URL"
       }
+    },
+    "search-mcp": {
+      "enabled": true,
+      "required": [],
+      "optional": [],
+      "any_of": [
+        "YOU_API_KEY",
+        "TAVILY_API_KEY",
+        "EXA_API_KEY",
+        "FIRECRAWL_API_KEY",
+        "NEWSAPI_KEY"
+      ]
     }
   }
 }

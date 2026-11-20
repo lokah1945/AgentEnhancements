@@ -165,21 +165,20 @@ class SelectorFixture:
 
 
 class PreflightTestCase(unittest.TestCase):
-    """Common isolation: fresh module, temp model.json, empty ui.api.json."""
+    """Common isolation: fresh module, temp ui.api.json carrying the
+    preflight section and a fixture PREFLIGHT_API_KEY."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        self.model_file = self.root / "model.json"
+        self.api_file = self.root / "ui.api.json"
         self.env = {
             "AGENT_ENHANCEMENTS_STATE_DIR": str(self.root / 'ae-state'),
-            "AGENT_ENHANCEMENTS_MODEL_FILE": str(self.model_file),
-            "AGENT_ENHANCEMENTS_API_FILE": str(self.root / "ui.api.json"),
+            "AGENT_ENHANCEMENTS_API_FILE": str(self.api_file),
             "AGENT_MEMORY_ROOT": str(self.root / "memory"),
             "HOME": str(self.root / "home"),
             "XDG_CONFIG_HOME": str(self.root / "home" / ".config"),
-            "AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY": "fixture-key",
         }
         for key, value in self.env.items():
             os.environ[key] = value
@@ -189,8 +188,28 @@ class PreflightTestCase(unittest.TestCase):
         for key in self.env:
             os.environ.pop(key, None)
 
+    def _api_doc(self):
+        if self.api_file.exists():
+            return json.loads(self.api_file.read_text())
+        return {"version": 2, "api_keys": {"PREFLIGHT_API_KEY": ["fixture-key"]},
+                "connections": {}, "mcp": {}}
+
     def write_model(self, document):
-        self.model_file.write_text(json.dumps(document))
+        """Write the ui.api.json "preflight" section (key kept separately)."""
+        doc = self._api_doc()
+        doc["preflight"] = document
+        self.api_file.write_text(json.dumps(doc))
+
+    def write_preflight_text(self, text):
+        """Raw section text, for parser-level cases (broken JSON, duplicates)."""
+        self.api_file.write_text(
+            '{"version": 2, "api_keys": {"PREFLIGHT_API_KEY": ["fixture-key"]}, '
+            '"connections": {}, "mcp": {}, "preflight": ' + text + '}')
+
+    def set_keys(self, reference, keys):
+        doc = self._api_doc()
+        doc["api_keys"][reference] = list(keys)
+        self.api_file.write_text(json.dumps(doc))
 
     def runtime_event(self, event, agent="codex", env=None):
         merged = dict(self.env)
@@ -221,7 +240,7 @@ class PreflightTestCase(unittest.TestCase):
 
 class ModelConfigTests(PreflightTestCase):
     def _check(self, content, mode, diagnosis=""):
-        self.model_file.write_text(content)
+        self.write_preflight_text(content)
         config = self.module.load_model_config()
         self.assertEqual(config.mode, mode, content)
         if diagnosis:
@@ -234,64 +253,75 @@ class ModelConfigTests(PreflightTestCase):
         self.assertEqual(self.module.load_model_config().diagnosis, "")
 
     def test_valid_modes(self):
-        self._check('{"adaptive_preflight_mode": 0}', 0)
-        self._check('{"adaptive_preflight_mode": 1}', 1)
-        self._check('{"adaptive_preflight_mode": 2, "endpoint": '
+        self._check('{"mode": 0}', 0)
+        self._check('{"mode": 1}', 1)
+        self._check('{"mode": 2, "endpoint": '
                     '"https://openrouter.ai/api/v1", "sdk": "openai", '
                     '"model": "provider/model"}', 2)
 
     def test_mode_must_be_exact_integer(self):
         for bad in ("true", '"0"', '"2"', "2.0", "3", "-1", "null"):
-            self._check(f'{{"adaptive_preflight_mode": {bad}}}', 0,
+            self._check(f'{{"mode": {bad}}}', 0,
                         "mode_not_0_1_or_2")
 
     def test_mode2_field_validation(self):
         cases = [
-            '{"adaptive_preflight_mode": 2}',
-            '{"adaptive_preflight_mode": 2, "sdk": "openai", "model": "x"}',
-            '{"adaptive_preflight_mode": 2, "endpoint": "http://h.example", '
+            '{"mode": 2}',
+            '{"mode": 2, "sdk": "openai", "model": "x"}',
+            '{"mode": 2, "endpoint": "http://h.example", '
             '"sdk": "openai", "model": "x"}',
-            '{"adaptive_preflight_mode": 2, "endpoint": "ftp://h.example", '
+            '{"mode": 2, "endpoint": "ftp://h.example", '
             '"sdk": "openai", "model": "x"}',
-            '{"adaptive_preflight_mode": 2, "endpoint": '
+            '{"mode": 2, "endpoint": '
             '"https://user:pw@h.example", "sdk": "openai", "model": "x"}',
         ]
         for content in cases:
             self._check(content, 0, "endpoint")
-        self._check('{"adaptive_preflight_mode": 2, "endpoint": '
+        self._check('{"mode": 2, "endpoint": '
                     '"https://h.example", "sdk": "cohere", "model": "x"}',
                     0, "sdk")
-        self._check('{"adaptive_preflight_mode": 2, "endpoint": '
+        self._check('{"mode": 2, "endpoint": '
                     '"https://h.example", "sdk": "anthropic"}', 0, "model")
 
     def test_duplicate_fields_rejected(self):
-        self._check('{"adaptive_preflight_mode": 0, '
-                    '"adaptive_preflight_mode": 1}', 0, "model_json_invalid")
+        self._check('{"mode": 0, '
+                    '"mode": 1}', 0, "ui_api_json_invalid")
 
     def test_broken_json_and_non_object_rejected(self):
-        self._check("{broken", 0, "model_json_invalid")
-        self._check("[]", 0, "not_an_object")
-        self._check('"mode 2 please"', 0, "not_an_object")
+        self._check("{broken", 0, "ui_api_json_invalid")
+        # A non-object section invalidates the whole file (fail closed).
+        self._check("[]", 0, "ui_api_json_invalid")
+        self._check('"mode 2 please"', 0, "ui_api_json_invalid")
+
+    def test_missing_section_is_silent_mode_0(self):
+        self.set_keys("PREFLIGHT_API_KEY", ["fixture-key"])
+        config = self.module.load_model_config()
+        self.assertEqual((config.mode, config.diagnosis), (0, ""))
+
+    def test_mode2_key_reference_validation(self):
+        base = ('{"mode": 2, "endpoint": "https://h.example", "sdk": "openai", '
+                '"model": "x", "api_key_ref": %s}')
+        for bad in ('"lower_case"', '""', "7", '"WITH SPACE"'):
+            self._check(base % bad, 0, "api_key_ref")
+        self._check(base % '"CUSTOM_SELECTOR_KEY"', 2)
 
     def test_mode_0_and_1_ignore_custom_fields(self):
-        self._check('{"adaptive_preflight_mode": 1, "endpoint": '
+        self._check('{"mode": 1, "endpoint": '
                     '"http://ignored.example", "sdk": "bogus", "model": ""}', 1)
-        self._check('{"adaptive_preflight_mode": 0, "endpoint": "nope"}', 0)
+        self._check('{"mode": 0, "endpoint": "nope"}', 0)
 
     def test_config_is_reread_per_call(self):
-        self._check('{"adaptive_preflight_mode": 0}', 0)
-        self._check('{"adaptive_preflight_mode": 1}', 1)
-        self.model_file.unlink()
+        self._check('{"mode": 0}', 0)
+        self._check('{"mode": 1}', 1)
+        self.api_file.unlink()
         self.assertEqual(self.module.load_model_config().mode, 0)
 
-    def test_default_path_follows_checkout_state_and_ignores_global_xdg(self):
-        os.environ.pop("AGENT_ENHANCEMENTS_MODEL_FILE")
+    def test_legacy_checkout_model_json_is_never_read(self):
         home = self.root / 'ae-state/config'
         home.mkdir(parents=True, exist_ok=True)
         (home / "model.json").write_text('{"adaptive_preflight_mode": 1}')
-        self.assertEqual(self.module.load_model_config().mode, 1)
-        (home / "model.json").unlink()
         self.assertEqual(self.module.load_model_config().mode, 0)
+        self.assertEqual(self.module.model_config_path(), self.api_file)
 
 
 # ---------------------------------------------------------------------------
@@ -407,7 +437,8 @@ class ExactIdResolutionTests(PreflightTestCase):
                                                    offset=0, limit=10)
         self.assertEqual([c["id"] for c in first["cards"]],
                          [c["id"] for c in again["cards"]])
-        self.assertEqual(first["matched"], 40)
+        catalog = json.loads((SCRIPTS.parents[1] / "plugin-catalog/mcp-servers.json").read_text())
+        self.assertEqual(first["matched"], len(catalog["servers"]))
         self.assertTrue(first["has_more"])
         ids = [c["id"] for c in first["cards"]]
         self.assertEqual(ids, sorted(ids))
@@ -647,21 +678,21 @@ class Mode0ParityTests(PreflightTestCase):
         self.assertIn("skill candidates", self.context_of(out))
 
     def test_explicit_mode_0_renders_legacy_cards(self):
-        self.write_model({"adaptive_preflight_mode": 0})
+        self.write_model({"mode": 0})
         rc, out, err = self.runtime_event(self.event)
         self.assertEqual(rc, 0, err)
         self.assertEqual(err, "")
         self.assertEqual(self.context_of(out), self.legacy_render())
 
     def test_invalid_config_renders_legacy_cards_with_diagnosis(self):
-        self.model_file.write_text('{"adaptive_preflight_mode": "2"}')
+        self.write_preflight_text('{"mode": "2"}')
         rc, out, err = self.runtime_event(self.event)
         self.assertEqual(rc, 0)
         self.assertEqual(self.context_of(out), self.legacy_render())
-        self.assertIn("model.json rejected", err)
+        self.assertIn("preflight config rejected", err)
 
     def test_mode2_invalid_settings_never_touch_the_network(self):
-        self.write_model({"adaptive_preflight_mode": 2,
+        self.write_model({"mode": 2,
                           "endpoint": "http://insecure.example",
                           "sdk": "openai", "model": "x"})
         with patch.object(socket, "socket") as blocked:
@@ -673,11 +704,11 @@ class Mode0ParityTests(PreflightTestCase):
         self.assertIn("endpoint", result.fallback_reason)
 
     def test_memory_effect_runs_exactly_once_per_mode(self):
-        for mode_file in (None, {"adaptive_preflight_mode": 0}):
+        for mode_file in (None, {"mode": 0}):
             if mode_file:
                 self.write_model(mode_file)
             else:
-                self.model_file.unlink(missing_ok=True)
+                self.api_file.unlink(missing_ok=True)
             rc, out, err = self.runtime_event(self.event)
             self.assertEqual(rc, 0, err)
             rows = [row for row in self.memory_rows()
@@ -711,7 +742,7 @@ class Mode0ParityTests(PreflightTestCase):
 class Mode1Tests(PreflightTestCase):
     def setUp(self):
         super().setUp()
-        self.write_model({"adaptive_preflight_mode": 1})
+        self.write_model({"mode": 1})
         self.event = {
             "hook_event_name": "UserPromptSubmit",
             "session_id": "mode1-session",
@@ -823,7 +854,7 @@ class Mode1Tests(PreflightTestCase):
     def test_mode1_never_switches_to_mode2(self):
         # Even with a fully configured custom endpoint stored alongside,
         # a failing Mode 1 stays on Mode 0 for the turn (review 14).
-        self.write_model({"adaptive_preflight_mode": 1,
+        self.write_model({"mode": 1,
                           "endpoint": "https://openrouter.ai/api/v1",
                           "sdk": "openai", "model": "provider/free"})
         with patch.object(socket, "socket") as blocked:
@@ -869,7 +900,7 @@ class Mode2EndToEndTests(PreflightTestCase):
 
     def start(self, responses, delay=0.0):
         self.fixture = SelectorFixture(responses, delay=delay)
-        self.write_model({"adaptive_preflight_mode": 2,
+        self.write_model({"mode": 2,
                           "endpoint": self.fixture.endpoint,
                           "sdk": "openai",
                           "model": "fixture/selector"})
@@ -988,8 +1019,9 @@ class Mode2EndToEndTests(PreflightTestCase):
 
     def test_missing_key_falls_back_before_any_request(self):
         fixture = self.start([SelectorFixture.selection("abstain")])
+        self.set_keys("PREFLIGHT_API_KEY", ["", "   "])
         rc, out, err = self.run_event(
-            env={"AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY": ""})
+            env={"AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY": "ambient-env-is-ignored"})
         self.assertEqual(self.context_of(out), self.legacy)
         self.assertIn("api_key_unavailable", err)
         self.assertEqual(fixture.requests, [])
@@ -1051,7 +1083,7 @@ class AnthropicProtocolTests(PreflightTestCase):
             "stop_reason": "end_turn",
         }])
         self.addCleanup(fixture.stop)
-        self.write_model({"adaptive_preflight_mode": 2,
+        self.write_model({"mode": 2,
                           "endpoint": fixture.endpoint_base,
                           "sdk": "anthropic",
                           "model": "fixture/claude"})
@@ -1084,7 +1116,7 @@ class AnthropicProtocolTests(PreflightTestCase):
         self.addCleanup(fixture.stop)
         # A 302 makes urllib's no-redirect handler raise HTTPError 302.
         fixture.responses.append((302, {}))
-        self.write_model({"adaptive_preflight_mode": 2,
+        self.write_model({"mode": 2,
                           "endpoint": fixture.endpoint,
                           "sdk": "openai", "model": "fixture"})
         event = {
@@ -1108,36 +1140,41 @@ class AnthropicProtocolTests(PreflightTestCase):
 
 
 class CredentialResolverTests(PreflightTestCase):
-    def test_env_var_wins(self):
-        os.environ["AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY"] = "from-env"
-        self.assertEqual(
-            self.module.resolve_api_key("https://any.example/api/v1"),
-            "from-env")
+    def mode2(self, reference="PREFLIGHT_API_KEY"):
+        self.write_model({"mode": 2, "endpoint": "https://openrouter.example/api/v1",
+                          "sdk": "openai", "model": "provider/free",
+                          "api_key_ref": reference})
+        return self.module.load_model_config()
 
-    def test_key_file_requires_owner_only_permissions(self):
-        os.environ.pop("AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY", None)
+    def test_key_comes_only_from_the_ui_api_reference(self):
+        config = self.mode2("CUSTOM_SELECTOR_KEY")
+        self.assertEqual(config.api_key_ref, "CUSTOM_SELECTOR_KEY")
+        os.environ["AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY"] = "from-env"
+        self.addCleanup(os.environ.pop, "AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY", None)
+        self.assertEqual(self.module.resolve_api_key(config), "",
+                         "an environment key must never be inherited")
+        self.set_keys("CUSTOM_SELECTOR_KEY", ["k-one", "k-two"])
+        picked = [self.module.resolve_api_key(config) for _ in range(4)]
+        self.assertEqual(sorted(set(picked)), ["k-one", "k-two"])
+        self.assertNotEqual(picked[0], picked[1], "one key per prompt, round-robin")
+
+    def test_legacy_key_file_is_not_a_runtime_source(self):
+        config = self.mode2()
+        self.set_keys("PREFLIGHT_API_KEY", [])
         directory = self.module.config_dir()
         directory.mkdir(parents=True, exist_ok=True)
         key_file = directory / "preflight.key"
-        key_file.write_text("file-secret\nsecond-line-ignored\n")
+        key_file.write_text("file-secret\n")
         key_file.chmod(0o600)
-        self.assertEqual(
-            self.module.resolve_api_key("https://127.0.0.1:9/v1"),
-            "file-secret")
-        key_file.chmod(0o644)
-        self.assertEqual(
-            self.module.resolve_api_key("https://127.0.0.1:9/v1"), "",
-            "a group/other-readable key file must be refused")
+        self.assertEqual(self.module.resolve_api_key(config), "")
 
     def test_no_secret_leaks_into_status_report(self):
-        self.write_model({"adaptive_preflight_mode": 2,
-                          "endpoint": "https://openrouter.example/api/v1",
-                          "sdk": "openai", "model": "provider/free"})
-        os.environ["AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY"] = "super-secret"
+        self.mode2()
+        self.set_keys("PREFLIGHT_API_KEY", ["super-secret"])
         report = json.dumps(self.module.status_report())
         self.assertIn("api_key_present", report)
         self.assertNotIn("super-secret", report)
-        os.environ["AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY"] = ""
+        self.set_keys("PREFLIGHT_API_KEY", [])
         report = self.module.status_report()
         self.assertFalse(report["api_key_present"])
 
@@ -1150,18 +1187,18 @@ class CredentialResolverTests(PreflightTestCase):
 class LiveModelTests(unittest.TestCase):
     @unittest.skipUnless(
         os.environ.get("AE_PREFLIGHT_LIVE") == "1",
-        "set AE_PREFLIGHT_LIVE=1 (and provide a real model.json + key) "
+        "set AE_PREFLIGHT_LIVE=1 (and configure ui.api.json preflight Mode 2 + key) "
         "for live selector calls")
     def test_live_selection_or_abstain(self):
         module = load_module("adaptive_preflight_live",
                              SCRIPTS / "adaptive_preflight.py")
         config = module.load_model_config()
         self.assertEqual(config.mode, 2,
-                         "live check needs a real user-scope model.json")
+                         "live check needs ui.api.json preflight mode 2")
         deadline = module.Deadline(8.0)
         selection = module.run_custom_selection(
             PROMPT, config, deadline,
-            module.resolve_api_key(config.endpoint))
+            module.resolve_api_key(config))
         self.assertIn(selection.decision, ("selected", "abstain"))
         if selection.decision == "selected":
             items, unmet = module.build_package(selection)

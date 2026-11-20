@@ -206,10 +206,12 @@ def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
                                       f'.ffmpeg_probe({json.dumps({"path": str(clip)})})'}))
     main = MainFixture(steps)
     try:
-        model_file, api_file = case / "model.json", case / "ui.api.json"
-        write_json(model_file, {"adaptive_preflight_mode": mode, "endpoint": selector.endpoint,
-                               "sdk": "openai", "model": "fixture-selector"})
-        write_json(api_file, {})
+        api_file = case / "ui.api.json"
+        write_json(api_file, {"version": 2, "connections": {}, "mcp": {},
+                              "api_keys": {"PREFLIGHT_API_KEY": ["synthetic-selector-only"]},
+                              "preflight": {"mode": mode, "endpoint": selector.endpoint,
+                                            "sdk": "openai", "model": "fixture-selector",
+                                            "api_key_ref": "PREFLIGHT_API_KEY"}})
         cfg = case / "config" / "opencode"
         cfg.mkdir(parents=True)
         diagnostics = case / "host.jsonl"
@@ -239,9 +241,7 @@ def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
         )
         python = str(ROOT / ".agentenhancements/runtime/venv/bin/python")
         env = {**os.environ,
-               "AGENT_ENHANCEMENTS_MODEL_FILE": str(model_file),
                "AGENT_ENHANCEMENTS_API_FILE": str(api_file),
-               "AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY": "synthetic-selector-only",
                "AGENT_MEMORY_ROOT": str(case / "memory"),
                "TASK_OBSERVER_WORKSPACE": str(case / "observer"),
                "SSL_CERT_FILE": str(selector.ca),

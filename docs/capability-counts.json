@@ -1,24 +1,24 @@
 {
   "built_in_capabilities": 8,
   "mcp": {
-    "bundled_backends": 9,
+    "bundled_backends": 10,
     "by_priority": {
-      "P0": 7,
+      "P0": 8,
       "P1": 22,
       "P2": 11
     },
     "by_status": {
-      "built": 10,
+      "built": 11,
       "to-install": 30
     },
     "default_disabled": [
       "task-router-mcp"
     ],
-    "default_enabled_backends": 8,
+    "default_enabled_backends": 9,
     "external_built": [
       "agent_browser"
     ],
-    "total": 40
+    "total": 41
   },
   "native": {
     "curated_skills": 31,
@@ -50,7 +50,7 @@
     "unique_upstreams": 22,
     "vendored_entries": 21
   },
-  "registry_entries": 3466,
+  "registry_entries": 3467,
   "skills": {
     "by_source": {
       "ECC": 314,

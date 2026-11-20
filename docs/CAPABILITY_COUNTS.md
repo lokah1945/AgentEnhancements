@@ -17,11 +17,11 @@ is [capability-counts.json](capability-counts.json). CI runs `--check`.
   records before name collisions are resolved.
 - **40 catalog plugins** from **22 unique upstream repositories**
   (`integrated`: 1, `integrated-ready`: 39); 21 entries have vendored source.
-- **40 MCP servers** (`built`: 10, `to-install`: 30); **9 bundled Python
-  backends**, 8 enabled by default before host configuration.
+- **41 MCP servers** (`built`: 11, `to-install`: 30); **10 bundled Python
+  backends**, 9 enabled by default before host configuration.
 - **8 built-in capabilities**; **16 default native skills**; 31 skills in the
   optional curated set.
-- **3,466 registry entries** in total; **11 vendored projects** listed in the
+- **3,467 registry entries** in total; **11 vendored projects** listed in the
   root license notice.
 
 ## Skill records by source
@@ -62,14 +62,14 @@ name; raw records are not additional usable skills.
 
 | Status | Entries |
 | --- | ---: |
-| built | 10 |
+| built | 11 |
 | to-install | 30 |
 
 ## MCP priorities
 
 | Priority | Entries |
 | --- | ---: |
-| P0 | 7 |
+| P0 | 8 |
 | P1 | 22 |
 | P2 | 11 |
 

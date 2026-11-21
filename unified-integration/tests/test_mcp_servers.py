@@ -281,6 +281,19 @@ class TestVision(unittest.TestCase):
             draw.text((20, 25), "AE7", fill=(0, 0, 0))
         canvas.save(cls.text)
 
+    def test_image_paths_follow_media_roots_and_must_be_images(self):
+        # Final audit 2026-11-20 (P2): any readable file reached tesseract,
+        # and describe() uploaded arbitrary bytes as image/png to the cloud.
+        secret = self.tmp / "notes.txt"
+        secret.write_text("not an image\n")
+        for tool in ("ocr", "describe"):
+            result = self.mod.TOOLS[tool](str(secret))
+            self.assertIn("not a supported image", result.get("error", ""), tool)
+        with patch.object(self.mod, "_allowed_roots", return_value=[Path("/nonexistent-root")]):
+            result = self.mod.TOOLS["describe"](str(self.flat))
+            self.assertIn("outside the allowed roots", result.get("error", ""))
+        self.assertNotIn("error", self.mod.TOOLS["describe"](str(self.flat)))
+
     def test_compare_identical_beats_different(self):
         same = self.mod.TOOLS["compare"](str(self.flat), str(self.flat))["similarity"]
         diff = self.mod.TOOLS["compare"](str(self.flat), str(self.text))["similarity"]

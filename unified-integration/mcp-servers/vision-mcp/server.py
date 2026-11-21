@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -49,16 +50,42 @@ def _tool(fn):
     return mcp.tool()(fn)
 
 
+def _allowed_roots() -> list[Path]:
+    """Media roots shared with ffmpeg-mcp: cwd, /tmp, AE_FFMPEG_ALLOWED_ROOTS."""
+    roots = [Path.cwd().resolve(), Path("/tmp")]
+    for item in os.environ.get("AE_FFMPEG_ALLOWED_ROOTS", "").split(os.pathsep):
+        if item.strip():
+            roots.append(Path(item.strip()).resolve())
+    return roots
+
+
+# Leading bytes of the formats Pillow/tesseract/vision models accept here.
+_IMAGE_MAGIC = (b"\x89PNG\r\n\x1a\n", b"\xff\xd8\xff", b"GIF87a", b"GIF89a",
+                b"BM", b"II*\x00", b"MM\x00*")
+
+
+def _is_image(data: bytes) -> bool:
+    return data.startswith(_IMAGE_MAGIC) or (data[:4] == b"RIFF" and data[8:12] == b"WEBP")
+
+
 def _load_image(raw: str) -> tuple[Path | None, bytes | None, str | None]:
     if not raw or not isinstance(raw, str):
         return None, None, "image_path must be a non-empty string"
     path = Path(raw).expanduser().resolve()
     if not path.is_file():
         return None, None, f"file not found: {raw}"
+    allowed = _allowed_roots()
+    if not any(path.is_relative_to(root) for root in allowed):
+        return None, None, (f"path {raw} is outside the allowed roots "
+                            f"({', '.join(str(r) for r in allowed)}); extend via "
+                            f"AE_FFMPEG_ALLOWED_ROOTS")
     if path.stat().st_size > MAX_BYTES:
         return None, None, (f"file larger than {MAX_BYTES // (1024 * 1024)} MB; "
                             f"downscale first")
     data = path.read_bytes()
+    if not _is_image(data):
+        # Never hand arbitrary files to tesseract or a cloud vision API.
+        return None, None, f"{raw} is not a supported image (png, jpeg, gif, bmp, tiff, webp)"
     # Pillow import is deferred: health() must work without PIL installed.
     return path, data, None
 

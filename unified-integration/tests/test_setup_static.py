@@ -28,6 +28,38 @@ class SetupStaticTests(unittest.TestCase):
                 rc, out, err = run(["bash", "-n", str(sh)])
                 self.assertEqual(rc, 0, f"{sh}: {err}")
 
+    def test_setup_prompts_never_rewrites_existing_prompt_files(self):
+        # Final audit 2026-11-20 (P2): every setup run copied a third-party
+        # prompt picked by a locale-dependent glob over the tracked
+        # prompts/*.txt files, leaving the checkout dirty.
+        import tempfile
+        functions = re.findall(
+            r"^(?:install_prompt|setup_prompts)\(\) \{.*?^\}", self.src, re.S | re.M)
+        self.assertEqual(len(functions), 2)
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            source = base / "system-prompts-and-models-of-ai-tools/Open Source prompts/Codex CLI"
+            source.mkdir(parents=True)
+            (source / "Prompt.txt").write_text("vendored prompt\n")
+            prompts = base / "unified-integration/prompts"
+            prompts.mkdir(parents=True)
+            kept = prompts / "codex-system-prompt.txt"
+            kept.write_text("tracked prompt\n")
+            script = "\n".join([
+                "set -euo pipefail", "shopt -s globstar nullglob",
+                "log_info() { :; }; log_success() { :; }; log_warn() { :; }",
+                *functions,
+                f"BASE_DIR={str(base)!r}; UNIFIED_DIR={str(base / 'unified-integration')!r}",
+                "AGENTS=(codex)", "setup_prompts", "rm \"$UNIFIED_DIR/prompts/codex-system-prompt.txt\"",
+                "setup_prompts"])
+            first = subprocess.run(["bash", "-c", "\n".join(script.split("\n")[:-2])],
+                                   capture_output=True, text=True)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            self.assertEqual(kept.read_text(), "tracked prompt\n")
+            second = subprocess.run(["bash", "-c", script], capture_output=True, text=True)
+            self.assertEqual(second.returncode, 0, second.stderr)
+            self.assertEqual(kept.read_text(), "vendored prompt\n")
+
     def test_globstar_enabled(self):
         self.assertRegex(self.src, r"shopt -s globstar")
 

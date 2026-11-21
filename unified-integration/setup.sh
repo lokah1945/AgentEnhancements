@@ -149,6 +149,21 @@ detect_agents() {
     fi
 }
 
+# Install a reference system prompt without rewriting an existing copy.
+# The prompts/ files are tracked; refreshing them on every run picked a
+# locale-dependent glob match and dirtied the checkout (final audit
+# 2026-11-20). A re-vendor that wants a new prompt replaces the file in a
+# reviewed commit.
+install_prompt() {
+    local source="$1" destination="$2"
+    if [ -e "$destination" ]; then
+        log_info "Kept existing $(basename "$destination")"
+        return 0
+    fi
+    cp "$source" "$destination"
+    log_success "Installed $(basename "$destination") from $source"
+}
+
 # Setup system prompts for each agent
 setup_prompts() {
     log_info "Setting up system prompts for all agents..."
@@ -167,8 +182,7 @@ setup_prompts() {
                     fi
                 done
                 if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
-                    cp "$prompt_file" "$UNIFIED_DIR/prompts/claude-code-system-prompt.txt"
-                    log_success "Claude Code system prompt configured from $prompt_file"
+                    install_prompt "$prompt_file" "$UNIFIED_DIR/prompts/claude-code-system-prompt.txt"
                 else
                     log_warn "Claude Code prompt not found in $PROMPTS_DIR/Anthropic/"
                 fi
@@ -184,8 +198,7 @@ setup_prompts() {
                     fi
                 done
                 if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
-                    cp "$prompt_file" "$UNIFIED_DIR/prompts/codex-system-prompt.txt"
-                    log_success "Codex system prompt configured from $prompt_file"
+                    install_prompt "$prompt_file" "$UNIFIED_DIR/prompts/codex-system-prompt.txt"
                 else
                     log_warn "Codex prompt not found in $PROMPTS_DIR/OpenAI/ or $PROMPTS_DIR/Open Source prompts/Codex CLI/"
                 fi
@@ -200,8 +213,7 @@ setup_prompts() {
                     fi
                 done
                 if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
-                    cp "$prompt_file" "$UNIFIED_DIR/prompts/opencode-system-prompt.txt"
-                    log_success "OpenCode system prompt configured from $prompt_file"
+                    install_prompt "$prompt_file" "$UNIFIED_DIR/prompts/opencode-system-prompt.txt"
                 else
                     log_warn "OpenCode prompt not found"
                 fi
@@ -216,8 +228,7 @@ setup_prompts() {
                     fi
                 done
                 if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
-                    cp "$prompt_file" "$UNIFIED_DIR/prompts/cursor-system-prompt.txt"
-                    log_success "Cursor system prompt configured from $prompt_file"
+                    install_prompt "$prompt_file" "$UNIFIED_DIR/prompts/cursor-system-prompt.txt"
                 else
                     log_warn "Cursor prompt not found in $PROMPTS_DIR/Cursor Prompts/"
                 fi
@@ -232,8 +243,7 @@ setup_prompts() {
                     fi
                 done
                 if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
-                    cp "$prompt_file" "$UNIFIED_DIR/prompts/gemini-cli-system-prompt.txt"
-                    log_success "Gemini CLI system prompt configured from $prompt_file"
+                    install_prompt "$prompt_file" "$UNIFIED_DIR/prompts/gemini-cli-system-prompt.txt"
                 else
                     log_warn "Gemini CLI prompt not found in $PROMPTS_DIR/Google/"
                 fi
@@ -248,8 +258,7 @@ setup_prompts() {
                     fi
                 done
                 if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
-                    cp "$prompt_file" "$UNIFIED_DIR/prompts/windsurf-system-prompt.txt"
-                    log_success "Windsurf system prompt configured from $prompt_file"
+                    install_prompt "$prompt_file" "$UNIFIED_DIR/prompts/windsurf-system-prompt.txt"
                 else
                     log_warn "Windsurf prompt not found in $PROMPTS_DIR/Windsurf/"
                 fi
@@ -264,8 +273,7 @@ setup_prompts() {
                     fi
                 done
                 if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
-                    cp "$prompt_file" "$UNIFIED_DIR/prompts/kiro-system-prompt.txt"
-                    log_success "Kiro system prompt configured from $prompt_file"
+                    install_prompt "$prompt_file" "$UNIFIED_DIR/prompts/kiro-system-prompt.txt"
                 else
                     log_warn "Kiro prompt not found in $PROMPTS_DIR/Kiro/"
                 fi

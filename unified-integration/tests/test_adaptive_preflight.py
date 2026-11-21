@@ -1181,6 +1181,16 @@ class CredentialResolverTests(PreflightTestCase):
         key_file.chmod(0o600)
         self.assertEqual(self.module.resolve_api_key(config), "")
 
+    def test_status_never_reports_mode1_as_effective_without_an_adapter(self):
+        # Final audit 2026-11-20 (P2): doctor printed "mode 1" although no
+        # installed adapter supplies ae_native_selection, so every prompt
+        # actually ran Mode 0.
+        self.write_model({"mode": 1})
+        report = self.module.status_report()
+        self.assertEqual(report["requested_mode"], 1)
+        self.assertEqual(report["effective_mode"], 0)
+        self.assertIn("mode1_native_selection_unavailable", report["diagnosis"])
+
     def test_no_secret_leaks_into_status_report(self):
         self.mode2()
         self.set_keys("PREFLIGHT_API_KEY", ["super-secret"])

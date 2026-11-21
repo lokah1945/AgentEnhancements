@@ -1180,6 +1180,11 @@ def status_report() -> Dict[str, Any]:
         "effective_mode": config.mode if not config.diagnosis else MODE_DISABLED,
         "diagnosis": config.diagnosis,
     }
+    if config.mode == MODE_NATIVE and not config.diagnosis:
+        # No shipped adapter supplies ae_native_selection (no host offers a
+        # pre-inference selection surface), so every prompt runs Mode 0.
+        report["effective_mode"] = MODE_DISABLED
+        report["diagnosis"] = "mode1_native_selection_unavailable"
     if config.mode == MODE_CUSTOM and not config.diagnosis:
         report["endpoint"] = config.endpoint
         report["sdk"] = config.sdk

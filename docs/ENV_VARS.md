@@ -29,10 +29,12 @@ history immediately.
     deterministic `local` embedder and honest `basic_metadata` describe mode.
 
 - **Var:** `AE_FFMPEG_ALLOWED_ROOTS`
-  - **Server:** ffmpeg-mcp
+  - **Server:** ffmpeg-mcp, video-mcp, vision-mcp
   - **Required:** no
-  - **Purpose:** extra allowed path roots for inputs/outputs (`:`-separated).
-    Defaults: cwd + /tmp.
+  - **Purpose:** extra allowed path roots for media inputs/outputs
+    (`:`-separated). Defaults: cwd + /tmp. video-mcp clip and output paths
+    and vision-mcp images follow the same roots; vision-mcp additionally
+    accepts only PNG, JPEG, GIF, BMP, TIFF and WebP files.
 
 The remaining in-house servers (task-router, graphrag, arxiv,
 google-news, video, style) need **no** environment variables.

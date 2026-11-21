@@ -91,6 +91,8 @@ bash unified-integration/scripts/audit-trail.sh decision "add-replica-skill" \
 ```
 
 Retention audit: minimum 12 bulan. Tidak ada auto-purge audit.
+Direktori `unified-integration/memory/audit/` diabaikan git (`.gitignore`),
+sehingga log privat ini tidak ikut ter-commit.
 
 ### 3. Data Sensitif & PII
 
@@ -104,6 +106,19 @@ Retention audit: minimum 12 bulan. Tidak ada auto-purge audit.
   `ui.api.json`. Tanpa key, tool ini tersembunyi dari gateway. Jangan
   mengirim gambar sensitif (dokumen, wajah, layar berisi data pribadi) bila
   Anda tidak menyetujui pemrosesan di server OpenAI; gunakan alat lokal.
+  vision-mcp hanya membaca file gambar (PNG, JPEG, GIF, BMP, TIFF, WebP) di
+  dalam allowed roots media (cwd, `/tmp`, `AE_FFMPEG_ALLOWED_ROOTS`); video-mcp
+  memakai roots yang sama untuk klip dan output, dan teks overlay dibaca dari
+  file privat sehingga tidak pernah menjadi sintaks filtergraph ffmpeg.
+- Redaksi kredensial (memory, observasi, input selector Mode 2) mengenali
+  kunci yang dikonfigurasi di `ui.api.json` serta bentuk token umum: GitHub,
+  `sk-`, AWS `AKIA`, GitLab, Tavily, Firecrawl, Google, Slack, Hugging Face,
+  Groq, xAI, npm, Stripe live, JWT, private key PEM, `user:password@` pada
+  URI, dan header Bearer/Basic. Format lain bisa lolos: jangan menempelkan
+  kredensial ke prompt.
+- Kandidat skill dengan label upstream `risk: offensive` ditandai
+  "needs explicit authorization" di kartu hook dan registry; konfirmasi
+  otorisasi tertulis sebelum memakainya.
 
 ### 4. Clean-Room Discipline (replica-skill)
 

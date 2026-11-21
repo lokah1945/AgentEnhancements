@@ -123,12 +123,19 @@ The gateway is registered under `mcp.servers`, with `disabled: false` and
 `codemode: false` to expose its available tools directly. Legacy flat entries,
 `enabled` and `env` fields are migrated. The prompt hook waits for the managed
 connection to settle so the first model request includes its tools.
+The plugin is the only lifecycle channel: OpenCode 2 ignores Claude-style
+command `hooks` in its config, so setup writes none and removes ones earlier
+AE versions wrote (the user's own hooks are kept). The injected library map
+names `registry.py` by absolute path, and the session summary is saved once
+per final answer (at idle, or on the next prompt), not on every tool-loop
+continuation.
 OpenCode 1 plugin APIs differ and
 are not supported by this adapter.
 Setup checks the installed version before changing the OpenCode configuration.
 
-**Full native integration**: lifecycle hooks, 16 native skills, MCP gateway,
-memory persistence, and compression — equivalent to Claude Code.
+**Native integration**: plugin lifecycle hooks (prompt, context, idle), 16
+native skills, MCP gateway and memory persistence. Unlike Claude Code and
+Codex, OpenCode has no per-tool AE hook.
 
 #### Hermes Agent (native profiles)
 
@@ -136,13 +143,17 @@ Setup installs the shared MCP gateway in each selected profile's `config.yaml`,
 adds a bounded library pointer to `SOUL.md`, and links the local
 `unified-integration/hermes-plugin` as `plugins/agent-enhancements`.
 The named plugin is enabled through Hermes's native `plugins.enabled` setting.
-An explicitly disabled plugin or a conflicting user plugin causes an error.
+An explicitly disabled plugin causes an error. A different user plugin already
+at `plugins/agent-enhancements` is preserved and not enabled; setup warns and
+the AE lifecycle plugin stays off for that profile.
 
 The plugin uses `pre_llm_call`, `post_llm_call` and `post_tool_call` to discover
-skills, recall notes and persist short task/session summaries. Conversation
-history and tool payloads are never forwarded to AE. Model providers, persona
-content and host approvals are preserved. `--mcp-only` installs only the
-gateway.
+skills, recall notes and persist short task/session summaries. Notes are kept
+separate per Hermes profile and, on messaging platforms (Telegram, Discord,
+Slack...), per sender, so one chat user's notes never reach another user.
+Conversation history and tool payloads are never forwarded to AE. Model
+providers, persona content and host approvals are preserved. `--mcp-only`
+installs only the gateway.
 `HERMES_HOME` is respected, including setup from a terminal whose environment
 points at `<root>/profiles/<name>`. If `active_profile` points to a missing
 profile, setup repairs it using the saved explicit profile selection.

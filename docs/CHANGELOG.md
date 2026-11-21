@@ -1,11 +1,38 @@
 ---
 title: Changelog
-version: 1.7
-last_updated: 2026-11-20
+version: 1.8
+last_updated: 2026-11-22
 audience: all
 ---
 
 ## Changelog
+
+## 2026-11-22 — Final production readiness audit remediation
+
+Branch `fix/final-audit-remediation`. Every fix carries a regression test
+that fails on `fc893cf4`.
+
+- video-mcp (P0/P1): overlay text can no longer escape into the ffmpeg
+  filtergraph (file truncation, SSRF); clip and output paths follow the
+  media allowed roots. vision-mcp reads only images inside those roots.
+- Hermes (P0/P1): AE session notes are isolated per profile and per
+  messaging sender; the real-CLI smoke no longer writes the checkout's
+  host selection; a same-name user plugin is never enabled by setup.
+- Redaction: no false positives inside words (`task-…`, `risk-…`); common
+  provider token formats, JWTs, PEM keys and URI passwords are redacted
+  before memory and the Mode 2 selector.
+- OpenCode: absolute registry command in the injected L0 map; Stop runs
+  once per final answer; no inert command hooks in `opencode.json`.
+- Preflight/config: selector IDs resolve only by exact typed ID; legacy
+  preflight files are imported once; Mode 1 is reported as falling back.
+- Codex: re-running setup keeps hook positions, so trusted hooks stay
+  trusted. doctor checks AE lifecycle wiring on every host.
+- Registry: honest plugin readiness ("guide only"), readiness reason on
+  cards, offensive risk label, absolute `show` paths, no run command for
+  unverified roadmap packages, L0 text matches MCP hiding.
+- Gateway: external servers cannot shadow built-in tool names and survive
+  JSON-RPC errors. Setup no longer rewrites tracked prompt files; private
+  audit logs are git-ignored.
 
 ## 2026-11-20 — Single ui.api.json configuration, multi-key pool, search-mcp
 

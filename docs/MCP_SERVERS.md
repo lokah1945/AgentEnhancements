@@ -30,7 +30,12 @@ rechecks current configuration, including after a credential is revoked.
 External candidates require an installed executable, the correct arguments,
 credentials and completed authorization. `agent_browser` is cataloged as built
 but remains an external runtime. Package names in the roadmap are not a
-certification that the package exists or is safe to install.
+certification that the package exists or is safe to install: they are
+unpinned and several are not registered on npm, so `registry.py show` labels
+them "not installed by AE; unverified" instead of printing a run command.
+An external server can never take a built-in tool name: servers whose name
+maps to a built-in prefix (for example `style` for `style-mcp`) are not
+exposed. A JSON-RPC error from an external server fails only that call.
 
 Task router is hidden until explicitly enabled in `ui.api.json`. Its command
 execution has the user's privileges. Host permissions remain the execution

@@ -123,7 +123,14 @@ A missing key falls back to Mode 0 before any network attempt.
 
 #### Mode 1 contract
 
-The adapter supplies its native selection on the hook event:
+No shipped adapter supplies a native selection yet (Claude Code and Codex
+offer no pre-inference selection surface; OpenCode and Hermes are
+unsupported), so a configured Mode 1 runs Mode 0 on every prompt.
+`doctor.py` and `status_report()` show it as requested 1, effective 0
+(`mode1_native_selection_unavailable`). Selector IDs resolve only by
+their exact typed registry ID; any other ID is "not found".
+
+An adapter would supply its native selection on the hook event:
 
 ```json
 {

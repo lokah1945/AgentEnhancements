@@ -63,8 +63,11 @@ arrays (`""` becomes `[]`) and preserves unknown fields. When `ui.api.json`
 has no `preflight` section yet, it also imports a legacy adaptive-preflight
 `.agentenhancements/config/model.json` and an owner-only `preflight.key` from
 the same directory; those legacy files are left in place and are no longer
-read. Restore by copying the backup over `ui.api.json`. A personal
-`search_providers.json` is not an AE file: AE never reads, imports, migrates
+read. The import happens once: afterwards a non-secret owner-only
+`legacy-preflight.imported` marker beside them prevents a later setup from
+re-importing a section or key the user removed. Restore by copying the
+backup over `ui.api.json`. A personal `search_providers.json` is not an AE
+file: AE never reads, imports, migrates
 or deletes it. Native CLI configs
 contain the gateway command, not copies of its secrets. The JSON schema
 provides editor validation. Setup preserves populated values.

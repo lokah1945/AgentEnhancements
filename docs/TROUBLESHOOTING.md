@@ -62,8 +62,13 @@ that provider's account flow. Native hooks and local MCP health can be tested
 without making paid model calls. Run
 `bash unified-integration/scripts/setup-mcp.sh --check` for the ten built
 servers' actual protocol tests.
-`doctor.py` additionally checks each selected native host, but does not test
-provider authentication. For Hermes, run `hermes -p <profile> chat -q
+`doctor.py` additionally checks each selected native host: the gateway entry,
+the AE lifecycle wiring (Claude Code/Codex hooks for SessionStart,
+UserPromptSubmit and Stop; the OpenCode plugin; the Hermes plugin) and MCP
+health. It does not test provider authentication, and it cannot see Codex hook
+trust: after setup or an update, review AE's hooks once in Codex `/hooks`.
+Re-running setup keeps every hook at its position, so hooks you already
+trusted stay trusted. For Hermes, run `hermes -p <profile> chat -q
 'Return exactly READY' --quiet --max-turns 1`. A missing Nous token requires
 that profile's native login or a deliberately selected working provider;
 installing MCP does not repair an unavailable model slug.

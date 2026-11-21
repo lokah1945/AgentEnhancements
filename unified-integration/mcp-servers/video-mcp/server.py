@@ -76,8 +76,9 @@ def _validate_clip(clip: dict, index: int) -> str | None:
     path = clip.get("path")
     if not path or not isinstance(path, str):
         return f"clips[{index}].path is required"
-    if not Path(path).is_file():
-        return f"clips[{index}].path not found: {path}"
+    _, problem = _validate_media_path(path, must_exist=True)
+    if problem:
+        return f"clips[{index}].{problem}"
     for field in ("start", "end"):
         value = clip.get(field, 0.0)
         try:
@@ -95,11 +96,33 @@ def _validate_clip(clip: dict, index: int) -> str | None:
     return None
 
 
-def _escape_drawtext(text: str) -> str:
-    """Escape a literal for ffmpeg drawtext."""
-    escaped = (text.replace("\\", "\\\\").replace(":", "\\:")
-               .replace("'", "\\'").replace("%", "\\%"))
-    return escaped
+def _allowed_roots() -> list[Path]:
+    """Media roots shared with ffmpeg-mcp: cwd, /tmp, AE_FFMPEG_ALLOWED_ROOTS."""
+    roots = [Path.cwd().resolve(), Path("/tmp")]
+    extra = os.environ.get("AE_FFMPEG_ALLOWED_ROOTS", "")
+    for item in extra.split(os.pathsep):
+        if item.strip():
+            roots.append(Path(item.strip()).resolve())
+    return roots
+
+
+def _validate_media_path(raw: str, must_exist: bool) -> tuple[Path | None, str | None]:
+    """Resolve a clip/output path and keep it inside the media allowed roots."""
+    path = Path(raw).expanduser().resolve()
+    if must_exist and not path.is_file():
+        return None, f"path not found: {raw}"
+    allowed = _allowed_roots()
+    if not any(path.is_relative_to(root) for root in allowed):
+        return None, (f"path {raw} is outside the allowed roots "
+                      f"({', '.join(str(r) for r in allowed)}); extend via "
+                      f"AE_FFMPEG_ALLOWED_ROOTS")
+    return path, None
+
+
+# drawtext reads overlay text from a private file with expansion disabled,
+# so user text never becomes filtergraph or option syntax. Only the file
+# path itself is embedded, and it must be made of inert characters.
+_INERT_PATH = re.compile(r"^[A-Za-z0-9/._-]+$")
 
 
 @_tool
@@ -181,24 +204,50 @@ def render(name: str, out: str) -> dict:
     if not shutil.which(FFMPEG):
         return {"error": "ffmpeg binary not found on PATH",
                 "hint": "install ffmpeg to render; timeline()/edl() work offline"}
-    out_path = Path(out).expanduser().resolve()
+    if not isinstance(out, str) or not out:
+        return {"error": "out must be a non-empty .mp4 path"}
+    out_path, problem = _validate_media_path(out, must_exist=False)
+    if problem:
+        return {"error": f"out {problem}"}
     if out_path.suffix.lower() != ".mp4":
         return {"error": "out must end with .mp4"}
-    out_path.parent.mkdir(parents=True, exist_ok=True)
     clips = doc["clips"]
+    # Re-check stored clips: the store may predate the roots policy.
+    sources: list[Path] = []
+    for index, clip in enumerate(clips):
+        source, problem = _validate_media_path(clip["path"], must_exist=True)
+        if problem:
+            return {"error": f"clips[{index}].{problem}"}
+        sources.append(source)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    work = Path(tempfile.mkdtemp(prefix="ae-video-text-"))
+    try:
+        if not _INERT_PATH.match(str(work)):
+            return {"error": "temporary directory path is not usable by drawtext",
+                    "hint": "set TMPDIR to a path made of letters, digits, '/', '.', '_' or '-'"}
+        return _render(name, doc, clips, sources, out_path, work)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def _render(name: str, doc: dict, clips: list[dict], sources: list[Path],
+            out_path: Path, work: Path) -> dict:
+    """Build and run the single ffmpeg invocation for render()."""
     inputs: list[str] = []
     filters: list[str] = []
     for i, clip in enumerate(clips):
         inputs += ["-ss", str(clip["start"]), "-t",
                    str(float(clip["end"]) - float(clip["start"])),
-                   "-i", clip["path"]]
+                   "-i", str(sources[i])]
         parts = [f"[{i}:v]scale=1280:720:force_original_aspect_ratio=decrease,"
                  f"pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1"]
         if clip.get("text"):
             y = {"top": "40", "center": "(h-text_h)/2", "bottom": "h-text_h-40"}[
                 clip.get("position", "bottom")]
+            text_file = work / f"overlay-{i}.txt"
+            text_file.write_text(clip["text"], encoding="utf-8")
             parts.append(
-                f"drawtext=text='{_escape_drawtext(clip['text'])}':"
+                f"drawtext=textfile={text_file}:expansion=none:"
                 f"fontcolor=white:fontsize=36:box=1:boxcolor=black@0.5:"
                 f"x=(w-text_w)/2:y={y}")
         filters.append(",".join(parts) + f"[v{i}]")

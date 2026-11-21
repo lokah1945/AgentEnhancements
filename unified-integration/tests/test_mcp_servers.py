@@ -485,6 +485,52 @@ class TestVideo(unittest.TestCase):
     def test_unknown_timeline(self):
         self.assertIn("error", self.mod.TOOLS["render"]("ghost", "/tmp/x.mp4"))
 
+    def test_overlay_text_cannot_escape_into_the_filtergraph(self):
+        # Final audit 2026-11-20 (P0): a quote in overlay text closed the
+        # drawtext value, so the rest was parsed as filtergraph syntax and a
+        # metadata filter could truncate any writable file.
+        victim = self.tmp / "victim.txt"
+        victim.write_text("keep me\n")
+        text = f"a',metadata=mode=print:file={victim},drawtext=text='b"
+        created = self.mod.TOOLS["timeline"]("inject", clips=[
+            {"path": str(self.clip), "start": 0.0, "end": 1.0, "text": text}])
+        self.assertTrue(created.get("ok"), created)
+        self.mod.TOOLS["render"]("inject", str(self.tmp / "inject.mp4"))
+        self.assertEqual(victim.read_text(), "keep me\n")
+
+    def test_overlay_text_with_ordinary_punctuation_renders(self):
+        created = self.mod.TOOLS["timeline"]("apostrophe", clips=[
+            {"path": str(self.clip), "start": 0.0, "end": 1.0,
+             "text": "Don't stop: 100% [ready]; go, go"}])
+        self.assertTrue(created.get("ok"), created)
+        out = self.tmp / "apostrophe.mp4"
+        rendered = self.mod.TOOLS["render"]("apostrophe", str(out))
+        self.assertTrue(rendered.get("ok"), rendered)
+        self.assertGreater(out.stat().st_size, 0)
+
+    def test_clip_and_output_paths_follow_the_media_allowed_roots(self):
+        # Final audit 2026-11-20 (P1): video-mcp ignored the allowed-root
+        # policy that ffmpeg-mcp enforces (cwd, /tmp, AE_FFMPEG_ALLOWED_ROOTS).
+        inside = Path(tempfile.mkdtemp(prefix="ae-video-inside-"))
+        outside = Path(tempfile.mkdtemp(prefix="ae-video-outside-"))
+        clip = inside / "clip.mp4"
+        clip.write_bytes(self.clip.read_bytes())
+        foreign = outside / "foreign.mp4"
+        foreign.write_bytes(self.clip.read_bytes())
+        with patch.object(self.mod, "_allowed_roots", return_value=[inside]):
+            refused = self.mod.TOOLS["timeline"]("roots-in", clips=[
+                {"path": str(foreign), "start": 0.0, "end": 1.0}])
+            self.assertIn("outside the allowed roots", refused.get("error", ""))
+            created = self.mod.TOOLS["timeline"]("roots-ok", clips=[
+                {"path": str(clip), "start": 0.0, "end": 1.0}])
+            self.assertTrue(created.get("ok"), created)
+            target = outside / "deep" / "out.mp4"
+            refused = self.mod.TOOLS["render"]("roots-ok", str(target))
+            self.assertIn("outside the allowed roots", refused.get("error", ""))
+            self.assertFalse(target.parent.exists())
+            rendered = self.mod.TOOLS["render"]("roots-ok", str(inside / "ok.mp4"))
+            self.assertTrue(rendered.get("ok"), rendered)
+
 
 class TestNetworkServers(unittest.TestCase):
     """M-9: arxiv / google-news guards (live calls only when opted in)."""

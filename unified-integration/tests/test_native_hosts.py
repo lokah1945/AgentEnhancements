@@ -291,7 +291,41 @@ class HermesPluginTests(unittest.TestCase):
                 self.assertNotIn("conversation_history", call.kwargs)
         with patch.object(module, "runtime") as runtime:
             callbacks["post_tool_call"]("terminal", "session", result="private output", params={"secret": "private"})
-            runtime.assert_called_once_with("PostToolUse", "session", tool_name="terminal")
+            runtime.assert_called_once_with("PostToolUse", "session", tool_name="terminal",
+                                            memory_scope="hermes-profile:default")
+
+    def test_gateway_users_and_profiles_never_share_session_notes(self):
+        # Final audit 2026-11-20 (P0/P1): memory was keyed by (agent, cwd)
+        # only, so one messaging user's notes reached another user's first
+        # turn and one Hermes profile recalled another profile's notes.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            env = {"AGENT_ENHANCEMENTS_STATE_DIR": str(root / "state"),
+                   "AGENT_MEMORY_ROOT": str(root / "memory"),
+                   "TASK_OBSERVER_WORKSPACE": str(root / "observer"),
+                   "TERMINAL_CWD": str(root)}
+            with patch.dict(os.environ, env):
+                def hooks(profile):
+                    module = load_module(f"ae_hermes_scope_{profile}", UI_DIR / "hermes-plugin/__init__.py")
+                    callbacks = {}
+
+                    class Context:
+                        profile_name = profile
+
+                        def register_hook(self, name, callback):
+                            callbacks[name] = callback
+                    module.register(Context())
+                    return callbacks
+                default, other = hooks("default"), hooks("ilma")
+                default["pre_llm_call"]("tg-111", "draft", True, platform="telegram", sender_id="111")
+                default["post_llm_call"]("tg-111", assistant_response="PRIVATE-NOTE-OF-111",
+                                         platform="telegram")
+                first = default["pre_llm_call"]("tg-222", "hello", True, platform="telegram", sender_id="222")
+                self.assertNotIn("PRIVATE-NOTE-OF-111", json.dumps(first or {}))
+                same = default["pre_llm_call"]("tg-111-b", "again", True, platform="telegram", sender_id="111")
+                self.assertIn("PRIVATE-NOTE-OF-111", json.dumps(same or {}))
+                profile = other["pre_llm_call"]("tg-111-c", "again", True, platform="telegram", sender_id="111")
+                self.assertNotIn("PRIVATE-NOTE-OF-111", json.dumps(profile or {}))
 
 
 class LibraryMapTests(unittest.TestCase):

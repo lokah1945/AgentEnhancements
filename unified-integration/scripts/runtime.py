@@ -134,8 +134,11 @@ def handle(agent: str, event: dict) -> str:
     """Persist lifecycle facts and return context for startup or prompt hooks."""
     name = event.get("hook_event_name", "")
     cwd = Path(event.get("cwd") or Path.cwd()).expanduser().resolve()
-    # Full paths isolate repositories with the same basename.
-    memory = AgentMemory(agent, project=str(cwd))
+    # Full paths isolate repositories with the same basename. An adapter
+    # serving several identities from one cwd (a Hermes messaging gateway or
+    # profile) adds an opaque memory_scope so their notes never mix.
+    scope = str(event.get("memory_scope") or "")[:200]
+    memory = AgentMemory(agent, project=f"{cwd}#{scope}" if scope else str(cwd))
     memory.cleanup_expired()
     session = str(event.get("session_id") or "unknown")[:200]
     session_key = hashlib.sha256(session.encode()).hexdigest()[:24]

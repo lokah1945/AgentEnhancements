@@ -489,6 +489,18 @@ class CredentialRedactionTests(IsolatedSecurityTest):
             "upstream error opaque-first-provider-fixture / opaque-second-provider-fixture", config)
         self.assertEqual(cleaned, "upstream error [redacted] / [redacted]")
 
+    def test_sk_pattern_needs_a_left_boundary_and_still_redacts_keys(self):
+        # Final audit 2026-11-20 (P2): words ending in "sk" followed by a
+        # slug (task-, risk-, desk-) were redacted, corrupting tool results.
+        api = self.module("sk_boundary", SCRIPTS / "api_config.py")
+        ordinary = ("see /repo/task-observer-improvements-v2/README and "
+                    "risk-assessment-for-production-rollout or desk-booking-service-frontend")
+        self.assertEqual(api.redact(ordinary), ordinary)
+        for leaked in ("sk-proj-abcdefghijklmnop0123", "sk-ant-api03-abcdefghijklmnop",
+                       "sk-abcdefghijklmnopqrstu"):
+            for context in (f"key {leaked} end", f"KEY={leaked}", f'"{leaked}"', f"x:{leaked}"):
+                self.assertNotIn(leaked, api.redact(context), context)
+
     def test_personal_search_provider_file_is_never_opened(self):
         """A sentinel search_providers.json at the checkout root stays untouched."""
         api = self.module("provider_isolation", SCRIPTS / "api_config.py")

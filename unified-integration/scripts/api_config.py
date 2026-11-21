@@ -73,7 +73,7 @@ BUILTIN_ANY_OF = {
     ),
 }
 SECRET_PATTERN = re.compile(
-    r"(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+|sk-(?:ant-)?[A-Za-z0-9_-]{16,}"
+    r"(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+|(?<![A-Za-z0-9])sk-(?:ant-)?[A-Za-z0-9_-]{16,}"
     r"|\bAKIA[A-Z0-9]{16}\b"
     r"|(?i:\b(?:Bearer|Basic)\s+[^\s\"',}]+)"
     r"|(?i:(?:api[_-]?key|access[_-]?token|password|secret|authorization)"

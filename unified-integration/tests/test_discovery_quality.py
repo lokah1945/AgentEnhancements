@@ -125,6 +125,26 @@ class DiscoveryQualityTests(unittest.TestCase):
         self.assertEqual(state["ready"], "no")
         self.assertTrue(state["blocker"])
 
+    def test_plugin_guides_are_not_reported_as_built_in_capabilities(self):
+        # Final audit 2026-11-20 (P2): every catalog plugin was reported
+        # ready "built-in" although AE ships only its guide (CONTRACT 8.1).
+        for vendored in ("False", "True"):
+            state = self.registry.entry_readiness(
+                {"type": "plugin", "name": "fixture-plugin", "vendored": vendored})
+            self.assertEqual(state["ready"], "yes")
+            self.assertIn("guide only", state["how"])
+            self.assertNotIn("built-in", state["how"])
+        self.assertEqual(self.registry.entry_readiness(
+            {"type": "capability", "name": "memory"})["how"], "built-in")
+
+    def test_ready_cards_print_how_they_are_ready(self):
+        card = self.registry._card({"type": "plugin", "id": "plugin:fixture",
+                                    "name": "fixture", "vendored": "False"}, score=2.5)
+        rendered = self.registry._format_card(card)
+        self.assertNotIn("ready: yes ()", rendered)
+        self.assertIn("ready: yes (guide only", rendered)
+        self.assertNotIn("query term", rendered)
+
     def test_vendored_source_remains_available_without_aggregation(self):
         entry = {"type": "skill", "name": "docx", "path": "missing-aggregation/SKILL.md",
                  "source_path": "anthropic-skills/skills/docx/SKILL.md"}

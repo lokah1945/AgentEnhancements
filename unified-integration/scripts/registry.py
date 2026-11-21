@@ -751,6 +751,12 @@ def entry_readiness(entry: Dict[str, Any]) -> Dict[str, str]:
         return _mcp_readiness(entry)
     if entry.get("type") == "skill":
         return _skill_readiness(entry)
+    if entry.get("type") == "plugin":
+        # A catalog plugin is an integration guide (CONTRACT 8.1): readable
+        # now, but never a callable runtime plugin AE has installed.
+        upstream = ("upstream vendored" if str(entry.get("vendored")) == "True"
+                    else "upstream not installed by AE")
+        return {"ready": "yes", "how": f"guide only; {upstream}; not a tool"}
     return {"ready": "yes", "how": "built-in"}
 
 
@@ -768,10 +774,12 @@ def _card(entry: Dict[str, Any], score: Optional[int] = None) -> Dict[str, Any]:
         "ready": ready.get("ready", "unknown"),
         "detail": f"registry.py show {entry.get('name') or entry.get('id')}",
     }
+    if ready.get("ready") == "yes" and ready.get("how"):
+        card["how"] = ready["how"][:80]
     if ready.get("ready") != "yes" and ready.get("blocker"):
         card["blocker"] = ready["blocker"][:80]
     if score is not None:
-        card["why"] = f"matched {score} query term(s)"
+        card["why"] = f"relevance score {score}"
     return card
 
 

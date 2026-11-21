@@ -105,6 +105,20 @@ class RegistryCliTests(unittest.TestCase):
     def _run(self, *args):
         return run([sys.executable, str(REGISTRY_SCRIPT), *args])
 
+    def test_show_never_presents_a_roadmap_install_as_a_run_command(self):
+        # Final audit 2026-11-20 (P1): to-install roadmap entries printed
+        # "run: npx -y <pkg>" for unpinned and partly unregistered npm names
+        # (squattable), with the provider key in the environment line.
+        code, out, err = self._run("show", "mcp:heygen-mcp")
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("npx", out)
+        self.assertNotIn("run:", out)
+        self.assertIn("not installed by AE", out)
+        code, out, err = self._run("show", "mcp:search-mcp")
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("python -m", out)
+        self.assertIn("agent-enhancements gateway", out)
+
     def test_map_json_is_valid_and_structured(self):
         code, out, err = self._run("map", "create a word document", "--json")
         self.assertEqual(code, 0, err)

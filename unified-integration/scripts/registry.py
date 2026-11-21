@@ -840,7 +840,17 @@ def _format_entry(entry: Dict[str, Any], score: Optional[int] = None) -> str:
         lines.append(f"    source: {entry['source_path']}")
     if entry.get("usage"):
         lines.append(f"    usage: {entry['usage']}")
-    if entry.get("command"):
+    if entry.get("type") == "mcp" and entry.get("command"):
+        # Roadmap npm names are unpinned and partly unregistered (anyone can
+        # publish them); built servers run inside the gateway. Neither is a
+        # command an agent should launch (final audit 2026-11-20).
+        if entry.get("status") == "built":
+            lines.append("    runs inside the agent-enhancements gateway: call its tools; "
+                         "do not launch it separately")
+        else:
+            lines.append("    install: roadmap entry, not installed by AE; the package name is "
+                         "unverified - use only the vendor's official, pinned instructions")
+    elif entry.get("command"):
         lines.append(f"    run: {entry['command']}")
     if entry.get("env_required"):
         lines.append(f"    env: {', '.join(entry['env_required'])}")

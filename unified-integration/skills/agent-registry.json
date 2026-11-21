@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-20T05:20:15.951589+00:00",
+  "generated_at": "2026-11-21T07:01:09.767911+00:00",
   "stats": {
     "total": 3467,
     "by_type": {
@@ -494,6 +494,7 @@
       "path": "unified-integration/skills/by-category/general/active-directory-attacks/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/active-directory-attacks/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -6555,6 +6556,7 @@
       "path": "unified-integration/skills/by-category/general/ai-engineering-toolkit/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/ai-engineering-toolkit/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -6904,6 +6906,7 @@
       "path": "unified-integration/skills/by-category/security/ai-red-teaming/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/ai-red-teaming/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -7676,6 +7679,7 @@
       "path": "unified-integration/skills/by-category/general/anti-reversing-techniques/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/anti-reversing-techniques/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -8041,6 +8045,7 @@
       "path": "unified-integration/skills/by-category/general/api-fuzzing-bug-bounty/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/api-fuzzing-bug-bounty/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -8155,6 +8160,7 @@
       "path": "unified-integration/skills/by-category/general/api-security/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/api-security/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -8183,6 +8189,7 @@
       "path": "unified-integration/skills/by-category/general/api-security-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/api-security-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -8509,6 +8516,7 @@
       "path": "unified-integration/skills/by-category/security/apk-redteam-pipeline/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/apk-redteam-pipeline/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -8523,6 +8531,7 @@
       "path": "unified-integration/skills/by-category/general/apk-reverse/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/apk-reverse/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -9120,6 +9129,7 @@
       "path": "unified-integration/skills/by-category/general/attack-chain/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/attack-chain/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -9134,6 +9144,7 @@
       "path": "unified-integration/skills/by-category/general/attack-tree-construction/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/attack-tree-construction/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -9670,6 +9681,7 @@
       "path": "unified-integration/skills/by-category/general/aws-penetration-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/aws-penetration-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -11926,6 +11938,7 @@
       "path": "unified-integration/skills/by-category/security/bb-methodology/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/bb-methodology/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -12750,6 +12763,7 @@
       "path": "unified-integration/skills/by-category/general/broken-authentication/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/broken-authentication/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -12990,6 +13004,7 @@
       "path": "unified-integration/skills/by-category/general/browser-extension-reverse/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/browser-extension-reverse/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -13103,6 +13118,7 @@
       "path": "unified-integration/skills/by-category/security/bug-bounty/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/bug-bounty/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -13305,6 +13321,7 @@
       "path": "unified-integration/skills/by-category/general/burp-suite-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/burp-suite-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -14715,6 +14732,7 @@
       "path": "unified-integration/skills/by-category/security/cloud-iam-deep/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/cloud-iam-deep/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -14729,6 +14747,7 @@
       "path": "unified-integration/skills/by-category/general/cloud-k8s/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/cloud-k8s/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -14743,6 +14762,7 @@
       "path": "unified-integration/skills/by-category/general/cloud-penetration-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/cloud-penetration-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -14785,6 +14805,7 @@
       "path": "unified-integration/skills/by-category/general/cloudflare-security-audit/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/cloudflare-security-audit/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -17828,6 +17849,7 @@
       "path": "unified-integration/skills/by-category/security/darkmoon-pentest/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/darkmoon-pentest/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -17870,6 +17892,7 @@
       "path": "unified-integration/skills/by-category/security/dast-scanning/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/dast-scanning/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -18210,6 +18233,7 @@
       "path": "unified-integration/skills/by-category/general/database-security/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/database-security/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -20375,6 +20399,7 @@
       "path": "unified-integration/skills/by-category/general/dotnet-reverse/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/dotnet-reverse/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -20798,6 +20823,7 @@
       "path": "unified-integration/skills/by-category/general/edr-bypass-re/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/edr-bypass-re/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -20997,6 +21023,7 @@
       "path": "unified-integration/skills/by-category/general/email-security/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/email-security/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -21194,6 +21221,7 @@
       "path": "unified-integration/skills/by-category/security/enterprise-vpn-attack/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/enterprise-vpn-attack/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -21470,6 +21498,7 @@
       "path": "unified-integration/skills/by-category/general/ethical-hacking-methodology/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/ethical-hacking-methodology/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -22495,6 +22524,7 @@
       "path": "unified-integration/skills/by-category/general/ffuf-claude-skill/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/ffuf-claude-skill/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -22509,6 +22539,7 @@
       "path": "unified-integration/skills/by-category/general/ffuf-web-fuzzing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/ffuf-web-fuzzing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -22551,6 +22582,7 @@
       "path": "unified-integration/skills/by-category/general/file-path-traversal/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/file-path-traversal/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -22750,6 +22782,7 @@
       "path": "unified-integration/skills/by-category/general/firmware-analyst/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/firmware-analyst/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -22764,6 +22797,7 @@
       "path": "unified-integration/skills/by-category/general/firmware-pentest/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/firmware-pentest/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -25757,6 +25791,7 @@
       "path": "unified-integration/skills/by-category/general/hardware-security/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hardware-security/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -26571,6 +26606,7 @@
       "path": "unified-integration/skills/by-category/general/html-injection-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/html-injection-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -26959,6 +26995,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-api-misconfig/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-api-misconfig/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -26973,6 +27010,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-aspnet/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-aspnet/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -26987,6 +27025,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-ato/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-ato/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27001,6 +27040,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-auth-bypass/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-auth-bypass/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27015,6 +27055,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-brute-force/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-brute-force/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27029,6 +27070,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-business-logic/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-business-logic/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27043,6 +27085,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-cache-poison/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-cache-poison/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27057,6 +27100,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-captcha-bypass/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-captcha-bypass/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27071,6 +27115,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-cicd/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-cicd/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27085,6 +27130,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-clickjacking/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-clickjacking/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27099,6 +27145,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-cloud-misconfig/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-cloud-misconfig/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27113,6 +27160,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-cors/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-cors/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27127,6 +27175,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-csrf/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-csrf/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27141,6 +27190,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-deserialization/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-deserialization/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27155,6 +27205,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-dispatch/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-dispatch/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27169,6 +27220,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-dom/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-dom/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27183,6 +27235,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-exceptional-conditions/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-exceptional-conditions/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27197,6 +27250,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-file-upload/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-file-upload/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27211,6 +27265,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-fintech-graphql/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-fintech-graphql/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27225,6 +27280,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-forgot-password/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-forgot-password/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27239,6 +27295,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-graphql/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-graphql/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27253,6 +27310,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-grpc/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-grpc/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27267,6 +27325,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-host-header/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-host-header/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27281,6 +27340,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-html-injection/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-html-injection/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27295,6 +27355,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-http-smuggling/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-http-smuggling/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27309,6 +27370,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-idor/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-idor/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27323,6 +27385,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-jwt-crypto/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-jwt-crypto/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27337,6 +27400,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-k8s/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-k8s/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27351,6 +27415,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-laravel/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-laravel/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27365,6 +27430,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-ldap/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-ldap/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27379,6 +27445,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-lfi/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-lfi/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27393,6 +27460,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-llm-ai/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-llm-ai/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27407,6 +27475,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-mfa-bypass/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-mfa-bypass/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27421,6 +27490,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-misc/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-misc/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27435,6 +27505,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-nextjs/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-nextjs/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27449,6 +27520,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-nodejs/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-nodejs/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27463,6 +27535,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-nosqli/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-nosqli/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27477,6 +27550,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-ntlm-info/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-ntlm-info/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27491,6 +27565,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-oauth/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-oauth/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27505,6 +27580,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-open-redirect/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-open-redirect/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27519,6 +27595,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-race-condition/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-race-condition/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27533,6 +27610,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-rag-vector/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-rag-vector/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27547,6 +27625,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-rce/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-rce/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27561,6 +27640,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-saml/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-saml/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27575,6 +27655,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-session/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-session/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27589,6 +27670,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-shadow-api/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-shadow-api/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27603,6 +27685,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-sharepoint/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-sharepoint/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27617,6 +27700,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-source-leak/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-source-leak/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27631,6 +27715,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-spa-api/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-spa-api/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27645,6 +27730,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-springboot/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-springboot/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27659,6 +27745,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-sqli/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-sqli/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27673,6 +27760,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-ssrf/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-ssrf/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27687,6 +27775,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-ssti/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-ssti/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27701,6 +27790,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-subdomain/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-subdomain/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27715,6 +27805,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-tls-network/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-tls-network/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27729,6 +27820,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-websocket/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-websocket/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27743,6 +27835,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-xss/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-xss/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -27757,6 +27850,7 @@
       "path": "unified-integration/skills/by-category/security/hunt-xxe/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/hunt-xxe/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -28025,6 +28119,7 @@
       "path": "unified-integration/skills/by-category/general/identity-federation/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/identity-federation/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -28053,6 +28148,7 @@
       "path": "unified-integration/skills/by-category/general/idor-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/idor-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -28896,6 +28992,7 @@
       "path": "unified-integration/skills/by-category/security/ios-redteam-pipeline/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/ios-redteam-pipeline/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -29423,6 +29520,7 @@
       "path": "unified-integration/skills/by-category/general/js-reverse/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/js-reverse/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -31201,6 +31299,7 @@
       "path": "unified-integration/skills/by-category/general/linux-privilege-escalation/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/linux-privilege-escalation/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -31497,6 +31596,7 @@
       "path": "unified-integration/skills/by-category/general/llm-security/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/llm-security/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -32215,6 +32315,7 @@
       "path": "unified-integration/skills/by-category/security/m365-entra-attack/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/m365-entra-attack/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -33512,6 +33613,7 @@
       "path": "unified-integration/skills/by-category/security/meme-coin-audit/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/meme-coin-audit/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -33749,6 +33851,7 @@
       "path": "unified-integration/skills/by-category/general/metasploit-framework/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/metasploit-framework/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -33833,6 +33936,7 @@
       "path": "unified-integration/skills/by-category/security/mid-engagement-ir-detection/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/mid-engagement-ir-detection/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -34092,6 +34196,7 @@
       "path": "unified-integration/skills/by-category/general/mobile-reverse/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/mobile-reverse/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -35351,6 +35456,7 @@
       "path": "unified-integration/skills/by-category/general/network-101/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/network-101/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -36607,6 +36713,7 @@
       "path": "unified-integration/skills/by-category/security/offensive-osint/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/offensive-osint/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -36712,6 +36819,7 @@
       "path": "unified-integration/skills/by-category/security/okta-attack/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/okta-attack/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -37451,6 +37559,7 @@
       "path": "unified-integration/skills/by-category/security/osint-methodology/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/osint-methodology/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -37498,6 +37607,7 @@
       "path": "unified-integration/skills/by-category/general/ot-ics/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/ot-ics/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -37861,6 +37971,7 @@
       "path": "unified-integration/skills/by-category/general/patch-diff-exploit/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/patch-diff-exploit/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -38044,6 +38155,7 @@
       "path": "unified-integration/skills/by-category/security/penetration-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/penetration-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -38058,6 +38170,7 @@
       "path": "unified-integration/skills/by-category/general/pentest-checklist/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/pentest-checklist/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -38072,6 +38185,7 @@
       "path": "unified-integration/skills/by-category/general/pentest-commands/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/pentest-commands/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -38086,6 +38200,7 @@
       "path": "unified-integration/skills/by-category/general/pentest-tools/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/pentest-tools/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -39640,6 +39755,7 @@
       "path": "unified-integration/skills/by-category/general/privilege-escalation-methods/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/privilege-escalation-methods/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -40540,6 +40656,7 @@
       "path": "unified-integration/skills/by-category/general/pwn-chain/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/pwn-chain/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -40973,6 +41090,7 @@
       "path": "unified-integration/skills/by-category/general/radio-sdr/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/radio-sdr/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -41535,6 +41653,7 @@
       "path": "unified-integration/skills/by-category/security/recon-scope-triage/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/recon-scope-triage/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -41619,6 +41738,7 @@
       "path": "unified-integration/skills/by-category/general/red-team-tactics/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/red-team-tactics/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -41633,6 +41753,7 @@
       "path": "unified-integration/skills/by-category/general/red-team-tools/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/red-team-tools/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -41756,6 +41877,7 @@
       "path": "unified-integration/skills/by-category/security/redteam-mindset/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/redteam-mindset/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -42434,6 +42556,7 @@
       "path": "unified-integration/skills/by-category/general/reverse-browser-automation/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/reverse-browser-automation/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -42448,6 +42571,7 @@
       "path": "unified-integration/skills/by-category/general/reverse-engineer/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/reverse-engineer/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -43382,6 +43506,7 @@
       "path": "unified-integration/skills/by-category/general/scanning-tools/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/scanning-tools/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -43799,6 +43924,7 @@
       "path": "unified-integration/skills/by-category/security/security-arsenal/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/security-arsenal/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -43813,6 +43939,7 @@
       "path": "unified-integration/skills/by-category/general/security-audit/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/security-audit/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -45083,6 +45210,7 @@
       "path": "unified-integration/skills/by-category/general/shodan-reconnaissance/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/shodan-reconnaissance/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -45922,6 +46050,7 @@
       "path": "unified-integration/skills/by-category/general/smtp-penetration-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/smtp-penetration-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -46575,6 +46704,7 @@
       "path": "unified-integration/skills/by-category/general/sql-injection-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/sql-injection-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -46642,6 +46772,7 @@
       "path": "unified-integration/skills/by-category/general/sqlmap-database-pentesting/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/sqlmap-database-pentesting/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -46747,6 +46878,7 @@
       "path": "unified-integration/skills/by-category/general/ssh-penetration-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/ssh-penetration-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -47382,6 +47514,7 @@
       "path": "unified-integration/skills/by-category/security/supply-chain-attack-recon/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/supply-chain-attack-recon/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -47396,6 +47529,7 @@
       "path": "unified-integration/skills/by-category/security/supply-chain-attack-response/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/supply-chain-attack-response/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -48841,6 +48975,7 @@
       "path": "unified-integration/skills/by-category/general/thick-client/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/thick-client/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -49390,6 +49525,7 @@
       "path": "unified-integration/skills/by-category/general/top-web-vulnerabilities/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/top-web-vulnerabilities/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -49708,6 +49844,7 @@
       "path": "unified-integration/skills/by-category/security/triage-validation/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/triage-validation/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -51076,6 +51213,7 @@
       "path": "unified-integration/skills/by-category/general/variant-analysis/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/variant-analysis/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -51720,6 +51858,7 @@
       "path": "unified-integration/skills/by-category/security/vmware-vcenter-attack/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/vmware-vcenter-attack/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -51897,6 +52036,7 @@
       "path": "unified-integration/skills/by-category/security/vulnerability-scanning/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/vulnerability-scanning/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -52323,6 +52463,7 @@
       "path": "unified-integration/skills/by-category/general/web-security-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/web-security-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -52337,6 +52478,7 @@
       "path": "unified-integration/skills/by-category/security/web2-recon/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/web2-recon/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -52351,6 +52493,7 @@
       "path": "unified-integration/skills/by-category/security/web3-audit/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/web3-audit/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -52648,6 +52791,7 @@
       "path": "unified-integration/skills/by-category/general/wifi-wireless/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/wifi-wireless/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -52792,6 +52936,7 @@
       "path": "unified-integration/skills/by-category/general/windows-ad/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/windows-ad/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -52834,6 +52979,7 @@
       "path": "unified-integration/skills/by-category/general/windows-privilege-escalation/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/windows-privilege-escalation/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -52983,6 +53129,7 @@
       "path": "unified-integration/skills/by-category/general/wordpress-penetration-testing/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/wordpress-penetration-testing/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -53129,6 +53276,7 @@
       "path": "unified-integration/skills/by-category/general/wp-guard/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/wp-guard/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -53405,6 +53553,7 @@
       "path": "unified-integration/skills/by-category/general/xss-html-injection/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/xss-html-injection/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {
@@ -53756,6 +53905,7 @@
       "path": "unified-integration/skills/by-category/general/zeroize-audit/SKILL.md",
       "source_path": "agentic-awesome-skills/skills/zeroize-audit/SKILL.md",
       "natively_linked_by_default": false,
+      "risk": "offensive",
       "activation": "on-demand via the skills loader"
     },
     {

@@ -125,6 +125,25 @@ class DiscoveryQualityTests(unittest.TestCase):
         self.assertEqual(state["ready"], "no")
         self.assertTrue(state["blocker"])
 
+    def test_offensive_skills_are_labelled_on_every_card(self):
+        # Final audit 2026-11-20 (P2): an ordinary staging security request
+        # put an "AUTHORIZED USE ONLY" offensive skill first, unlabelled.
+        runtime = import_file("discovery_quality_runtime", UI_DIR / "scripts" / "runtime.py")
+        cards = runtime.skill_context(
+            "codex", "test the security of the login api on our staging server")
+        offensive = {s["name"] for s in self.loader.skills_index["skills"] if s.get("risk") == "offensive"}
+        lines = [line for line in cards.splitlines() if line.startswith("- ")]
+        self.assertTrue(any(line[2:].split(":")[0] in offensive for line in lines), cards)
+        for line in lines:
+            labelled = "[risk: offensive - needs explicit authorization]" in line
+            self.assertEqual(labelled, line[2:].split(":")[0] in offensive, line)
+        entry = {"type": "skill", "id": "skill:fixture", "name": "fixture", "risk": "offensive",
+                 "path": "missing/SKILL.md"}
+        rendered = self.registry._format_card(self.registry._card(entry))
+        self.assertIn("risk: offensive - needs explicit authorization", rendered)
+        entry["risk"] = "safe"
+        self.assertNotIn("risk:", self.registry._format_card(self.registry._card(entry)))
+
     def test_plugin_guides_are_not_reported_as_built_in_capabilities(self):
         # Final audit 2026-11-20 (P2): every catalog plugin was reported
         # ready "built-in" although AE ships only its guide (CONTRACT 8.1).

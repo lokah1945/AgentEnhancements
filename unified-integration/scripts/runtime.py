@@ -60,7 +60,11 @@ def skill_context(agent: str, prompt: str) -> str:
     for item in matches:
         name = item.get("name", "")
         summary = (item.get("description") or "").strip().split("\n")[0][:100]
-        lines.append(f"- {name}: {summary}")
+        # Upstream risk labels stay visible on the card itself, so offensive
+        # methodology is never offered as an ordinary step (final audit).
+        risk = (" [risk: offensive - needs explicit authorization]"
+                if item.get("risk") == "offensive" else "")
+        lines.append(f"- {name}: {summary}{risk}")
     if not lines:
         return ""
     return clamp_to_budget(

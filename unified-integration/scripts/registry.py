@@ -317,6 +317,8 @@ def load_skill_entries() -> List[Dict[str, Any]]:
             "path": skill.get("path", ""),
             "source_path": skill.get("source_path", ""),
             "natively_linked_by_default": source in DEFAULT_NATIVE_SOURCES,
+            # Only the label a card must show; absent means not offensive.
+            **({"risk": "offensive"} if skill.get("risk") == "offensive" else {}),
             "activation": (
                 "natively linked into ~/.claude/skills and ~/.agents/skills "
                 "by setup.sh / link-skills.sh"
@@ -774,6 +776,8 @@ def _card(entry: Dict[str, Any], score: Optional[int] = None) -> Dict[str, Any]:
         "ready": ready.get("ready", "unknown"),
         "detail": f"registry.py show {entry.get('name') or entry.get('id')}",
     }
+    if entry.get("risk") == "offensive":
+        card["risk"] = "offensive - needs explicit authorization"
     if ready.get("ready") == "yes" and ready.get("how"):
         card["how"] = ready["how"][:80]
     if ready.get("ready") != "yes" and ready.get("blocker"):
@@ -787,6 +791,8 @@ def _format_card(card: Dict[str, Any]) -> str:
     lines = [f"- {card['name']} [{card['type']}] {card['id']}"]
     if card.get("summary"):
         lines.append(f"  {card['summary']}")
+    if card.get("risk"):
+        lines.append(f"  risk: {card['risk']}")
     why = card.get("why")
     if why:
         lines.append(f"  why: {why}")

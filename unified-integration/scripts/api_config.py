@@ -75,6 +75,16 @@ BUILTIN_ANY_OF = {
 SECRET_PATTERN = re.compile(
     r"(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+|(?<![A-Za-z0-9])sk-(?:ant-)?[A-Za-z0-9_-]{16,}"
     r"|\bAKIA[A-Z0-9]{16}\b"
+    # Provider token prefixes users paste into prompts (final audit
+    # 2026-11-20): GitLab, Tavily, Firecrawl, Google, Slack, Hugging Face,
+    # Groq, xAI, npm, Stripe live keys, JWTs, PEM private keys, URI userinfo.
+    r"|(?<![A-Za-z0-9])(?:glpat-[A-Za-z0-9_-]{20,}|tvly-[A-Za-z0-9_-]{20,}"
+    r"|fc-[a-f0-9]{24,}|AIza[0-9A-Za-z_-]{35}|xox[abprs]-[A-Za-z0-9-]{20,}"
+    r"|hf_[A-Za-z0-9]{30,}|gsk_[A-Za-z0-9]{30,}|xai-[A-Za-z0-9]{30,}"
+    r"|npm_[A-Za-z0-9]{36}|[sr]k_live_[A-Za-z0-9]{16,}"
+    r"|eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,})"
+    r"|-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----"
+    r"|(?<=://)[^/\s:@]+:[^/\s@]+(?=@)"
     r"|(?i:\b(?:Bearer|Basic)\s+[^\s\"',}]+)"
     r"|(?i:(?:api[_-]?key|access[_-]?token|password|secret|authorization)"
     r"[\"']?\s*[:=]\s*[\"']?(?:(?:Bearer|Basic)\s+)?[^\s\"',}]+)"

@@ -501,6 +501,35 @@ class CredentialRedactionTests(IsolatedSecurityTest):
             for context in (f"key {leaked} end", f"KEY={leaked}", f'"{leaked}"', f"x:{leaked}"):
                 self.assertNotIn(leaked, api.redact(context), context)
 
+    def test_common_provider_credential_formats_are_redacted(self):
+        # Final audit 2026-11-20 (P1): user-pasted credentials in these formats
+        # reached the Mode 2 selector (and memory) unredacted. Fixtures are
+        # synthetic and assembled at runtime.
+        api = self.module("provider_formats", SCRIPTS / "api_config.py")
+        body = "Ab3dE5gH7jK9mN1pQ3sT5vX7zB9cD1fG3hJ5kL7"
+        hexed = "0123456789abcdef0123456789abcdef"
+        leaks = {
+            "gitlab": "glpat-" + body[:20], "tavily": "tvly-dev-" + body[:24],
+            "firecrawl": "fc-" + hexed, "google": "AIza" + body[:35],
+            "slack": "xoxb-" + "123456789012-" + body[:24], "huggingface": "hf_" + body[:34],
+            "groq": "gsk_" + body[:40], "xai": "xai-" + body[:40], "npm": "npm_" + body[:36],
+            "stripe": "sk_live_" + body[:24], "stripe-restricted": "rk_live_" + body[:24],
+            "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0." + body[:30],
+        }
+        for name, secret in leaks.items():
+            with self.subTest(format=name):
+                self.assertNotIn(secret, api.redact(f"please use {secret} for this"))
+        pem = ("-----BEGIN OPENSSH PRIVATE KEY-----\n" + body + "\n"
+               "-----END OPENSSH PRIVATE KEY-----")
+        self.assertNotIn(body, api.redact(f"key:\n{pem}\nthanks"))
+        uri = api.redact("connect to postgres://report:" + body[:12] + "@db.internal:5432/sales")
+        self.assertNotIn(body[:12], uri)
+        self.assertIn("postgres://", uri)
+        self.assertIn("@db.internal:5432/sales", uri)
+        ordinary = ("fix fc-barcelona-fan-page, the xai-sdk docs, hf_hub_download(), "
+                    "npm_config_cache and https://example.com/path@v1 or user@example.com")
+        self.assertEqual(api.redact(ordinary), ordinary)
+
     def test_personal_search_provider_file_is_never_opened(self):
         """A sentinel search_providers.json at the checkout root stays untouched."""
         api = self.module("provider_isolation", SCRIPTS / "api_config.py")

@@ -26,7 +26,7 @@
 
 ### P0: Hardcoded Preflight API Key in Committed ui.api.json
 - **File:** `ui.api.json:15`
-- **Root Cause:** The preflight section contains a live OpenRouter API key (`REDACTED****...`) committed to the repository.
+- **Root Cause:** The preflight section contained a live OpenRouter API key (redacted: `REDACTED****...`) committed to the repository.
 - **Reproduction:** `cat ui.api.json | grep -A5 preflight`
 - **User Impact:** API key exposed in git history; any clone or fork inherits the credential. Key rotation required immediately.
 - **Severity:** P0 (secret leakage in committed config)

@@ -490,6 +490,19 @@ class PackageResolutionTests(PreflightTestCase):
         self.assertEqual(unmet, [])
         self.assertEqual(package[0].delivery, "direct_read")
 
+    def test_selector_ids_must_match_a_registry_id_exactly(self):
+        # Final audit 2026-11-20 (P1): wrong-typed, untyped or re-cased IDs
+        # resolved through the name surface (mcp:docx -> skill:docx,
+        # skill:memory -> a callable capability) instead of failing.
+        for wrong in ("mcp:docx", "skill:memory", "SKILL:DOCX", "capability:docx"):
+            with self.subTest(id=wrong):
+                package, unmet = self.module.build_package(self.select([{"id": wrong}]))
+                self.assertEqual(package, [])
+                self.assertEqual(len(unmet), 1)
+                self.assertIn("id not found", unmet[0])
+        package, unmet = self.module.build_package(self.select([{"id": "skill:docx"}]))
+        self.assertEqual((unmet, package[0].id), ([], "skill:docx"))
+
     def test_plugin_resolves_guide(self):
         package, unmet = self.module.build_package(self.select(
             [{"id": "plugin:openmontage", "required": False}]))

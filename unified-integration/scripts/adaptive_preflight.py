@@ -669,6 +669,11 @@ def build_package(selection: Selection, *, agent: str = "",
             resolved = _resolve_tool_id(item, tools)
         else:
             entry = registry.find_entry(item.id)
+            # CONTRACT 8.5: typed IDs resolve exactly. find_entry also serves
+            # the CLI name surface (case-insensitive, untyped, cross-type),
+            # which must never turn a wrong selector ID into another entry.
+            if entry is not None and entry.get("id") != item.id:
+                entry = None
             if entry is None:
                 resolved = ResolvedItem(
                     id=item.id, type="unknown", ref="",

@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process"
+import { createHash } from "node:crypto"
 import { existsSync, readFileSync, statSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -32,13 +33,29 @@ function registryStamp() {
     join(unified, "..", "skills", "library-map.json")].map(fileRevision).join("|")
 }
 
-function bootstrapMap() {
+/** Shell-safe absolute command for the registry CLI. The generated L0 map
+ * names it relative to the checkout, which fails from a user project. */
+export function registryCommand() {
+  const script = join(unified, "scripts", "registry.py")
+  return "python3 " + (/^[\w\/.-]+$/.test(script) ? script : "'" + script.replaceAll("'", "'\\''") + "'")
+}
+
+export function bootstrapMap() {
   try {
-    const map = JSON.parse(readFileSync(join(unified, "..", "skills", "library-map.json"), "utf8")).rendered
+    const rendered = JSON.parse(readFileSync(join(unified, "..", "skills", "library-map.json"), "utf8")).rendered
+    if (typeof rendered !== "string") return ""
+    const map = rendered.replaceAll("python3 unified-integration/scripts/registry.py", registryCommand())
     // Reserve the remainder of the 1,000-token bootstrap slot for the
     // retained workflow rules and wrapper below.
-    return typeof map === "string" && Math.floor(map.length / 4) + 1 <= 900 ? map : ""
+    return Math.floor(map.length / 4) + 1 <= 900 ? map : ""
   } catch { return "" }
+}
+
+function lastAssistantText(messages) {
+  const last = [...messages].reverse().find((item) => item.role === "assistant" || item.type === "assistant")
+  if (!last) return ""
+  return typeof last.content === "string" ? last.content :
+    (last.content || []).filter((part) => part.type === "text").map((part) => part.text).join("\n")
 }
 
 /** Private evidence from this host location, never another gateway process. */
@@ -187,6 +204,15 @@ export default {
     const event = (name, id, extra = {}) => ({
       hook_event_name: name, session_id: id, cwd, ...extra,
     })
+    /** Run Stop at most once per distinct final answer of a session. */
+    const flush = async (id, text) => {
+      if (!text) return
+      const digest = createHash("sha256").update(text).digest("hex")
+      const note = notes.get(id)
+      if (note?.flushed === digest) return
+      if (note) note.flushed = digest
+      await runtime(event("Stop", id, { last_assistant_message: text }))
+    }
     registrations.push(await ctx.session.hook("prompt", async (input) => {
       await readyMcp(ctx)
       const id = input.sessionID
@@ -196,7 +222,10 @@ export default {
       const prepared = await runtime(event("UserPromptSubmit", id, {
         prompt: input.prompt.text || "", ae_host_inventory: inventory,
       }), true)
-      notes.set(id, { previous, skills: prepared.context, fallback: prepared.fallback, inventory, stamp })
+      // A new prompt ends the previous turn: its final answer is flushed once,
+      // on the first model request of this turn, unless idle already did.
+      notes.set(id, { previous, skills: prepared.context, fallback: prepared.fallback, inventory, stamp,
+        flushed: notes.get(id)?.flushed, pendingFlush: notes.has(id) })
       if (notes.size > 100) notes.delete(notes.keys().next().value)
     }))
     registrations.push(await ctx.session.hook("context", async (input) => {
@@ -231,11 +260,12 @@ export default {
       }
       const text = [bootstrap, context?.previous, context?.skills].filter(Boolean).join("\n\n")
       if (text) input.system.push({ type: "text", text })
-      const last = [...input.messages].reverse().find((item) => item.role === "assistant")
-      if (last) {
-        const text = typeof last.content === "string" ? last.content :
-          (last.content || []).filter((part) => part.type === "text").map((part) => part.text).join("\n")
-        if (text) await runtime(event("Stop", input.sessionID, { last_assistant_message: text }))
+      // Stop is a turn-end event. Tool-loop continuations also reach this
+      // hook; running Stop there appended observer checkpoints and replaced
+      // the session summary with intermediate text (final audit 2026-11-20).
+      if (context?.pendingFlush) {
+        context.pendingFlush = false
+        await flush(input.sessionID, lastAssistantText(input.messages))
       }
     }))
     registrations.push(await ctx.session.hook("experimental.idle", async (input) => {
@@ -243,9 +273,7 @@ export default {
       // Saving at idle captures the final answer without parsing transcripts.
       try {
         const messages = await ctx.session.context({ sessionID: input.sessionID })
-        const last = [...messages].reverse().find((item) => item.type === "assistant")
-        const text = (last?.content || []).filter((part) => part.type === "text").map((part) => part.text).join("\n")
-        if (text) await runtime(event("Stop", input.sessionID, { last_assistant_message: text }))
+        await flush(input.sessionID, lastAssistantText(messages))
       } catch {
         // A cancelled/deleted session must not fail the agent's lifecycle.
       }

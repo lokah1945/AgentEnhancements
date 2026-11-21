@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises"
+import { mkdtemp, mkdir, writeFile, readFile, readdir, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -15,7 +15,17 @@ try {
   process.env.AGENT_SKILLS_DIR = skills
   process.env.AGENT_MEMORY_ROOT = join(root, "memory")
   process.env.AGENT_ENHANCEMENTS_STATE_DIR = join(root, "ae-state")
-  const { default: plugin, deliveredTools, runtime } = await import("../opencode-plugin/index.js")
+  process.env.TASK_OBSERVER_WORKSPACE = join(root, "observer")
+  const { default: plugin, deliveredTools, runtime, registryCommand } = await import("../opencode-plugin/index.js")
+  const stopFlushes = async () => {
+    let count = 0
+    for (const name of await readdir(join(root, "observer"), { recursive: true }).catch(() => [])) {
+      if (name.endsWith("checkpoints.log")) {
+        count += (await readFile(join(root, "observer", name), "utf8")).split("\n").filter((line) => line.includes("stop-flush")).length
+      }
+    }
+    return count
+  }
   const ref = 'tools["agent-enhancements"].ffmpeg_probe'
   const inventory = { tools: [{ name: "ffmpeg_probe", id: "agent-enhancements_ffmpeg_probe",
     namespace: "agent-enhancements", codemode: true,
@@ -69,7 +79,12 @@ try {
   const bootstrap = { sessionID: "session-one", system: [{ type: "text", text: "Keep unrelated instructions.\n" + owned + "\n" + owned }], messages: [] }
   await hooks.get("context")(bootstrap)
   const bootstrapText = bootstrap.system.map((part) => part.text).join("\n")
-  assert.equal(bootstrapText.split(map).length - 1, 1)
+  // The injected L0 must name the registry by absolute path: the agent runs
+  // it from the user's project, where the checkout-relative path fails.
+  const absoluteMap = map.replaceAll("python3 unified-integration/scripts/registry.py", registryCommand())
+  assert.equal(bootstrapText.split(absoluteMap).length - 1, 1)
+  assert.doesNotMatch(bootstrapText, /python3 unified-integration\/scripts\/registry\.py/)
+  assert.match(registryCommand(), /^python3 \/.+\/unified-integration\/scripts\/registry\.py$/)
   assert.doesNotMatch(bootstrapText, /agent-enhancements:begin/)
   assert.match(bootstrapText, /Keep unrelated instructions/)
   assert.match(bootstrapText, /historical notes \(7-day TTL\)/)
@@ -83,6 +98,24 @@ try {
   const continued = { sessionID: "session-two", system: [], messages: [] }
   await hooks.get("context")(continued)
   assert.match(continued.system[0].text, /completed automated fixture/)
+  // Stop is a turn-end event: tool-loop continuations must not flush it,
+  // and one final answer is flushed once (idle or next prompt, not both).
+  const said = (text) => [{ role: "user", content: "fix it" }, { role: "assistant", content: text }]
+  await hooks.get("prompt")({ sessionID: "session-turns", prompt: { text: "security audit" } })
+  const before = await stopFlushes()
+  await hooks.get("context")({ sessionID: "session-turns", system: [], messages: said("Let me look at the files first") })
+  await hooks.get("context")({ sessionID: "session-turns", system: [], messages: said("Now running the tests") })
+  assert.equal(await stopFlushes(), before)
+  await hooks.get("experimental.idle")({ sessionID: "session-turns" })
+  assert.equal(await stopFlushes(), before + 1)
+  await hooks.get("prompt")({ sessionID: "session-turns", prompt: { text: "security again" } })
+  await hooks.get("context")({ sessionID: "session-turns", system: [], messages: said("completed automated fixture") })
+  await hooks.get("context")({ sessionID: "session-turns", system: [], messages: said("Checking once more") })
+  assert.equal(await stopFlushes(), before + 1)
+  await hooks.get("prompt")({ sessionID: "session-missed-idle", prompt: { text: "security audit" } })
+  await hooks.get("prompt")({ sessionID: "session-missed-idle", prompt: { text: "security again" } })
+  await hooks.get("context")({ sessionID: "session-missed-idle", system: [], messages: said("final answer of turn one") })
+  assert.equal(await stopFlushes(), before + 2)
   await cleanup()
   assert.equal(disposed, 3)
   const stalledHooks = new Map()

@@ -70,6 +70,11 @@ def targets(agents: list[str]) -> list[tuple[str, Path, dict]]:
             doc = tomlkit.parse(path.read_text()).unwrap() if agent == "codex" else read_json(path)
             servers = doc.get(key, {})
             cfg = servers.get("servers", {}).get("agent-enhancements", {}) if agent == "opencode" else servers.get("agent-enhancements", {})
+            if agent == "opencode":
+                plugins = doc.get("plugins", [])
+                if not isinstance(plugins, list) or str(UI / "opencode-plugin") not in plugins:
+                    cfg = {"diagnosis": "OpenCode lifecycle plugin is not configured; "
+                                        "re-run setup.sh to wire it"}
         except (OSError, ValueError, AttributeError, TypeError) as exc:
             cfg = {"diagnosis": f"Host configuration unavailable ({type(exc).__name__})"}
         result.append((agent, path, cfg))

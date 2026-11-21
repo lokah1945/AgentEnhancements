@@ -253,6 +253,25 @@ class DoctorTests(unittest.TestCase):
                 self.assertIn("must be an object", row["diagnosis"])
 
 
+    def test_opencode_target_requires_the_lifecycle_plugin(self):
+        # Final audit 2026-11-20 (P2): a gateway-only OpenCode config passed
+        # doctor although no AE hook would ever run.
+        with patch.object(sys, "path", [str(UI_DIR / "scripts"), *sys.path]):
+            module = load_module("ae_doctor_opencode_test", UI_DIR / "scripts/doctor.py")
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "opencode"
+            config.mkdir()
+            gateway = {"type": "local", "command": ["python3", str(UI_DIR / "mcp-servers/gateway.py")]}
+            path = config / "opencode.json"
+            with patch.dict(os.environ, {"XDG_CONFIG_HOME": directory}):
+                path.write_text(json.dumps({"mcp": {"servers": {"agent-enhancements": gateway}}}))
+                (_, _, cfg), = module.targets(["opencode"])
+                self.assertIn("plugin", cfg.get("diagnosis", ""))
+                path.write_text(json.dumps({"mcp": {"servers": {"agent-enhancements": gateway}},
+                                            "plugins": [str(UI_DIR / "opencode-plugin")]}))
+                (_, _, cfg), = module.targets(["opencode"])
+                self.assertEqual(cfg, gateway)
+
 class HermesPluginTests(unittest.TestCase):
     def test_callbacks_forward_only_bounded_lifecycle_fields(self):
         module = load_module("ae_hermes_plugin", UI_DIR / "hermes-plugin/__init__.py")

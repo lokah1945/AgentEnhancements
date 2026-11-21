@@ -60,6 +60,15 @@ class SetupStaticTests(unittest.TestCase):
             self.assertEqual(second.returncode, 0, second.stderr)
             self.assertEqual(kept.read_text(), "vendored prompt\n")
 
+    def test_private_runtime_logs_are_never_committable(self):
+        # Final audit 2026-11-20 (P2): consent and audit JSONL are written to
+        # unified-integration/memory/audit/, which was not ignored.
+        for path in ("unified-integration/memory/audit/consent.jsonl",
+                     "unified-integration/memory/audit/mcp-calls.jsonl",
+                     ".agentenhancements/memory/memory.db", "ui.api.json"):
+            result = subprocess.run(["git", "-C", str(REPO_DIR), "check-ignore", "-q", path])
+            self.assertEqual(result.returncode, 0, f"{path} is not ignored")
+
     def test_globstar_enabled(self):
         self.assertRegex(self.src, r"shopt -s globstar")
 

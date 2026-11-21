@@ -44,6 +44,8 @@ __pycache__/
 # Runtime dependencies and local audit state
 unified-integration/.venv/
 unified-integration/opencode-plugin/node_modules/
+# Private consent/audit JSONL written by consent-gate.sh and audit-trail.sh.
+unified-integration/memory/audit/
 
 # Canonical machine-local credentials; only the empty template is tracked.
 /ui.api.json

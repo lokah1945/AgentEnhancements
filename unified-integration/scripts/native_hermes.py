@@ -101,18 +101,24 @@ def install_hermes(block: dict, merge_servers: Callable[[dict, dict], None], *, 
                 target.parent / target.readlink(), "hermes-plugin"
             ) and target.resolve() != source.resolve():
                 target.unlink()
+            foreign = False
             if target.exists() or target.is_symlink():
                 if not target.is_symlink() or target.resolve() != source.resolve():
-                    # User has their own plugin at this location - warn and skip
-                    print(f"[native] WARNING: user plugin collision at {target}, preserving user version", file=sys.stderr)
+                    # A user's own plugin owns this name: keep it and do not
+                    # enable it on AE's behalf (final audit 2026-11-20).
+                    foreign = True
+                    print(f"[native] WARNING: user plugin collision at {target}, preserving "
+                          "user version; AE lifecycle plugin not enabled for this profile",
+                          file=sys.stderr)
                 # If it's already our symlink, nothing to do
             else:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.symlink_to(source, target_is_directory=True)
-            enabled = plugins.setdefault("enabled", [])
-            if "agent-enhancements" not in enabled:
-                enabled.append("agent-enhancements")
-            merge_instructions(path.parent / "SOUL.md", note)
+            if not foreign:
+                enabled = plugins.setdefault("enabled", [])
+                if "agent-enhancements" not in enabled:
+                    enabled.append("agent-enhancements")
+                merge_instructions(path.parent / "SOUL.md", note)
         write(path, yaml.safe_dump(doc, sort_keys=False, allow_unicode=True))
     if profiles is not None:
         selection = read_json(host_selection_path())

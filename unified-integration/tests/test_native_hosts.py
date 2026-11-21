@@ -175,8 +175,15 @@ class NativeHostTests(unittest.TestCase):
         foreign = self.home / 'personal-plugin'
         foreign.mkdir()
         target.symlink_to(foreign, target_is_directory=True)
-        self.install('hermes')
+        config = self.home / '.hermes/config.yaml'
+        config.write_text('plugins:\n  enabled: []\n')
+        result = self.install('hermes')
         self.assertEqual(target.resolve(), foreign.resolve())
+        # Final audit 2026-11-20 (P2): the preserved foreign plugin must not
+        # be switched on under AE's name.
+        import yaml
+        self.assertNotIn('agent-enhancements', yaml.safe_load(config.read_text())['plugins']['enabled'])
+        self.assertIn('not enabled', result.stderr)
 
     def test_checkout_move_refreshes_native_skill_link_without_overwriting_foreign_link(self):
         registry = self.home / 'current/unified-integration/skills'

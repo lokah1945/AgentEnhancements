@@ -119,6 +119,16 @@ class RegistryCliTests(unittest.TestCase):
         self.assertNotIn("python -m", out)
         self.assertIn("agent-enhancements gateway", out)
 
+    def test_show_prints_paths_that_open_from_any_directory(self):
+        code, out, err = self._run("show", "skill:docx")
+        self.assertEqual(code, 0, err)
+        paths = [line.split(": ", 1)[1] for line in out.splitlines()
+                 if line.strip().startswith(("path:", "source:"))]
+        self.assertTrue(paths)
+        for path in paths:
+            self.assertTrue(Path(path).is_absolute(), path)
+            self.assertTrue(Path(path).is_file(), path)
+
     def test_map_json_is_valid_and_structured(self):
         code, out, err = self._run("map", "create a word document", "--json")
         self.assertEqual(code, 0, err)

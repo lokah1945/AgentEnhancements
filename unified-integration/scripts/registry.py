@@ -834,10 +834,14 @@ def _format_entry(entry: Dict[str, Any], score: Optional[int] = None) -> str:
     desc = entry.get("description") or ""
     if desc:
         lines.append(f"    {desc[:160]}{'...' if len(desc) > 160 else ''}")
-    if entry.get("path"):
-        lines.append(f"    path: {entry['path']}")
+    # Absolute paths: the agent reads them from the user's project, where
+    # checkout-relative paths do not resolve (final audit 2026-11-20).
+    # A skill's aggregated copy exists only after setup; its vendored
+    # source is always present, so never point at a missing file.
+    if entry.get("path") and (REPO_ROOT / entry["path"]).exists():
+        lines.append(f"    path: {REPO_ROOT / entry['path']}")
     if entry.get("source_path"):
-        lines.append(f"    source: {entry['source_path']}")
+        lines.append(f"    source: {REPO_ROOT / entry['source_path']}")
     if entry.get("usage"):
         lines.append(f"    usage: {entry['usage']}")
     if entry.get("type") == "mcp" and entry.get("command"):

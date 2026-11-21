@@ -286,6 +286,32 @@ class NativeConfigurationTests(unittest.TestCase):
         self.assertIn("SessionStart", hooks)
         self.assertIn("UserPromptSubmit", hooks)
 
+    def test_codex_rerun_keeps_every_hook_position_and_command_stable(self):
+        # Final audit 2026-11-20 (P1): Codex keys hook trust by event, group
+        # and handler index plus a hash. Re-appending AE at the end moved the
+        # user's later hook and silently untrusted it; an unset
+        # AGENT_ENHANCEMENTS_API_FILE also changed AE's command.
+        self.install("codex")
+        path = self.home / ".codex/hooks.json"
+        doc = json.loads(path.read_text())
+        mine = lambda name: {"hooks": [{"type": "command", "command": f"/home/me/{name}.sh"}]}
+        doc["hooks"]["Stop"] = [mine("first-stop"), *doc["hooks"]["Stop"], mine("second-stop")]
+        path.write_text(json.dumps(doc, indent=2) + "\n")
+        before = path.read_text()
+        self.install("codex")
+        self.assertEqual(path.read_text(), before)
+        stop = json.loads(before)["hooks"]["Stop"]
+        self.assertIn("first-stop", json.dumps(stop[0]))
+        self.assertIn("runtime.py", json.dumps(stop[1]))
+        self.assertIn("second-stop", json.dumps(stop[2]))
+        implicit = {key: value for key, value in self.env.items() if key != "AGENT_ENHANCEMENTS_API_FILE"}
+        rc, _, err = run([sys.executable, str(UI_DIR / "scripts/native-integration.py"),
+                          "--agent", "codex"], env=implicit)
+        self.assertEqual(rc, 0, err)
+        command = json.loads(path.read_text())["hooks"]["Stop"][1]["hooks"][0]["command"]
+        self.assertIn(f"AGENT_ENHANCEMENTS_API_FILE={UI_DIR.parent / 'ui.api.json'}", command)
+        self.assertIn("second-stop", json.dumps(json.loads(path.read_text())["hooks"]["Stop"][2]))
+
     def test_claude_credentials_and_helper_remain_native(self):
         path = self.home / ".claude/settings.json"
         path.parent.mkdir()

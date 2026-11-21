@@ -58,18 +58,39 @@ def own_hook(handler: dict) -> bool:
 
 
 def merge_hooks(doc: dict, agent: str, install: bool = True) -> None:
-    """Replace our handlers, preserving other events and matcher groups.
+    """Refresh our handlers in place, preserving other events and groups.
 
+    AE's handler keeps its group and handler position, and a new group is
+    appended only for an event that has none: Codex keys hook trust by
+    event, group and handler index, so re-appending AE at the end shifted
+    a user's later hook and silently untrusted it (final audit 2026-11-20).
     With install=False only previously installed AE handlers are removed
     (hosts whose config drops command hooks, e.g. OpenCode 2).
     """
     hooks = doc.setdefault("hooks", {})
     if not isinstance(hooks, dict):
         raise ValueError("hooks must be an object")
+    handler = None
+    if install:
+        from project_paths import environment
+        variables = environment()
+        for name in ('AGENT_ENHANCEMENTS_API_FILE',):
+            if os.environ.get(name):
+                variables[name] = os.environ[name]
+        command = shlex.join(['env', *[key+'='+value for key, value in variables.items()],
+                              runtime_python(), str(UI / "scripts/runtime.py"), agent])
+        handler = {"type": "command", "command": command, "timeout": 10}
     for event, groups in list(hooks.items()):
         retained = []
+        placed = False
         for group in groups:
-            handlers = [h for h in group.get("hooks", []) if not own_hook(h)]
+            handlers = []
+            for item in group.get("hooks", []):
+                if not own_hook(item):
+                    handlers.append(item)
+                elif handler is not None and event in EVENTS and not placed:
+                    handlers.append(dict(handler))
+                    placed = True
             if handlers:
                 retained.append({**group, "hooks": handlers})
         hooks[event] = retained
@@ -79,25 +100,10 @@ def merge_hooks(doc: dict, agent: str, install: bool = True) -> None:
         if not hooks:
             del doc["hooks"]
         return
-    from project_paths import environment
-    variables = environment()
-    for name in ('AGENT_ENHANCEMENTS_API_FILE',):
-        if os.environ.get(name):
-            variables[name] = os.environ[name]
-    command = shlex.join(['env', *[key+'='+value for key, value in variables.items()],
-                          runtime_python(), str(UI / "scripts/runtime.py"), agent])
     for event in EVENTS:
-        hooks.setdefault(event, []).append(
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": command,
-                        "timeout": 10,
-                    }
-                ]
-            }
-        )
+        groups = hooks.setdefault(event, [])
+        if not any(item == handler for group in groups for item in group.get("hooks", [])):
+            groups.append({"hooks": [dict(handler)]})
 
 
 def mcp_block() -> dict:

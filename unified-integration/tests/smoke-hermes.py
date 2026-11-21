@@ -39,7 +39,11 @@ def main() -> int:
             project.mkdir()
             api = root / "ui.api.json"
             api.write_text((UI / "config/ui.api.example.json").read_text())
+            # Keep host selection and caches out of the checkout's live state
+            # (final audit 2026-11-20).
+            state = root / "ae-state"
             env = {**os.environ, "HOME": str(home),
+                   "AGENT_ENHANCEMENTS_STATE_DIR": str(state),
                    "HERMES_HOME": str(home / ".hermes"),
                    "XDG_DATA_HOME": str(home / ".local/share"),
                    "AGENT_MEMORY_ROOT": str(root / "memory"),

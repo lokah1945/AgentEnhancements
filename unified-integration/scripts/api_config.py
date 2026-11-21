@@ -443,8 +443,13 @@ def migrate(legacy_dir: Path | None = None) -> dict:
         doc["version"] = CONFIG_VERSION
         changed = True
 
-    if "preflight" not in doc:
-        directory = Path(legacy_dir) if legacy_dir else _legacy_preflight_dir()
+    directory = Path(legacy_dir) if legacy_dir else _legacy_preflight_dir()
+    # CONTRACT 8.6: legacy files are imported once. Without this marker a
+    # user who removed the preflight section and revoked the key got Mode 2
+    # and the old key back on the next setup (final audit 2026-11-20).
+    marker = directory / "legacy-preflight.imported"
+    imported = False
+    if "preflight" not in doc and not marker.exists():
         legacy = _read_private_text(directory / "model.json")
         if legacy is None and (directory / "model.json").is_file():
             # Readable but not owner-only: still non-secret settings.
@@ -480,7 +485,7 @@ def migrate(legacy_dir: Path | None = None) -> dict:
         if preflight is not None:
             doc["preflight"] = preflight
         if preflight is not None or legacy_key:
-            changed = True
+            changed = imported = True
 
     if not changed:
         return report
@@ -491,6 +496,8 @@ def migrate(legacy_dir: Path | None = None) -> dict:
     )
     _write_private_atomic(backup, path.read_text(encoding="utf-8"))
     _write_private_atomic(path, text)
+    if imported:
+        _write_private_atomic(marker, f"imported into {path.name} {time.strftime('%Y-%m-%dT%H:%M:%S')}\n")
     report.update(status="migrated", to_version=CONFIG_VERSION, backup=str(backup))
     return report
 

@@ -205,6 +205,21 @@ class MigrationTests(IsolatedConfig):
         (legacy / "model.json").write_text('{"adaptive_preflight_mode": 1}')
         self.assertEqual(api.migrate(legacy_dir=legacy)["status"], "already_current")
         self.assertEqual(json.loads(self.path.read_text())["preflight"]["mode"], 2)
+        # Final audit 2026-11-20 (P1): the user disables preflight by removing
+        # the section and revokes the key; a later setup must not resurrect
+        # Mode 2 egress with the old legacy key.
+        doc = json.loads(self.path.read_text())
+        del doc["preflight"]
+        doc["api_keys"]["PREFLIGHT_API_KEY"] = []
+        self.path.write_text(json.dumps(doc))
+        again = api.migrate(legacy_dir=legacy)
+        self.assertEqual(again["status"], "already_current")
+        doc = json.loads(self.path.read_text())
+        self.assertNotIn("preflight", doc)
+        self.assertEqual(doc["api_keys"]["PREFLIGHT_API_KEY"], [])
+        marker = legacy / "legacy-preflight.imported"
+        self.assertEqual(marker.stat().st_mode & 0o777, 0o600)
+        self.assertNotIn("legacy-preflight-fixture", marker.read_text())
 
     def test_group_readable_key_file_is_not_imported(self):
         self.write({})

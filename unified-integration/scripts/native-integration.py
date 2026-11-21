@@ -57,8 +57,12 @@ def own_hook(handler: dict) -> bool:
     )
 
 
-def merge_hooks(doc: dict, agent: str) -> None:
-    """Replace our handlers, preserving other events and matcher groups."""
+def merge_hooks(doc: dict, agent: str, install: bool = True) -> None:
+    """Replace our handlers, preserving other events and matcher groups.
+
+    With install=False only previously installed AE handlers are removed
+    (hosts whose config drops command hooks, e.g. OpenCode 2).
+    """
     hooks = doc.setdefault("hooks", {})
     if not isinstance(hooks, dict):
         raise ValueError("hooks must be an object")
@@ -69,6 +73,12 @@ def merge_hooks(doc: dict, agent: str) -> None:
             if handlers:
                 retained.append({**group, "hooks": handlers})
         hooks[event] = retained
+        if not install and not retained:
+            del hooks[event]
+    if not install:
+        if not hooks:
+            del doc["hooks"]
+        return
     from project_paths import environment
     variables = environment()
     for name in ('AGENT_ENHANCEMENTS_API_FILE',):
@@ -260,8 +270,10 @@ def install(agent: str, *, mcp_only: bool = False, profiles: list[str] | None = 
             plugin = str(UI / "opencode-plugin")
             plugins = [p for p in doc.get("plugins", []) if not managed_integration_path(p, "opencode-plugin")]
             doc["plugins"] = [*plugins, plugin]
-            # Install runtime hooks for opencode
-            merge_hooks(doc, agent)
+            # OpenCode 2 drops Claude-style command hooks from its config; the
+            # plugin above is the lifecycle channel. Remove handlers that
+            # earlier AE versions wrote, keep the user's own.
+            merge_hooks(doc, agent, install=False)
         write_json(path, doc)
         # Audit AE-15: JSON serialization drops user comments from JSONC
         # files. The untouched original is preserved in the 0600 backup;

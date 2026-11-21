@@ -356,6 +356,22 @@ class NativeConfigurationTests(unittest.TestCase):
         self.assertFalse(path.with_suffix(".json").exists())
         self.assertTrue(list(path.parent.glob("*.backup.*")))
 
+    def test_opencode_gets_no_inert_command_hooks_and_old_ones_are_removed(self):
+        # Final audit 2026-11-20 (P3): OpenCode 2 drops Claude-style command
+        # hooks from its config; the AE plugin is the only active channel.
+        path = self.home / ".config/opencode/opencode.json"
+        path.parent.mkdir(parents=True)
+        stale = {"type": "command", "command":
+                 "python3 /old/unified-integration/scripts/runtime.py opencode"}
+        mine = {"type": "command", "command": "echo personal"}
+        path.write_text(json.dumps({"hooks": {
+            "Stop": [{"hooks": [stale]}], "PreToolUse": [{"hooks": [mine, stale]}]}}))
+        self.install("opencode")
+        doc = json.loads(path.read_text())
+        self.assertNotIn("runtime.py", json.dumps(doc.get("hooks", {})))
+        self.assertEqual(doc["hooks"], {"PreToolUse": [{"hooks": [mine]}]})
+        self.assertTrue(any(str(p).endswith("opencode-plugin") for p in doc["plugins"]))
+
     def test_opencode_migrates_v1_server_shape_and_environment(self):
         path = self.home / ".config/opencode/opencode.json"
         path.parent.mkdir(parents=True)

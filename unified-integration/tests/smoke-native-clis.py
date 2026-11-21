@@ -8,7 +8,7 @@ The test creates temporary config/data and checks automatic task + summary notes
 """
 
 import argparse
-import json, os, subprocess, tempfile, threading, time, sqlite3, shutil
+import json, os, subprocess, sys, tempfile, threading, time, sqlite3, shutil
 from pathlib import Path
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
@@ -605,7 +605,9 @@ def main() -> None:
         )
         opencfg.write_text("{}")
         env["XDG_CONFIG_HOME"] = str(root / "config")
-        python = Path.home() / ".local/share/agentenhancements/venv/bin/python"
+        # AE keeps its runtime in the checkout (.agentenhancements/runtime);
+        # the smoke runs under that interpreter (final audit 2026-11-22).
+        python = Path(sys.executable)
         claude_config = root / "claude"
         claude_config.mkdir()
         (claude_config / "settings.json").write_text(

@@ -253,6 +253,28 @@ class DoctorTests(unittest.TestCase):
                 self.assertIn("must be an object", row["diagnosis"])
 
 
+    def test_codex_and_claude_targets_require_the_lifecycle_hooks(self):
+        # Final audit 2026-11-20 (P2): doctor passed with the gateway entry
+        # alone although no AE hook would run.
+        with patch.object(sys, "path", [str(UI_DIR / "scripts"), *sys.path]):
+            module = load_module("ae_doctor_hooks_test", UI_DIR / "scripts/doctor.py")
+        with tempfile.TemporaryDirectory() as directory:
+            codex = Path(directory) / "codex"
+            codex.mkdir()
+            gateway = {"command": "python3", "args": [str(UI_DIR / "mcp-servers/gateway.py")]}
+            (codex / "config.toml").write_text(
+                '[mcp_servers.agent-enhancements]\ncommand = "python3"\n'
+                f'args = ["{UI_DIR / "mcp-servers/gateway.py"}"]\n')
+            with patch.dict(os.environ, {"CODEX_HOME": str(codex)}):
+                (_, _, cfg), = module.targets(["codex"])
+                self.assertIn("lifecycle hooks are not installed", cfg.get("diagnosis", ""))
+                command = f"env X=1 python3 {UI_DIR / 'scripts/runtime.py'} codex"
+                hooks = {event: [{"hooks": [{"type": "command", "command": command}]}]
+                         for event in ("SessionStart", "UserPromptSubmit", "Stop")}
+                (codex / "hooks.json").write_text(json.dumps({"hooks": hooks}))
+                (_, _, cfg), = module.targets(["codex"])
+                self.assertEqual(cfg, gateway)
+
     def test_opencode_target_requires_the_lifecycle_plugin(self):
         # Final audit 2026-11-20 (P2): a gateway-only OpenCode config passed
         # doctor although no AE hook would ever run.

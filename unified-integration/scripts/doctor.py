@@ -31,6 +31,34 @@ COMMANDS = {"claude-code": "claude", "codex": "codex",
             "opencode": "opencode", "hermes": "hermes"}
 
 
+def lifecycle_hooks_missing(agent: str) -> list[str]:
+    """Events whose AE runtime hook is absent from the host's hook file.
+
+    The gateway entry alone proved installation, not that prompts reach AE
+    (final audit 2026-11-20). Codex additionally requires the user to trust
+    new or changed hooks in /hooks; that review state is host-private.
+    """
+    home = Path.home()
+    if agent == "claude-code":
+        base = Path(os.environ.get("CLAUDE_CONFIG_DIR", home / ".claude"))
+        path = base / "settings.json"
+    else:
+        path = Path(os.environ.get("CODEX_HOME", home / ".codex")) / "hooks.json"
+    try:
+        hooks = read_json(path).get("hooks", {})
+    except (OSError, ValueError, AttributeError, TypeError):
+        hooks = {}
+    runtime = str(UI / "scripts/runtime.py")
+    missing = []
+    for event in ("SessionStart", "UserPromptSubmit", "Stop"):
+        groups = hooks.get(event, []) if isinstance(hooks, dict) else []
+        if not any(runtime in str(item.get("command", ""))
+                   for group in groups if isinstance(group, dict)
+                   for item in group.get("hooks", []) if isinstance(item, dict)):
+            missing.append(event)
+    return missing
+
+
 def targets(agents: list[str]) -> list[tuple[str, Path, dict]]:
     """Read the actual configuration file used by each selected host."""
     home = Path.home()
@@ -70,6 +98,11 @@ def targets(agents: list[str]) -> list[tuple[str, Path, dict]]:
             doc = tomlkit.parse(path.read_text()).unwrap() if agent == "codex" else read_json(path)
             servers = doc.get(key, {})
             cfg = servers.get("servers", {}).get("agent-enhancements", {}) if agent == "opencode" else servers.get("agent-enhancements", {})
+            if agent in ("claude-code", "codex") and cfg:
+                missing = lifecycle_hooks_missing(agent)
+                if missing:
+                    cfg = {"diagnosis": "AE lifecycle hooks are not installed ("
+                                        + ", ".join(missing) + "); re-run setup.sh"}
             if agent == "opencode":
                 plugins = doc.get("plugins", [])
                 if not isinstance(plugins, list) or str(UI / "opencode-plugin") not in plugins:

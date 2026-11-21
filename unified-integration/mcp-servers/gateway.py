@@ -23,6 +23,7 @@ from typing import Any
 
 import jsonschema
 from mcp import ClientSession, StdioServerParameters, types
+from mcp.shared.exceptions import McpError
 from mcp.client.stdio import stdio_client
 from mcp.server import Server
 from mcp.server.lowlevel import NotificationOptions
@@ -193,6 +194,13 @@ class External:
                             tool, arguments, result = item
                             try:
                                 response = await session.call_tool(tool, arguments)
+                            except McpError:
+                                # A JSON-RPC error response (unknown tool,
+                                # invalid params) leaves the connection usable.
+                                if not result.done():
+                                    result.set_result(failed(
+                                        "External MCP rejected the request (unknown tool or invalid arguments)."))
+                                continue
                             except Exception:
                                 response = failed(
                                     "External MCP request failed; verify its installation and authorization."
@@ -315,18 +323,32 @@ class Gateway:
         server in one result).
         """
         result = {}
+        reserved = {"ae_health"} | {
+            public_name(server, tool.name)
+            for server, definitions in self.definitions.items()
+            for tool in definitions
+        }
         sources = {
             **self.definitions,
             **{key: worker.tools for key, worker in self.externals.items()},
         }
+        builtin_prefixes = {server.removesuffix("-mcp") for server in BUILTINS}
         for name, definitions in sources.items():
             if not server_state(name, config)["visible"]:
                 continue
+            if name not in BUILTINS and name.removesuffix("-mcp") in builtin_prefixes:
+                continue  # would answer under a built-in's tool names
             for original in definitions:
                 if not tool_available(name, original.name, config):
                     continue
                 tool = slim_schema(original)
                 tool.name = public_name(name, original.name)
+                if name not in BUILTINS and (
+                        tool.name in reserved or tool.name in result):
+                    # Built-in names stay reserved even while that backend is
+                    # disabled: an external server must never answer under a
+                    # trusted tool's name (final audit 2026-11-20).
+                    continue
                 if name == "embeddings-mcp" and original.name in (
                     "embed",
                     "embed_batch",

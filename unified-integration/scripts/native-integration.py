@@ -134,7 +134,7 @@ def merge_servers(existing: dict, block: dict) -> None:
         if isinstance(old, dict):
             command = old.get("args", old.get("command", []))
             if isinstance(command, list) and any(
-                managed_integration_path(arg, "mcp-servers", name, "server.py")
+                managed_integration_path(arg, "mcp-servers", "gateway.py")
                 for arg in command
             ):
                 del existing[name]

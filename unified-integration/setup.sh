@@ -882,6 +882,8 @@ for record in content.split('\x1e'):
         rel_agg = os.path.relpath(agg_path, base_dir) if base_dir else agg_path
     except ValueError:
         rel_agg = agg_path
+    # Normalize to forward slashes for cross-platform consistency
+    rel_agg = rel_agg.replace('\\', '/')
 
     source_path = ''
     if skill_file and base_dir:
@@ -889,6 +891,8 @@ for record in content.split('\x1e'):
             source_path = os.path.relpath(skill_file, base_dir)
         except ValueError:
             source_path = skill_file
+    # Normalize to forward slashes for cross-platform consistency
+    source_path = source_path.replace('\\', '/')
 
     skills_by_name[name] = {
         'name': name,

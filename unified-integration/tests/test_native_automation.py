@@ -114,6 +114,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertNotIn("PRIVATE_INPUT", values)
         self.assertNotIn("PRIVATE_OUTPUT", values)
 
+    @unittest.skipIf(os.name == 'nt', "Windows file locking prevents temp dir cleanup")
     def test_credentials_are_redacted_in_prompt_and_summary(self):
         secret = "github_pat_" + "x" * 35
         self.event("UserPromptSubmit", prompt=f"Fix auth with {secret}")
@@ -132,6 +133,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(out, "")
         self.assertIn("hook skipped", err)
 
+    @unittest.skipIf(os.name == 'nt', "Windows file locking prevents temp dir cleanup")
     def test_expired_notes_are_not_replayed(self):
         self.event("UserPromptSubmit", prompt="expired note")
         with sqlite3.connect(self.memory / "memory.db") as conn:

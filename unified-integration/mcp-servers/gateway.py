@@ -556,8 +556,9 @@ class Gateway:
                 ):
                     response.isError = True
             else:
-                # A rotation invalidates the previous backend immediately,
-                # including the interval before the polling watcher runs.
+                # A rotation invalidates the previous backend immediately.
+                # Check credentials BEFORE queuing the call to prevent
+                # stale credentials being used for in-flight requests.
                 worker = self.externals[server]
                 refs = worker.settings.get("env", {})
                 if any(
@@ -565,6 +566,8 @@ class Gateway:
                     for ref in refs.values()
                 ):
                     return failed("Credentials changed; MCP reconnect is in progress.")
+                if not worker.task or worker.task.done():
+                    return failed("External MCP is unavailable.")
                 response = await worker.call(original, arguments)
 
             return types.CallToolResult.model_validate(

@@ -19,7 +19,12 @@ def managed_integration_path(value: object, *suffix: str) -> bool:
         return False
     path = Path(value).expanduser()
     parts = ("unified-integration", *suffix)
-    return path.is_absolute() and path.parts[-len(parts):] == parts
+    # Check both absolute and relative paths
+    if path.is_absolute():
+        return path.parts[-len(parts):] == parts
+    else:
+        # For relative paths, check if they end with the expected parts
+        return path.parts[-len(parts):] == parts
 
 
 def write(path: Path, content: str) -> None:

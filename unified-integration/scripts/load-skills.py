@@ -33,7 +33,7 @@ class SkillsLoader:
         """Load the aggregated skills index"""
         index_file = SKILLS_DIR / "all-skills.json"
         if index_file.exists():
-            with open(index_file) as f:
+            with open(index_file, encoding="utf-8") as f:
                 return json.load(f)
         return {"skills": []}
 
@@ -47,8 +47,18 @@ class SkillsLoader:
             # or say "Agent Skills". Those are not incompatible agent names.
             if compatible and self.agent not in compatible:
                 continue
+            # Fix tags to ensure they're strings
+            tags = skill.get("tags") or []
+            if isinstance(tags, list):
+                tags = [str(t).lower() for t in tags]
+            elif isinstance(tags, str):
+                tags = [t.strip().lower() for t in tags.split(",") if t.strip()]
+            else:
+                tags = []
+            skill_fixed = dict(skill)
+            skill_fixed["tags"] = tags
             candidates.append({
-                **skill, "type": "skill", "_skill": skill,
+                **skill_fixed, "type": "skill", "_skill": skill_fixed,
                 "natively_linked_by_default": skill.get("source") in DEFAULT_NATIVE_SOURCES,
             })
         # Return the original skill records: ranking metadata stays internal.

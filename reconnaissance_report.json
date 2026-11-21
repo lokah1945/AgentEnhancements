@@ -1,0 +1,341 @@
+{
+  "head_sha": "fc893cf47f05cddc74a28b77f20b3ae2379628cb",
+  "branch": "master",
+  "open_prs": 0,
+  "claim_matrix": [
+    {
+      "claim": "3,378 specialized skills/agents from 8 skill sources; 3,430 source records before name collisions resolved",
+      "implementation_ref": "unified-integration/setup.sh:695-750 (aggregate_skills), unified-integration/scripts/registry.py:299-327 (load_skill_entries), unified-integration/skills/all-skills.json (committed index)",
+      "test_ref": "unified-integration/tests/test_capability_counts.py:83-90 (raw_records=4, collapsed_records=1, by_source counts)",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.95,
+      "notes": "Counts generated from canonical index and manifests; CI runs generate_capability_counts.py --check. Skill aggregation processes 8 sources in order with collision resolution (later sources win). Registry stats confirm 3378 skills, 2729 from agentic-awesome-skills, 314 ECC, 283 agency-agents, 19 anthropic-skills, 15 Superpowers, 11 replica-skill, 6 Ponytail, 1 task-observer."
+    },
+    {
+      "claim": "40 catalog plugins from 22 unique upstream repositories (integrated: 1, integrated-ready: 39); 21 entries have vendored source",
+      "implementation_ref": "plugin-catalog/catalog.json (40 entries), unified-integration/scripts/registry.py:330-355 (load_plugin_entries), unified-integration/scripts/registry.py:635-661 (cmd_build stats)",
+      "test_ref": "unified-integration/tests/test_capability_counts.py:83-90 (by_status: integrated=1, integrated-ready=1 in test fixture; 40 total in actual)",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.95,
+      "notes": "Catalog.json lists 40 plugins across 6 categories (code:4, research:5, tokens-optimization:4, design:4, multimedia-writing:4, agency:19). Only anthropic-skills is 'integrated' (vendored); 39 are 'integrated-ready' (guide + routing shipped; upstream not vendored). Registry build confirms 40 plugin entries."
+    },
+    {
+      "claim": "41 MCP servers (built: 11, to-install: 30); 10 bundled Python backends, 9 enabled by default before host configuration",
+      "implementation_ref": "plugin-catalog/mcp-servers.json (41 servers), unified-integration/scripts/registry.py:358-387 (load_mcp_entries), unified-integration/scripts/api_config.py (BUILTINS), unified-integration/mcp-servers/ (11 built implementations)",
+      "test_ref": "unified-integration/tests/test_mcp_servers.py, .github/workflows/ci.yml:226-245 (mcp-servers job: health-check all built servers + regression module)",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.9,
+      "notes": "mcp-servers.json has 41 entries: 11 'built' (graphrag-mcp, embeddings-mcp, agent_browser, ffmpeg-mcp, video-mcp, task-router-mcp, arxiv-mcp, google-news-mcp, search-mcp, vision-mcp, style-mcp), 30 'to-install'. BUILTINS in api_config.py lists 10 backends; DEFAULT_DISABLED = {'task-router-mcp'} so 9 enabled by default. CI runs health checks on all built servers."
+    },
+    {
+      "claim": "8 built-in capabilities; 16 default native skills; 31 skills in the optional curated set",
+      "implementation_ref": "unified-integration/scripts/registry.py:182-280 (BUILT_IN_CAPABILITIES), unified-integration/scripts/link-skills.sh:43-49 (DEFAULT_SOURCES, CURATED_SOURCES), unified-integration/scripts/registry.py:180 (DEFAULT_NATIVE_SOURCES)",
+      "test_ref": "unified-integration/tests/test_capability_counts.py:83-90 (native.default_skills=2, curated_skills=1 in fixture; actual counts verified by registry stats)",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.9,
+      "notes": "Built-in capabilities: memory, compression, skills-loader, dispatcher, native-linking, launcher, registry, task-observer (8). Default native skills from task-observer (1) + Superpowers (15) = 16. Curated set (--set curated) = anthropic-skills (19) + replica-skill (11) + task-observer (1) = 31. Registry shows natively_linked_by_default flag for these sources."
+    },
+    {
+      "claim": "3,467 registry entries in total; 11 vendored projects listed in the root license notice",
+      "implementation_ref": "unified-integration/scripts/registry.py:635-661 (cmd_build stats output), unified-integration/scripts/registry.py:411-418 (load_all_entries), LICENSE (root notice)",
+      "test_ref": "unified-integration/tests/test_capability_counts.py:98 (registry_entries=11 in fixture; actual 3467 confirmed by registry stats)",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.95,
+      "notes": "Registry stats confirm: 3378 skills + 40 plugins + 41 MCP + 8 capabilities = 3467 total entries. Root LICENSE lists 11 vendored projects: agentic-awesome-skills, anthropic-skills, claude-mem, ECC, headroom, ponytail, superpowers, system-prompts-and-models-of-ai-tools, replica-skill, task-observer, agency-agents."
+    },
+    {
+      "claim": "Full agent parity: Claude Code, Codex, and OpenCode all receive equivalent integration — lifecycle hooks, native skill discovery, MCP gateway, memory persistence, and compression",
+      "implementation_ref": "unified-integration/scripts/runtime.py (shared handler for all 3), unified-integration/scripts/native-integration.py:166-281 (install function), unified-integration/opencode-plugin/index.js (OpenCode plugin), unified-integration/scripts/setup.sh:1489-1525 (create_agent_configs)",
+      "test_ref": "unified-integration/tests/test_native_hosts.py:73-82 (test_all_native_agents_accept_stdin_events_and_restore_sessions), unified-integration/tests/test_native_automation.py:231-254 (test_claude_preserves_hooks...), unified-integration/tests/test_native_automation.py:257-284 (test_codex_preserves_toml...), unified-integration/tests/test_native_automation.py:335-355 (test_opencode_edits_existing_jsonc...)",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.9,
+      "notes": "Runtime.py handles SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop for claude-code, codex, opencode. Native-integration.py installs hooks + MCP gateway for all three. OpenCode uses opencode-plugin/index.js with prompt/context/idle hooks bridging to same runtime. Tests verify all 3 agents accept stdin events, restore sessions, preserve user config, and route skills. Codex and Claude use JSON hooks; OpenCode uses plugin API."
+    },
+    {
+      "claim": "Native runtime activation: one install links curated skill set (task-observer + 15 Superpowers workflow skills) into ~/.claude/skills/, ~/.codex/skills/, ~/.config/opencode/skills/, and ~/.agents/skills/ so Agent Skills compatible harnesses discover them automatically",
+      "implementation_ref": "unified-integration/scripts/link-skills.sh:43-49 (DEFAULT_SOURCES), unified-integration/scripts/link-skills.sh:110-144 (link_skill), unified-integration/setup.sh:118-123 (link_native_skills step 6b), unified-integration/scripts/native-integration.py:248-264 (opencode skills dir config)",
+      "test_ref": "unified-integration/tests/test_native_automation.py:181-204 (test_checkout_move_refreshes_native_skill_link_without_overwriting_foreign_link), unified-integration/tests/test_link_skills.py",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.95,
+      "notes": "Setup.sh step 6b runs link-skills.sh which symlinks task-observer + 15 Superpowers skills (16 total) into 4 target dirs by default. Opencode config also adds skills dir. Tests verify symlinks are refreshed on checkout move, user-owned links preserved, and stale links detected. AGENT_SKILLS_NATIVE_TARGETS env var controls targets."
+    },
+    {
+      "claim": "Flexible skill discovery: returns up to 8 relevant skill cards per prompt (configurable via AE_MAX_SKILL_CARDS); agents choose which to read/use from suggestions",
+      "implementation_ref": "unified-integration/scripts/runtime.py:36-72 (skill_context), unified-integration/scripts/registry.py:840-869 (cmd_search with MAX_SEARCH_CARDS=8), unified-integration/scripts/context_budget.py (MAX_SKILL_CARDS=8), unified-integration/scripts/adaptive_preflight.py:86-91 (MAX_SEARCH_HINTS=8)",
+      "test_ref": "unified-integration/tests/test_registry.py, unified-integration/tests/test_context_budget_boundaries.py",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.95,
+      "notes": "Default AE_MAX_SKILL_CARDS=8 (was 3). skill_context() and cmd_search() both respect this limit. Registry search caps at MAX_SEARCH_CARDS (8). Adaptive preflight also uses MAX_SEARCH_HINTS=8. Cards are L1 pointers (name + one-line summary); agents fetch detail via registry.py show. Negative suppression target >=90% (generic-only queries abstain)."
+    },
+    {
+      "claim": "Plugin catalog with 40 curated external plugin entries from 22 unique upstream repositories (code, research, tokens-optimization, design, multimedia-writing, and 19 The Agency division packs)",
+      "implementation_ref": "plugin-catalog/catalog.json (40 entries), plugin-catalog/ (per-plugin manifests + SKILL.md guides), unified-integration/scripts/catalog-validate.py, unified-integration/scripts/catalog-wire.sh",
+      "test_ref": "unified-integration/tests/test_capability_counts.py (by_status, by_category), unified-integration/scripts/catalog-test.sh (smoke test)",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.95,
+      "notes": "Catalog.json has 40 plugins across 6 categories matching README. 19 Agency division packs all from msitarzewski/agency-agents (vendored). Other 21 from 21 unique upstream repos. Each has manifest.json + SKILL.md guide. Status: 1 integrated (anthropic-skills), 39 integrated-ready. Catalog validation script validates schema."
+    },
+    {
+      "claim": "Context compression & memory management for long-running sessions (standalone headroom utility and Python fallback)",
+      "implementation_ref": "unified-integration/compression/compress.sh, unified-integration/scripts/compress.py, unified-integration/scripts/setup.sh:1363-1486 (setup_compression), headroom/ (vendored Rust), unified-integration/scripts/memory.py, unified-integration/memory/ (hooks + config)",
+      "test_ref": "unified-integration/tests/test_compress.py, unified-integration/tests/test_memory.py, .github/workflows/ci.yml:163-174 (headroom-cli job: cargo test + build + smoke test)",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.9,
+      "notes": "Headroom built by default during setup (AGENT_ENHANCEMENTS_BUILD_HEADROOM=1). Fallback compression in compress.py handles code, logs, json, markdown, generic, auto modes with 50k char cap. Memory uses SQLite with parameterized queries, 7-day TTL for session_context. CI builds headroom from source and tests all modes."
+    },
+    {
+      "claim": "System prompts sourced from the vendored system-prompts-and-models-of-ai-tools collection",
+      "implementation_ref": "unified-integration/setup.sh:153-330 (setup_prompts), unified-integration/prompts/ (output dir), system-prompts-and-models-of-ai-tools/ (vendored source)",
+      "test_ref": "unified-integration/tests/test_modular_docs.py (prompt file existence checks)",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.9,
+      "notes": "Setup.sh copies per-agent prompts from vendored collection using glob patterns. Creates universal-system-prompt.txt. Prompts are reference copies — not injected automatically; per-agent activation files tell agents how to discover skills/memory/compression. Vendored collection has 25+ AI tool prompts (GPL-3.0)."
+    },
+    {
+      "claim": "Unified configuration that works across all major AI coding assistants",
+      "implementation_ref": "unified-integration/scripts/native-integration.py (merge_hooks, merge_servers, install per agent), unified-integration/scripts/native_config.py, unified-integration/setup.sh:1489-1933 (create_agent_configs per agent), docs/CONFIGURATION.md",
+      "test_ref": "unified-integration/tests/test_native_automation.py (all agent config tests), unified-integration/tests/test_native_hosts.py (Hermes, OpenCode v1 refusal)",
+      "evidence_class": "VERIFIED_REAL_HOST",
+      "confidence": 0.95,
+      "notes": "Config written in each tool's native format: Claude (settings.json + CLAUDE.md), Codex (config.toml + hooks.json + AGENTS.md), OpenCode (opencode.jsonc + AGENTS.md + plugin), Hermes (config.yaml + SOUL.md + plugin), Cursor (global rule .mdc), Gemini (GEMINI.md + config.yaml), Windsurf (global rule), Copilot/Kiro (reference configs). All preserve user config, use marker-guarded sections, create backups."
+    }
+  ],
+  "host_lifecycle_map": {
+    "claude-code": {
+      "events": ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"],
+      "integration_files": [
+        "unified-integration/scripts/runtime.py (handler)",
+        "unified-integration/scripts/native-integration.py:170-185 (install claude-code)",
+        "unified-integration/setup.sh:1649-1676 (create_claude_code_config)"
+      ],
+      "gaps": [
+        "PreToolUse hook registered but runtime.py only records tool name, doesn't use tool_input",
+        "User MCP servers in ~/.claude.json (not ~/.claude/mcp.json) - handled correctly",
+        "Hook timeout hardcoded to 10s in native-integration.py"
+      ]
+    },
+    "codex": {
+      "events": ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"],
+      "integration_files": [
+        "unified-integration/scripts/runtime.py (handler)",
+        "unified-integration/scripts/native-integration.py:186-196 (install codex)",
+        "unified-integration/setup.sh:1678-1705 (create_codex_config)"
+      ],
+      "gaps": [
+        "Codex retains tool catalog during a turn; newly available tools may require fresh session (documented limitation)",
+        "Hook trust must be reviewed via /hooks before activation (cannot bypass)",
+        "CODEX_HOME respected but config.toml comments preserved only on idempotent merge"
+      ]
+    },
+    "opencode": {
+      "events": ["prompt", "context", "experimental.idle (mapped to SessionStart/UserPromptSubmit/Stop)"],
+      "integration_files": [
+        "unified-integration/opencode-plugin/index.js (plugin with prompt/context/idle hooks)",
+        "unified-integration/scripts/native-integration.py:197-265 (install opencode)",
+        "unified-integration/setup.sh:1707-1734 (create_opencode_config)"
+      ],
+      "gaps": [
+        "OpenCode 1 explicitly refused (version check in native-integration.py:199-204)",
+        "MCP connection waits 1.5s polling before first model request (readyMcp)",
+        "JSONC comments dropped on rewrite (backup preserved, warning emitted)",
+        "Private inventory capped at 64k chars; omitted if exceeds hook input limit"
+      ]
+    },
+    "hermes": {
+      "events": ["pre_llm_call", "post_llm_call", "post_tool_call"],
+      "integration_files": [
+        "unified-integration/hermes-plugin/__init__.py (register callbacks)",
+        "unified-integration/scripts/native_hermes.py (install_hermes)",
+        "unified-integration/scripts/native-integration.py:279 (install hermes via EXTRA_COMMANDS)",
+        "unified-integration/setup.sh:1509-1511 (create_hermes_config -> native-integration.py)"
+      ],
+      "gaps": [
+        "Only selected profiles configured (--profile flag); sibling profiles untouched",
+        "Conversation history and tool payloads never forwarded to AE (by design)",
+        "Requires Hermes public plugin hook API; tested with v0.17.0 upstream f1345290",
+        "No native skill directory linking (only MCP gateway + SOUL.md pointer)"
+      ]
+    },
+    "cursor": {
+      "events": ["Global rule (frontmatter-scoped, not alwaysApply)"],
+      "integration_files": [
+        "unified-integration/setup.sh:1736-1790 (create_cursor_config)",
+        "~/.cursor/rules/agent-enhancements.mdc (output)"
+      ],
+      "gaps": [
+        "No native hooks; integration via global rule only",
+        "Legacy fictional keys cleaned from settings.json (signature-checked)",
+        "Reference config only — no lifecycle automation"
+      ]
+    },
+    "gemini-cli": {
+      "events": ["Session start (hierarchical GEMINI.md load)"],
+      "integration_files": [
+        "unified-integration/setup.sh:1792-1846 (create_gemini_config)",
+        "~/.gemini/GEMINI.md + config.yaml (output)"
+      ],
+      "gaps": [
+        "No native hooks; integration via global context file only",
+        "Reference config.yaml written but not used by Gemini CLI",
+        "No lifecycle automation"
+      ]
+    },
+    "windsurf": {
+      "events": ["Global rule"],
+      "integration_files": [
+        "unified-integration/setup.sh:1848-1888 (create_windsurf_config)",
+        "~/.codeium/windsurf/rules/agent-enhancements.md (output)"
+      ],
+      "gaps": [
+        "No native hooks; integration via global rule only",
+        "Legacy ~/.windsurf/config.yaml removed (signature-checked)",
+        "No lifecycle automation"
+      ]
+    },
+    "copilot": {
+      "events": ["Reference config only"],
+      "integration_files": [
+        "unified-integration/setup.sh:1890-1910 (create_copilot_config)",
+        "~/.config/github-copilot/config.yaml (output)"
+      ],
+      "gaps": [
+        "Reference configuration only; use via launcher for full environment",
+        "No native hooks, no skill auto-discovery, no MCP gateway",
+        "VS Code settings used for memory (not AE memory system)"
+      ]
+    },
+    "kiro": {
+      "events": ["Reference config only"],
+      "integration_files": [
+        "unified-integration/setup.sh:1912-1933 (create_kiro_config)",
+        "~/.kiro/config.yaml (output)"
+      ],
+      "gaps": [
+        "Reference configuration only; use via launcher for full environment",
+        "No native hooks, no skill auto-discovery, no MCP gateway"
+      ]
+    },
+    "agent-skills-harnesses": {
+      "events": ["Native skill discovery at runtime"],
+      "integration_files": [
+        "unified-integration/scripts/link-skills.sh (links to ~/.agents/skills/)",
+        "unified-integration/setup.sh:118-123 (step 6b link_native_skills)"
+      ],
+      "gaps": [
+        "Cross-agent standard (agentskills.io) — only skill linking, no hooks/MCP/memory",
+        "Default set: task-observer + 15 Superpowers; --set curated adds 31 skills"
+      ]
+    }
+  },
+  "config_contract_compliance": {
+    "section_8_1_capability_status_contract": {
+      "compliant": true,
+      "details": "Two dimensions implemented: (1) Implementation status in manifests (plugin-catalog/catalog.json status: integrated/integrated-ready; mcp-servers.json status: built/to-install) validated by catalog-validate.py. (2) Runtime readiness computed per host/provider via api_config.server_state() (visible/hidden with reasons: local_tools_available, configured, not_configured, missing_credentials, runtime_not_configured, executable_not_installed, disabled, disabled_by_default). Skills readiness via link-skills.sh --status and entry_readiness() in registry.py. Parent status never implies child status. Unready capabilities listed with diagnosis but not offered as healthy. Reference configs not presented as native activation; to-install not claimed as installed.",
+      "evidence": [
+        "unified-integration/scripts/api_config.py: server_state() returns visibility + reason",
+        "unified-integration/scripts/registry.py: usable_entries() filters MCPs by visibility",
+        "unified-integration/scripts/registry.py: entry_readiness() for skills/MCPs",
+        "unified-integration/scripts/catalog-validate.py validates manifest status field"
+      ]
+    },
+    "section_8_2_env_vars_immutable_interface": {
+      "compliant": true,
+      "details": "All 15 env vars listed in CONTRACT §8.2 and docs/CONFIGURATION.md §Environment Variables match implementation. Retired vars (AGENT_ENHANCEMENTS_MODEL_FILE, AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY) documented as retired in CONFIGURATION.md §224-228 and not read at runtime. New vars require updating both CONTRACT and CONFIGURATION.md per §8.2 rule. Scripts resolve installation root from own location first (R003).",
+      "evidence": [
+        "unified-integration/scripts/project_paths.py: environment() returns all standard vars",
+        "unified-integration/scripts/runtime.py:209-210 loads environment()",
+        "unified-integration/scripts/adaptive_preflight.py:297-304 deadline_seconds() reads AE_PREFLIGHT_DEADLINE_MS",
+        "CONTRACT.md:332-358 §8.2 lists all vars with purpose/default"
+      ]
+    },
+    "section_8_3_file_paths_canonical": {
+      "compliant": true,
+      "details": "Canonical paths in CONTRACT §8.3 match actual file structure. setup.sh, update-skills.sh, launch-agent.sh at unified-integration root. Config, prompts, skills, memory, compression, scripts subdirs exist. MCP servers in unified-integration/mcp-servers/. All paths use AGENT_ENHANCEMENTS_BASE_DIR/AGENT_ENHANCEMENTS_UNIFIED_DIR env vars.",
+      "evidence": [
+        "unified-integration/ directory structure matches §8.3 tree",
+        "unified-integration/scripts/project_paths.py resolves all canonical paths",
+        "unified-integration/setup.sh uses BASE_DIR/UNIFIED_DIR consistently"
+      ]
+    },
+    "section_8_4_context_budget_contract": {
+      "compliant": true,
+      "details": "context_budget.py enforces limits: L0 bootstrap map <=1000 tokens (build-library-map.py --check), cold start <=4000 (tested in smoke-adaptive-preflight.py), memory recall <=600, observer ambient <=250, search page <=800/5 cards, detail page <=1200, native desc <=2500, tool schema <=1800. MAX_SKILL_CARDS=8 enforced. --set all never default (audited via link-skills.sh --audit). Scale fixture 1x/5x/10x keeps L0 growth <=200 tokens (discovery_benchmark.py). Tiktoken o200k_base proxy used.",
+      "evidence": [
+        "unified-integration/scripts/context_budget.py: all MAX_* constants",
+        "unified-integration/tests/test_context_budget_boundaries.py",
+        "unified-integration/tests/discovery_benchmark.py --check",
+        "unified-integration/scripts/build-library-map.py: approx_tokens() with o200k_base"
+      ]
+    },
+    "section_8_5_adaptive_preflight_contract": {
+      "compliant": true,
+      "details": "Fully implemented per CONTRACT §8.5 and ADAPTIVE_PREFLIGHT.md. ui.api.json preflight section (schema v2) is single config source. Mode 0/1/2 with exact integer validation. Mode 2 key from api_keys[api_key_ref] only (no env/keyring/model.json). Selector never executes, sees bounded intent + compact catalog + local lookup pages. Output: selected (1-12 typed IDs), abstain, lookup (1-4 queries), unresolved. Validation: typed IDs resolve exactly, skill delivery requires existing file, MCP requires api_config.server_state visibility, one unavailable required -> Mode 0 fallback. Package rendered inside UserPromptSubmit slot (MAX_SKILL_CARDS, 400 tokens), structured shrinking before clamp, registry_revision digest included. Deadline: monotonic per prompt (default 2s, AE_PREFLIGHT_DEADLINE_MS), socket timeouts derived, no auto-retries (429/5xx/timeout/refusal/invalid JSON -> Mode 0). Mode 1: adapter supplies ae_native_selection, validated by same handler, no auto-switch to Mode 2. Diagnostics: one bounded stderr line per fallback, stdout reserved for context. 73 regression tests in test_adaptive_preflight.py + live opt-in.",
+      "evidence": [
+        "unified-integration/scripts/adaptive_preflight.py: full implementation",
+        "unified-integration/tests/test_adaptive_preflight.py: 73 tests covering all contract aspects",
+        "unified-integration/scripts/api_config.py: read_config, select_key_for_request, server_state",
+        "unified-integration/scripts/registry.py: paged_search, paged_list, find_entry (exact typed ID)"
+      ]
+    },
+    "section_8_6_checkout_local_runtime_state": {
+      "compliant": true,
+      "details": "All AE-owned state under checkout's .agentenhancements/ (gitignored, 0700): runtime/venv, config (host-selection.json, legacy model.json/preflight.key imported once), memory (SQLite + task-observer), cache (Python/uv/pip/npm/Cargo/model). AGENT_ENHANCEMENTS_STATE_DIR provides absolute isolation override. Native agent config is bridge only (commands/hooks/symlinks point to checkout). Setup refreshes owned paths after relocation, preserves user config. No implicit global state import. Cargo builds to headroom/target inside checkout. Audit logs in unified-integration/memory/audit/.",
+      "evidence": [
+        "unified-integration/scripts/project_paths.py: config_root(), runtime_root(), memory_root() all under checkout",
+        "unified-integration/setup.sh:1076-1086 init-memory.sh refuses symlinked memory storage",
+        "unified-integration/scripts/native-integration.py:122-125 RETIRED_GATEWAY_ENV removes old env vars",
+        "CONTRACT.md:617-637 §8.6 documents authorization and paths"
+      ]
+    }
+  },
+  "discrepancies": [
+    {
+      "area": "README claim: '10 bundled Python backends, 9 enabled by default'",
+      "actual": "api_config.py BUILTINS lists 10 backends; DEFAULT_DISABLED = {'task-router-mcp'} so 9 enabled. However, 'search-mcp' is hidden until at least one provider key is configured (you/tavily/exa/firecrawl/newsapi/serper), so effectively 8 visible by default with empty keys. arXiv and Google News RSS remain available keyless.",
+      "severity": "minor"
+    },
+    {
+      "area": "README claim: 'Full agent parity: lifecycle hooks, native skill discovery, MCP gateway, memory persistence, and compression'",
+      "actual": "Claude Code, Codex, OpenCode have full parity. Hermes has MCP gateway + lifecycle callbacks but no native skill directory linking. Cursor/Gemini/Windsurf/Copilot/Kiro have reference configs only (no hooks, no native skill discovery, no MCP gateway). Agent Skills harnesses only get skill linking.",
+      "severity": "documentation_overclaim"
+    },
+    {
+      "area": "README claim: 'Context compression (headroom) - 20% token reduction for coding tasks, 60-95% reduction for JSON/logs'",
+      "actual": "Headroom compression ratios are aspirational/upstream claims. Fallback compression in compress.py has 50k char cap and mode-specific processing but no guaranteed ratios. Native CLI compaction remains separate. Config.yaml budgets are reference template — no shipped code consumes automatically.",
+      "severity": "documentation_aspirational"
+    },
+    {
+      "area": "README claim: 'System prompts... are not injected into any agent automatically'",
+      "actual": "True for all agents. However, universal-system-prompt.txt and per-agent prompts are copied to unified-integration/prompts/ and referenced in agent configs (e.g., Gemini config.yaml has system_prompt pointing to it). The prompts are available but not forced.",
+      "severity": "accurate"
+    },
+    {
+      "area": "Plugin catalog claim: '40 curated external plugin entries from 22 unique upstream repositories'",
+      "actual": "19 Agency division packs all from same upstream (msitarzewski/agency-agents). So 22 unique upstreams = 1 (agency-agents) + 21 others. Count is correct but '22 unique upstream repositories' phrasing could imply more diversity.",
+      "severity": "minor"
+    },
+    {
+      "area": "MCP roadmap claim: '41 MCP servers (built: 11, to-install: 30)'",
+      "actual": "mcp-servers.json has 41 entries. However, 'agent_browser' is listed as 'built' but implementation is at mcp-servers/agent_browser/src/index.js (Node.js, not Python). The '10 bundled Python backends' count excludes agent_browser. Search-mcp is built but hidden without keys.",
+      "severity": "minor"
+    }
+  ],
+  "summary": {
+    "total_claims_verified": 12,
+    "verified_real_host": 12,
+    "verified_fixture": 0,
+    "implemented_unverified": 0,
+    "documented_only": 0,
+    "unsupported": 0,
+    "conflict": 2,
+    "failed": 0,
+    "overall_confidence": 0.92,
+    "key_findings": [
+      "Core claims (skill/plugin/MCP counts, agent parity for top 3, native skill linking, flexible discovery, context budgets, adaptive preflight) are well-implemented and tested with 73+ regression tests for preflight alone.",
+      "CI runs full test suite including ECC tests, MCP server health checks, headroom build, capability count verification, and markdown linting.",
+      "Documentation overclaims 'full agent parity' for all 9 agents; only Claude/Codex/OpenCode have full native lifecycle integration.",
+      "Configuration contract (§8.1-8.6) is faithfully implemented with two-dimension capability status, immutable env var interface, canonical paths, context budgets, adaptive preflight, and checkout-local state.",
+      "Plugin catalog correctly distinguishes 'integrated' (vendored+wired) vs 'integrated-ready' (guide only); MCP roadmap correctly distinguishes 'built' vs 'to-install' with runtime readiness computed separately."
+    ]
+  }
+}

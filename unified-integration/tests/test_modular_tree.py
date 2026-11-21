@@ -44,7 +44,7 @@ CATEGORIES = [
 
 
 def _load(path):
-    return json.loads(Path(path).read_text())
+    return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 class TestCatalogIntegrity(unittest.TestCase):
@@ -246,7 +246,7 @@ class TestCursorrulesCoverage(unittest.TestCase):
     """T-7: .cursorrules routes every cataloged plugin."""
 
     def test_every_slug_routed(self):
-        rules = CURSORRULES.read_text()
+        rules = CURSORRULES.read_text(encoding="utf-8")
         catalog = _load(CATALOG_PATH)
         unrouted = [
             entry["slug"] for entry in catalog["skills"]
@@ -260,7 +260,7 @@ class TestIntegrationReadmeCoverage(unittest.TestCase):
     """T-8: README_INTEGRATION.md documents every cataloged plugin."""
 
     def test_every_slug_documented(self):
-        doc = README_INTEGRATION.read_text()
+        doc = README_INTEGRATION.read_text(encoding="utf-8")
         catalog = _load(CATALOG_PATH)
         missing = [
             entry["slug"] for entry in catalog["skills"]
@@ -270,7 +270,7 @@ class TestIntegrationReadmeCoverage(unittest.TestCase):
                          f"README_INTEGRATION.md missing: {missing}")
 
     def test_declares_accurate_totals(self):
-        doc = README_INTEGRATION.read_text()
+        doc = README_INTEGRATION.read_text(encoding="utf-8")
         self.assertIn("17 / 17", doc)
         self.assertIn("**40 plugins**", doc)
         # Totals must track the source of truth, not a stale snapshot

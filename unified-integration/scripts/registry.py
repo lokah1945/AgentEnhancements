@@ -427,7 +427,14 @@ def score_skill(entry: Dict[str, Any], weights: Dict[str, float]) -> float:
     name = (entry.get("name") or "").lower()
     desc_tokens = set(_tokenize(entry.get("description", "")))
     desc_tokens |= set(_tokenize(entry.get("when_to_use", "")))
-    tags = {t.lower() for t in entry.get("tags", [])}
+    # Fix tags to ensure they're strings
+    tags_raw = entry.get("tags", [])
+    if isinstance(tags_raw, list):
+        tags = {str(t).lower() for t in tags_raw}
+    elif isinstance(tags_raw, str):
+        tags = {t.strip().lower() for t in tags_raw.split(",") if t.strip()}
+    else:
+        tags = set()
     name_matched = False
     name_hits = 0
     generic_confirmed = False

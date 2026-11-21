@@ -64,7 +64,10 @@ for plugin_id, mcp_servers in plugin_mcp_mapping.items():
         print(f"WARNING: No manifest path for {plugin_id}")
         continue
     
-    full_path = os.path.join('/root/project/AgentEnhancements', manifest_path)
+    # Auto-detect project root from script location
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    BASE_DIR = os.path.dirname(SCRIPT_DIR)
+    full_path = os.path.join(BASE_DIR, manifest_path)
     if not os.path.exists(full_path):
         print(f"WARNING: Manifest not found: {full_path}")
         continue

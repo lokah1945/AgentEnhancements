@@ -701,12 +701,14 @@ def main() -> None:
                 )
                 results.append((name, success))
                 if exercise_tools or not success or not tools_seen:
-                    log = Path("/tmp/agentenhancements-fixture-" + name + ".log")
+                    log_dir = Path(tempfile.gettempdir())
+                    log = log_dir / f"agentenhancements-fixture-{name}.log"
                     log.touch(mode=0o600, exist_ok=True)
                     log.write_text(r.stderr)
             except subprocess.TimeoutExpired as timeout:
                 print(name, "timeout", flush=True)
-                log = Path("/tmp/agentenhancements-fixture-" + name + ".log")
+                log_dir = Path(tempfile.gettempdir())
+                log = log_dir / f"agentenhancements-fixture-{name}.log"
                 log.touch(mode=0o600, exist_ok=True)
                 log.write_bytes(timeout.stderr or b"")
                 results.append((name, False))

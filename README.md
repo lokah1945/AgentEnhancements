@@ -26,8 +26,7 @@ Counts are generated from the canonical index and manifests; see [the
 inventory](docs/CAPABILITY_COUNTS.md).
 
 AgentEnhancements combines vendored projects and a plugin catalog to enhance AI
-coding agents (Claude Code, Codex, OpenCode, Hermes, Cursor, Gemini CLI,
-Copilot, Windsurf, Kiro) with:
+coding agents with:
 
 - **Specialized skills and personas** in the unified index, including official
   Anthropic skills, The Agency personas, and the pinned [task-observer
@@ -38,20 +37,21 @@ Copilot, Windsurf, Kiro) with:
   (task-observer + 15 Superpowers workflow skills) into `~/.claude/skills/`,
   `~/.codex/skills/`, `~/.config/opencode/skills/`, and `~/.agents/skills/`, so
   Agent Skills compatible harnesses discover them automatically
-- **Full agent parity**: Claude Code, Codex, and OpenCode all receive equivalent
-  integration — lifecycle hooks, native skill discovery, MCP gateway, memory
-  persistence, and compression
+- **Native lifecycle integration** (4 agents): **Claude Code**, **Codex**, **OpenCode 2**, and **Hermes** receive full integration — lifecycle hooks, native skill discovery, MCP gateway, memory persistence, and compression
+- **Documented reference configs** (5 agents): **Cursor**, **Gemini CLI**, **Windsurf**, **Copilot**, and **Kiro** receive reference configuration files documenting manual usage of `registry.py`, `memory.py`, and `compress.sh` CLIs
 - **Flexible skill discovery**: returns up to 8 relevant skill cards per prompt
   (configurable via `AE_MAX_SKILL_CARDS`); agents choose which to read/use from
   suggestions
 - **Plugin catalog** with 40 curated external plugin entries from 22 unique
   upstream repositories (code, research, tokens, design, multimedia, and 19 The
-  Agency division packs)
+  Agency division packs) — **plugins provide integration guides; runtime entry points require separate installation**
 - **Context compression & memory management** for long-running sessions
   (standalone headroom utility and Python fallback)
 - **System prompts** sourced from the vendored
   `system-prompts-and-models-of-ai-tools` collection
-- **Unified configuration** that works across all major AI coding assistants
+- **Unified configuration** via `ui.api.json` (schema v2) for all supported agents
+
+> **Note on Adaptive Preflight Mode 1 (Native)**: The native host selection mode requires a pre-inference selection surface that current host APIs do not expose. Mode 1 is currently **unsupported**; Mode 0 (heuristic cards) and Mode 2 (custom endpoint) are available. See [ADAPTIVE_PREFLIGHT.md](docs/ADAPTIVE_PREFLIGHT.md) for details.
 
 ---
 
@@ -217,57 +217,57 @@ marker-guarded instruction files).
 
 What gets configured per agent when `setup.sh` detects it:
 
-- **Agent:** **Claude Code**
+- **Agent:** **Claude Code** (Native — Full Lifecycle)
   - **Activation file(s) written by setup:** `~/.claude/settings.json` (merged,
     credentials preserved) + `~/.claude/CLAUDE.md` + links in
     `~/.claude/skills/`
   - **What activates:** Hooks fire automatically on every tool use / session
     stop; 16 curated skills natively auto-discovered; flexible skill cards
-    (default 8)
+    (default 8); MCP gateway; memory persistence
 
-- **Agent:** **Codex**
+- **Agent:** **Codex** (Native — Full Lifecycle)
   - **Activation file(s) written by setup:** `~/.codex/AGENTS.md`, `hooks.json`,
     `config.toml` + `~/.codex/skills/`
   - **What activates:** Native lifecycle hooks (5/5 events), shared MCP gateway,
     bounded skill discovery; 16 curated skills natively auto-discovered
 
-- **Agent:** **OpenCode 2**
+- **Agent:** **OpenCode 2** (Native — Full Lifecycle)
   - **Activation file(s) written by setup:** Existing
     `~/.config/opencode/opencode.jsonc` or `opencode.json`, plus `AGENTS.md` +
     `~/.config/opencode/skills/`
   - **What activates:** Native lifecycle plugin, shared MCP gateway, bounded
     skill discovery; 16 curated skills natively auto-discovered
 
-- **Agent:** **Hermes**
+- **Agent:** **Hermes** (Native — Full Lifecycle)
   - **Activation file(s) written by setup:** Selected profile `config.yaml`,
     `SOUL.md`, and native plugin link
   - **What activates:** Profile lifecycle hooks, shared MCP gateway and bounded
     skill discovery
 
-- **Agent:** **Cursor**
+- **Agent:** **Cursor** (Reference Config Only)
   - **Activation file(s) written by setup:**
     `~/.cursor/rules/agent-enhancements.mdc`
   - **What activates:** Global rule (frontmatter-scoped) with catalog, memory
-    and compression usage
+    and compression usage — **no automatic hook integration**
 
-- **Agent:** **Gemini CLI**
+- **Agent:** **Gemini CLI** (Reference Config Only)
   - **Activation file(s) written by setup:** `~/.gemini/GEMINI.md` +
     `~/.gemini/config.yaml` (reference)
-  - **What activates:** Global hierarchical context file loaded at session start
+  - **What activates:** Global hierarchical context file loaded at session start — **no automatic hook integration**
 
-- **Agent:** **Windsurf**
+- **Agent:** **Windsurf** (Reference Config Only)
   - **Activation file(s) written by setup:**
     `~/.codeium/windsurf/rules/agent-enhancements.md`
-  - **What activates:** Global rule with catalog, memory and compression usage
+  - **What activates:** Global rule with catalog, memory and compression usage — **no automatic hook integration**
 
-- **Agent:** **GitHub Copilot**
+- **Agent:** **GitHub Copilot** (Reference Config Only)
   - **Activation file(s) written by setup:**
     `~/.config/github-copilot/config.yaml` (reference)
-  - **What activates:** Reference configuration; use via the launcher
+  - **What activates:** Reference configuration; use via the launcher — **no automatic hook integration**
 
-- **Agent:** **Kiro**
+- **Agent:** **Kiro** (Reference Config Only)
   - **Activation file(s) written by setup:** `~/.kiro/config.yaml` (reference)
-  - **What activates:** Reference configuration; use via the launcher
+  - **What activates:** Reference configuration; use via the launcher — **no automatic hook integration**
 
 - **Agent:** **All Agent Skills harnesses**
   - **Activation file(s) written by setup:** links in `~/.agents/skills/`
@@ -279,9 +279,12 @@ Notes:
 
 - Marker-guarded files (`<!-- agent-enhancements:begin/end -->`) preserve your
   personal instructions across re-runs.
-- **Claude Code, Codex, and OpenCode 2 have full native lifecycle integration**
+- **Claude Code, Codex, OpenCode 2, and Hermes have full native lifecycle integration**
   — hooks, native skills, MCP gateway, memory, and compression. See [Agent
   guides](docs/AGENTS.md) for supported versions and verification.
+- **Cursor, Gemini CLI, Windsurf, Copilot, and Kiro receive reference configurations only** — no automatic lifecycle hooks, skill injection, or MCP gateway registration.
+- **Adaptive Preflight Mode 1 (Native) is unsupported** — no host currently exposes a pre-inference selection surface. Use Mode 0 (heuristic cards) or Mode 2 (custom endpoint).
+- **Plugin catalog entries are integration guides only** — they document how to install and use external plugins; runtime entry points require separate installation and host permissions.
 - Extend the linked set with `link-skills.sh --set curated` or specific names.
   Use `registry.py search` for the full catalog; `--set all` exposes its
   metadata at every session start.

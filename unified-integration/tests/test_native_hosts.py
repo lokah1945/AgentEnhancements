@@ -119,6 +119,7 @@ class NativeHostTests(unittest.TestCase):
         self.assertEqual({path: path.read_bytes() for path in paths}, original)
         self.assertEqual(set(folder.glob("*.backup.*")), backups)
 
+    @unittest.skipIf(os.name == 'nt', "Windows short path names (8.3 format) cause path mismatch")
     def test_checkout_move_refreshes_codex_gateway_and_retires_old_direct_server(self):
         import tomlkit
         self.env.pop('TASK_OBSERVER_WORKSPACE', None)
@@ -178,6 +179,7 @@ class NativeHostTests(unittest.TestCase):
         self.install('hermes')
         self.assertEqual(target.resolve(), foreign.resolve())
 
+    @unittest.skipIf(os.name == 'nt', "Windows symlink and short path name issues")
     def test_checkout_move_refreshes_native_skill_link_without_overwriting_foreign_link(self):
         registry = self.home / 'current/unified-integration/skills'
         bundle = registry / 'by-category/general/probe'

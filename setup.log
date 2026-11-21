@@ -1,0 +1,169 @@
+========================================
+  Unified AI Agent Enhancement Setup
+========================================
+
+Base directory: /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements
+Unified directory: /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration
+
+C:\Users\Laptop Kantor - ASUS\Documents\Project\AgentEnhancements\ui.api.json
+Traceback (most recent call last):
+  File "C:\Users\Laptop Kantor - ASUS\Documents\Project\AgentEnhancements\unified-integration\scripts\api_config.py", line 543, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\Laptop Kantor - ASUS\Documents\Project\AgentEnhancements\unified-integration\scripts\api_config.py", line 534, in main
+    result = migrate()
+             ^^^^^^^^^
+  File "C:\Users\Laptop Kantor - ASUS\Documents\Project\AgentEnhancements\unified-integration\scripts\api_config.py", line 492, in migrate
+    _write_private_atomic(backup, path.read_text(encoding="utf-8"))
+  File "C:\Users\Laptop Kantor - ASUS\Documents\Project\AgentEnhancements\unified-integration\scripts\api_config.py", line 395, in _write_private_atomic
+    os.fchmod(descriptor, 0o600)
+    ^^^^^^^^^
+AttributeError: module 'os' has no attribute 'fchmod'. Did you mean: 'chmod'?
+[1;33m[WARN][0m ui.api.json migration skipped: run 'python3 unified-integration/scripts/api_config.py migrate' to see why
+[0;34m[INFO][0m Detecting available AI coding agents...
+[0;32m[SUCCESS][0m Found: Claude Code
+[0;32m[SUCCESS][0m Found: Codex
+[0;34m[INFO][0m Setting up system prompts for all agents...
+[0;32m[SUCCESS][0m Claude Code system prompt configured from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/system-prompts-and-models-of-ai-tools/Anthropic/Claude Code/Prompt.txt
+[0;32m[SUCCESS][0m Codex system prompt configured from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/system-prompts-and-models-of-ai-tools/Open Source prompts/Codex CLI/Prompt.txt
+[0;32m[SUCCESS][0m Universal system prompt created
+[0;34m[INFO][0m Aggregating skills from all sources...
+[0;34m[INFO][0m Processing agentic-awesome-skills skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agentic-awesome-skills/skills...
+[0;32m[SUCCESS][0m agentic-awesome-skills: processed 2781 skills
+[0;34m[INFO][0m Processing ECC skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/ECC/skills...
+[0;32m[SUCCESS][0m ECC: processed 314 skills
+[0;34m[INFO][0m Processing Ponytail skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/ponytail/skills...
+[0;32m[SUCCESS][0m Ponytail: processed 6 skills
+[0;34m[INFO][0m Processing Superpowers skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/superpowers/skills...
+[0;32m[SUCCESS][0m Superpowers: processed 15 skills
+[0;34m[INFO][0m Processing replica-skill skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/replica-skill...
+[0;32m[SUCCESS][0m replica-skill: processed 11 skills
+[0;34m[INFO][0m Processing anthropic-skills skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/anthropic-skills/skills...
+[0;32m[SUCCESS][0m anthropic-skills: processed 19 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/academic/...
+[0;32m[SUCCESS][0m agency-agents: processed 6 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/design/...
+[0;32m[SUCCESS][0m agency-agents: processed 10 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/engineering/...
+[0;32m[SUCCESS][0m agency-agents: processed 66 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/finance/...
+[0;32m[SUCCESS][0m agency-agents: processed 5 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/game-development/...
+[0;32m[SUCCESS][0m agency-agents: processed 21 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/gis/...
+[0;32m[SUCCESS][0m agency-agents: processed 13 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/healthcare/...
+[0;32m[SUCCESS][0m agency-agents: processed 3 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/marketing/...
+[0;32m[SUCCESS][0m agency-agents: processed 37 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/paid-media/...
+[0;32m[SUCCESS][0m agency-agents: processed 7 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/product/...
+[0;32m[SUCCESS][0m agency-agents: processed 6 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/project-management/...
+[0;32m[SUCCESS][0m agency-agents: processed 7 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/research/...
+[0;32m[SUCCESS][0m agency-agents: processed 1 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/sales/...
+[0;32m[SUCCESS][0m agency-agents: processed 9 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/security/...
+[0;32m[SUCCESS][0m agency-agents: processed 12 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/spatial-computing/...
+[0;32m[SUCCESS][0m agency-agents: processed 6 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/specialized/...
+[0;32m[SUCCESS][0m agency-agents: processed 59 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/support/...
+[0;32m[SUCCESS][0m agency-agents: processed 6 skills
+[0;34m[INFO][0m Processing agency-agents skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/agency-agents/skills/testing/...
+[0;32m[SUCCESS][0m agency-agents: processed 9 skills
+[0;34m[INFO][0m Processing task-observer skills from /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/task-observer...
+[0;32m[SUCCESS][0m task-observer: processed 1 skills
+[0;34m[INFO][0m Creating unified skills index...
+Unified skills index created with 3378 skills
+[1;33m[WARN][0m Index still contains 350 block-scalar placeholder descriptions
+[0;32m[SUCCESS][0m Skills aggregation complete
+[0;34m[INFO][0m Building capability registry (skills + plugins + MCP)...
+[0;32m[SUCCESS][0m Capability registry built (/c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/skills/agent-registry.json)
+[0;34m[INFO][0m Building the L0 library map...
+[0;32m[SUCCESS][0m Library map generated (skills/library-map.json)
+[0;34m[INFO][0m Setting up persistent memory (claude-mem)...
+[0;32m[SUCCESS][0m Memory system configured
+Memory directories created at C:\Users\Laptop Kantor - ASUS\Documents\Project\AgentEnhancements\.agentenhancements\memory; the SQLite database will be created by the Python hooks on first use (sqlite3 CLI not installed)
+[0;34m[INFO][0m Setting up context compression (headroom)...
+[1;33m[WARN][0m cargo not found, will use fallback compression
+[0;32m[SUCCESS][0m Context compression configured
+[0;34m[INFO][0m Creating agent-specific configurations (preserving existing)...
+[native] claude-code: configured hooks/plugin + MCP
+[native] codex: configured hooks/plugin + MCP
+[0;32m[SUCCESS][0m Agent configurations merged
+[0;34m[INFO][0m Linking curated skills into native agent skill directories...
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): brainstorming
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): diagnosing-superpowers
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): dispatching-parallel-agents
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): executing-plans
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): finishing-a-development-branch
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): receiving-code-review
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): requesting-code-review
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): subagent-driven-development
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): systematic-debugging
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): task-observer
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): test-driven-development
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): using-git-worktrees
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): using-superpowers
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): verification-before-completion
+[1;33m[link-skills:WARN][0m not in registry (no SKILL.md): writing-plans
+[1;33m[link-skills:WARN][0m skip /c/Users/Laptop Kantor - ASUS/.claude/skills/writing-skills: exists and is not a symlink (user-owned)
+[1;33m[link-skills:WARN][0m skip /c/Users/Laptop Kantor - ASUS/.agents/skills/writing-skills: exists and is not a symlink (user-owned)
+[1;33m[link-skills:WARN][0m skip /c/Users/Laptop Kantor - ASUS/.codex/skills/writing-skills: exists and is not a symlink (user-owned)
+[1;33m[link-skills:WARN][0m skip /c/Users/Laptop Kantor - ASUS/.config/opencode/skills/writing-skills: exists and is not a symlink (user-owned)
+[0;32m[SUCCESS][0m Native skill activation complete (~/.claude/skills, ~/.agents/skills)
+[0;34m[INFO][0m Creating universal launcher...
+[0;34m[INFO][0m Launcher: /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/launch-agent.sh (set INSTALL_SYSTEM_LAUNCHER=1 to also link /usr/local/bin/agent-enhanced)
+[0;32m[SUCCESS][0m Universal launcher created at /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/launch-agent.sh
+[0;34m[INFO][0m Creating skills loader utility...
+[0;32m[SUCCESS][0m Skills loader created
+[0;34m[INFO][0m Creating memory utility...
+[0;32m[SUCCESS][0m Memory utility created
+[0;34m[INFO][0m Creating compression utility...
+[0;32m[SUCCESS][0m Compression utility created
+
+========================================
+  Setup Complete!
+========================================
+
+Configured agents: claude-code codex
+
+Next steps:
+  1. Start claude, codex, opencode, or hermes normally (no launcher required).
+  2. Codex requires review of new/changed hook definitions in /hooks.
+  3. Verify MCP protocol: bash /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/scripts/setup-mcp.sh --check
+  4. Find capabilities on demand: python3 /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/scripts/registry.py search "<task>"
+     (bounded cards; full-catalog native linking is audited, not default)
+  5. Audit an old install for full-catalog exposure: bash /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/scripts/link-skills.sh --audit
+
+Config files created in:
+  - /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/config/
+  - /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/prompts/
+  - /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/skills/
+  - /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/memory/
+  - /c/Users/Laptop Kantor - ASUS/Documents/Project/AgentEnhancements/unified-integration/compression/
+
+Agent configs also placed in (per detected agent):
+  - ~/.claude/settings.json + CLAUDE.md          (Claude Code: hooks + instructions)
+  - ~/.codex/AGENTS.md                            (Codex: global instructions)
+  - ~/.config/opencode/opencode.json + AGENTS.md  (OpenCode: schema-valid config + instructions)
+  - ~/.hermes/profiles/<profile>/config.yaml + SOUL.md (Hermes: selected profiles, native plugin + MCP)
+  - ~/.cursor/rules/agent-enhancements.mdc        (Cursor: global rule)
+  - ~/.gemini/GEMINI.md + config.yaml             (Gemini CLI: global context + reference)
+  - ~/.codeium/windsurf/rules/agent-enhancements.md (Windsurf: global rule)
+  - ~/.config/github-copilot/config.yaml          (Copilot: reference config)
+  - ~/.kiro/config.yaml                           (Kiro: reference config)
+
+Native skill activation (all Agent Skills compatible harnesses):
+  - ~/.claude/skills/   task-observer + Superpowers linked (Claude Code auto-discovery)
+  - ~/.agents/skills/   task-observer + Superpowers linked (cross-agent standard)
+
+Environment variables for customization:
+  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: repository root detected from setup.sh location)
+  AGENT_MEMORY_ROOT - Override memory storage location (default: checkout/.agentenhancements/memory)
+  HEADROOM_BIN - Override headroom binary path

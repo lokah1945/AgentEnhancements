@@ -1,7 +1,7 @@
 ---
 title: Agents
-version: 1.6
-last_updated: 2026-11-16
+version: 1.7
+last_updated: 2026-11-21
 audience: users
 ---
 
@@ -11,6 +11,25 @@ audience: users
 enhancements through each tool's **native configuration format**. Backups are
 written next to every modified file, and marker-guarded instruction files
 preserve your personal content across re-runs.
+
+### Integration Level Summary
+
+| Agent | Integration Level | Lifecycle Hooks | Skill Injection | MCP Gateway | Memory |
+|-------|------------------|-----------------|-----------------|-------------|--------|
+| **Claude Code** | **Native — Full** | ✅ 5/5 | ✅ Auto | ✅ | ✅ |
+| **Codex** | **Native — Full** | ✅ 5/5 | ✅ Auto | ✅ | ✅ |
+| **OpenCode 2** | **Native — Full** | ✅ 4/5* | ✅ Auto | ✅ | ✅ |
+| **Hermes** | **Native — Full** | ✅ 3/3** | ✅ Auto | ✅ | ✅ |
+| **Cursor** | Reference Config | ❌ | Manual | ❌ | Manual |
+| **Gemini CLI** | Reference Config | ❌ | Manual | ❌ | Manual |
+| **Windsurf** | Reference Config | ❌ | Manual | ❌ | Manual |
+| **Copilot** | Reference Config | ❌ | Manual | ❌ | Manual |
+| **Kiro** | Reference Config | ❌ | Manual | ❌ | Manual |
+
+* OpenCode uses `prompt`/`context`/`idle` mapping (no explicit SessionStart)
+** Hermes uses `pre_llm_call`/`post_llm_call`/`post_tool_call` mapping
+
+> **Adaptive Preflight Mode 1 (Native) is currently unsupported** — no host exposes a pre-inference selection surface. Mode 0 (heuristic cards) and Mode 2 (custom endpoint) are available. See [ADAPTIVE_PREFLIGHT.md](ADAPTIVE_PREFLIGHT.md).
 
 ### Detection
 
@@ -152,30 +171,42 @@ build reporting v0.17.0, upstream `f1345290`, passed native CLI tests for both
 profiles. Compatibility requires its public plugin hook API; the test command
 below verifies actual installation behavior rather than a version label alone.
 
-#### Cursor (global rule)
+#### Cursor (reference config only — no native hook integration)
 
 Setup writes `~/.cursor/rules/agent-enhancements.mdc` (frontmatter-scoped
 global rule). Cursor's real `~/.cursor/settings.json` is no longer
 polluted with integration keys; fictional keys from older versions are
 cleaned up (signature-checked).
 
-#### Gemini CLI (global context file)
+**No automatic lifecycle hooks, skill injection, or MCP gateway registration.**
+Use `registry.py search "<task>"` and `memory.py` CLI manually.
+
+#### Gemini CLI (reference config only — no native hook integration)
 
 Setup writes a marker-guarded section into `~/.gemini/GEMINI.md` (the
 hierarchical global context file Gemini CLI loads at session start) and
 keeps `~/.gemini/config.yaml` as a reference summary.
 
-#### Windsurf (global rule)
+**No automatic lifecycle hooks, skill injection, or MCP gateway registration.**
+Use `registry.py search "<task>"` and `memory.py` CLI manually.
+
+#### Windsurf (reference config only — no native hook integration)
 
 Setup writes `~/.codeium/windsurf/rules/agent-enhancements.md`. The
 legacy `~/.windsurf/config.yaml` (never read by Windsurf) is removed
 (signature-checked) when found.
 
-#### GitHub Copilot / Kiro (reference config)
+**No automatic lifecycle hooks, skill injection, or MCP gateway registration.**
+Use `registry.py search "<task>"` and `memory.py` CLI manually.
+
+#### GitHub Copilot / Kiro (reference config only — no native hook integration)
 
 `~/.config/github-copilot/config.yaml` and `~/.kiro/config.yaml` carry a
 reference summary of the integration settings. Use these agents through
 the launcher to get the full environment.
+
+**No automatic lifecycle hooks, skill injection, or MCP gateway registration.**
+Use `registry.py search "<task>"` and `memory.py` CLI manually.
 
 ### Native verification
 

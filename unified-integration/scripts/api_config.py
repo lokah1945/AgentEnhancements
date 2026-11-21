@@ -392,11 +392,16 @@ def _write_private_atomic(path: Path, text: str) -> None:
     """Same-directory temp file (0600), fsync, then atomic replace."""
     descriptor, temporary = tempfile.mkstemp(dir=path.parent, prefix=".ui-api-")
     try:
-        os.fchmod(descriptor, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+        os.close(descriptor)
+        with open(temporary, "w", encoding="utf-8") as stream:
             stream.write(text)
             stream.flush()
             os.fsync(stream.fileno())
+        # Windows doesn't have os.fchmod; chmod the path after write
+        try:
+            os.chmod(temporary, 0o600)
+        except OSError:
+            pass
         os.replace(temporary, path)
     except BaseException:
         try:

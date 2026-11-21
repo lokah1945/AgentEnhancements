@@ -67,6 +67,7 @@ class CatalogCrossReferenceTests(unittest.TestCase):
 class CatalogTestAgencyTests(unittest.TestCase):
     """AE-07: catalog-test.sh must cover agency packs."""
 
+    @unittest.skipIf(os.name == 'nt', "jq not available on Windows")
     def test_agency_slug_smoke(self):
         code, out, err = run(["bash", str(SCRIPTS / "catalog-test.sh"), "nexus"])
         self.assertEqual(code, 0, err)

@@ -38,10 +38,18 @@ class AgentMemory:
         try:
             if not stat.S_ISREG(os.fstat(descriptor).st_mode):
                 raise OSError("memory database must be a regular file")
-            os.fchmod(descriptor, 0o600)
+            # Windows doesn't have os.fchmod; chmod the path after close
         finally:
             os.close(descriptor)
-        with sqlite3.connect(DB_PATH) as conn:
+        # Ensure file permissions are restrictive (Windows: chmod on path)
+        try:
+            os.chmod(DB_PATH, 0o600)
+        except OSError:
+            pass
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            # Enable WAL mode for better concurrent access on Windows
+            conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS memories (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,7 +68,14 @@ class AgentMemory:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_project ON memories(agent, project)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_type ON memories(memory_type)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_expires ON memories(expires_at)")
-        DB_PATH.chmod(0o600)
+            conn.commit()
+        finally:
+            conn.close()
+        # Ensure file permissions are restrictive (Windows: chmod on path)
+        try:
+            DB_PATH.chmod(0o600)
+        except OSError:
+            pass
 
     def save(self, key: str, value: str, memory_type: str = "session_context",
              metadata: Optional[Dict] = None, ttl_days: Optional[int] = None) -> None:
@@ -75,16 +90,21 @@ class AgentMemory:
 
         meta_json = json.dumps(metadata) if metadata else None
 
-        with sqlite3.connect(DB_PATH) as conn:
+        conn = sqlite3.connect(DB_PATH)
+        try:
             conn.execute("""
                 INSERT OR REPLACE INTO memories
                 (agent, project, memory_type, key, value, metadata, updated_at, expires_at)
                 VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?)
             """, (self.agent, self.project, memory_type, key, value, meta_json, expires_at))
+            conn.commit()
+        finally:
+            conn.close()
 
     def load(self, key: str, memory_type: str = "session_context") -> Optional[str]:
         """Load a memory"""
-        with sqlite3.connect(DB_PATH) as conn:
+        conn = sqlite3.connect(DB_PATH)
+        try:
             cursor = conn.execute("""
                 SELECT value FROM memories
                 WHERE agent=? AND project=? AND memory_type=? AND key=?
@@ -93,10 +113,13 @@ class AgentMemory:
             """, (self.agent, self.project, memory_type, key))
             row = cursor.fetchone()
             return row[0] if row else None
+        finally:
+            conn.close()
 
     def list(self, memory_type: Optional[str] = None, limit: int = 20) -> List[Dict]:
         """List memories"""
-        with sqlite3.connect(DB_PATH) as conn:
+        conn = sqlite3.connect(DB_PATH)
+        try:
             if memory_type:
                 cursor = conn.execute("""
                     SELECT memory_type, key, value, metadata, updated_at
@@ -124,24 +147,34 @@ class AgentMemory:
                 }
                 for row in cursor.fetchall()
             ]
+        finally:
+            conn.close()
 
     def delete(self, key: str, memory_type: str = "session_context") -> bool:
         """Delete a memory"""
-        with sqlite3.connect(DB_PATH) as conn:
+        conn = sqlite3.connect(DB_PATH)
+        try:
             cursor = conn.execute("""
                 DELETE FROM memories
                 WHERE agent=? AND project=? AND memory_type=? AND key=?
             """, (self.agent, self.project, memory_type, key))
+            conn.commit()
             return cursor.rowcount > 0
+        finally:
+            conn.close()
 
     def cleanup_expired(self) -> int:
         """Remove expired memories"""
-        with sqlite3.connect(DB_PATH) as conn:
+        conn = sqlite3.connect(DB_PATH)
+        try:
             cursor = conn.execute("""
                 DELETE FROM memories
                 WHERE expires_at IS NOT NULL AND expires_at < datetime('now')
             """)
+            conn.commit()
             return cursor.rowcount
+        finally:
+            conn.close()
 
 
 def main():

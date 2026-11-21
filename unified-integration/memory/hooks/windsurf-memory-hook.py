@@ -29,10 +29,16 @@ def init_db():
     try:
         if not stat.S_ISREG(os.fstat(descriptor).st_mode):
             raise OSError("Memory database must be a regular file")
-        os.fchmod(descriptor, 0o600)
-    finally:
+        # Windows does not have os.fchmod; chmod the path after close
         os.close(descriptor)
-    with sqlite3.connect(DB_PATH) as conn:
+        try:
+            os.chmod(DB_PATH, 0o600)
+        except OSError:
+            pass
+    finally:
+        pass
+    conn = sqlite3.connect(DB_PATH)
+    try:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS memories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,6 +58,9 @@ def init_db():
         conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_project ON memories(agent, project)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_type ON memories(memory_type)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_expires ON memories(expires_at)")
+        conn.commit()
+    finally:
+        conn.close()
 
 def save_memory(key, value, memory_type="session_context", project=None, metadata=None, ttl_days=None):
     if project is None:
@@ -67,18 +76,23 @@ def save_memory(key, value, memory_type="session_context", project=None, metadat
 
     meta_json = json.dumps(metadata) if metadata else None
 
-    with sqlite3.connect(DB_PATH) as conn:
+    conn = sqlite3.connect(DB_PATH)
+    try:
         conn.execute("""
             INSERT OR REPLACE INTO memories
             (agent, project, memory_type, key, value, metadata, updated_at, expires_at)
             VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?)
         """, (AGENT, project, memory_type, key, value, meta_json, expires_at))
+        conn.commit()
+    finally:
+        conn.close()
 
 def load_memory(key, memory_type="session_context", project=None):
     if project is None:
         project = os.path.realpath(os.getcwd())
 
-    with sqlite3.connect(DB_PATH) as conn:
+    conn = sqlite3.connect(DB_PATH)
+    try:
         cursor = conn.execute("""
             SELECT value FROM memories
             WHERE agent=? AND project=? AND memory_type=? AND key=?
@@ -87,12 +101,15 @@ def load_memory(key, memory_type="session_context", project=None):
         """, (AGENT, project, memory_type, key))
         row = cursor.fetchone()
         return row[0] if row else None
+    finally:
+        conn.close()
 
 def list_memories(memory_type=None, project=None, limit=20):
     if project is None:
         project = os.path.realpath(os.getcwd())
 
-    with sqlite3.connect(DB_PATH) as conn:
+    conn = sqlite3.connect(DB_PATH)
+    try:
         if memory_type:
             cursor = conn.execute("""
                 SELECT memory_type, key, value, metadata, updated_at
@@ -120,25 +137,35 @@ def list_memories(memory_type=None, project=None, limit=20):
             }
             for row in cursor.fetchall()
         ]
+    finally:
+        conn.close()
 
 def delete_memory(key, memory_type="session_context", project=None):
     if project is None:
         project = os.path.realpath(os.getcwd())
 
-    with sqlite3.connect(DB_PATH) as conn:
+    conn = sqlite3.connect(DB_PATH)
+    try:
         cursor = conn.execute("""
             DELETE FROM memories
             WHERE agent=? AND project=? AND memory_type=? AND key=?
         """, (AGENT, project, memory_type, key))
+        conn.commit()
         return cursor.rowcount > 0
+    finally:
+        conn.close()
 
 def cleanup_expired():
-    with sqlite3.connect(DB_PATH) as conn:
+    conn = sqlite3.connect(DB_PATH)
+    try:
         cursor = conn.execute("""
             DELETE FROM memories
             WHERE expires_at IS NOT NULL AND expires_at < datetime('now')
         """)
+        conn.commit()
         return cursor.rowcount
+    finally:
+        conn.close()
 
 def main():
     if len(sys.argv) < 2:
@@ -164,7 +191,7 @@ def main():
         project = sys.argv[5] if len(sys.argv) > 5 else None
         ttl = int(sys.argv[6]) if len(sys.argv) > 6 else None
         save_memory(key, value, mem_type, project, ttl_days=ttl)
-        print(f"Saved: {key} ({mem_type})")
+        print("Saved: %s (%s)" % (key, mem_type))
 
     elif command == "load":
         if len(sys.argv) < 3:
@@ -177,7 +204,7 @@ def main():
         if value:
             print(value)
         else:
-            print(f"Memory not found: {key}", file=sys.stderr)
+            print("Memory not found: %s" % key, file=sys.stderr)
             sys.exit(1)
 
     elif command == "list":
@@ -186,7 +213,7 @@ def main():
         limit = int(sys.argv[4]) if len(sys.argv) > 4 else 20
         memories = list_memories(mem_type, project, limit)
         for m in memories:
-            print(f"[{m['type']}] {m['key']}: {m['value']} (updated: {m['updated']})")
+            print("[%s] %s: %s (updated: %s)" % (m['type'], m['key'], m['value'], m['updated']))
 
     elif command == "delete":
         if len(sys.argv) < 3:
@@ -196,17 +223,17 @@ def main():
         mem_type = sys.argv[3] if len(sys.argv) > 3 else "session_context"
         project = sys.argv[4] if len(sys.argv) > 4 else None
         if delete_memory(key, mem_type, project):
-            print(f"Deleted: {key}")
+            print("Deleted: %s" % key)
         else:
-            print(f"Not found: {key}")
+            print("Not found: %s" % key)
             sys.exit(1)
 
     elif command == "cleanup":
         count = cleanup_expired()
-        print(f"Cleaned up {count} expired memories")
+        print("Cleaned up %d expired memories" % count)
 
     else:
-        print(f"Unknown command: {command}")
+        print("Unknown command: %s" % command)
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -12,6 +12,7 @@ from pathlib import Path
 import platform
 import re
 import resource
+import shlex
 import statistics
 import subprocess
 import sys
@@ -100,6 +101,20 @@ def native_description(path: Path) -> str:
     return str(yaml.safe_load("".join(lines))["description"])
 
 
+def installed_bootstrap(marker: str, repo: Path) -> list[str]:
+    """Read the installed command and restrict execution to the checkout's map."""
+    script = str(repo / "unified-integration/scripts/build-library-map.py")
+    published = str(repo / "skills/library-map.json")
+    for inline in re.findall(r"`([^`\n]+)`", marker):
+        args = shlex.split(inline)
+        if args in (["python3", script, "--print"], ["cat", published]):
+            return args
+    # Older installs pointed at the JSON file instead of supplying a command.
+    if f"`{published}`" in marker:
+        return ["cat", published]
+    raise ValueError("Installed Codex instructions do not point at this checkout's L0 map")
+
+
 async def wire_probe(settings: dict, env: dict, clip: Path, sample: bool) -> dict:
     """Read one real stdio response byte-for-byte, with a local optional tool call."""
     start = time.perf_counter()
@@ -182,10 +197,7 @@ def collect(repo: Path, home: Path, repeats: int) -> dict:
                "TASK_OBSERVER_WORKSPACE": str(fixture / "observer"), "AE_FFMPEG_ALLOWED_ROOTS": str(project),
                "PYTHONDONTWRITEBYTECODE": "1", **proxies}
         normalize = lambda text: text.replace(str(home), "/fixture/codex-home").replace(str(repo), "/checkout/ae").replace(scratch, "/fixture/run")
-        if "--print" in marker:
-            l0_cmd = [sys.executable, str(ui / "scripts/build-library-map.py"), "--print"]
-        else:
-            l0_cmd = ["cat", str(bootstrap_path)]
+        l0_cmd = installed_bootstrap(marker, repo)
         bootstrap, bootstrap_ms, bootstrap_status = command(l0_cmd, env, project)
         if bootstrap_status:
             raise ValueError(f"Installed L0 command exited {bootstrap_status}")
@@ -264,13 +276,52 @@ def collect(repo: Path, home: Path, repeats: int) -> dict:
             "max_child_process_rss_kib": resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss}
 
 
+def check_budgets(repo: Path, evidence: dict) -> list[str]:
+    """Verify the measured credential-free default profile against the contract."""
+    sys.path.insert(0, str(repo / "unified-integration/scripts"))
+    import context_budget as limits
+
+    channels = evidence["channels"]
+    checks = {
+        "L0": (channels["l0"], limits.MAX_BOOTSTRAP),
+        "observer": (channels["observer_cold"], limits.MAX_OBSERVER_AMBIENT),
+        "returning-session recall": (channels["memory_recall"], limits.MAX_MEMORY_RECALL),
+        "native descriptions": (channels["native_descriptions"], limits.MAX_NATIVE_DESCRIPTION_TOTAL),
+        "eager schema projection": (channels["tool_schema_eager_projection"], limits.MAX_TOOL_SCHEMA_TOTAL),
+        "cold start with one fixture note": (
+            max(row["cold_start_with_prior_note"] for row in evidence["rows"]), limits.MAX_COLD_START_TOTAL),
+        "search page": (max(row["cost"]["search_page"] for row in evidence["rows"]), limits.MAX_SEARCH_PAGE),
+        "detail page": (max(row["cost"]["detail_page"] for row in evidence["rows"]), limits.MAX_DETAIL_PAGE),
+    }
+    failures = [f"{name} measured {actual} tokens (limit {limit})"
+                for name, (actual, limit) in checks.items() if actual > limit]
+    stdio = evidence["stdio_mcp"]
+    if stdio["search_shape_visible_without_key"] or not (
+        stdio["embedding_256"] and stdio["video_width_32"] and evidence["codex_native_mcp_list"]
+    ):
+        failures.append("Credential-free MCP discovery or local calls failed")
+    return failures
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("repo", type=Path)
     parser.add_argument("--home", type=Path, required=True, help="Read-only path to generated isolated HOME")
     parser.add_argument("--repeats", type=int, default=5)
+    parser.add_argument("--check", action="store_true",
+                        help="fail on a default-profile budget or MCP check failure")
     args = parser.parse_args()
-    print(json.dumps(collect(args.repo.resolve(), args.home.resolve(), args.repeats), ensure_ascii=False, indent=2))
+    if args.check and ENCODING is None:
+        parser.error("--check requires the tiktoken o200k_base benchmark encoder")
+    if args.repeats < 1:
+        parser.error("--repeats must be positive")
+    repo = args.repo.resolve()
+    evidence = collect(repo, args.home.resolve(), args.repeats)
+    if args.check:
+        evidence["budget_failures"] = check_budgets(repo, evidence)
+    print(json.dumps(evidence, ensure_ascii=False, indent=2))
+    if args.check and evidence["budget_failures"]:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

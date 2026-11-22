@@ -88,9 +88,9 @@ menurunkannya ke set default dengan aman).
 python3 unified-integration/scripts/registry.py search "buat laporan pdf"
 ```
 
-5 kartu dengan `ready:` dan `detail:`. Kosong untuk chit-chat itu
-benar (abstain by design). Benchmark penuh (recall@5 ≥ 95%,
-neg-suppression ≥ 90%): lihat `docs/benchmark/REPORT_2026-11-15.md`.
+Pencarian menampilkan sampai lima kartu dengan readiness dan ID detail.
+Corpus historis punya target recall@5 ≥ 95% dan abstain ≥ 90%.
+[Benchmark 15 November](benchmark/REPORT_2026-11-15.md)
 
 #### 5. Promote/rollback observer?
 
@@ -106,7 +106,7 @@ neg-suppression ≥ 90%): lihat `docs/benchmark/REPORT_2026-11-15.md`.
 | --- | --- | ---: |
 | CLAUDE.md/AGENTS.md section | pointer L0 + aturan | ~640 tok |
 | SessionStart hook | observer card + memory recall | 250 + 600 |
-| UserPromptSubmit hook | 3 kartu skill | 250 |
+| UserPromptSubmit hook | Kartu skill atau paket preflight | 400 |
 | Native skills (~/.claude/skills) | deskripsi skill tertaut | 2500 |
 | MCP tools/list | skema tool yang diaktifkan | 1800 |
 
@@ -117,6 +117,13 @@ wajib mendaftar di `context_budget.COLD_START_CHANNELS` + test CI.
 
 1. `run-tests.py` 100% (skip by design hanya untuk env-dependen).
 2. `setup-mcp.sh --check` 11/11.
-3. Routing benchmark ≥95%/≥90% (dataset 41+10 di docs/benchmark).
+3. Jalankan `unified-integration/tests/discovery_benchmark.py --check` untuk
+   corpus CI 50 kasus. Ambang saat ini mencakup 25/40 top-1, 30/40 top-3,
+   abstain 6/6 dan 0/4 MCP tanpa credential yang ditawarkan.
 4. `git diff --exit-code -- skills/` setelah scaffold+generate (no drift).
 5. Bundle checksum pristine.
+
+Jalankan benchmark `docs/benchmark/paired-lifecycle.py --check` dengan
+tokenizer `o200k_base` dan HOME Codex hasil setup terisolasi. Untuk bukti
+payload model OpenCode, jalankan smoke native pada kedua profil tool.
+[Prosedur dan bukti rilis](audit/ENTERPRISE_RELEASE_2026-11-23.md)

@@ -1,0 +1,479 @@
+{
+  "date": "2026-11-23",
+  "environment": {
+    "platform": "Debian 12 x86-64",
+    "python": "3.11.2",
+    "opencode": "2.3.2",
+    "codex": "0.171.0",
+    "encoding": "tiktoken 0.14.0 o200k_base"
+  },
+  "baseline_master_commit": "244793238664fce36e4a942d272fdc172760705a",
+  "candidate_code_tree": "bf4dcd5cbcd0a32ad0922bbc8833ea43d841238b",
+  "candidate_files_sha256": {
+    "unified-integration/scripts/adaptive_preflight.py": "d0c9d76bb5a2bcbd78121446e79de0c1c6f97a713131129184261f49e0de9db4",
+    "unified-integration/scripts/api_config.py": "416064bff7a2be35ef73bbf1dd1ce0a07d8d208129611f7713b9720728bbb5a2",
+    "unified-integration/scripts/registry.py": "64702bba0b3017b3b0679260a4e5081d20a39bef3ebe1cafb57434b8efb0623d",
+    "unified-integration/scripts/runtime_dependencies.py": "8b8890d39e2cabbbb18044c6bbf53f680752ad707f70c9bb2efd2c39b49d63bc",
+    "unified-integration/mcp-servers/gateway.py": "41b96b3169207bab3a802363bf78b1d404e52e6fa4a876e5da342631040b9b6f",
+    "unified-integration/opencode-plugin/index.js": "fa20f8461d810e7b9fbec7a4c95a017c25352d99bdcc3d083a12640f31243326",
+    "unified-integration/tests/smoke-adaptive-preflight.py": "f1956373bea440c356d6e3fdb747bb0f94cb892fa4020048a2b7d733d56e468c",
+    "docs/benchmark/paired-lifecycle.py": "1bffd3b9179f796f876f3c05d10f67e611a09ae25000dd1ce6c6dae01e48b22b"
+  },
+  "open_code_localhost_model_payloads": [
+    {
+      "tool_mode": "code",
+      "mode": 0,
+      "effective_mode": 0,
+      "scenario": "selected",
+      "selector_requests": 0,
+      "main_requests": 4,
+      "catalog_searches": 1,
+      "detail_reads": 1,
+      "memory_task_writes": 1,
+      "context_budget": {
+        "measurement": "tiktoken o200k_base",
+        "ae_native_skills": 16,
+        "channels": {
+          "library_map_read": 513,
+          "bootstrap_workflow": 34,
+          "instruction_source_headers": 0,
+          "native_descriptions_ae": 1202,
+          "ae_tool_catalog_and_schemas": 895,
+          "observer_and_memory": 157,
+          "prompt_slot": 251,
+          "additional_catalog_results": 195
+        },
+        "cold_start_total": 3247,
+        "limit": 4000
+      },
+      "first_main_seconds": 5.914460222993512
+    },
+    {
+      "tool_mode": "code",
+      "mode": 2,
+      "effective_mode": 2,
+      "scenario": "abstain",
+      "selector_requests": 1,
+      "main_requests": 1,
+      "catalog_searches": 0,
+      "detail_reads": 0,
+      "memory_task_writes": 1,
+      "context_budget": {
+        "measurement": "tiktoken o200k_base",
+        "ae_native_skills": 16,
+        "channels": {
+          "library_map_read": 513,
+          "bootstrap_workflow": 34,
+          "instruction_source_headers": 0,
+          "native_descriptions_ae": 1202,
+          "ae_tool_catalog_and_schemas": 895,
+          "observer_and_memory": 161,
+          "prompt_slot": 0,
+          "additional_catalog_results": 0
+        },
+        "cold_start_total": 2805,
+        "limit": 4000
+      },
+      "first_main_seconds": 5.985896127007436
+    },
+    {
+      "tool_mode": "code",
+      "mode": 2,
+      "effective_mode": 2,
+      "scenario": "guide",
+      "selector_requests": 1,
+      "main_requests": 4,
+      "catalog_searches": 0,
+      "detail_reads": 2,
+      "memory_task_writes": 1,
+      "context_budget": {
+        "measurement": "tiktoken o200k_base",
+        "ae_native_skills": 16,
+        "channels": {
+          "library_map_read": 513,
+          "bootstrap_workflow": 34,
+          "instruction_source_headers": 0,
+          "native_descriptions_ae": 1202,
+          "ae_tool_catalog_and_schemas": 895,
+          "observer_and_memory": 157,
+          "prompt_slot": 232,
+          "additional_catalog_results": 0
+        },
+        "cold_start_total": 3033,
+        "limit": 4000
+      },
+      "first_main_seconds": 6.552409439987969
+    },
+    {
+      "tool_mode": "code",
+      "mode": 2,
+      "effective_mode": 2,
+      "scenario": "lookup",
+      "selector_requests": 2,
+      "main_requests": 4,
+      "catalog_searches": 0,
+      "detail_reads": 2,
+      "memory_task_writes": 1,
+      "context_budget": {
+        "measurement": "tiktoken o200k_base",
+        "ae_native_skills": 16,
+        "channels": {
+          "library_map_read": 513,
+          "bootstrap_workflow": 34,
+          "instruction_source_headers": 0,
+          "native_descriptions_ae": 1202,
+          "ae_tool_catalog_and_schemas": 895,
+          "observer_and_memory": 159,
+          "prompt_slot": 237,
+          "additional_catalog_results": 0
+        },
+        "cold_start_total": 3040,
+        "limit": 4000
+      },
+      "first_main_seconds": 6.9728269210027065
+    },
+    {
+      "tool_mode": "code",
+      "mode": 2,
+      "effective_mode": 2,
+      "scenario": "selected",
+      "selector_requests": 1,
+      "main_requests": 3,
+      "catalog_searches": 0,
+      "detail_reads": 1,
+      "memory_task_writes": 1,
+      "context_budget": {
+        "measurement": "tiktoken o200k_base",
+        "ae_native_skills": 16,
+        "channels": {
+          "library_map_read": 513,
+          "bootstrap_workflow": 34,
+          "instruction_source_headers": 0,
+          "native_descriptions_ae": 1202,
+          "ae_tool_catalog_and_schemas": 895,
+          "observer_and_memory": 157,
+          "prompt_slot": 175,
+          "additional_catalog_results": 0
+        },
+        "cold_start_total": 2976,
+        "limit": 4000
+      },
+      "first_main_seconds": 6.688179707998643
+    },
+    {
+      "tool_mode": "code",
+      "mode": 2,
+      "effective_mode": 0,
+      "scenario": "stale",
+      "selector_requests": 1,
+      "main_requests": 4,
+      "catalog_searches": 1,
+      "detail_reads": 1,
+      "memory_task_writes": 1,
+      "context_budget": {
+        "measurement": "tiktoken o200k_base",
+        "ae_native_skills": 16,
+        "channels": {
+          "library_map_read": 513,
+          "bootstrap_workflow": 34,
+          "instruction_source_headers": 0,
+          "native_descriptions_ae": 1202,
+          "ae_tool_catalog_and_schemas": 927,
+          "observer_and_memory": 159,
+          "prompt_slot": 251,
+          "additional_catalog_results": 195
+        },
+        "cold_start_total": 3281,
+        "limit": 4000
+      },
+      "first_main_seconds": 6.610647573004826
+    },
+    {
+      "tool_mode": "code",
+      "mode": 2,
+      "effective_mode": 0,
+      "scenario": "unavailable",
+      "selector_requests": 1,
+      "main_requests": 4,
+      "catalog_searches": 1,
+      "detail_reads": 1,
+      "memory_task_writes": 1,
+      "context_budget": {
+        "measurement": "tiktoken o200k_base",
+        "ae_native_skills": 16,
+        "channels": {
+          "library_map_read": 513,
+          "bootstrap_workflow": 34,
+          "instruction_source_headers": 0,
+          "native_descriptions_ae": 1202,
+          "ae_tool_catalog_and_schemas": 895,
+          "observer_and_memory": 159,
+          "prompt_slot": 251,
+          "additional_catalog_results": 195
+        },
+        "cold_start_total": 3249,
+        "limit": 4000
+      },
+      "first_main_seconds": 6.437261842991575
+    },
+    {
+      "tool_mode": "direct",
+      "mode": 0,
+      "effective_mode": 0,
+      "scenario": "selected",
+      "selector_requests": 0,
+      "main_requests": 4,
+      "catalog_searches": 1,
+      "detail_reads": 1,
+      "memory_task_writes": 1,
+      "context_budget": {
+        "measurement": "tiktoken o200k_base",
+        "ae_native_skills": 16,
+        "channels": {
+          "library_map_read": 513,
+          "bootstrap_workflow": 34,
+          "instruction_source_headers": 0,
+          "native_descriptions_ae": 1202,
+          "ae_tool_catalog_and_schemas": 1588,
+          "observer_and_memory": 157,
+          "prompt_slot": 251,
+          "additional_catalog_results": 195
+        },
+        "cold_start_total": 3940,
+        "limit": 4000
+      },
+      "first_main_seconds": 6.975164325005608
+    },
+    {
+      "tool_mode": "direct",
+      "mode": 2,
+      "effective_mode": 2,
+      "scenario": "selected",
+      "selector_requests": 1,
+      "main_requests": 3,
+      "catalog_searches": 0,
+      "detail_reads": 1,
+      "memory_task_writes": 1,
+      "context_budget": {
+        "measurement": "tiktoken o200k_base",
+        "ae_native_skills": 16,
+        "channels": {
+          "library_map_read": 513,
+          "bootstrap_workflow": 34,
+          "instruction_source_headers": 0,
+          "native_descriptions_ae": 1202,
+          "ae_tool_catalog_and_schemas": 1588,
+          "observer_and_memory": 157,
+          "prompt_slot": 172,
+          "additional_catalog_results": 0
+        },
+        "cold_start_total": 3666,
+        "limit": 4000
+      },
+      "first_main_seconds": 7.969788891990902
+    }
+  ],
+  "paired_default_context_projection": {
+    "method": "tiktoken o200k_base proxy after normalizing fixture paths. Native descriptions reconstructed. Tool schema projection assumes eager exposure. No model endpoint used.",
+    "baseline": {
+      "channels": {
+        "native_marker": 196,
+        "l0": 486,
+        "observer_cold": 122,
+        "memory_recall": 39,
+        "native_descriptions": 1065,
+        "tool_schema_eager_projection": 1468
+      },
+      "max_cold_start_with_fixture_note": 3627,
+      "reached_workflows": 5,
+      "workflow_cases": 7,
+      "unreached_workflows": [
+        "typescript-refactor",
+        "python-debug"
+      ],
+      "tool_count": 24,
+      "tools_list_wire_bytes": 6326,
+      "local_embedding_and_video": true
+    },
+    "candidate": {
+      "channels": {
+        "native_marker": 196,
+        "l0": 486,
+        "observer_cold": 122,
+        "memory_recall": 39,
+        "native_descriptions": 1065,
+        "tool_schema_eager_projection": 1468
+      },
+      "max_cold_start_with_fixture_note": 3627,
+      "reached_workflows": 5,
+      "workflow_cases": 7,
+      "unreached_workflows": [
+        "typescript-refactor",
+        "python-debug"
+      ],
+      "tool_count": 24,
+      "tools_list_wire_bytes": 6326,
+      "local_embedding_and_video": true
+    },
+    "candidate_budget_failures": [],
+    "candidate_stdio_startup_ms": {
+      "n": 5,
+      "p50": 1583.959,
+      "p95": 1850.222,
+      "max": 1850.222
+    },
+    "candidate_prompt_submit_ms": {
+      "n": 35,
+      "p50": 675.028,
+      "p95": 878.924,
+      "max": 959.039
+    }
+  },
+  "frozen_bilingual_discovery": {
+    "cases": 50,
+    "fixture_sha256": "d54bc497947ef5b2b1970c52011d27ff454dd34528ed23db839a4410aea4adb0",
+    "quality": {
+      "registry_map": {
+        "all": {
+          "n": 40,
+          "top1_hits": 25,
+          "top3_hits": 30
+        },
+        "positive": {
+          "n": 32,
+          "top1_hits": 23,
+          "top3_hits": 27
+        },
+        "ambiguous": {
+          "n": 8,
+          "top1_hits": 2,
+          "top3_hits": 3
+        },
+        "en": {
+          "n": 20,
+          "top1_hits": 11,
+          "top3_hits": 15
+        },
+        "id": {
+          "n": 20,
+          "top1_hits": 14,
+          "top3_hits": 15
+        },
+        "negative": {
+          "n": 6,
+          "abstained": 6
+        }
+      },
+      "loader": {
+        "all": {
+          "n": 40,
+          "top1_hits": 25,
+          "top3_hits": 30
+        },
+        "positive": {
+          "n": 32,
+          "top1_hits": 23,
+          "top3_hits": 27
+        },
+        "ambiguous": {
+          "n": 8,
+          "top1_hits": 2,
+          "top3_hits": 3
+        },
+        "en": {
+          "n": 20,
+          "top1_hits": 11,
+          "top3_hits": 15
+        },
+        "id": {
+          "n": 20,
+          "top1_hits": 14,
+          "top3_hits": 15
+        },
+        "negative": {
+          "n": 6,
+          "abstained": 6
+        }
+      },
+      "hook": {
+        "all": {
+          "n": 40,
+          "top1_hits": 25,
+          "top3_hits": 30
+        },
+        "positive": {
+          "n": 32,
+          "top1_hits": 23,
+          "top3_hits": 27
+        },
+        "ambiguous": {
+          "n": 8,
+          "top1_hits": 2,
+          "top3_hits": 3
+        },
+        "en": {
+          "n": 20,
+          "top1_hits": 11,
+          "top3_hits": 15
+        },
+        "id": {
+          "n": 20,
+          "top1_hits": 14,
+          "top3_hits": 15
+        },
+        "negative": {
+          "n": 6,
+          "abstained": 6
+        }
+      }
+    },
+    "token_measurement": "documented chars/4 fallback",
+    "tokens": {
+      "registry": {
+        "p50": 789.5,
+        "p95": 1043,
+        "max": 1152
+      },
+      "hook": {
+        "p50": 276.0,
+        "p95": 301,
+        "max": 311
+      }
+    },
+    "registry_invalid_json": 0,
+    "unavailable_mcp": {
+      "n": 4,
+      "advertised": 0,
+      "ready": 0
+    }
+  },
+  "coverage": {
+    "measurement": "coverage.py 7.13.5 with Python subprocess instrumentation",
+    "files": {
+      "runtime.py": {
+        "covered_lines": 101,
+        "num_statements": 120,
+        "covered_branches": 25,
+        "num_branches": 38
+      },
+      "load-skills.py": {
+        "covered_lines": 54,
+        "num_statements": 72,
+        "covered_branches": 16,
+        "num_branches": 24
+      },
+      "memory.py": {
+        "covered_lines": 60,
+        "num_statements": 114,
+        "covered_branches": 6,
+        "num_branches": 32
+      },
+      "compress.py": {
+        "covered_lines": 57,
+        "num_statements": 71,
+        "covered_branches": 23,
+        "num_branches": 32
+      }
+    }
+  }
+}

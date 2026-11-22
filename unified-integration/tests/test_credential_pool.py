@@ -252,6 +252,26 @@ class MigrationTests(IsolatedConfig):
         self.assertEqual(json.loads(self.path.read_text()), original)
         self.assertEqual(list(self.root.glob(".ui-api-*")), [])
 
+    def test_migration_preserves_an_edit_made_during_backup(self):
+        self.v1()
+        original = self.path.read_bytes()
+        edited = json.dumps({"version": 1, "api_keys": {"TAVILY_API_KEY": ""}})
+        replace = api.os.replace
+
+        def edit_after_backup(source, destination):
+            replace(source, destination)
+            if Path(destination).name.startswith("ui.api.json.backup."):
+                editor_file = self.root / "editor.json"
+                editor_file.write_text(edited)
+                replace(editor_file, self.path)
+
+        with patch.object(api.os, "replace", side_effect=edit_after_backup):
+            result = api.migrate(legacy_dir=self.root / "none")
+
+        self.assertEqual(result["reason"], "config_changed_during_migration")
+        self.assertEqual(self.path.read_text(), edited)
+        self.assertEqual(Path(result["backup"]).read_bytes(), original)
+
     def test_migrate_cli_prints_no_values(self):
         self.v1()
         import subprocess

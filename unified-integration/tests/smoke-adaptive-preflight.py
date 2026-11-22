@@ -29,7 +29,13 @@ ROOT = Path(__file__).resolve().parents[2]
 UI = ROOT / "unified-integration"
 sys.path.insert(0, str(UI / "scripts"))
 import adaptive_preflight as preflight
-from context_budget import approx_tokens, MAX_COLD_START_TOTAL, MAX_SKILL_CARDS
+from context_budget import (
+    approx_tokens, MAX_BOOTSTRAP, MAX_COLD_START_TOTAL, MAX_NATIVE_DESCRIPTION_TOTAL,
+    MAX_OBSERVER_AMBIENT, MAX_SEARCH_PAGE, MAX_SKILL_CARDS, MAX_TOOL_SCHEMA_TOTAL,
+)
+
+DIRECT_PROBE = "agent-enhancements_ffmpeg_probe"
+CODE_PROBE = 'tools["agent-enhancements"].ffmpeg_probe'
 
 
 def write_json(path: Path, value: object) -> None:
@@ -49,24 +55,40 @@ def sanitized(value: object) -> object:
     return value
 
 
-def context_ledger(context: str, tools: dict, discovery: list[str]) -> dict:
+def context_ledger(context: str, tools: dict, discovery: list[str], native_names: set[str]) -> dict:
     """Count all AE channels in this actual host profile, including duplicates.
 
-    Conservatively charge every native skill description and the complete shared
-    execute declaration. Task-specific skill bodies arrive after selection and
-    are outside the documented cold-start total.
+    Charge AE-linked native skills and the complete shared execute declaration.
+    Host built-ins and task-specific skill bodies are outside the AE cold-start
+    total.
 
     The library-map read is measured separately as a mandatory cold-start action.
     """
     native = re.search(r"<available_skills>.*?</available_skills>", context, re.S)
-    library_map = json.loads((ROOT / "skills/library-map.json").read_text())["rendered"]
+    ae_skills = []
+    observed_names = []
+    for skill in re.findall(r"  <skill>.*?</skill>", native.group() if native else "", re.S):
+        match = re.search(r"<id>([^<]+)</id>", skill)
+        if match and match[1] in native_names:
+            ae_skills.append(skill)
+            observed_names.append(match[1])
+    assert sorted(observed_names) == sorted(native_names), "AE native skill declarations changed"
+    declarations = "\n".join(["<available_skills>", *ae_skills, "</available_skills>"])
+    library_map = subprocess.check_output(
+        [sys.executable, str(UI / "scripts/build-library-map.py"), "--print"],
+        text=True, timeout=10,
+    ).rstrip()
     assert context.count(library_map) == 1, "complete L0 bootstrap map was not delivered exactly once"
     bootstrap = "".join(re.findall(
         r"<!-- agent-enhancements:begin -->.*?<!-- agent-enhancements:end -->", context, re.S))
     assert not bootstrap, "duplicate bootstrap pointers remain after L0 delivery"
-    start = context.index("\n- agent-enhancements (")
-    end = context.find("\n- ", start + 1)
-    catalog = context[start:end if end >= 0 else len(context)]
+    start = context.find("\n- agent-enhancements (")
+    catalog = ""
+    if start >= 0:
+        end = context.find("\n- ", start + 1)
+        catalog = context[start:end if end >= 0 else len(context)]
+    tool_schemas = [tool for name, tool in tools.items()
+                    if name.startswith("agent-enhancements_") or (catalog and name == "execute")]
     hook_start = context.index("AgentEnhancements task-observer is active")
     bootstrap_start = context.index("AgentEnhancements bootstrap (L0):")
     # Library map starts after the bootstrap header
@@ -81,20 +103,22 @@ def context_ledger(context: str, tools: dict, discovery: list[str]) -> dict:
     channels = {"library_map_read": approx_tokens(library_map),
                 "bootstrap_workflow": approx_tokens(workflow_text),
                 "instruction_source_headers": approx_tokens("\n".join(re.findall(r"Instructions from:[^\n]+", context))),
-                "native_descriptions_all": approx_tokens(native.group() if native else ""),
-                "ae_tool_catalog_and_shared_execute": approx_tokens(catalog + json.dumps(tools["execute"])),
+                "native_descriptions_ae": approx_tokens(declarations),
+                "ae_tool_catalog_and_schemas": approx_tokens(
+                    catalog + json.dumps(tool_schemas, separators=(",", ":"))),
                 "observer_and_memory": approx_tokens(observer), "prompt_slot": approx_tokens(submit),
                 "additional_catalog_results": sum(approx_tokens(text) for text in discovery)}
     assert channels["prompt_slot"] <= MAX_SKILL_CARDS, channels
-    assert channels["observer_and_memory"] <= 250, channels
-    assert channels["native_descriptions_all"] <= 2500, channels
-    assert channels["ae_tool_catalog_and_shared_execute"] <= 1800, channels
-    assert channels["library_map_read"] <= 500, channels  # documented bootstrap_tokens_approx: 491
-    assert channels["bootstrap_workflow"] <= 100, channels
-    assert all(approx_tokens(text) <= 800 for text in discovery), "discovery page budget exceeded"
+    assert channels["observer_and_memory"] <= MAX_OBSERVER_AMBIENT, channels
+    assert channels["native_descriptions_ae"] <= MAX_NATIVE_DESCRIPTION_TOTAL, channels
+    assert channels["ae_tool_catalog_and_schemas"] <= MAX_TOOL_SCHEMA_TOTAL, channels
+    assert channels["library_map_read"] + channels["bootstrap_workflow"] <= MAX_BOOTSTRAP, channels
+    assert all(approx_tokens(text) <= MAX_SEARCH_PAGE for text in discovery), "discovery page budget exceeded"
     total = sum(channels.values())
     assert total <= MAX_COLD_START_TOTAL, channels
-    return {"measurement": "documented chars/4 fallback (provider usage unavailable)",
+    measurement = ("tiktoken o200k_base" if "tiktoken.registry" in sys.modules
+                   else "documented chars/4 fallback")
+    return {"measurement": measurement, "ae_native_skills": len(observed_names),
             "channels": channels, "cold_start_total": total, "limit": MAX_COLD_START_TOTAL}
 
 
@@ -145,7 +169,7 @@ class MainFixture:
         self.httpd.server_close()
 
 
-def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
+def run_case(output: Path, mode: int, scenario: str = "selected", *, code_mode: bool = False) -> dict:
     """Run one real host session in isolated config/data with one AE gateway."""
     case = output / f"mode-{mode}-{scenario}"
     case.mkdir(mode=0o700)
@@ -158,9 +182,9 @@ def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
     if not clip.exists():
         subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i",
                         "color=c=blue:s=32x32:d=0.2", "-y", str(clip)], check=True)
-    prompt = (f"AE_SYNTHETIC_ONLY: inspect local video {clip}. "
-              "Use the video-content-extractor skill before probing metadata with ffmpeg. "
-              "Report the video dimensions. Keep this complete user prompt intact.")
+    prompt = (f"AE_SYNTHETIC_ONLY: inspect the local video {clip}. "
+              "Verify the container metadata with a media probe and report the video dimensions "
+              "before making any edits.")
     items = [
         {"id": "skill:video-content-extractor"},
         {"id": "tool:ffmpeg-mcp/ffmpeg_probe"},
@@ -193,17 +217,20 @@ def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
                      SelectorFixture.selection("selected", items=items)]
     selector = SelectorFixture(responses)
     steps = []
+    probe = CODE_PROBE if code_mode else DIRECT_PROBE
     if mode == 0 or scenario in ("unavailable", "stale"):
         steps.append(("shell", {"command": shlex.join([sys.executable, str(UI / "scripts/registry.py"),
-                                                     "search", "video metadata ffmpeg"])}))
+                                                     "search", "video content extractor metadata",
+                                                     "--type", "skill", "--limit", "2"])}))
     if scenario != "abstain":
         steps.extend(("read", {"path": str(path)}) for path in skill_paths)
         if scenario == "stale":
             steps.append(("shell", {"command": shlex.join(["ffprobe", "-v", "error", "-show_streams",
                                                           "-of", "json", str(clip)])}))
+        elif code_mode:
+            steps.append(("execute", {"code": f"return await {probe}({json.dumps({'path': str(clip)})})"}))
         else:
-            steps.append(("execute", {"code": 'return await tools["agent-enhancements"]'
-                                      f'.ffmpeg_probe({json.dumps({"path": str(clip)})})'}))
+            steps.append((probe, {"path": str(clip)}))
     main = MainFixture(steps)
     try:
         api_file = case / "ui.api.json"
@@ -241,6 +268,7 @@ def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
         )
         python = str(ROOT / ".agentenhancements/runtime/venv/bin/python")
         env = {**os.environ,
+               "HOME": str(case / "home"),
                "AGENT_ENHANCEMENTS_API_FILE": str(api_file),
                "AGENT_MEMORY_ROOT": str(case / "memory"),
                "TASK_OBSERVER_WORKSPACE": str(case / "observer"),
@@ -254,11 +282,29 @@ def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
                "all_proxy": "http://127.0.0.1:1", "no_proxy": "127.0.0.1,localhost"}
         env.pop("AGENT_ENHANCEMENTS_STATE_DIR", None)
         env.pop("AGENT_SKILLS_DIR", None)
+        for name in ("OPENCODE_CONFIG", "OPENCODE_CONFIG_CONTENT", "OPENCODE_CONFIG_DIR"):
+            env.pop(name, None)
+        target = cfg / "skills"
+        subprocess.run(["bash", str(UI / "scripts/link-skills.sh"), "--quiet"],
+                       env={**env, "AGENT_SKILLS_NATIVE_TARGETS": str(target)}, check=True, timeout=20)
+        native_names = {path.name for path in target.iterdir()
+                        if path.is_symlink() and path.resolve().is_relative_to(ROOT)}
+        assert native_names, "default native skills were not linked"
+        permissions = [{"action": "read", "resource": str(path), "effect": "allow"}
+                       for path in skill_paths]
+        permissions.extend({"action": "shell", "resource": arguments["command"], "effect": "allow"}
+                           for name, arguments in steps if name == "shell")
+        permissions.append({"action": DIRECT_PROBE.replace("-", "_"), "resource": "*", "effect": "allow"})
+        if code_mode:
+            permissions.append({"action": "execute", "resource": "*", "effect": "allow"})
         write_json(cfg / "opencode.json", {"$schema": "https://opencode.ai/config.json",
             "model": "ae-fixture/fixture", "plugins": [str(UI / "opencode-plugin"), str(fixture_plugin)],
-            "mcp": {"agent-enhancements": {"type": "local", "command": [
-                python, str(UI / "mcp-servers/gateway.py")], "environment": {
-                "AGENT_ENHANCEMENTS_API_FILE": str(api_file)}}}})
+            "permissions": permissions,
+            "mcp": {"servers": {"agent-enhancements": {
+                "type": "local", "codemode": code_mode,
+                "command": [python, str(UI / "mcp-servers/gateway.py")],
+                "environment": {"AGENT_ENHANCEMENTS_API_FILE": str(api_file)},
+            }}}})
         write_json(project / "opencode.json", {})
         # Instrument this disposable fixture DB only. Upserts would otherwise
         # hide a duplicate UserPromptSubmit behind one final task row.
@@ -276,7 +322,7 @@ def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
             """)
         started = time.monotonic()
         process = subprocess.run(["opencode", "run", prompt, "--format", "json", "--standalone",
-            "--auto", "--title", "AE preflight fixture", "--model", "ae-fixture/fixture"],
+            "--title", "AE preflight fixture", "--model", "ae-fixture/fixture"],
             cwd=project, env=env, capture_output=True, text=True, timeout=50)
         write_json(case / "main-requests.json", sanitized(main.requests))
         write_json(case / "selector-requests.json", sanitized([
@@ -295,10 +341,13 @@ def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
         assert user_texts == [prompt], "decoded user prompt changed"
         tools = {t["function"]["name"]: t["function"] for t in first["tools"]}
         context = "\n".join(m["content"] for m in first["messages"] if m["role"] == "system")
-        probe = 'tools["agent-enhancements"].ffmpeg_probe'
         if scenario != "stale":
-            assert "execute" in tools and probe in context, "Code Mode tool/schema missing"
-            assert probe + "({\n  path: string," in context, "required path schema changed"
+            if code_mode:
+                assert "execute" in tools and probe in context, "Code Mode tool/schema missing"
+                assert probe + "({\n  path: string," in context, "required path schema changed"
+            else:
+                assert probe in tools, "direct MCP tool/schema missing"
+                assert "path" in tools[probe]["parameters"]["required"], "required path schema changed"
         selected = mode == 2 and scenario in ("selected", "lookup", "guide")
         if selected:
             assert len(selector.requests) == (2 if scenario == "lookup" else 1)
@@ -330,8 +379,9 @@ def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
                     "OpenMontage" if scenario == "guide" else "PostgreSQL")
                 assert "tool.execution" not in result and marker in result, "skill read failed"
             if name == "shell" and "registry.py" in arguments["command"]:
+                assert "skill:video-content-extractor" in result, "on-demand discovery missed the video skill"
                 discovery_results.append(result)
-            if name == "execute" or scenario == "stale" and index == len(steps) - 1:
+            if name in ("execute", DIRECT_PROBE) or scenario == "stale" and index == len(steps) - 1:
                 metadata = json.loads(result[result.index("{"):])
                 streams = metadata["streams"] if scenario == "stale" else metadata["video_streams"]
                 assert streams[0]["width"] == 32, "probe result did not return to main model"
@@ -347,8 +397,9 @@ def run_case(output: Path, mode: int, scenario: str = "selected") -> dict:
         assert events[0]["at"] < main.requests[0]["received_at"], "prompt hook ran too late"
         if selector.requests:
             assert selector.requests[-1]["completed_at"] < main.requests[0]["received_at"], "selector finished too late"
-        ledger = context_ledger(context, tools, discovery_results)
+        ledger = context_ledger(context, tools, discovery_results, native_names)
         return {"mode": mode, "effective_mode": 2 if selected or scenario == "abstain" else 0,
+                "tool_mode": "code" if code_mode else "direct",
                 "scenario": scenario, "selector_requests": len(selector.requests), "main_requests": len(main.requests),
                 "first_main_seconds": main.requests[0]["received_at"] - started,
                 "exact_tool": probe, "skill_read": str(skill), "memory_task_rows": tasks,
@@ -378,14 +429,22 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--mode", type=int, choices=[0, 2], default=2)
+    parser.add_argument("--tool-mode", choices=["direct", "code"], default="direct")
+    parser.add_argument("--exact-tokens", action="store_true",
+                        help="use the preinstalled tiktoken o200k_base benchmark encoder")
     parser.add_argument("--scenario", choices=["selected", "abstain", "lookup", "stale", "unavailable", "guide"], default="selected")
     args = parser.parse_args()
     if args.scenario == "abstain" and args.mode != 2:
         # "abstain" models a selector that ran and declined; no selector exists in
         # Mode 0, so the combination is contradictory rather than a coverage gap.
         parser.error("the abstain scenario requires --mode 2 (it models a selector that declined)")
+    if args.exact_tokens:
+        import tiktoken
+
+        tiktoken.get_encoding("o200k_base")
     args.output.mkdir(parents=True, exist_ok=True, mode=0o700)
-    result = run_case(args.output.resolve(), args.mode, args.scenario)
+    result = run_case(args.output.resolve(), args.mode, args.scenario,
+                      code_mode=args.tool_mode == "code")
     result["host_version"] = subprocess.check_output(["opencode", "--version"], text=True).strip()
     write_json(args.output / f"summary-mode-{args.mode}-{args.scenario}.json", result)
     print(json.dumps(result, indent=2))

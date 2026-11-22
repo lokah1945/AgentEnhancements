@@ -1,4 +1,5 @@
 """Existing runtimes must refresh dependency constraints after an AE update."""
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -7,8 +8,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
-from helpers import UI_DIR
+from helpers import UI_DIR, load_module
 
 
 class RuntimeDependencyRefreshTests(unittest.TestCase):
@@ -51,6 +53,26 @@ class RuntimeDependencyRefreshTests(unittest.TestCase):
         from importlib.metadata import version
         installed = tuple(int(part) for part in version('filelock').split('.')[:3])
         self.assertGreaterEqual(installed, (4, 2, 1))
+
+    def test_preparer_reads_requirements_after_acquiring_the_lock(self):
+        with patch.object(sys, "path", [str(UI_DIR / "scripts"), *sys.path]):
+            module = load_module("runtime_lock_test", UI_DIR / "scripts/runtime_dependencies.py")
+        with tempfile.TemporaryDirectory(prefix="ae-dependency-lock-") as directory:
+            root = Path(directory)
+            requirements = root / "requirements.txt"
+            requirements.write_text("previous lock\n")
+
+            def acquire(*_args):
+                requirements.write_text("current lock\n")
+
+            with patch.object(module, "runtime_root", return_value=root), \
+                 patch.object(module, "REQUIREMENTS", requirements), \
+                 patch.object(module.fcntl, "flock", side_effect=acquire), \
+                 patch.object(module, "ready", return_value=True) as ready:
+                self.assertEqual(module.prepare(), root / "venv/bin/python")
+
+            self.assertEqual(ready.call_args.args[1]["requirements_sha256"],
+                             hashlib.sha256(requirements.read_bytes()).hexdigest())
 
     def test_prepare_refresh_rollback_and_concurrent_reuse(self):
         with tempfile.TemporaryDirectory(prefix='ae-dependency-refresh-') as temp:

@@ -17,7 +17,6 @@ import json
 import os
 from pathlib import Path
 import re
-import shutil
 import sys
 import time
 from typing import Any
@@ -39,39 +38,17 @@ from api_config import (
     cloud_available,
     external_command,
     has_usable_key,
+    public_name,
     read_config,
     redact,
     server_state,
+    tool_available,
     value,
 )
 
 
 # search-mcp provider names, aligned with api_config.BUILTIN_ANY_OF order.
 SEARCH_PROVIDERS = ("you", "tavily", "exa", "firecrawl", "newsapi", "serper")
-
-
-def public_name(server: str, tool: str) -> str:
-    """Keep portable MCP names unique and below the 64 character limit."""
-    raw = server.removesuffix("-mcp").replace("-", "_") + "_" + tool
-    safe = re.sub(r"[^a-zA-Z0-9_-]", "_", raw)
-    if len(safe) > 64 or safe != raw:
-        safe = safe[:51] + "_" + hashlib.sha256(raw.encode()).hexdigest()[:12]
-    return safe
-
-
-def tool_available(server: str, original: str, config: dict) -> bool:
-    """Shared current availability gate, also used to reject stale host views."""
-    if original == "health":
-        return False
-    if server == "vision-mcp" and original == "describe":
-        return cloud_available(server, config=config)
-    if server == "ffmpeg-mcp":
-        return bool(shutil.which("ffprobe" if original == "probe" else "ffmpeg"))
-    if server == "video-mcp" and original == "render":
-        return bool(shutil.which("ffmpeg"))
-    if server == "vision-mcp" and original == "ocr":
-        return bool(shutil.which("tesseract"))
-    return True
 
 
 def external_fingerprint(settings: dict, config: dict) -> str:

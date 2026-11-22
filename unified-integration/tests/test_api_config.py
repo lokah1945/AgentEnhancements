@@ -160,14 +160,14 @@ class ConfigurationTests(unittest.TestCase):
 
     def test_media_prerequisites_filter_tools_without_hiding_local_subsets(self):
         module = load_module('gateway_media_readiness', UI_DIR / 'mcp-servers/gateway.py')
-        with configuration(), patch.object(module.shutil, 'which', lambda name: None):
+        with configuration(), patch.object(api.shutil, 'which', lambda name: None):
             self.assertFalse(api.server_state('ffmpeg-mcp')['visible'])
             for server, tool in (('ffmpeg-mcp', 'probe'), ('ffmpeg-mcp', 'cut'),
                                  ('vision-mcp', 'ocr'), ('video-mcp', 'render')):
                 self.assertFalse(module.tool_available(server, tool, {}))
             self.assertTrue(module.tool_available('vision-mcp', 'compare', {}))
             self.assertTrue(module.tool_available('video-mcp', 'timeline', {}))
-        with configuration(), patch.object(module.shutil, 'which',
+        with configuration(), patch.object(api.shutil, 'which',
                                            lambda name: name if name == 'ffprobe' else None):
             self.assertTrue(api.server_state('ffmpeg-mcp')['visible'])
             self.assertTrue(module.tool_available('ffmpeg-mcp', 'probe', {}))

@@ -469,6 +469,11 @@ class PackageResolutionTests(PreflightTestCase):
         return self.module.parse_selection({"decision": "selected",
                                             "items": items})
 
+    def test_host_tool_matching_does_not_import_the_gateway_transport(self):
+        observed = {"name": "embeddings_embed", "namespace": "agent-enhancements"}
+        with patch.dict(sys.modules, {"mcp": None}):
+            self.assertEqual(self.module._server_tools("embeddings-mcp", [observed]), [observed])
+
     def test_skill_resolves_direct_read_with_file_proof(self):
         package, unmet = self.module.build_package(self.select(
             [{"id": "skill:postgresql-optimization"}]))

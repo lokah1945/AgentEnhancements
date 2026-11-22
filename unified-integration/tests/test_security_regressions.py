@@ -29,6 +29,7 @@ from helpers import UI_DIR, load_module
 
 SCRIPTS = UI_DIR / "scripts"
 SERVERS = UI_DIR / "mcp-servers"
+sys.path.insert(0, str(SCRIPTS))
 
 
 class IsolatedSecurityTest(unittest.TestCase):
@@ -206,6 +207,27 @@ class PreflightSecurityTests(IsolatedSecurityTest):
         self.assertNotIn("legacy_preflight_key", result)
         self.assertNotIn("fixture-only", Path(self.env["AGENT_ENHANCEMENTS_API_FILE"]).read_text())
 
+    def test_migration_never_imports_symlinked_legacy_selector_settings(self):
+        api = self.module("migrate_model_link", SCRIPTS / "api_config.py")
+        directory = self.root / "legacy"
+        directory.mkdir()
+        target = self.root / "outside-settings.json"
+        target.write_text(json.dumps({"adaptive_preflight_mode": 1}))
+        (directory / "model.json").symlink_to(target)
+
+        api.migrate(legacy_dir=directory)
+
+        self.assertNotIn("preflight", json.loads(api.config_path().read_text()))
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "POSIX file types required")
+    def test_nonregular_configuration_returns_a_diagnosis(self):
+        path = Path(self.env["AGENT_ENHANCEMENTS_API_FILE"])
+        path.unlink()
+        os.mkfifo(path)
+        output = subprocess.check_output([sys.executable, str(SCRIPTS / "api_config.py"),
+                                          "status"], text=True, timeout=3)
+        self.assertEqual(json.loads(output)["configuration"], "config_unavailable_or_invalid")
+
     def test_non_utf8_api_config_falls_back_with_a_diagnosis(self):
         Path(self.env["AGENT_ENHANCEMENTS_API_FILE"]).write_bytes(b"\xffinvalid")
         config = self.preflight.load_model_config()
@@ -354,6 +376,34 @@ class CredentialRedirectTests(IsolatedSecurityTest):
 
 
 class GatewayHealthSecurityTests(IsolatedSecurityTest):
+    def test_builtin_rechecks_readiness_after_awaiting_backend_lock(self):
+        gateway_module = self.module("queued_gateway", SERVERS / "gateway.py")
+
+        async def check():
+            gateway = gateway_module.Gateway()
+            server = "embeddings-mcp"
+            called = []
+
+            async def call(*args):
+                called.append(args)
+                return {"ok": True}
+
+            gateway.modules[server] = SimpleNamespace(mcp=SimpleNamespace(call_tool=call))
+            tool = gateway_module.types.Tool(
+                name="embed", inputSchema={"type": "object", "properties": {}},
+            )
+            gateway.definitions[server] = [tool]
+            async with gateway.module_locks[server]:
+                pending = asyncio.create_task(gateway.call_tool("embeddings_embed", {}))
+                await asyncio.sleep(0)
+                self.config["mcp"][server] = {"enabled": False}
+                self.write_config()
+            response = await asyncio.wait_for(pending, timeout=3)
+            self.assertTrue(response.isError)
+            self.assertEqual(called, [])
+
+        asyncio.run(check())
+
     def test_health_redacts_secrets_before_truncation_in_every_field(self):
         gateway_module = self.module("health_gateway", SERVERS / "gateway.py")
         from mcp import types
@@ -367,20 +417,30 @@ class GatewayHealthSecurityTests(IsolatedSecurityTest):
             gateway = gateway_module.Gateway()
             ready = asyncio.Event()
             ready.set()
+            calls = []
 
             async def call(*args):
+                calls.append(args)
                 return types.CallToolResult(content=[types.TextContent(
                     type="text", text=json.dumps({"status": secret, "reason": secret}),
                 )])
 
             gateway.externals["fixture-mcp"] = SimpleNamespace(
-                tools=[types.Tool(name="fixture", inputSchema={"type": "object"})],
+                tools=[types.Tool(name=name, inputSchema={"type": "object"})
+                       for name in ("fixture", "other")] + [
+                           types.Tool(name="sensitive_metadata", description=secret,
+                                      inputSchema={"type": "object"}),
+                       ],
                 ready=ready, call=call, task=asyncio.get_running_loop().create_future(),
             )
             config, _ = gateway_module.read_config()
             gateway.fingerprints["fixture-mcp"] = gateway_module.external_fingerprint(
                 config["mcp"]["fixture-mcp"], config)
-            return await gateway.call_tool("ae_health", {})
+            tools = await gateway.list_tools()
+            self.assertNotIn("fixture_sensitive_metadata", {tool.name for tool in tools})
+            result = await gateway.call_tool("ae_health", {})
+            self.assertEqual(calls, [("health", {})])
+            return result
 
         response = asyncio.run(check())
         rendered = json.dumps(response.model_dump(mode="json"))

@@ -254,11 +254,7 @@ def load_model_config(config: Optional[Dict[str, Any]] = None) -> ModelConfig:
     """Validate the preflight section; every rejection falls back to
     Mode 0 with a diagnosis code (review 12, fallback table)."""
     if config is None:
-        config, error = _api_config().read_config()
-        if error:
-            if not _api_config().config_path().exists():
-                return ModelConfig()  # missing file == Mode 0, no diagnosis
-            return ModelConfig(diagnosis="ui_api_json_invalid")
+        return _read_model_snapshot()[0]
     doc = config.get("preflight", {})
     if not isinstance(doc, dict):
         return ModelConfig(diagnosis="preflight_invalid:not_an_object")
@@ -292,6 +288,15 @@ def load_model_config(config: Optional[Dict[str, Any]] = None) -> ModelConfig:
         model=model.strip() if isinstance(model, str) else "",
         api_key_ref=key_ref if isinstance(key_ref, str) else DEFAULT_KEY_REF,
     )
+
+
+def _read_model_snapshot() -> tuple[ModelConfig, Dict[str, Any]]:
+    """Pair validated settings with the document that supplied them."""
+    api = _api_config()
+    snapshot, error = api.read_config()
+    if error and api.config_path().exists():
+        return ModelConfig(diagnosis="ui_api_json_invalid"), snapshot
+    return load_model_config(snapshot), snapshot
 
 
 def deadline_seconds() -> float:
@@ -761,7 +766,7 @@ def render_package(items: List[ResolvedItem], revision: str,
 # ---------------------------------------------------------------------------
 
 
-def resolve_api_key(config: ModelConfig) -> str:
+def resolve_api_key(config: ModelConfig, snapshot: Optional[Dict[str, Any]] = None) -> str:
     """Mode 2 key from ui.api.json ``api_keys[config.api_key_ref]``.
 
     One key per prompt, chosen by the shared credential pool (round-robin
@@ -769,7 +774,12 @@ def resolve_api_key(config: ModelConfig) -> str:
     key files and model.json are never consulted; the key never enters
     the selector prompt or the main-agent context.
     """
-    return _api_config().select_key_for_request(config.api_key_ref)
+    api = _api_config()
+    if snapshot is None:
+        snapshot, _ = api.read_config()
+    return api.select_key_for_request(config.api_key_ref, {
+        "api_keys": snapshot.get("api_keys", {}),
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -1016,14 +1026,17 @@ def _round_two_user(prompt: str, lookups: List[Dict[str, Any]]) -> str:
 
 
 def run_custom_selection(prompt: str, config: ModelConfig,
-                         deadline: Deadline, api_key: str) -> Selection:
+                         deadline: Deadline, api_key: str, *,
+                         snapshot: Optional[Dict[str, Any]] = None) -> Selection:
     """Mode 2: at most two inference rounds, bounded catalog reads,
     every failure mapped to a PreflightError code."""
     # The selector gets intent, never credentials embedded in a prompt. Redact
     # before ranking/truncation so a credential cannot survive as a prefix or
     # reappear on the optional lookup round.
     redact = _api_config().redact
-    prompt = redact(prompt.replace(api_key, "[redacted]") if api_key else prompt)
+    prompt = redact(prompt, snapshot)
+    if api_key:
+        prompt = prompt.replace(api_key, "[redacted]")
     registry = _registry()
     candidates = registry.paged_search(prompt, limit=MAX_SEARCH_HINTS)
     user = _round_one_user(prompt, candidates)
@@ -1079,7 +1092,7 @@ def preflight_context(
     legacy ``skill_context``) with a diagnosis. Memory effects stay in
     runtime.py and run exactly once regardless of the mode.
     """
-    config = load_model_config()
+    config, snapshot = _read_model_snapshot()
     if config.diagnosis:
         _diagnose(f"preflight config rejected ({config.diagnosis}); running Mode 0")
     if config.mode == MODE_DISABLED:
@@ -1091,11 +1104,6 @@ def preflight_context(
         )
 
     deadline = Deadline(deadline_seconds())
-    api_key = ""
-    if config.mode == MODE_CUSTOM:
-        # Resolve once per prompt; a missing key falls back before any
-        # network attempt (review 12 fallback table).
-        api_key = resolve_api_key(config)
     try:
         revision = registry_revision()
         if config.mode == MODE_NATIVE:
@@ -1111,9 +1119,11 @@ def preflight_context(
             if selection.decision == "lookup":
                 raise PreflightError("mode1_selection_not_final")
         else:
+            api_key = resolve_api_key(config, snapshot)
             if not api_key:
                 raise PreflightError("api_key_unavailable")
-            selection = run_custom_selection(prompt, config, deadline, api_key)
+            selection = run_custom_selection(prompt, config, deadline, api_key,
+                                             snapshot=snapshot)
 
         if selection.decision == "abstain":
             return PreflightResult(
@@ -1173,7 +1183,7 @@ def preflight_context(
 
 def status_report() -> Dict[str, Any]:
     """Redacted, doctor-friendly summary of the preflight config."""
-    config = load_model_config()
+    config, snapshot = _read_model_snapshot()
     report: Dict[str, Any] = {
         "config_file": str(model_config_path()),
         "requested_mode": config.mode,
@@ -1190,7 +1200,10 @@ def status_report() -> Dict[str, Any]:
         report["sdk"] = config.sdk
         report["model"] = config.model
         report["api_key_ref"] = config.api_key_ref
-        report["api_key_present"] = _api_config().has_usable_key(config.api_key_ref)
+        report["api_key_present"] = bool(snapshot.get("api_keys", {}).get(config.api_key_ref))
+        if not report["api_key_present"]:
+            report["effective_mode"] = MODE_DISABLED
+            report["diagnosis"] = "api_key_unavailable"
     return report
 
 

@@ -1181,6 +1181,45 @@ class CredentialResolverTests(PreflightTestCase):
         key_file.chmod(0o600)
         self.assertEqual(self.module.resolve_api_key(config), "")
 
+    def test_connection_value_cannot_supply_a_selector_key(self):
+        self.mode2()
+        document = json.loads(self.api_file.read_text())
+        document["api_keys"].pop("PREFLIGHT_API_KEY", None)
+        document["connections"] = {"PREFLIGHT_API_KEY": "fixture-connection"}
+        self.api_file.write_text(json.dumps(document))
+
+        with patch.object(self.module, "call_model") as model:
+            result = self.module.preflight_context("codex", PROMPT, {}, lambda *_: "legacy")
+        model.assert_not_called()
+        self.assertEqual(result.context, "legacy")
+        self.assertEqual(result.fallback_reason, "api_key_unavailable")
+        status = self.module.status_report()
+        self.assertFalse(status["api_key_present"])
+        self.assertEqual(status["effective_mode"], 0)
+        self.assertEqual(status["diagnosis"], "api_key_unavailable")
+
+    def test_selector_uses_endpoint_key_and_redaction_from_one_snapshot(self):
+        api = self.module._api_config()
+        section = {"mode": 2, "endpoint": "https://old.example/v1",
+                   "sdk": "openai", "model": "fixture"}
+        original = {"preflight": section, "api_keys": {
+            "PREFLIGHT_API_KEY": ["first-fixture-key"], "ANOTHER_KEY": ["secret-to-mask"],
+        }}
+        changed = {"preflight": {**section, "endpoint": "https://new.example/v1"},
+                   "api_keys": {"PREFLIGHT_API_KEY": ["second-fixture-key"]}}
+        snapshots = [(original, None), (changed, None), (changed, None)]
+        with patch.object(api, "read_config", side_effect=snapshots), \
+             patch.object(self.module, "call_model", return_value={"decision": "abstain"}) as model:
+            result = self.module.preflight_context(
+                "codex", f"{PROMPT} secret-to-mask", {}, lambda *_: "legacy",
+            )
+
+        self.assertEqual(result.effective_mode, 2)
+        config, _, user_text, _, api_key = model.call_args.args
+        self.assertEqual(config.endpoint, section["endpoint"])
+        self.assertEqual(api_key, "first-fixture-key")
+        self.assertNotIn("secret-to-mask", user_text)
+
     def test_status_never_reports_mode1_as_effective_without_an_adapter(self):
         # Final audit 2026-11-20 (P2): doctor printed "mode 1" although no
         # installed adapter supplies ae_native_selection, so every prompt

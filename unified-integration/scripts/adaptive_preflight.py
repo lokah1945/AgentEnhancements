@@ -58,6 +58,7 @@ import importlib.util
 import json
 import os
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -621,6 +622,10 @@ def _resolve_tool_id(item: SelectionItem, tools: List[Dict[str, Any]]) -> Resolv
     if not server or not tool or "/" in tool:
         raise PreflightError("selection_invalid:tool_id", item.id[:80])
     entry = _registry().find_entry(f"mcp:{server}")
+    # CONTRACT 8.5: exact IDs only. The name surface would otherwise bind
+    # tool:pdf/... to skill:pdf or tool:memory/... to capability:memory.
+    if entry is not None and entry.get("id") != f"mcp:{server}":
+        entry = None
     if entry is None:
         return ResolvedItem(
             id=item.id, type="tool", ref="", delivery="unavailable",
@@ -791,6 +796,36 @@ class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
 
 def _post_json(url: str, headers: Dict[str, str], payload: Dict[str, Any],
                timeout: float) -> Dict[str, Any]:
+    """POST bounded by ``timeout`` of wall-clock time for the whole call.
+
+    Socket timeouts do not cover getaddrinfo or a trickled status line and
+    headers, so the request runs on a daemon worker. A worker still blocked
+    at the deadline is abandoned (it cannot delay interpreter exit) and the
+    caller gets the same ``timeout`` code, keeping the Mode 0 fallback
+    inside the shared deadline.
+    """
+    box: Dict[str, Any] = {}
+
+    def _run() -> None:
+        try:
+            box["value"] = _post_json_unbounded(url, headers, payload, timeout)
+        except BaseException as exc:  # re-raised on the caller's thread
+            box["error"] = exc
+
+    worker = threading.Thread(target=_run, name="ae-preflight-http",
+                              daemon=True)
+    worker.start()
+    worker.join(timeout)
+    if worker.is_alive():
+        raise PreflightError("timeout")
+    if "error" in box:
+        raise box["error"]
+    return box["value"]
+
+
+def _post_json_unbounded(url: str, headers: Dict[str, str],
+                         payload: Dict[str, Any],
+                         timeout: float) -> Dict[str, Any]:
     expires = time.monotonic() + timeout
     request = urllib.request.Request(
         url,

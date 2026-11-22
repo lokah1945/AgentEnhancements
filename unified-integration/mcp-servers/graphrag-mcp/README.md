@@ -19,7 +19,11 @@ can be layered later behind the same tool API.
 
 ## Persistence
 
-Corpora are cached in memory and mirrored to `/tmp/ae-graphrag/<corpus>.json`.
+Corpora are cached in memory and mirrored to a private (mode 0700) store at
+`$AGENT_MEMORY_ROOT/mcp/graphrag/<project-key>/<corpus>.json`, where
+`<project-key>` is a SHA-256 prefix of the working directory, so corpora from
+different checkouts never collide. `AGENT_MEMORY_ROOT` defaults to
+`.agentenhancements/memory` in this checkout. `health` reports the exact path.
 
 ## Env vars
 

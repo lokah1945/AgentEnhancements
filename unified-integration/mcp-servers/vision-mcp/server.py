@@ -13,6 +13,7 @@ replica-skill (plugin-catalog/mcp-servers.json → vision-mcp, P1, core).
 from __future__ import annotations
 
 import base64
+import http.client
 import json
 import os
 import shutil
@@ -26,7 +27,7 @@ from typing import Any, Callable
 from mcp.server.fastmcp import FastMCP
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
-from api_config import cloud_available, read_config, value
+from api_config import cloud_available, read_config, safe_service_url, value
 
 VERSION = "1.0.0"
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
@@ -66,6 +67,23 @@ _IMAGE_MAGIC = (b"\x89PNG\r\n\x1a\n", b"\xff\xd8\xff", b"GIF87a", b"GIF89a",
 
 def _is_image(data: bytes) -> bool:
     return data.startswith(_IMAGE_MAGIC) or (data[:4] == b"RIFF" and data[8:12] == b"WEBP")
+
+
+def _media_type(data: bytes) -> str | None:
+    """MIME type from magic bytes for the formats the cloud vision API accepts.
+
+    BMP and TIFF pass _is_image (Pillow/tesseract read them) but return None:
+    the OpenAI vision endpoint rejects them, so they are never uploaded.
+    """
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if data.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
 
 
 def _load_image(raw: str) -> tuple[Path | None, bytes | None, str | None]:
@@ -186,9 +204,17 @@ def describe(image_path: str, detail: str = "auto") -> dict:
     api_key = value("OPENAI_API_KEY", config)
     if cloud_available("vision-mcp", config=config):
         model = value("OPENAI_VISION_MODEL", config) or OPENAI_MODEL
+        media = _media_type(data)
+        if media is None:
+            return {"error": "describe via the cloud API supports png, jpeg, gif and webp only; "
+                             "convert bmp/tiff first"}
+        base = (value("OPENAI_BASE_URL", config) or "https://api.openai.com/v1").rstrip("/")
+        if not safe_service_url(base):
+            # Refuse before any socket opens: an http:// typo would otherwise
+            # send the bearer key and the image in cleartext.
+            return {"error": "OPENAI_BASE_URL must be https (or loopback http)",
+                    "hint": "fix connections.OPENAI_BASE_URL in ui.api.json"}
         b64 = base64.b64encode(data).decode("ascii")
-        suffix = path.suffix.lstrip(".").lower() or "png"
-        media = {"jpeg": "image/jpeg", "jpg": "image/jpeg"}.get(suffix, "image/png")
         body = json.dumps({
             "model": model,
             "max_tokens": 400,
@@ -203,7 +229,7 @@ def describe(image_path: str, detail: str = "auto") -> dict:
             }],
         }).encode()
         request = urllib.request.Request(
-            (value("OPENAI_BASE_URL", config) or "https://api.openai.com/v1").rstrip("/") + "/chat/completions", data=body,
+            base + "/chat/completions", data=body,
             headers={"Content-Type": "application/json"}, method="POST")
         request.add_header("Authorization", f"Bearer {api_key}")
         try:
@@ -212,7 +238,10 @@ def describe(image_path: str, detail: str = "auto") -> dict:
                 payload = json.loads(resp.read().decode("utf-8"))
             return {"mode": "openai", "model": model,
                     "description": payload["choices"][0]["message"]["content"]}
-        except (urllib.error.HTTPError, urllib.error.URLError, KeyError, ValueError):
+        # URLError and HTTPError subclass OSError; read timeouts and dropped
+        # connections raise TimeoutError/OSError or http.client exceptions.
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError,
+                http.client.HTTPException, KeyError, IndexError, TypeError, ValueError):
             return {"error": "Vision API call failed; check ui.api.json endpoint, key and model",
                     "hint": "falling back is explicit - re-run with the key "
                             "unset to get basic_metadata mode"}
@@ -223,6 +252,10 @@ def describe(image_path: str, detail: str = "auto") -> dict:
     except ImportError:
         return {"error": "OPENAI_API_KEY is empty in ui.api.json and Pillow is not installed",
                 "hint": "either edit ui.api.json or install pillow"}
+    except Exception:
+        # UnidentifiedImageError, OSError (truncated data), DecompressionBombError.
+        return {"error": f"cannot decode image {image_path}",
+                "hint": "file has valid image magic bytes but is truncated or corrupt"}
     small = img.resize((64, 64))
     colors = sorted(small.getcolors(64 * 64) or [], reverse=True)[:5]
     total = 64 * 64

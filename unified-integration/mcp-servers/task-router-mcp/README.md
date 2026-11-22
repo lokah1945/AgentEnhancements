@@ -16,8 +16,15 @@ Sub-agent task dispatch + progress tracking for orchestrator skills
 
 ## Semantics
 
-- Each task runs in its own temp workspace (`/tmp/ae-task-<id>-*/`) with a
-  hard timeout (default 60 s, max 600 s).
+- Each task runs in its own temp workspace
+  (`.agentenhancements/cache/tasks/ae-task-<id>-*/`, private mode 0700) with a hard timeout (default
+  60 s, max 600 s). The workspace is removed when the task finishes (done,
+  failed or cancelled).
+- Each task runs in its own session; when it ends, any background children it
+  left in that session are killed (POSIX). Processes that detach into a new
+  session (`setsid`, daemons) are not tracked.
+- The registry keeps the most recent 500 finished tasks for `track` /
+  `list_tasks`; older finished entries are pruned on the next `dispatch`.
 - 4 worker threads; excess tasks stay `queued`.
 - stdout/stderr are tail-truncated to 4,000 chars to bound context size.
 - **Best-effort denylist guard** refuses obviously destructive bash
@@ -38,4 +45,6 @@ python3 unified-integration/mcp-servers/task-router-mcp/server.py   # stdio
 
 Covered by `unified-integration/tests/test_mcp_servers.py`
 (dispatch → done with stdout; python kind; denylist refusal;
-unknown-id tracking; timeout path).
+unknown-id tracking; timeout path) and
+`unified-integration/tests/test_mcp_a_regressions.py` (background-child
+cleanup, workspace removal, registry cap).

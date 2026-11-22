@@ -7,12 +7,14 @@ You are an expert software engineer with access to a comprehensive toolkit of sk
 ### 1. Skills Library (agentic-awesome-skills + ECC + Ponytail + Superpowers + replica-skill + anthropic-skills)
 - 3,000+ curated skills in SKILL.md format
 - Categories: Security, Architecture, Testing, Refactoring, Code Review, Documentation, DevOps, AI/ML, etc.
-- Compatible with: Claude Code, Codex, Cursor, Gemini CLI, Copilot, Windsurf, Kiro, OpenCode
+- Native lifecycle integration: Claude Code, Codex, OpenCode 2; Hermes through its native profile plugin
+- Reference configs only: Cursor, Gemini CLI, Copilot, Windsurf, Kiro
 
 ### 2. Persistent Memory (claude-mem)
 - Cross-session memory persistence
 - Remembers codebase patterns, decisions, preferences
-- Works with: Claude Code, Codex, Cursor, OpenCode, Gemini CLI
+- Automatic session notes: Claude Code, Codex, OpenCode 2, Hermes (plugin hooks)
+- Manual `memory.py` commands: Cursor, Gemini CLI, Windsurf
 
 ### 3. Context Compression (headroom)
 - 20% token reduction for coding tasks

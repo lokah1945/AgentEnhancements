@@ -3,10 +3,15 @@
 one functional tool per server. Run from the mcp-servers/ directory:
 
     python3 smoke_test.py
+
+State, memory, credentials and media all live in a temporary fixture that
+is removed afterwards, so the user's real AgentEnhancements state is never
+touched.
 """
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 import tempfile
 import time
@@ -28,7 +33,43 @@ def load(slug: str):
     return module
 
 
+def _wait(mod, task_id: str, deadline: float = 15.0) -> dict:
+    """Poll task-router until the task leaves queued/running or time runs out."""
+    end = time.monotonic() + deadline
+    result = mod.TOOLS["track"](task_id)
+    while result.get("status") in ("queued", "running") and time.monotonic() < end:
+        time.sleep(0.1)
+        result = mod.TOOLS["track"](task_id)
+    return result
+
+
 def main() -> int:
+    """Run the smoke checks against an isolated, temporary state fixture."""
+    scratch = tempfile.TemporaryDirectory(prefix="ae-smoke-")
+    saved = {key: os.environ.get(key) for key in (
+        "AGENT_ENHANCEMENTS_API_FILE", "AGENT_ENHANCEMENTS_STATE_DIR",
+        "AGENT_MEMORY_ROOT")}
+    try:
+        fixture = Path(scratch.name)
+        api = fixture / "ui.api.json"
+        api.write_text('{"version":2,"api_keys":{},"mcp":{}}\n', encoding="utf-8")
+        # Servers read these when imported, so set them before the first load().
+        os.environ["AGENT_ENHANCEMENTS_API_FILE"] = str(api)
+        os.environ["AGENT_ENHANCEMENTS_STATE_DIR"] = str(fixture / "state")
+        os.environ["AGENT_MEMORY_ROOT"] = str(fixture / "state" / "memory")
+        media = fixture / "media"
+        media.mkdir()
+        return _smoke(media)
+    finally:
+        for key, value in saved.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+        scratch.cleanup()
+
+
+def _smoke(tmp: Path) -> int:
     failures = []
 
     for slug in SERVERS:
@@ -55,12 +96,10 @@ def main() -> int:
     # task-router: bash + python dispatch
     mod = load("task-router-mcp")
     t1 = mod.TOOLS["dispatch"](kind="bash", command="echo router-ok")
-    time.sleep(1.2)
-    r1 = mod.TOOLS["track"](t1["task_id"])
+    r1 = _wait(mod, t1["task_id"])
     assert "router-ok" in r1.get("stdout", ""), r1
     t2 = mod.TOOLS["dispatch"](kind="python", code="print(6*7)")
-    time.sleep(1.2)
-    r2 = mod.TOOLS["track"](t2["task_id"])
+    r2 = _wait(mod, t2["task_id"])
     assert "42" in r2.get("stdout", ""), r2
     refused = mod.TOOLS["dispatch"](kind="bash", command="rm -rf /")
     assert "error" in refused, refused
@@ -68,7 +107,6 @@ def main() -> int:
 
     # ffmpeg: lavfi test clip -> probe -> cut -> thumbnail
     mod = load("ffmpeg-mcp")
-    tmp = Path(tempfile.mkdtemp(prefix="ae-smoke-"))
     clip = tmp / "src.mp4"
     gen = mod._run(["ffmpeg", "-y", "-f", "lavfi", "-i",
                     "testsrc=duration=3:size=320x240:rate=10",

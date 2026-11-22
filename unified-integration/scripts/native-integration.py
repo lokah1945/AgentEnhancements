@@ -16,8 +16,10 @@ import shlex
 import shutil
 import subprocess
 import sys
+import traceback
 
 import tomlkit
+import yaml
 
 from api_config import BUILTINS, initialize
 from native_config import managed_integration_path, read_json, write, write_json
@@ -324,15 +326,37 @@ def main() -> None:
     if args.print_selection:
         print(",".join(selected or []))
         return
-    agents = (
-        ["claude-code", "codex", "opencode", *[
-            agent for agent, command in EXTRA_COMMANDS.items() if shutil.which(command)
-        ]] if args.agent == "all" else [args.agent]
-    )
+    if args.agent == "all":
+        # Without a saved selection, configure only hosts that are installed:
+        # writing ~/.claude.json or a V2-shaped OpenCode file for an absent
+        # CLI skips its version guard and leaves config for a host nobody
+        # chose. A saved selection keeps its explicit meaning.
+        commands = {"claude-code": "claude", "codex": "codex", "opencode": "opencode"}
+        if selected is not None:
+            agents = [agent for agent in commands if agent in selected]
+        else:
+            agents = [agent for agent, command in commands.items() if shutil.which(command)]
+        agents += [agent for agent, command in EXTRA_COMMANDS.items()
+                   if shutil.which(command) and (selected is None or agent in selected)]
+    else:
+        agents = [args.agent]
+    failures = []
     for agent in agents:
-        if args.agent == "all" and selected is not None and agent not in selected:
-            continue
-        install(agent, mcp_only=args.mcp_only, profiles=args.profile if agent == "hermes" else None)
+        # One broken host must not leave the remaining hosts unconfigured.
+        try:
+            install(agent, mcp_only=args.mcp_only, profiles=args.profile if agent == "hermes" else None)
+        except (ValueError, OSError, subprocess.SubprocessError, yaml.YAMLError) as exc:
+            print(f"[native] {agent}: {exc}", file=sys.stderr)
+            failures.append(agent)
+        except Exception as exc:  # noqa: BLE001 - keep configuring the other hosts
+            # An unexpected error (e.g. a malformed nested config) in one host
+            # must not leave the rest unconfigured; keep the traceback for
+            # diagnosis and still fail the run at the end.
+            traceback.print_exc(file=sys.stderr)
+            print(f"[native] {agent}: unexpected {type(exc).__name__}: {exc}", file=sys.stderr)
+            failures.append(agent)
+    if failures:
+        sys.exit(f"[native] failed: {', '.join(failures)}")
     if args.select_agents is not None:
         selection = read_json(host_selection_path())
         selection["agents"] = selected

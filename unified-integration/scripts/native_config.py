@@ -23,7 +23,15 @@ def managed_integration_path(value: object, *suffix: str) -> bool:
 
 
 def write(path: Path, content: str) -> None:
-    """Preserve unchanged files and keep private backups of actual changes."""
+    """Preserve unchanged files and keep private backups of actual changes.
+
+    A symlinked config (e.g. managed dotfiles) is updated at its target so
+    the link survives; replacing the link itself would silently detach the
+    user's managed copy. resolve() is non-strict, so a dangling link still
+    writes to its intended target.
+    """
+    if path.is_symlink():
+        path = path.resolve()
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         if path.read_text(encoding="utf-8") == content:

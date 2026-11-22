@@ -546,6 +546,29 @@ class PackageResolutionTests(PreflightTestCase):
             [{"id": "tool:unknown-server/some_tool", "required": False}]))
         self.assertEqual(package, [])
 
+    def test_tool_server_must_be_an_exact_mcp_id(self):
+        # find_entry("mcp:pdf") falls through the name surface to skill:pdf
+        # and "mcp:memory" to capability:memory; neither is an MCP server.
+        for selected in ("tool:pdf/pdf_extract", "tool:memory/memory_save"):
+            resolved = self.module._resolve_tool_id(
+                self.module.SelectionItem(id=selected, required=True), [])
+            self.assertEqual(resolved.delivery, "unavailable", selected)
+            self.assertEqual(resolved.note, "unknown MCP server", selected)
+
+    def test_tool_resolution_rejects_a_cross_type_registry_match(self):
+        # Defense in depth: even if the registry name surface returns a
+        # same-named skill for "mcp:pdf", the tool must not bind to it.
+        registry = self.module._registry()
+        with patch.object(registry, "find_entry",
+                          return_value={"id": "skill:pdf", "type": "skill",
+                                        "description": "pdf skill"}):
+            resolved = self.module._resolve_tool_id(
+                self.module.SelectionItem(id="tool:pdf/pdf_extract",
+                                          required=True),
+                [{"name": "pdf_extract", "server": "pdf"}])
+        self.assertEqual(resolved.delivery, "unavailable")
+        self.assertEqual(resolved.note, "unknown MCP server")
+
     def host_event(self):
         """The private bridge view, matching actual OpenCode 2 ToolInfo fields."""
         path = Path(self.env["AGENT_ENHANCEMENTS_API_FILE"])
@@ -925,7 +948,11 @@ class Mode2EndToEndTests(PreflightTestCase):
         return self.fixture
 
     def run_event(self, env=None):
-        merged = {"SSL_CERT_FILE": str(self.fixture.ca)}
+        # The 2 s default budget also covers interpreter start and catalog
+        # reads, so a loaded runner would fall back to Mode 0. Pin the 8 s
+        # cap; deadline tests pass their own value, applied after this.
+        merged = {"SSL_CERT_FILE": str(self.fixture.ca),
+                  "AE_PREFLIGHT_DEADLINE_MS": "8000"}
         merged.update(env or {})
         return self.runtime_event(self.event, env=merged)
 
@@ -1034,6 +1061,41 @@ class Mode2EndToEndTests(PreflightTestCase):
         self.assertIn("timeout", err)
         self.assertLess(elapsed, 4.0,
                         "fallback must beat the host hook timeout")
+
+    def test_post_deadline_covers_trickled_response_headers(self):
+        # Socket timeouts are per-recv: a server trickling one header line
+        # per second used to hold _post_json far past its budget.
+        listener = socket.socket()
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(1)
+        self.addCleanup(listener.close)
+        stop = threading.Event()
+        self.addCleanup(stop.set)
+
+        def trickle():
+            try:
+                conn, _ = listener.accept()
+            except OSError:
+                return
+            with conn:
+                try:
+                    conn.recv(65_536)
+                    conn.sendall(b"HTTP/1.1 200 OK\r\n")
+                    for index in range(8):
+                        if stop.wait(1.0):
+                            return
+                        conn.sendall(f"X-Trickle-{index}: 1\r\n".encode())
+                except OSError:
+                    return
+
+        threading.Thread(target=trickle, daemon=True).start()
+        url = f"http://127.0.0.1:{listener.getsockname()[1]}/v1"
+        started = time.monotonic()
+        with self.assertRaises(self.module.PreflightError) as caught:
+            self.module._post_json(url, {}, {}, 1.0)
+        elapsed = time.monotonic() - started
+        self.assertEqual(caught.exception.code, "timeout")
+        self.assertLess(elapsed, 1.5)
 
     def test_missing_key_falls_back_before_any_request(self):
         fixture = self.start([SelectorFixture.selection("abstain")])

@@ -48,6 +48,10 @@ STOPWORDS = {
     "has", "had", "do", "does", "did", "which", "who", "whom", "what",
 }
 MAX_ENTITIES = 2000
+# One corpus id maps to exactly one store file: ids are never cleaned or
+# truncated, so two distinct ids cannot share (and overwrite) a corpus.
+_CORPUS_ID_RE = re.compile(r"[a-zA-Z0-9_-]{1,64}")
+_CORPUS_ID_ERROR = "corpus_id must match ^[a-zA-Z0-9_-]{1,64}$"
 
 mcp = FastMCP("graphrag-mcp")
 
@@ -91,9 +95,14 @@ def _normalize(entity: str) -> str:
 _CORPORA: dict[str, dict] = {}
 
 
+def _valid_corpus_id(corpus_id: object) -> bool:
+    return isinstance(corpus_id, str) and _CORPUS_ID_RE.fullmatch(corpus_id) is not None
+
+
 def _corpus_path(corpus_id: str) -> Path:
-    safe = re.sub(r"[^a-zA-Z0-9_-]", "", corpus_id)[:64] or "default"
-    return STORE_DIR / f"{safe}.json"
+    if not _valid_corpus_id(corpus_id):
+        raise ValueError(_CORPUS_ID_ERROR)
+    return STORE_DIR / f"{corpus_id}.json"
 
 
 def _load_corpus(corpus_id: str) -> dict | None:
@@ -180,11 +189,11 @@ def index(corpus_id: str, documents: list[dict]) -> dict:
     """Build the entity graph for a corpus.
 
     Args:
-        corpus_id: stable id for the corpus (letters/digits/-/_).
+        corpus_id: stable id for the corpus (1-64 letters/digits/-/_).
         documents: list of {id?, text} dicts.
     """
-    if not corpus_id or not re.match(r"^[a-zA-Z0-9_-]+$", corpus_id):
-        return {"error": "corpus_id must match ^[a-zA-Z0-9_-]+$"}
+    if not _valid_corpus_id(corpus_id):
+        return {"error": _CORPUS_ID_ERROR}
     if not isinstance(documents, list) or not documents:
         return {"error": "documents must be a non-empty list of {id?, text}"}
     for doc in documents:
@@ -200,6 +209,8 @@ def index(corpus_id: str, documents: list[dict]) -> dict:
 @_tool
 def query(corpus_id: str, question: str, k: int = 5) -> dict:
     """Graph-enhanced retrieval: rank evidence sentences for a question."""
+    if not _valid_corpus_id(corpus_id):
+        return {"error": _CORPUS_ID_ERROR}
     corpus = _load_corpus(corpus_id)
     if corpus is None:
         return {"error": f"unknown corpus_id {corpus_id!r}",
@@ -242,6 +253,8 @@ def query(corpus_id: str, question: str, k: int = 5) -> dict:
 @_tool
 def status(corpus_id: str) -> dict:
     """Stats for an indexed corpus (or an error when unknown)."""
+    if not _valid_corpus_id(corpus_id):
+        return {"error": _CORPUS_ID_ERROR}
     corpus = _load_corpus(corpus_id)
     if corpus is None:
         return {"error": f"unknown corpus_id {corpus_id!r}"}

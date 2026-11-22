@@ -37,7 +37,8 @@ def _tool(fn):
 
 
 def _allowed_roots() -> list[Path]:
-    roots = [Path.cwd().resolve(), Path("/tmp")]
+    # Resolve /tmp like candidates are resolved (macOS: /tmp -> /private/tmp).
+    roots = [Path.cwd().resolve(), Path("/tmp").resolve()]
     extra = os.environ.get("AE_FFMPEG_ALLOWED_ROOTS", "")
     for item in extra.split(os.pathsep):
         if item.strip():
@@ -71,6 +72,48 @@ def _run(cmd: list[str]) -> dict:
         return {"error": f"{cmd[0]} exited with code {proc.returncode}",
                 "hint": proc.stderr[-STDERR_TAIL:]}
     return {"ok": True, "stderr_tail": proc.stderr[-400:]}
+
+
+def _media_duration(path: Path) -> float | None:
+    """Container duration in seconds, or None when ffprobe cannot tell."""
+    try:
+        proc = subprocess.run(
+            [FFPROBE, "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=nw=1:nk=1", str(path)],
+            capture_output=True, text=True, timeout=60,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+    try:
+        value = float(proc.stdout.strip())
+    except ValueError:
+        return None
+    return value if value >= 0 else None
+
+
+def _prepare_output(output: Path, *inputs: Path) -> str | None:
+    """Refuse in-place edits and drop a stale output before ffmpeg runs.
+
+    ffmpeg can exit 0 without writing anything (for example when seeking
+    past the end), so a leftover file from an earlier run must not be
+    mistaken for the new result.
+    """
+    if output in inputs:
+        return "out must differ from the input file(s)"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.unlink(missing_ok=True)
+    return None
+
+
+def _check_output(output: Path, result: dict) -> dict:
+    """Turn a zero exit code without a non-empty output file into an error."""
+    if "error" in result:
+        return result
+    if not output.is_file() or output.stat().st_size == 0:
+        output.unlink(missing_ok=True)
+        return {"error": "ffmpeg produced no output",
+                "hint": result.get("stderr_tail", "")}
+    return result
 
 
 def _duration_seconds(raw: str | int | float) -> float | None:
@@ -145,9 +188,18 @@ def cut(path: str, start: float, end: float, out: str) -> dict:
     end_s = _duration_seconds(end)
     if start_s is None or end_s is None or end_s <= start_s:
         return {"error": "start/end must be seconds with 0 <= start < end"}
-    output.parent.mkdir(parents=True, exist_ok=True)
-    result = _run([FFMPEG, "-y", "-ss", str(start_s), "-to", str(end_s),
-                   "-i", str(target), "-c", "copy", str(output)])
+    duration = _media_duration(target)
+    if duration is not None:
+        if start_s >= duration:
+            return {"error": f"start={start_s}s is at or beyond the media "
+                             f"duration ({duration:.3f}s)"}
+        end_s = min(end_s, duration)
+    problem = _prepare_output(output, target)
+    if problem:
+        return {"error": problem}
+    result = _check_output(output, _run([
+        FFMPEG, "-y", "-ss", str(start_s), "-to", str(end_s),
+        "-i", str(target), "-c", "copy", str(output)]))
     if "error" in result:
         return result
     return {"ok": True, "out": str(output),
@@ -170,7 +222,9 @@ def concat(paths: list[str], out: str) -> dict:
     output, err = _validate_path(out, must_exist=False)
     if err:
         return {"error": err}
-    output.parent.mkdir(parents=True, exist_ok=True)
+    problem = _prepare_output(output, *resolved)
+    if problem:
+        return {"error": problem}
     # A predictable sibling filename can be a symlink to unrelated user data.
     # mkstemp atomically claims a private file; quote paths for ffconcat's
     # parser, whose single-quoted tokens otherwise allow directive injection.
@@ -185,6 +239,7 @@ def concat(paths: list[str], out: str) -> dict:
                        "-i", str(list_file), "-c", "copy", str(output)])
     finally:
         list_file.unlink(missing_ok=True)
+    result = _check_output(output, result)
     if "error" in result:
         return result
     return {"ok": True, "out": str(output), "clips": len(resolved)}
@@ -202,8 +257,12 @@ def transcode(path: str, codec: str = "libx264", out: str | None = None) -> dict
                                  must_exist=False)
     if err:
         return {"error": err}
-    result = _run([FFMPEG, "-y", "-i", str(target),
-                   "-c:v", codec, "-c:a", "copy", str(output)])
+    problem = _prepare_output(output, target)
+    if problem:
+        return {"error": problem}
+    result = _check_output(output, _run([
+        FFMPEG, "-y", "-i", str(target),
+        "-c:v", codec, "-c:a", "copy", str(output)]))
     if "error" in result:
         return result
     return {"ok": True, "out": str(output), "codec": codec}
@@ -218,8 +277,12 @@ def extract_audio(path: str, out: str) -> dict:
     output, err = _validate_path(out, must_exist=False)
     if err:
         return {"error": err}
-    result = _run([FFMPEG, "-y", "-i", str(target), "-vn",
-                   "-c:a", "aac", str(output)])
+    problem = _prepare_output(output, target)
+    if problem:
+        return {"error": problem}
+    result = _check_output(output, _run([
+        FFMPEG, "-y", "-i", str(target), "-vn",
+        "-c:a", "aac", str(output)]))
     if "error" in result:
         return result
     return {"ok": True, "out": str(output)}
@@ -234,12 +297,20 @@ def thumbnail(path: str, t: float = 0.0, out: str | None = None) -> dict:
     at = _duration_seconds(t)
     if at is None:
         return {"error": "t must be a non-negative second offset"}
+    duration = _media_duration(target)
+    if duration is not None and at >= duration:
+        return {"error": f"t={at}s is at or beyond the media duration "
+                         f"({duration:.3f}s)"}
     output, err = _validate_path(out or str(target.with_suffix(".jpg")),
                                  must_exist=False)
     if err:
         return {"error": err}
-    result = _run([FFMPEG, "-y", "-ss", str(at), "-i", str(target),
-                   "-frames:v", "1", "-q:v", "2", str(output)])
+    problem = _prepare_output(output, target)
+    if problem:
+        return {"error": problem}
+    result = _check_output(output, _run([
+        FFMPEG, "-y", "-ss", str(at), "-i", str(target),
+        "-frames:v", "1", "-q:v", "2", str(output)]))
     if "error" in result:
         return result
     return {"ok": True, "out": str(output), "at_s": at}

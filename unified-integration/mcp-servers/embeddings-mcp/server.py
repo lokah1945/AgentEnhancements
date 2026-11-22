@@ -17,6 +17,7 @@ deterministic outputs, actionable errors, health probe, no secret logging.
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import math
 from pathlib import Path
@@ -29,7 +30,7 @@ from typing import Any, Callable
 from mcp.server.fastmcp import FastMCP
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
-from api_config import cloud_available, read_config, value
+from api_config import cloud_available, read_config, safe_service_url, value
 
 VERSION = "1.0.0"
 LOCAL_DIM = 256
@@ -80,9 +81,17 @@ def _openai_embed(texts: list[str]) -> list[list[float]] | dict:
             "hint": "edit ui.api.json or pass backend='local' "
                     "for the deterministic offline embedder",
         }
+    base = (value("OPENAI_BASE_URL", config) or "https://api.openai.com/v1").rstrip("/")
+    if not safe_service_url(base):
+        # Refuse before any socket opens: an http:// typo would otherwise
+        # put the bearer key on the wire in cleartext.
+        return {
+            "error": "OPENAI_BASE_URL must be https (or loopback http)",
+            "hint": "fix connections.OPENAI_BASE_URL in ui.api.json",
+        }
     payload = json.dumps({"model": value("OPENAI_EMBEDDING_MODEL", config) or OPENAI_MODEL, "input": texts}).encode()
     request = urllib.request.Request(
-        (value("OPENAI_BASE_URL", config) or "https://api.openai.com/v1").rstrip("/") + "/embeddings",
+        base + "/embeddings",
         data=payload,
         headers={"Content-Type": "application/json"},
         method="POST",
@@ -92,17 +101,33 @@ def _openai_embed(texts: list[str]) -> list[list[float]] | dict:
         opener = urllib.request.build_opener(_NoCredentialRedirect())
         with opener.open(request, timeout=OPENAI_TIMEOUT) as resp:
             body = json.loads(resp.read().decode("utf-8"))
+        vectors = [item["embedding"] for item in body["data"]]
+        if len(vectors) != len(texts) or not all(isinstance(v, list) and v for v in vectors):
+            raise ValueError("embedding count or shape does not match the request")
     except urllib.error.HTTPError as exc:
         return {
             "error": f"OpenAI API returned HTTP {exc.code}",
             "hint": "check the endpoint, key validity and quota in ui.api.json",
         }
-    except urllib.error.URLError as exc:
+    except urllib.error.URLError:
         return {
             "error": "cannot reach the configured embeddings API",
             "hint": "check network / proxy settings, or use backend='local'",
         }
-    return [item["embedding"] for item in body["data"]]
+    # URLError (above) subclasses OSError, so it must be matched first. A
+    # read timeout or dropped connection raises TimeoutError/OSError or an
+    # http.client exception instead.
+    except (TimeoutError, OSError, http.client.HTTPException):
+        return {
+            "error": "embeddings API timed out or dropped the connection",
+            "hint": "retry, or use backend='local'",
+        }
+    except (ValueError, KeyError, TypeError):
+        return {
+            "error": "embeddings API returned an unexpected response",
+            "hint": "check OPENAI_BASE_URL / model in ui.api.json",
+        }
+    return vectors
 
 
 def _resolve_backend(requested: str | None) -> str:

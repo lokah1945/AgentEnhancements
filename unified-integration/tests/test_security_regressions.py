@@ -317,9 +317,16 @@ class FfmpegSecurityTests(IsolatedSecurityTest):
         protected.write_text("protected fixture")
         scratch = self.root / "output.concat.txt"
         scratch.symlink_to(protected)
-        with patch.object(self.ffmpeg, "_run", return_value={"ok": True}):
-            result = self.ffmpeg.concat([str(p) for p in clips], str(self.root / "output.mp4"))
-        self.assertTrue(result.get("ok"))
+        output = self.root / "output.mp4"
+
+        def execute(command):
+            # Stand in for ffmpeg: concat verifies the output was produced.
+            output.write_bytes(b"fixture video")
+            return {"ok": True}
+
+        with patch.object(self.ffmpeg, "_run", side_effect=execute):
+            result = self.ffmpeg.concat([str(p) for p in clips], str(output))
+        self.assertTrue(result.get("ok"), result)
         self.assertEqual(protected.read_text(), "protected fixture")
         self.assertTrue(scratch.is_symlink())
 
@@ -327,6 +334,7 @@ class FfmpegSecurityTests(IsolatedSecurityTest):
 class CredentialRedirectTests(IsolatedSecurityTest):
     def test_authenticated_mcp_requests_do_not_forward_keys_across_redirects(self):
         received = []
+        redirected = []
 
         class Sink(BaseHTTPRequestHandler):
             def log_message(self, *args):
@@ -352,6 +360,7 @@ class CredentialRedirectTests(IsolatedSecurityTest):
 
             def do_POST(self):
                 self.rfile.read(int(self.headers["Content-Length"]))
+                redirected.append(self.path)
                 self.send_response(302)
                 self.send_header("Location", f"http://127.0.0.1:{sink.server_port}/receive")
                 self.send_header("Content-Length", "0")
@@ -365,13 +374,21 @@ class CredentialRedirectTests(IsolatedSecurityTest):
         self.config["connections"]["OPENAI_BASE_URL"] = f"http://127.0.0.1:{origin.server_port}/v1"
         self.write_config()
         image = self.root / "fixture.png"
-        image.write_bytes(b"fixture image bytes")
+        # Real PNG magic so vision's content sniffing accepts the file and the
+        # request actually reaches the redirecting origin.
+        image.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 32)
         embeddings = self.module("redirect_embeddings", SERVERS / "embeddings-mcp" / "server.py")
         vision = self.module("redirect_vision", SERVERS / "vision-mcp" / "server.py")
-        for call in (lambda: embeddings.embed("fixture", backend="openai"), lambda: vision.describe(str(image))):
-            with self.subTest(call=call):
+        calls = {"embeddings": lambda: embeddings.embed("fixture", backend="openai"),
+                 "vision": lambda: vision.describe(str(image))}
+        for name, call in calls.items():
+            with self.subTest(call=name):
+                before = len(redirected)
                 response = call()
                 self.assertIn("error", response)
+                # The request must reach the origin so the redirect guard is
+                # what stops it, not an earlier input validation failure.
+                self.assertGreater(len(redirected), before, response)
         self.assertEqual(received, [])
 
 

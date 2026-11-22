@@ -292,12 +292,14 @@ You are an expert software engineer with access to a comprehensive toolkit of sk
 ### 1. Skills Library (agentic-awesome-skills + ECC + Ponytail + Superpowers + replica-skill + anthropic-skills)
 - 3,000+ curated skills in SKILL.md format
 - Categories: Security, Architecture, Testing, Refactoring, Code Review, Documentation, DevOps, AI/ML, etc.
-- Compatible with: Claude Code, Codex, Cursor, Gemini CLI, Copilot, Windsurf, Kiro, OpenCode
+- Native lifecycle integration: Claude Code, Codex, OpenCode 2; Hermes through its native profile plugin
+- Reference configs only: Cursor, Gemini CLI, Copilot, Windsurf, Kiro
 
 ### 2. Persistent Memory (claude-mem)
 - Cross-session memory persistence
 - Remembers codebase patterns, decisions, preferences
-- Works with: Claude Code, Codex, Cursor, OpenCode, Gemini CLI
+- Automatic session notes: Claude Code, Codex, OpenCode 2, Hermes (plugin hooks)
+- Manual `memory.py` commands: Cursor, Gemini CLI, Windsurf
 
 ### 3. Context Compression (headroom)
 - 20% token reduction for coding tasks
@@ -1349,7 +1351,9 @@ def main():
 if __name__ == "__main__":
     main()
 PYEOF
-        sed -i "s/AGENT_PLACEHOLDER/$agent/g" "$MEMORY_DIR/hooks/${agent}-memory-hook.py"
+        # Portable in-place substitution (BSD/macOS sed requires a suffix for -i).
+        sed "s/AGENT_PLACEHOLDER/$agent/g" "$MEMORY_DIR/hooks/${agent}-memory-hook.py" > "$MEMORY_DIR/hooks/${agent}-memory-hook.py.partial"
+        mv "$MEMORY_DIR/hooks/${agent}-memory-hook.py.partial" "$MEMORY_DIR/hooks/${agent}-memory-hook.py"
         chmod +x "$MEMORY_DIR/hooks/${agent}-memory-hook.py"
 
         # Also create a bash wrapper for backward compatibility
@@ -1360,7 +1364,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT="AGENT_PLACEHOLDER"
 exec python3 "$SCRIPT_DIR/${AGENT}-memory-hook.py" "$@"
 SHEOF
-        sed -i "s/AGENT_PLACEHOLDER/$agent/g" "$MEMORY_DIR/hooks/${agent}-memory-hook.sh"
+        # Portable in-place substitution (BSD/macOS sed requires a suffix for -i).
+        sed "s/AGENT_PLACEHOLDER/$agent/g" "$MEMORY_DIR/hooks/${agent}-memory-hook.sh" > "$MEMORY_DIR/hooks/${agent}-memory-hook.sh.partial"
+        mv "$MEMORY_DIR/hooks/${agent}-memory-hook.sh.partial" "$MEMORY_DIR/hooks/${agent}-memory-hook.sh"
         chmod +x "$MEMORY_DIR/hooks/${agent}-memory-hook.sh"
     done
 
@@ -1539,15 +1545,19 @@ create_agent_configs() {
 merge_agents_md() {
     local target_file="$1"
     local section_file="$2"
+    local status=0
 
     AGENTS_MD_TARGET="$target_file" AGENTS_MD_SECTION_FILE="$section_file" \
     python3 -c "
 import os
 import shutil
+import sys
 import tempfile
 from datetime import datetime, timezone
 
-target = os.environ['AGENTS_MD_TARGET']
+# Write through a symlinked AGENTS.md/CLAUDE.md/GEMINI.md: backing up and
+# os.replace()-ing the link path itself would swap the link for a regular file.
+target = os.path.realpath(os.environ['AGENTS_MD_TARGET'])
 section_file = os.environ['AGENTS_MD_SECTION_FILE']
 BEGIN = '<!-- agent-enhancements:begin -->'
 END = '<!-- agent-enhancements:end -->'
@@ -1559,6 +1569,12 @@ existing = ''
 if os.path.exists(target):
     with open(target, 'r', encoding='utf-8', errors='replace') as f:
         existing = f.read()
+
+# Refuse ambiguous, unbalanced or reversed markers: splitting on them would
+# silently drop user text that sits after an orphan begin marker.
+begins, ends = existing.count(BEGIN), existing.count(END)
+if begins != ends or begins > 1 or (begins and existing.index(BEGIN) > existing.index(END)):
+    sys.exit(3)
 
 block = BEGIN + '\n' + section + '\n' + END
 if BEGIN in existing and END in existing:
@@ -1581,7 +1597,12 @@ if merged != existing:
     with os.fdopen(fd, 'w', encoding='utf-8') as f:
         f.write(merged)
     os.replace(temporary, target)
-"
+" || status=$?
+    if [ "$status" -eq 3 ]; then
+        log_warn "Ambiguous or unbalanced agent-enhancements markers in $target_file; left unchanged (fix the markers and re-run setup)"
+        return 0
+    fi
+    return "$status"
 }
 
 # Merge YAML configs using Python - replace hooks, preserve other keys
@@ -1698,7 +1719,32 @@ create_codex_config() {
     python3 "$UNIFIED_DIR/scripts/native-integration.py" --agent codex
 }
 
+# The OpenCode adapter targets OpenCode 2. Mirror native-integration.py's
+# probe so an older CLI is refused before any OpenCode file is touched.
+opencode_cli_supported() {
+    python3 -c "
+import shutil
+import subprocess
+import sys
+
+executable = shutil.which('opencode')
+if not executable:
+    sys.exit(0)
+try:
+    version = subprocess.run([executable, '--version'], capture_output=True,
+                             text=True, timeout=10)
+except (OSError, subprocess.SubprocessError):
+    sys.exit(1)
+supported = not version.returncode and version.stdout.strip().removeprefix('opencode v').startswith('2.')
+sys.exit(0 if supported else 1)
+"
+}
+
 create_opencode_config() {
+    if ! opencode_cli_supported; then
+        log_warn "OpenCode 2 is required; skipping the OpenCode integration (upgrade the CLI and re-run setup)"
+        return 0
+    fi
     OPENCODE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
     mkdir -p "$OPENCODE_DIR"
     local section_file
@@ -2142,7 +2188,7 @@ import os
 import stat
 import sys
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Callable, Optional, List, Dict, Any
 from datetime import datetime, timezone
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -2150,6 +2196,21 @@ from project_paths import memory_root
 
 MEMORY_ROOT = memory_root()
 DB_PATH = MEMORY_ROOT / "memory.db"
+LIST_VALUE_LIMIT = 200
+
+
+def _redactor() -> Callable[[str], str]:
+    """Return the shared credential redactor, or identity when unavailable.
+
+    Imported lazily so memory.py keeps working as a standalone utility.
+    """
+    try:
+        from api_config import read_config, redact
+        config, _ = read_config()
+    except Exception:  # noqa: BLE001 - redaction is best effort here
+        return lambda text: text
+    return lambda text: redact(text, config)
+
 
 class AgentMemory:
     def __init__(self, agent: str, project: Optional[str] = None):
@@ -2198,7 +2259,7 @@ class AgentMemory:
              metadata: Optional[Dict] = None, ttl_days: Optional[int] = None) -> None:
         """Save a memory"""
         expires_at = None
-        if ttl_days:
+        if ttl_days is not None:
             from datetime import timedelta
             # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
             # against datetime('now') work: the ISO "T" separator sorts
@@ -2246,16 +2307,24 @@ class AgentMemory:
                     ORDER BY updated_at DESC LIMIT ?
                 """, (self.agent, self.project, limit))
 
-            return [
-                {
-                    "type": row[0],
-                    "key": row[1],
-                    "value": row[2][:200] + "..." if len(row[2]) > 200 else row[2],
-                    "metadata": json.loads(row[3]) if row[3] else {},
-                    "updated": row[4]
-                }
-                for row in cursor.fetchall()
-            ]
+            rows = cursor.fetchall()
+
+        # Redact the full value before truncating it: a credential that
+        # straddles the cut would otherwise survive as an unmatched prefix.
+        redact = _redactor()
+        memories = []
+        for row in rows:
+            value = redact(row[2])
+            if len(value) > LIST_VALUE_LIMIT:
+                value = value[:LIST_VALUE_LIMIT] + "..."
+            memories.append({
+                "type": row[0],
+                "key": row[1],
+                "value": value,
+                "metadata": json.loads(row[3]) if row[3] else {},
+                "updated": row[4]
+            })
+        return memories
 
     def delete(self, key: str, memory_type: str = "session_context") -> bool:
         """Delete a memory"""
@@ -2274,6 +2343,15 @@ class AgentMemory:
                 WHERE expires_at IS NOT NULL AND expires_at < datetime('now')
             """)
             return cursor.rowcount
+
+
+def _int_arg(raw: str, usage: str) -> int:
+    """Parse an integer CLI argument, exiting with usage text on bad input."""
+    try:
+        return int(raw)
+    except ValueError:
+        print(usage)
+        sys.exit(1)
 
 
 def main():
@@ -2298,7 +2376,7 @@ def main():
         key = sys.argv[3]
         value = sys.argv[4]
         mem_type = sys.argv[5] if len(sys.argv) > 5 else "session_context"
-        ttl = int(sys.argv[6]) if len(sys.argv) > 6 else None
+        ttl = _int_arg(sys.argv[6], "Usage: memory.py <agent> save <key> <value> [type] [ttl_days]") if len(sys.argv) > 6 else None
         memory.save(key, value, mem_type, ttl_days=ttl)
         print(f"Saved: {key} ({mem_type})")
 
@@ -2309,7 +2387,7 @@ def main():
         key = sys.argv[3]
         mem_type = sys.argv[4] if len(sys.argv) > 4 else "session_context"
         value = memory.load(key, mem_type)
-        if value:
+        if value is not None:
             print(value)
         else:
             print(f"Memory not found: {key}")
@@ -2317,7 +2395,7 @@ def main():
 
     elif command == "list":
         mem_type = sys.argv[3] if len(sys.argv) > 3 else None
-        limit = int(sys.argv[4]) if len(sys.argv) > 4 else 20
+        limit = _int_arg(sys.argv[4], "Usage: memory.py <agent> list [type] [limit]") if len(sys.argv) > 4 else 20
         memories = memory.list(mem_type, limit)
         for m in memories:
             print(f"[{m['type']}] {m['key']}: {m['value']} (updated: {m['updated']})")
@@ -2409,7 +2487,9 @@ def compress_content(content: str, mode: str = "auto", agent: str = "claude-code
                 timeout=30
             )
             if result.returncode == 0:
-                return result.stdout.decode()
+                # headroom terminates its output with exactly one newline.
+                out = result.stdout.decode("utf-8", errors="replace")
+                return out[:-1] if out.endswith("\n") else out
         except Exception as e:
             print(f"Headroom error: {e}", file=sys.stderr)
 
@@ -2464,9 +2544,11 @@ def main():
     mode = sys.argv[1]
     agent = sys.argv[2] if len(sys.argv) > 2 else "claude-code"
 
-    content = sys.stdin.read()
+    # Log dumps are often not valid UTF-8; decode leniently instead of
+    # failing before either engine runs.
+    content = sys.stdin.buffer.read().decode("utf-8", errors="replace")
     compressed = compress_content(content, mode, agent)
-    print(compressed)
+    sys.stdout.write(compressed)
 
 if __name__ == "__main__":
     main()

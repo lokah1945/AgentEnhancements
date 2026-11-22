@@ -15,7 +15,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 EXPECTED_FIELDS: Set[str] = {
     "id", "name", "slug", "category", "version", "status", "source",
@@ -113,8 +113,14 @@ def validate_category(
 
 
 def validate_catalog_index(root: Path, errors: List[str],
-                           roadmap_ids: Set[str] = frozenset()) -> int:
-    """Validate plugin-catalog/catalog.json consistency with manifests."""
+                           roadmap_ids: Set[str] = frozenset(),
+                           index_keys: Optional[Set[Tuple[str, str]]] = None) -> int:
+    """Validate plugin-catalog/catalog.json consistency with manifests.
+
+    Returns the number of index entries. When ``index_keys`` is given it
+    is filled with the ``(category, slug)`` pair of every index entry so
+    the caller can check the manifest -> index direction as well.
+    """
     index_path = root / "plugin-catalog" / "catalog.json"
     if not index_path.is_file():
         errors.append("catalog.json hilang: plugin-catalog/catalog.json")
@@ -125,8 +131,16 @@ def validate_catalog_index(root: Path, errors: List[str],
         errors.append(f"catalog.json tidak valid: {exc}")
         return 0
     total = 0
-    for entry in data.get("skills", []):
+    skills = data.get("skills", [])
+    if data.get("total_plugins") != len(skills):
+        errors.append(
+            f"catalog.json: total_plugins {data.get('total_plugins')} "
+            f"!= {len(skills)} entries"
+        )
+    for entry in skills:
         total += 1
+        if index_keys is not None:
+            index_keys.add((entry.get("category"), entry.get("slug")))
         manifest = root / entry["manifest_path"]
         if not manifest.is_file():
             errors.append(f"catalog.json: manifest tidak ada: {entry['manifest_path']}")
@@ -164,15 +178,26 @@ def main() -> int:
     warnings: List[str] = []
     roadmap_ids = load_roadmap_ids(root)
     found_total = 0
+    all_found: Set[Tuple[str, str]] = set()
     for category in VALID_CATEGORIES:
         found = validate_category(root, category, errors, warnings, roadmap_ids)
         found_total += len(found)
+        all_found.update((category, slug) for slug in found)
         missing = EXPECTED_PLUGINS[category] - found
         if missing:
             errors.append(f"Plugin hilang di {category}/: {sorted(missing)}")
 
-    index_total = validate_catalog_index(root, errors, roadmap_ids)
+    index_keys: Set[Tuple[str, str]] = set()
+    index_total = validate_catalog_index(root, errors, roadmap_ids, index_keys)
     expected_total = sum(len(v) for v in EXPECTED_PLUGINS.values())
+    # registry.load_plugin_entries reads only catalog.json, so a manifest
+    # absent from the index silently vanishes from search/map/preflight.
+    for category, slug in sorted(all_found - index_keys):
+        errors.append(f"catalog.json: manifest {category}/{slug} tidak terdaftar di index")
+    for category, slug in sorted(index_keys - all_found, key=str):
+        errors.append(f"catalog.json: entry {category}/{slug} tanpa manifest kategori")
+    if index_total != expected_total:
+        errors.append(f"catalog.json: {index_total} entries, expect {expected_total}")
 
     print("=" * 60)
     print("VALIDATION REPORT - AgentEnhancements plugin-catalog")

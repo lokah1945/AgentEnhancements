@@ -1,5 +1,5 @@
 {
-  "_comment": "Canonical native gateway template. setup.sh renders the repository path and isolated Python interpreter for all three CLIs. Credentials are read live from ui.api.json; empty-key cloud tools and unconfigured external servers are hidden. Nine bundled implementations are loaded internally by the gateway.",
+  "_comment": "Canonical native gateway template. setup.sh renders the repository path and isolated Python interpreter for all three CLIs. Credentials are read live from ui.api.json; empty-key cloud tools and unconfigured external servers are hidden. Ten bundled implementations are loaded internally by the gateway.",
   "mcpServers": {
     "agent-enhancements": {
       "command": "python3",

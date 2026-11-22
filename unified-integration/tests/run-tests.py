@@ -45,6 +45,18 @@ for mod in [
     "test_modular_docs",
     "test_project_local_state",
     "test_credential_pool",
+    "test_service_url_regressions",
+    "test_setup_regressions",
+    "test_runtime_regressions",
+    "test_task_observer_regressions",
+    "test_link_skills_regressions",
+    "test_native_regressions",
+    "test_registry_regressions",
+    "test_mcp_network_regressions",
+    "test_mcp_media_regressions",
+    "test_ops_regressions",
+    "test_docs_regressions",
+    "test_maintenance_scripts_regressions",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))
 

@@ -8,6 +8,7 @@ No API key required. Private 10-minute response cache under AGENT_MEMORY_ROOT.
 from __future__ import annotations
 
 import hashlib
+import http.client
 import os
 import tempfile
 import time
@@ -27,8 +28,19 @@ from project_paths import memory_root
 
 VERSION = "1.0.0"
 BASE = "https://news.google.com/rss"
-LANGS = {"en": "en", "id": "id", "jp": "jp", "kr": "kr", "de": "de",
-         "fr": "fr", "es": "es", "pt": "pt-BR", "zh": "zh-Hans"}
+# lang key -> (hl, gl, ceid) of the canonical Google News edition. A
+# mismatched hl/gl/ceid triple is redirected to the English US feed.
+LANGS = {
+    "en": ("en-US", "US", "US:en"),
+    "id": ("id", "ID", "ID:id"),
+    "jp": ("ja", "JP", "JP:ja"),
+    "kr": ("ko", "KR", "KR:ko"),
+    "de": ("de", "DE", "DE:de"),
+    "fr": ("fr", "FR", "FR:fr"),
+    "es": ("es-419", "US", "US:es-419"),
+    "pt": ("pt-BR", "BR", "BR:pt-419"),
+    "zh": ("zh-CN", "CN", "CN:zh-Hans"),
+}
 CACHE_DIR = memory_root() / "mcp" / "news-cache"
 CACHE_TTL = 600
 TIMEOUT = 30
@@ -80,6 +92,11 @@ def _fetch(url: str) -> str | dict:
     except urllib.error.URLError as exc:
         return {"error": f"cannot reach Google News RSS: {exc.reason}",
                 "hint": "check network connectivity"}
+    except (TimeoutError, OSError, http.client.HTTPException) as exc:
+        # Read timeouts, connection resets and truncated/malformed responses
+        # escape the URLError branch; keep the tool's normal error shape.
+        return {"error": f"Google News RSS request failed: {type(exc).__name__}: {exc}",
+                "hint": "retry shortly or fall back to newsapi-mcp"}
     _cache_put(key, body)
     return body
 
@@ -137,11 +154,12 @@ def top(topic: str | None = None, lang: str = "en", limit: int = 10) -> dict:
         return {"error": f"unsupported lang {lang!r}",
                 "hint": f"choose one of {sorted(LANGS)}"}
     limit = min(max(limit, 1), MAX_LIMIT)
-    hl = LANGS[lang_key]
+    hl, gl, ceid = LANGS[lang_key]
+    edition = f"hl={hl}&gl={gl}&ceid={ceid}"
     if topic and topic.strip():
-        url = (f"{BASE}/search?hl={hl}&q={urllib.parse.quote(topic.strip())}")
+        url = f"{BASE}/search?q={urllib.parse.quote(topic.strip())}&{edition}"
     else:
-        url = f"{BASE}?hl={hl}&gl=US&ceid=US:{hl}"
+        url = f"{BASE}?{edition}"
     body = _fetch(url)
     if isinstance(body, dict):
         return body

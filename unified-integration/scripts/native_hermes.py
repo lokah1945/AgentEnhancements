@@ -86,16 +86,31 @@ def install_hermes(block: dict, merge_servers: Callable[[dict, dict], None], *, 
     selected = hermes_roots(profiles)
     for root in selected:
         path = root / "config.yaml"
-        doc = yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else {}
+        original = path.read_text(encoding="utf-8") if path.exists() else ""
+        doc = yaml.safe_load(original) if original else {}
         if doc is None:
             doc = {}
         if not isinstance(doc, dict):
             raise ValueError(f"configuration must be an object: {path}")
-        merge_servers(doc.setdefault("mcp_servers", {}), block)
+        # A bare `key:` (e.g. Hermes's example config with every entry
+        # commented out) loads as None; treat it as empty, reject other types.
+        servers = doc.get("mcp_servers")
+        if servers is None:
+            servers = doc["mcp_servers"] = {}
+        elif not isinstance(servers, dict):
+            raise ValueError(f"mcp_servers must be an object: {path}")
+        merge_servers(servers, block)
         if not mcp_only:
-            plugins = doc.setdefault("plugins", {})
-            if not isinstance(plugins, dict):
+            plugins = doc.get("plugins")
+            if plugins is None:
+                plugins = doc["plugins"] = {}
+            elif not isinstance(plugins, dict):
                 raise ValueError(f"plugins must be an object: {path}")
+            for key in ("enabled", "disabled"):
+                if key in plugins and plugins[key] is None:
+                    del plugins[key]
+                elif key in plugins and not isinstance(plugins[key], list):
+                    raise ValueError(f"plugins.{key} must be a list: {path}")
             if "agent-enhancements" in plugins.get("disabled", []):
                 raise ValueError(f"agent-enhancements is disabled by the user: {path}")
             target = root / "plugins/agent-enhancements"
@@ -122,7 +137,14 @@ def install_hermes(block: dict, merge_servers: Callable[[dict, dict], None], *, 
                 if "agent-enhancements" not in enabled:
                     enabled.append("agent-enhancements")
                 merge_instructions(path.parent / "SOUL.md", note)
-        write(path, yaml.safe_dump(doc, sort_keys=False, allow_unicode=True))
+        # Re-parse the original: `doc` was merged in place. An unchanged
+        # configuration keeps its bytes (and comments) and gets no backup.
+        if not original or yaml.safe_load(original) != doc:
+            write(path, yaml.safe_dump(doc, sort_keys=False, allow_unicode=True))
+            if re.search(r"(^|\s)#", original, flags=re.M):
+                print(f"[native] hermes: note - comments in {path} were dropped by the YAML "
+                      "rewrite; the original file was backed up next to it (mode 0600)",
+                      file=sys.stderr)
     if profiles is not None:
         selection = read_json(host_selection_path())
         selection["hermes_profiles"] = list(dict.fromkeys(profiles))

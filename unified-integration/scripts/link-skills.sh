@@ -13,7 +13,7 @@
 #   link-skills.sh                          # default curated set
 #   link-skills.sh --set anthropic-skills   # one source
 #   link-skills.sh --set replica-skill
-#   link-skills.sh --set superpowers
+#   link-skills.sh --set Superpowers        # source names are case-insensitive
 #   link-skills.sh --set all                # everything (large context!)
 #   link-skills.sh <skill-name> [...]       # specific skills by name
 #   link-skills.sh --status                 # what is linked where
@@ -74,6 +74,9 @@ with open(os.environ['INDEX_FILE'], encoding='utf-8') as f:
 mode = os.environ['FILTER_MODE']
 filt = os.environ['FILTER']
 wanted = [w for w in filt.split() if w]
+# Source names match case-insensitively (--set superpowers == Superpowers);
+# skill names stay exact.
+wanted_sources = {w.lower() for w in wanted}
 
 seen = set()
 for skill in data.get('skills', []):
@@ -93,7 +96,7 @@ for skill in data.get('skills', []):
         continue
     if not name or name in seen:
         continue
-    if mode == 'sources' and skill.get('source') not in wanted:
+    if mode == 'sources' and str(skill.get('source') or '').lower() not in wanted_sources:
         continue
     if mode == 'names' and name not in wanted:
         continue
@@ -210,6 +213,7 @@ audit_install() {
         [ -d "$target" ] || continue
         local ours=0 stale=0 entry
         local stale_names=""
+        local -a stale_paths=()
         for entry in "$target"/*; do
             [ -L "$entry" ] || continue
             local current
@@ -220,6 +224,7 @@ audit_install() {
                     if [ ! -e "$entry" ]; then
                         stale=$((stale + 1))
                         stale_names="$stale_names $(basename "$entry")"
+                        stale_paths+=("$entry")
                     fi
                     ;;
             esac
@@ -280,9 +285,14 @@ audit_install() {
             findings=$((findings + 1))
             log_warn "$target: $stale stale link(s) (target missing):$stale_names"
             if [ "$migrate" = "yes" ]; then
-                local sname
-                for sname in $stale_names; do
-                    rm -f "$target/$sname"
+                # Remove the exact paths found by the scan (no word
+                # splitting or globbing of names), re-checking that each
+                # is still a dangling symlink.
+                local spath
+                for spath in "${stale_paths[@]}"; do
+                    if [ -L "$spath" ] && [ ! -e "$spath" ]; then
+                        rm -f -- "$spath"
+                    fi
                 done
                 log_info "  stale links removed"
             fi

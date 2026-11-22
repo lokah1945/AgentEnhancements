@@ -3,7 +3,12 @@
 Update catalog.json to match plugin manifests' mcp_servers_suggested.
 """
 import json
-import os
+from pathlib import Path
+
+# The script lives at the repository root; resolve paths from there so the
+# working directory does not matter.
+ROOT = Path(__file__).resolve().parent
+CATALOG_PATH = ROOT / 'plugin-catalog/catalog.json'
 
 # Plugin ID to MCP servers mapping (same as before)
 plugin_mcp_mapping = {
@@ -32,7 +37,7 @@ plugin_mcp_mapping = {
 }
 
 # Load catalog
-with open('plugin-catalog/catalog.json') as f:
+with open(CATALOG_PATH, encoding='utf-8') as f:
     catalog = json.load(f)
 
 # Update each skill in catalog
@@ -45,7 +50,7 @@ for skill in catalog['skills']:
         updated += 1
 
 # Save catalog
-with open('plugin-catalog/catalog.json', 'w') as f:
+with open(CATALOG_PATH, 'w', encoding='utf-8') as f:
     json.dump(catalog, f, indent=2, ensure_ascii=False)
 
 print(f"\nTotal catalog entries updated: {updated}")

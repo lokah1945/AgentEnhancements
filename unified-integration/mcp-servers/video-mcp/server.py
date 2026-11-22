@@ -5,7 +5,8 @@ Shot-list / timeline semantics layered on ffmpeg for openmontage and
 hyperframes (plugin-catalog/mcp-servers.json → video-mcp, P2, media).
 
 Timelines are JSON documents (clips with in/out points, optional text
-overlays) persisted in /tmp/ae-video-mcp/timelines.json. render()
+overlays) persisted privately per project in
+$AGENT_MEMORY_ROOT/mcp/video/<project-key>/timelines.json. render()
 compiles a timeline into a single ffmpeg invocation (concat filter +
 drawtext overlays). Rendering needs the ffmpeg binary; timeline
 construction and EDL export are fully offline.
@@ -14,6 +15,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import math
 import os
 import re
 import shutil
@@ -79,17 +81,24 @@ def _validate_clip(clip: dict, index: int) -> str | None:
     _, problem = _validate_media_path(path, must_exist=True)
     if problem:
         return f"clips[{index}].{problem}"
+    times: dict[str, float] = {}
     for field in ("start", "end"):
         value = clip.get(field, 0.0)
+        if isinstance(value, bool):
+            return f"clips[{index}].{field} must be a number of seconds"
         try:
-            float(value)
+            number = float(value)
         except (TypeError, ValueError):
             return f"clips[{index}].{field} must be a number of seconds"
-    try:
-        if float(clip.get("end", 0)) <= float(clip.get("start", 0)):
-            return f"clips[{index}] needs end > start"
-    except (TypeError, ValueError):
-        return f"clips[{index}] start/end must be numbers"
+        # NaN/Infinity would defeat the end > start check and serialize as
+        # non-standard JSON; negative offsets are meaningless to ffmpeg.
+        if not math.isfinite(number) or number < 0:
+            return (f"clips[{index}].{field} must be a finite, "
+                    f"non-negative number of seconds")
+        times[field] = number
+    if times["end"] <= times["start"]:
+        return f"clips[{index}] needs end > start"
+    clip["start"], clip["end"] = times["start"], times["end"]
     text = clip.get("text")
     if text is not None and (not isinstance(text, str) or len(text) > 120):
         return f"clips[{index}].text must be a string of <= 120 chars"
@@ -98,7 +107,8 @@ def _validate_clip(clip: dict, index: int) -> str | None:
 
 def _allowed_roots() -> list[Path]:
     """Media roots shared with ffmpeg-mcp: cwd, /tmp, AE_FFMPEG_ALLOWED_ROOTS."""
-    roots = [Path.cwd().resolve(), Path("/tmp")]
+    # Resolve /tmp like candidates are resolved (macOS: /tmp -> /private/tmp).
+    roots = [Path.cwd().resolve(), Path("/tmp").resolve()]
     extra = os.environ.get("AE_FFMPEG_ALLOWED_ROOTS", "")
     for item in extra.split(os.pathsep):
         if item.strip():
@@ -160,6 +170,8 @@ def timeline(name: str, clips: list[dict]) -> dict:
             return {"error": problem}
         if clip.get("position") not in (None, "top", "center", "bottom"):
             return {"error": f"clips[{index}].position must be top|center|bottom"}
+        if "position" in clip and clip["position"] is None:
+            del clip["position"]
     total = round(sum(float(c["end"]) - float(c["start"]) for c in clips), 3)
     doc = {"name": name, "clips": clips, "total_s": total}
     STORE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -243,7 +255,7 @@ def _render(name: str, doc: dict, clips: list[dict], sources: list[Path],
                  f"pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1"]
         if clip.get("text"):
             y = {"top": "40", "center": "(h-text_h)/2", "bottom": "h-text_h-40"}[
-                clip.get("position", "bottom")]
+                clip.get("position") or "bottom"]
             text_file = work / f"overlay-{i}.txt"
             text_file.write_text(clip["text"], encoding="utf-8")
             parts.append(

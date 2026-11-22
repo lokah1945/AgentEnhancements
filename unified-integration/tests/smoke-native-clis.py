@@ -20,6 +20,23 @@ exercise_tools = False
 api_config_path = None
 
 
+def write_fixture_log(log_dir, name, data):
+    """Write one host CLI's stderr to a new private file inside ``log_dir``.
+
+    ``log_dir`` comes from ``tempfile.mkdtemp`` (mode 0700). The file is
+    created with O_EXCL|O_NOFOLLOW so a pre-existing file or symlink is never
+    reused or followed.
+    """
+    if isinstance(data, str):
+        data = data.encode("utf-8", errors="replace")
+    path = Path(log_dir) / f"fixture-{name}.log"
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(path, flags, 0o600)
+    with os.fdopen(fd, "wb") as handle:
+        handle.write(data or b"")
+    return path
+
+
 def openai_health(payload):
     """Read the credential boolean from native or serialized MCP envelopes."""
     if isinstance(payload, str):
@@ -520,6 +537,15 @@ def main() -> None:
     threading.Thread(target=server.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{server.server_port}"
     root = Path(tempfile.mkdtemp(prefix="ae-native-smoke-"))
+    # Logs outlive ``root`` (removed below), so they get their own private
+    # directory, created only when the first log is written.
+    log_dirs = []
+
+    def fixture_log_dir():
+        if not log_dirs:
+            log_dirs.append(Path(tempfile.mkdtemp(prefix="ae-native-smoke-logs-")))
+        return log_dirs[0]
+
     try:
         (root / "project").mkdir()
         env = dict(os.environ)
@@ -703,14 +729,10 @@ def main() -> None:
                 )
                 results.append((name, success))
                 if exercise_tools or not success or not tools_seen:
-                    log = Path("/tmp/agentenhancements-fixture-" + name + ".log")
-                    log.touch(mode=0o600, exist_ok=True)
-                    log.write_text(r.stderr)
+                    write_fixture_log(fixture_log_dir(), name, r.stderr)
             except subprocess.TimeoutExpired as timeout:
                 print(name, "timeout", flush=True)
-                log = Path("/tmp/agentenhancements-fixture-" + name + ".log")
-                log.touch(mode=0o600, exist_ok=True)
-                log.write_bytes(timeout.stderr or b"")
+                write_fixture_log(fixture_log_dir(), name, timeout.stderr)
                 results.append((name, False))
         if (root / "memory/memory.db").exists():
             with sqlite3.connect(root / "memory/memory.db") as conn:
@@ -805,6 +827,8 @@ def main() -> None:
     finally:
         server.shutdown()
         shutil.rmtree(root, ignore_errors=True)
+        if log_dirs:
+            print("Fixture stderr logs:", log_dirs[0], flush=True)
 
 
 if __name__ == "__main__":

@@ -3,10 +3,14 @@
 Update plugin manifests with appropriate mcp_servers_suggested based on mcp-servers.json mappings.
 """
 import json
-import os
+from pathlib import Path
+
+# The script lives at the repository root; resolve every path from there so it
+# works from any working directory and never touches another checkout.
+ROOT = Path(__file__).resolve().parent
 
 # Load mcp-servers.json to get plugin -> MCP server mappings
-with open('plugin-catalog/mcp-servers.json') as f:
+with open(ROOT / 'plugin-catalog/mcp-servers.json', encoding='utf-8') as f:
     mcp_data = json.load(f)
 
 # Build reverse mapping: plugin -> list of MCP server IDs
@@ -21,7 +25,7 @@ for server in mcp_data['servers']:
 all_plugins_mcp = plugin_to_mcp.get('all', [])
 
 # Load catalog to get all plugin IDs and their manifest paths
-with open('plugin-catalog/catalog.json') as f:
+with open(ROOT / 'plugin-catalog/catalog.json', encoding='utf-8') as f:
     catalog = json.load(f)
 
 # Map plugin ID to manifest path
@@ -64,18 +68,18 @@ for plugin_id, mcp_servers in plugin_mcp_mapping.items():
         print(f"WARNING: No manifest path for {plugin_id}")
         continue
     
-    full_path = os.path.join('/root/project/AgentEnhancements', manifest_path)
-    if not os.path.exists(full_path):
+    full_path = ROOT / manifest_path
+    if not full_path.exists():
         print(f"WARNING: Manifest not found: {full_path}")
         continue
     
-    with open(full_path) as f:
+    with open(full_path, encoding='utf-8') as f:
         manifest = json.load(f)
     
     # Update mcp_servers_suggested
     manifest['mcp_servers_suggested'] = mcp_servers
     
-    with open(full_path, 'w') as f:
+    with open(full_path, 'w', encoding='utf-8') as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
     
     print(f"Updated: {plugin_id} -> {mcp_servers}")

@@ -1011,14 +1011,22 @@ def find_entry(identifier: str) -> Optional[Dict[str, Any]]:
     for entry in entries:
         if entry["id"].lower() == needle.lower():
             return entry
-    stripped = needle
+    # A typed prefix constrains the name/slug pass to that type, and a
+    # bare prefix ("skill:") names nothing: skills carry no slug, so an
+    # empty needle would otherwise match the first skill.
+    stripped, want_type = needle, None
     for prefix in ("skill:", "plugin:", "mcp:", "capability:"):
         if stripped.lower().startswith(prefix):
-            stripped = stripped[len(prefix):]
+            stripped, want_type = stripped[len(prefix):].strip(), prefix[:-1]
             break
+    if not stripped:
+        return None
+    low = stripped.lower()
     for entry in entries:
-        if entry.get("name", "").lower() == stripped.lower() or \
-                entry.get("slug", "").lower() == stripped.lower():
+        if want_type and entry.get("type") != want_type:
+            continue
+        slug = (entry.get("slug") or "").lower()
+        if (entry.get("name") or "").lower() == low or (slug and slug == low):
             return entry
     return None
 
@@ -1095,6 +1103,48 @@ def paged_list(entry_type: str = "", source: str = "", prefix: str = "",
     }
 
 
+_DETAIL_TEXT_FIELDS = ("description", "when_to_use")
+_DETAIL_LIST_KEEP = 10
+
+
+def _bounded_detail_json(detail: Dict[str, Any]) -> str:
+    """Serialize a detail page within MAX_DETAIL_PAGE as valid JSON.
+
+    Trimming the serialized text would cut mid-object and append a
+    plain-text note, breaking every ``--json`` consumer. Over budget, the
+    long free-text fields are shortened first, then long lists, and the
+    page is marked ``truncated`` so nothing is silently cut.
+    """
+    payload = json.dumps(detail, indent=2)
+    if approx_tokens(payload) <= MAX_DETAIL_PAGE:
+        return payload
+    detail = dict(detail)
+    for key in _DETAIL_TEXT_FIELDS:
+        if isinstance(detail.get(key), str):
+            detail[key] = clamp_to_budget(
+                detail[key], MAX_DETAIL_PAGE // 4, label=key)
+    detail["truncated"] = True
+    detail["truncated_note"] = "see source for full text"
+    payload = json.dumps(detail, indent=2)
+    if approx_tokens(payload) <= MAX_DETAIL_PAGE:
+        return payload
+    for key, value in list(detail.items()):
+        if isinstance(value, list) and len(value) > _DETAIL_LIST_KEEP:
+            detail[key] = value[:_DETAIL_LIST_KEEP]
+    payload = json.dumps(detail, indent=2)
+    if approx_tokens(payload) <= MAX_DETAIL_PAGE:
+        return payload
+    # Last resort: keep only the identity, pointers and readiness.
+    keep = ("id", "type", "name", "source", "path", "source_path",
+            "readiness", "truncated", "truncated_note")
+    slim = {k: detail[k] for k in keep if k in detail}
+    for key in _DETAIL_TEXT_FIELDS:
+        if isinstance(detail.get(key), str):
+            slim[key] = clamp_to_budget(
+                detail[key], MAX_DETAIL_PAGE // 8, label=key)
+    return json.dumps(slim, indent=2)
+
+
 def cmd_show(identifier: str, as_json: bool = False) -> int:
     """Show one entry by id or name (L2 detail, bounded).
 
@@ -1108,9 +1158,7 @@ def cmd_show(identifier: str, as_json: bool = False) -> int:
         detail = dict(entry)
         detail["readiness"] = entry_readiness(entry)
         if as_json:
-            print(clamp_to_budget(
-                json.dumps(detail, indent=2), MAX_DETAIL_PAGE,
-                label="registry detail"))
+            print(_bounded_detail_json(detail))
             return 0
         text = _format_entry(entry)
         if entry.get("activation"):
@@ -1183,6 +1231,17 @@ def main(argv: List[str]) -> int:
         except (ValueError, IndexError):
             return default
 
+    def int_flag(flag: str, default: int) -> int:
+        """Parse a positive integer flag; raise ValueError with a clear message."""
+        raw = flag_value(flag, str(default))
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f"{flag} must be a positive integer, got {raw!r}") from None
+        if value <= 0:
+            raise ValueError(f"{flag} must be a positive integer, got {raw!r}")
+        return value
+
     def positional_text() -> str:
         """Keep filter/limit values out of the natural-language relevance query."""
         values = {"--type", "--limit", "--out", "--source"}
@@ -1207,10 +1266,15 @@ def main(argv: List[str]) -> int:
         if not query:
             print("usage: registry.py search \"<query>\"", file=sys.stderr)
             return 2
+        try:
+            limit = int_flag("--limit", 8)
+        except ValueError as exc:
+            print(f"registry.py search: {exc}", file=sys.stderr)
+            return 2
         return cmd_search(
             query,
             entry_type=flag_value("--type", ""),
-            limit=int(flag_value("--limit", "8")),
+            limit=limit,
             as_json=has_flag("--json"),
             catalog=has_flag("--catalog"),
         )
@@ -1219,8 +1283,12 @@ def main(argv: List[str]) -> int:
         if not task:
             print("usage: registry.py map \"<task description>\"", file=sys.stderr)
             return 2
-        return cmd_map(task, limit=int(flag_value("--limit", "8")),
-                       as_json=has_flag("--json"))
+        try:
+            limit = int_flag("--limit", 8)
+        except ValueError as exc:
+            print(f"registry.py map: {exc}", file=sys.stderr)
+            return 2
+        return cmd_map(task, limit=limit, as_json=has_flag("--json"))
     if command == "show":
         ident = positional_text()
         if not ident:

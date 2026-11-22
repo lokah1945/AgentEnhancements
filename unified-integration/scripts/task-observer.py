@@ -920,7 +920,16 @@ def rollback(root: Path, staged_name: str) -> str:
     rollback_dir = updates_dir(root) / "rollback"
     if not rollback_dir.is_dir():
         return "refused: no rollback backups"
-    backups = sorted(rollback_dir.glob(f"{staged_name}-*"))
+    # Backups are named "<skill>-<YYYYmmddTHHMMSSZ>" (see promote()). Match
+    # the exact name plus a fixed-width stamp: a "<skill>-*" glob would also
+    # match another skill whose name extends this one (agent-memory vs
+    # agent-memory-mcp) and, sorting last, restore that skill's tree here.
+    # The fixed-width stamp makes the lexical sort chronological.
+    stamp_re = re.compile(re.escape(staged_name) + r"-\d{8}T\d{6}Z")
+    backups = sorted(
+        p for p in rollback_dir.iterdir()
+        if p.is_dir() and stamp_re.fullmatch(p.name)
+    )
     if not backups:
         return f"refused: no rollback backup for '{staged_name}'"
     backup = backups[-1]

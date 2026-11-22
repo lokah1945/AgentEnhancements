@@ -26,11 +26,30 @@ from context_budget import (
 
 MAX_INPUT = 2_000_000
 MAX_CONTEXT = 12_000
+DEFAULT_SKILL_CARDS = 8
+MAX_SKILL_CARDS_LIMIT = 50
 
 
 def redact(value: str) -> str:
     """Remove recognizable credentials before saving any natural language."""
     return redact_configured(value)
+
+
+def skill_card_limit() -> int:
+    """AE_MAX_SKILL_CARDS as a bounded positive int.
+
+    A malformed or non-positive value falls back to the default instead of
+    raising: an exception here would silently drop every prompt-time card.
+    The rendered cards stay inside the MAX_SKILL_CARDS token budget anyway;
+    the upper bound only caps ranking work.
+    """
+    try:
+        value = int(os.environ.get("AE_MAX_SKILL_CARDS", DEFAULT_SKILL_CARDS))
+    except (TypeError, ValueError):
+        return DEFAULT_SKILL_CARDS
+    if value < 1:
+        return DEFAULT_SKILL_CARDS
+    return min(value, MAX_SKILL_CARDS_LIMIT)
 
 
 def skill_context(agent: str, prompt: str) -> str:
@@ -54,7 +73,7 @@ def skill_context(agent: str, prompt: str) -> str:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     loader = module.SkillsLoader(agent)
-    max_results = int(os.environ.get("AE_MAX_SKILL_CARDS", "8"))
+    max_results = skill_card_limit()
     matches = loader.find_skills(prompt, max_results=max_results)
     lines = []
     for item in matches:

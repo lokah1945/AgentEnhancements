@@ -11,8 +11,10 @@ last-30-days skill. Catalog entry: `plugin-catalog/mcp-servers.json` →
 | `health` | — | supported languages + cache stats |
 | `top` | `topic?`, `lang?=en`, `limit?=10` | headlines: title / link / published / source |
 
-Languages: en, id, jp, kr, de, fr, es, pt, zh. Cache TTL 10 min in
-`/tmp/ae-news-cache`.
+Languages: en, id, jp, kr, de, fr, es, pt, zh. Cache TTL 10 min in a
+private (mode 0700) directory, `$AGENT_MEMORY_ROOT/mcp/news-cache` (default
+`.agentenhancements/memory/mcp/news-cache` in this checkout); `health` reports
+the exact `cache_dir`.
 
 ## Env vars
 

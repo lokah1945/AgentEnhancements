@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import ipaddress
 import json
 import os
 from pathlib import Path
@@ -32,6 +33,7 @@ import tempfile
 import threading
 import time
 from typing import Any
+from urllib.parse import urlsplit
 
 UI = Path(__file__).resolve().parent.parent
 ROOT = UI.parent
@@ -433,6 +435,35 @@ def server_state(name: str, config: dict | None = None) -> dict:
     if blocker:
         return {"visible": False, "reason": blocker}
     return {"visible": True, "reason": "configured", "verification": "host_handshake_required"}
+
+
+def safe_service_url(url: str) -> bool:
+    """Return True when a configured service base URL may carry an API key.
+
+    HTTPS is required, except plain HTTP to a loopback host (local mocks and
+    proxies). Userinfo and fragments are refused, matching the adaptive
+    preflight endpoint rule, so a bearer key is never sent in cleartext
+    across the network because of a typo such as ``http://api.openai.com``.
+    """
+    if not isinstance(url, str):
+        return False
+    try:
+        parts = urlsplit(url)
+        host = parts.hostname or ""
+    except ValueError:
+        return False
+    if parts.username is not None or parts.password is not None or parts.fragment or not host:
+        return False
+    if parts.scheme == "https":
+        return True
+    if parts.scheme != "http":
+        return False
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
 
 
 def cloud_available(

@@ -10,7 +10,7 @@ import os
 import stat
 import sys
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Callable, Optional, List, Dict, Any
 from datetime import datetime, timezone
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -18,6 +18,21 @@ from project_paths import memory_root
 
 MEMORY_ROOT = memory_root()
 DB_PATH = MEMORY_ROOT / "memory.db"
+LIST_VALUE_LIMIT = 200
+
+
+def _redactor() -> Callable[[str], str]:
+    """Return the shared credential redactor, or identity when unavailable.
+
+    Imported lazily so memory.py keeps working as a standalone utility.
+    """
+    try:
+        from api_config import read_config, redact
+        config, _ = read_config()
+    except Exception:  # noqa: BLE001 - redaction is best effort here
+        return lambda text: text
+    return lambda text: redact(text, config)
+
 
 class AgentMemory:
     def __init__(self, agent: str, project: Optional[str] = None):
@@ -66,7 +81,7 @@ class AgentMemory:
              metadata: Optional[Dict] = None, ttl_days: Optional[int] = None) -> None:
         """Save a memory"""
         expires_at = None
-        if ttl_days:
+        if ttl_days is not None:
             from datetime import timedelta
             # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
             # against datetime('now') work: the ISO "T" separator sorts
@@ -114,16 +129,24 @@ class AgentMemory:
                     ORDER BY updated_at DESC LIMIT ?
                 """, (self.agent, self.project, limit))
 
-            return [
-                {
-                    "type": row[0],
-                    "key": row[1],
-                    "value": row[2][:200] + "..." if len(row[2]) > 200 else row[2],
-                    "metadata": json.loads(row[3]) if row[3] else {},
-                    "updated": row[4]
-                }
-                for row in cursor.fetchall()
-            ]
+            rows = cursor.fetchall()
+
+        # Redact the full value before truncating it: a credential that
+        # straddles the cut would otherwise survive as an unmatched prefix.
+        redact = _redactor()
+        memories = []
+        for row in rows:
+            value = redact(row[2])
+            if len(value) > LIST_VALUE_LIMIT:
+                value = value[:LIST_VALUE_LIMIT] + "..."
+            memories.append({
+                "type": row[0],
+                "key": row[1],
+                "value": value,
+                "metadata": json.loads(row[3]) if row[3] else {},
+                "updated": row[4]
+            })
+        return memories
 
     def delete(self, key: str, memory_type: str = "session_context") -> bool:
         """Delete a memory"""
@@ -142,6 +165,15 @@ class AgentMemory:
                 WHERE expires_at IS NOT NULL AND expires_at < datetime('now')
             """)
             return cursor.rowcount
+
+
+def _int_arg(raw: str, usage: str) -> int:
+    """Parse an integer CLI argument, exiting with usage text on bad input."""
+    try:
+        return int(raw)
+    except ValueError:
+        print(usage)
+        sys.exit(1)
 
 
 def main():
@@ -166,7 +198,7 @@ def main():
         key = sys.argv[3]
         value = sys.argv[4]
         mem_type = sys.argv[5] if len(sys.argv) > 5 else "session_context"
-        ttl = int(sys.argv[6]) if len(sys.argv) > 6 else None
+        ttl = _int_arg(sys.argv[6], "Usage: memory.py <agent> save <key> <value> [type] [ttl_days]") if len(sys.argv) > 6 else None
         memory.save(key, value, mem_type, ttl_days=ttl)
         print(f"Saved: {key} ({mem_type})")
 
@@ -177,7 +209,7 @@ def main():
         key = sys.argv[3]
         mem_type = sys.argv[4] if len(sys.argv) > 4 else "session_context"
         value = memory.load(key, mem_type)
-        if value:
+        if value is not None:
             print(value)
         else:
             print(f"Memory not found: {key}")
@@ -185,7 +217,7 @@ def main():
 
     elif command == "list":
         mem_type = sys.argv[3] if len(sys.argv) > 3 else None
-        limit = int(sys.argv[4]) if len(sys.argv) > 4 else 20
+        limit = _int_arg(sys.argv[4], "Usage: memory.py <agent> list [type] [limit]") if len(sys.argv) > 4 else 20
         memories = memory.list(mem_type, limit)
         for m in memories:
             print(f"[{m['type']}] {m['key']}: {m['value']} (updated: {m['updated']})")

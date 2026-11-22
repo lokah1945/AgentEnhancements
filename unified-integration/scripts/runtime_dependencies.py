@@ -20,6 +20,8 @@ UI = Path(__file__).resolve().parent.parent
 REQUIREMENTS = UI / "requirements.txt"
 RECORD = "ae-runtime.json"
 PROTOCOL_CHECK = UI / "mcp-servers/check-protocol.py"
+# requirements.txt is locked for this interpreter floor (docs/UPDATING.md).
+MIN_PYTHON = (3, 11)
 RUNTIME_INVENTORY = """import mcp, PIL, yaml, tomlkit, json5, jsonschema, filelock
 from importlib.metadata import distributions
 import json
@@ -157,6 +159,13 @@ def main() -> int:
             managed_target(active, root / "environments")
             return subprocess.run([str(active / "bin/python"), str(PROTOCOL_CHECK)],
                                   check=False).returncode
+        if tuple(sys.version_info[:2]) < MIN_PYTHON:
+            # The locked wheels cannot install on an older interpreter; fail
+            # clearly before building (and discarding) a whole venv.
+            print(f"[setup-mcp] Python >= {'.'.join(map(str, MIN_PYTHON))} is required "
+                  f"(found {sys.version.split()[0]}); put a newer python3 on PATH and rerun.",
+                  file=sys.stderr)
+            return 1
         print(prepare())
         return 0
     except (OSError, ValueError, subprocess.SubprocessError):

@@ -13,7 +13,9 @@ hyperframes. Catalog entry: `plugin-catalog/mcp-servers.json` →
 | `edl` | `name` | export edit-decision-list (JSON + human-readable) |
 | `render` | `name`, `out` (.mp4) | one ffmpeg invocation: trim → scale/pad 720p → drawtext → concat |
 
-Timelines persist in `/tmp/ae-video-mcp/timelines.json`.
+Timelines persist privately per project in
+`$AGENT_MEMORY_ROOT/mcp/video/<project-key>/timelines.json`
+(`AGENT_MEMORY_ROOT` defaults to the runtime state's `memory/` directory).
 `timeline()` + `edl()` work offline; `render()` needs the ffmpeg binary.
 
 ## Env vars

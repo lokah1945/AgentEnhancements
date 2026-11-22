@@ -4,7 +4,9 @@ Paper search + metadata from the public arXiv Atom API for
 understand-anything and agent-reach. Catalog entry:
 `plugin-catalog/mcp-servers.json` → `arxiv-mcp` (P2, reference).
 
-No API key required. Responses cached 1 h in `/tmp/ae-arxiv-cache`.
+No API key required. Responses cached 1 h in a private (mode 0700) directory,
+`$AGENT_MEMORY_ROOT/mcp/arxiv-cache` (default `.agentenhancements/memory/mcp/arxiv-cache`
+in this checkout); `health` reports the exact `cache_dir`.
 
 ## Tools
 

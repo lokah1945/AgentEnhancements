@@ -53,7 +53,9 @@ def compress_content(content: str, mode: str = "auto", agent: str = "claude-code
                 timeout=30
             )
             if result.returncode == 0:
-                return result.stdout.decode()
+                # headroom terminates its output with exactly one newline.
+                out = result.stdout.decode("utf-8", errors="replace")
+                return out[:-1] if out.endswith("\n") else out
         except Exception as e:
             print(f"Headroom error: {e}", file=sys.stderr)
 
@@ -108,9 +110,11 @@ def main():
     mode = sys.argv[1]
     agent = sys.argv[2] if len(sys.argv) > 2 else "claude-code"
 
-    content = sys.stdin.read()
+    # Log dumps are often not valid UTF-8; decode leniently instead of
+    # failing before either engine runs.
+    content = sys.stdin.buffer.read().decode("utf-8", errors="replace")
     compressed = compress_content(content, mode, agent)
-    print(compressed)
+    sys.stdout.write(compressed)
 
 if __name__ == "__main__":
     main()

@@ -36,6 +36,9 @@ VERSION = "1.0.0"
 DEFAULT_TIMEOUT = 60
 MAX_TIMEOUT = 600
 STDOUT_TAIL = 4000
+# Finished task entries kept for track()/list_tasks(); older ones are pruned
+# so a long-lived server does not grow its registry without limit.
+MAX_FINISHED_TASKS = 500
 
 mcp = FastMCP("task-router-mcp")
 
@@ -87,7 +90,8 @@ def _terminate(proc: subprocess.Popen) -> None:
             os.killpg(proc.pid, signal.SIGKILL)
         else:
             proc.kill()
-    except ProcessLookupError:
+    except (ProcessLookupError, PermissionError):
+        # The group is already gone (or its id now belongs to someone else).
         pass
 
 
@@ -101,7 +105,9 @@ def _run_task(task_id: str, spec: dict) -> None:
         # Drain continually and retain a bounded tail. capture_output=True
         # previously buffered the entire output in RAM before truncating it.
         try:
-            while chunk := stream.read(4096):
+            # read1 returns whatever is available, so output already produced
+            # is kept even if a lingering pipe holder outlives the join below.
+            while chunk := stream.read1(4096):
                 output[key] = (output[key] + chunk)[-STDOUT_TAIL:]
         finally:
             stream.close()
@@ -128,6 +134,11 @@ def _run_task(task_id: str, spec: dict) -> None:
             timed_out = True
             _terminate(proc)
             proc.wait()
+        if os.name == "posix":
+            # The task owns its session (start_new_session): kill background
+            # children it left behind so they neither outlive the task nor
+            # hold the output pipes open and delay completion.
+            _terminate(proc)
         for reader in readers:
             reader.join(timeout=2)
         with _LOCK:
@@ -149,9 +160,21 @@ def _run_task(task_id: str, spec: dict) -> None:
             _PROCESSES.pop(task_id, None)
             entry["finished_at"] = time.time()
             entry["duration_s"] = round(entry["finished_at"] - entry.get("started_at", entry["created_at"]), 3)
-            cancelled = entry["status"] == "cancelled"
-        if cancelled:
-            shutil.rmtree(_WORKSPACES.get(task_id, ""), ignore_errors=True)
+            workspace = _WORKSPACES.pop(task_id, "")
+        # Every finished task (done, failed or cancelled) releases its workspace.
+        if workspace:
+            shutil.rmtree(workspace, ignore_errors=True)
+
+
+def _prune_finished_tasks() -> None:
+    """Drop the oldest finished entries beyond MAX_FINISHED_TASKS (hold _LOCK)."""
+    finished = [t for t in _TASKS.values()
+                if t["status"] in ("done", "failed", "cancelled") and "finished_at" in t
+                and t["id"] not in _WORKSPACES]
+    excess = len(finished) - MAX_FINISHED_TASKS
+    if excess > 0:
+        for task in sorted(finished, key=lambda e: e["created_at"])[:excess]:
+            _TASKS.pop(task["id"], None)
 
 
 @_tool
@@ -200,15 +223,18 @@ def dispatch(kind: str, command: str | None = None, code: str | None = None,
         spec["command"] = payload
     else:
         spec["code"] = payload
-    _TASKS[task_id] = {
-        "id": task_id, "status": "queued", "created_at": time.time(),
-        "spec": {"kind": kind, "timeout": effective_timeout},
-    }
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
     from project_paths import prepare
     workspaces = prepare() / 'cache/tasks'
     workspaces.mkdir(mode=0o700, exist_ok=True)
-    _WORKSPACES[task_id] = tempfile.mkdtemp(prefix=f"ae-task-{task_id}-", dir=workspaces)
+    workspace = tempfile.mkdtemp(prefix=f"ae-task-{task_id}-", dir=workspaces)
+    with _LOCK:
+        _prune_finished_tasks()
+        _TASKS[task_id] = {
+            "id": task_id, "status": "queued", "created_at": time.time(),
+            "spec": {"kind": kind, "timeout": effective_timeout},
+        }
+        _WORKSPACES[task_id] = workspace
     future = _POOL.submit(_run_task, task_id, spec)
     future.add_done_callback(lambda _f: None)
     return {"task_id": task_id, "status": "queued",

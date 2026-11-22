@@ -202,9 +202,8 @@ def run_case(output: Path, mode: int, scenario: str = "selected", *, code_mode: 
         skill_paths.append(ROOT / preflight._registry().find_entry("plugin:openmontage")["path"])
         responses = [SelectorFixture.selection("selected", items=items)]
     elif scenario == "lookup":
-        prompt = (f"AE_SYNTHETIC_ONLY: Inspect local video metadata for {clip} and troubleshoot "
-                  "the slow relational metadata query planner. Read appropriate guidance "
-                  "before probing the video and reviewing PostgreSQL query tuning.")
+        prompt = (f"AE_SYNTHETIC_ONLY: Inspect video metadata for {clip}. A join on the footage catalog "
+                  "slowed down. Review the query plan before choosing an index.")
         # The focused lookup must add a genuinely absent initial candidate.
         initial = preflight._registry().paged_search(prompt, limit=8)
         target = "skill:postgresql-optimization"

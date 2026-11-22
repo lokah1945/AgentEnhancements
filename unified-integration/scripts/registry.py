@@ -15,7 +15,7 @@ per-component installation or discovery required.
 Usage:
   python3 registry.py build [--out PATH] [--quiet]
   python3 registry.py search "<query>" [--type skill|plugin|mcp|capability]
-                                         [--limit N] [--json]
+                                         [--limit N] [--catalog] [--json]
   python3 registry.py map "<task description>" [--limit N] [--json]
   python3 registry.py show <name-or-id> [--json]
   python3 registry.py stats [--json]
@@ -397,7 +397,7 @@ def usable_entries(entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     spec.loader.exec_module(api)
     config, _ = api.read_config()
     return [entry for entry in entries if entry["type"] != "mcp"
-            or api.server_state(entry["name"], config)["visible"]]
+            or api.server_state(_mcp_config_id(entry), config)["visible"]]
 
 
 def load_capability_entries() -> List[Dict[str, Any]]:
@@ -731,6 +731,11 @@ def _skill_readiness(entry: Dict[str, Any]) -> Dict[str, str]:
     return {"ready": "yes", "how": "on-demand read of SKILL.md"}
 
 
+def _mcp_config_id(entry: Dict[str, Any]) -> str:
+    name = entry.get("name", "")
+    return "agent-browser-mcp" if name == "agent_browser" else name
+
+
 def _mcp_readiness(entry: Dict[str, Any]) -> Dict[str, str]:
     """Live readiness for an MCP entry via api_config.server_state."""
     try:
@@ -740,7 +745,9 @@ def _mcp_readiness(entry: Dict[str, Any]) -> Dict[str, str]:
         api = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(api)
         config, _ = api.read_config()
-        state = api.server_state(entry.get("name", ""), config)
+        state = api.server_state(_mcp_config_id(entry), config)
+        if state.get("verification") == "host_handshake_required":
+            return {"ready": "unknown", "blocker": "host_handshake_required"}
         if state.get("visible"):
             return {"ready": "yes", "how": state.get("reason", "visible")}
         return {"ready": "no", "blocker": state.get("reason", "not visible")}
@@ -754,8 +761,15 @@ def entry_readiness(entry: Dict[str, Any]) -> Dict[str, str]:
     if entry.get("type") == "skill":
         return _skill_readiness(entry)
     if entry.get("type") == "plugin":
-        # A catalog plugin is an integration guide (CONTRACT 8.1): readable
-        # now, but never a callable runtime plugin AE has installed.
+        guide = entry.get("path")
+        if not guide:
+            return {"ready": "no", "blocker": "guide_file_unavailable"}
+        try:
+            path = (REPO_ROOT / guide).resolve()
+            if not path.is_relative_to(REPO_ROOT) or not path.is_file():
+                return {"ready": "no", "blocker": "guide_file_unavailable"}
+        except (OSError, RuntimeError):
+            return {"ready": "no", "blocker": "guide_file_unavailable"}
         upstream = ("upstream vendored" if str(entry.get("vendored")) == "True"
                     else "upstream not installed by AE")
         return {"ready": "yes", "how": f"guide only; {upstream}; not a tool"}
@@ -848,7 +862,9 @@ def _format_entry(entry: Dict[str, Any], score: Optional[int] = None) -> str:
         # Roadmap npm names are unpinned and partly unregistered (anyone can
         # publish them); built servers run inside the gateway. Neither is a
         # command an agent should launch (final audit 2026-11-20).
-        if entry.get("status") == "built":
+        if entry.get("name") == "agent_browser":
+            lines.append("    optional external browser companion; setup prepares the bundled Python runtime")
+        elif entry.get("status") == "built":
             lines.append("    runs inside the agent-enhancements gateway: call its tools; "
                          "do not launch it separately")
         else:
@@ -866,34 +882,43 @@ def _format_entry(entry: Dict[str, Any], score: Optional[int] = None) -> str:
 
 
 def cmd_search(query: str, entry_type: str = "", limit: int = 8,
-               as_json: bool = False) -> int:
+               as_json: bool = False, catalog: bool = False) -> int:
     """Search every capability type; returns a bounded card page (L1).
 
     Output is capped at MAX_SEARCH_CARDS cards and MAX_SEARCH_PAGE tokens
     (context contract §8.4): a search result is a pointer surface, not a
     catalog dump. Detail for any card is one `show` away.
     """
-    entries = usable_entries(load_all_entries())
+    entries = load_all_entries()
+    if not catalog:
+        entries = usable_entries(entries)
     if entry_type:
         entries = [e for e in entries if e["type"] == entry_type]
     # Rank the full match set once so `matched` (the page's continuation
     # signal) is the true count, not just the page slice.
     ranked_all = rank_entries(entries, query, limit=len(entries) or 1)
-    page_size = min(limit, MAX_SEARCH_CARDS)
+    page_size = max(0, min(limit, MAX_SEARCH_CARDS))
     ranked = ranked_all[:page_size]
     cards = [_card(entry, score) for score, entry in ranked]
-    meta = _page_meta(len(ranked_all), len(cards), limit)
-    if as_json:
-        print(json.dumps({"query": query, **meta, "cards": cards}, indent=2))
-        return 0
-    print(f"=== Registry search: {query!r} ({meta['matched']} match(es), "
-          f"showing {meta['shown']}) ===")
-    for card in cards:
-        print(_format_card(card))
-    if not cards:
-        print("  (no matches - try broader terms, or: registry.py list)")
-    elif meta["continuation"]:
-        print(f"  ({meta['continuation']})")
+    display_query = clamp_to_budget(query, 100, label="query")
+    while True:
+        meta = _page_meta(len(ranked_all), len(cards), page_size)
+        if as_json:
+            rendered = json.dumps({"query": display_query, **meta, "cards": cards},
+                                  ensure_ascii=False, separators=(",", ":"))
+        else:
+            lines = [f"=== Registry search: {display_query!r} ({meta['matched']} match(es), "
+                     f"showing {meta['shown']}) ==="]
+            lines.extend(_format_card(card) for card in cards)
+            if not meta["matched"]:
+                lines.append("  (no matches - try broader terms, or: registry.py list)")
+            elif meta["continuation"]:
+                lines.append(f"  ({meta['continuation']})")
+            rendered = "\n".join(lines)
+        if approx_tokens(rendered + "\n") <= MAX_SEARCH_PAGE or not cards:
+            print(rendered)
+            break
+        cards.pop()
     return 0
 
 
@@ -1183,6 +1208,7 @@ def main(argv: List[str]) -> int:
             entry_type=flag_value("--type", ""),
             limit=int(flag_value("--limit", "8")),
             as_json=has_flag("--json"),
+            catalog=has_flag("--catalog"),
         )
     if command == "map":
         task = positional_text()

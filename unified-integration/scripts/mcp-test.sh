@@ -111,8 +111,10 @@ check_installable() {
     local cmd
     cmd="$(jq -r --arg id "$id" '.servers[] | select(.id == $id) | .command' "$SERVERS_JSON")"
     case "$cmd" in
-        npx)   warn "$id - npm package (auto-install via npx -y)"; return 0 ;;
-        python) warn "$id - python module (perlu pip install)"; return 0 ;;
+        npx|python)
+            warn "$id (configuration only; verify the vendor release, installed runtime and host tools)"
+            return 0
+            ;;
         *)     return 1 ;;
     esac
 }

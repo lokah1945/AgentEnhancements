@@ -125,6 +125,42 @@ class ConfigurationTests(unittest.TestCase):
             self.assertNotIn("task-router-mcp", names)
             self.assertNotIn("serper-mcp", names)
 
+    def test_external_installed_entry_point_is_distinct_from_host_readiness(self):
+        with configuration() as path, tempfile.TemporaryDirectory() as temporary:
+            script = Path(temporary) / 'server.py'
+            registry = load_module('api_registry_external', UI_DIR / 'scripts/registry.py')
+            entry = registry.find_entry('mcp:tavily-mcp')
+
+            def command(*parts):
+                edit(path, lambda doc: doc['mcp'].update({'tavily-mcp': {'command': list(parts)}}))
+                return api.server_state('tavily-mcp')
+
+            for parts in (('npx', 'local-fixture'), ('uvx', 'local-fixture'),
+                          ('{python}', '-m', 'pip', '--version')):
+                state = command(*parts)
+                self.assertFalse(state['visible'])
+                self.assertEqual(state['reason'], 'package_launcher_requires_provisioning')
+            self.assertEqual(command('{python}', str(script))['reason'], 'executable_not_installed')
+            script.write_text('print("fixture")\n')
+            self.assertEqual(command('{python}', str(script))['verification'], 'host_handshake_required')
+            self.assertEqual(registry.entry_readiness(entry),
+                             {'ready': 'unknown', 'blocker': 'host_handshake_required'})
+
+    def test_media_prerequisites_filter_tools_without_hiding_local_subsets(self):
+        module = load_module('gateway_media_readiness', UI_DIR / 'mcp-servers/gateway.py')
+        with configuration(), patch.object(module.shutil, 'which', lambda name: None):
+            self.assertFalse(api.server_state('ffmpeg-mcp')['visible'])
+            for server, tool in (('ffmpeg-mcp', 'probe'), ('ffmpeg-mcp', 'cut'),
+                                 ('vision-mcp', 'ocr'), ('video-mcp', 'render')):
+                self.assertFalse(module.tool_available(server, tool, {}))
+            self.assertTrue(module.tool_available('vision-mcp', 'compare', {}))
+            self.assertTrue(module.tool_available('video-mcp', 'timeline', {}))
+        with configuration(), patch.object(module.shutil, 'which',
+                                           lambda name: name if name == 'ffprobe' else None):
+            self.assertTrue(api.server_state('ffmpeg-mcp')['visible'])
+            self.assertTrue(module.tool_available('ffmpeg-mcp', 'probe', {}))
+            self.assertFalse(module.tool_available('ffmpeg-mcp', 'cut', {}))
+
     def test_invalid_embedding_backend_cannot_trigger_network(self):
         module = load_module(
             "api_embeddings_fixture", UI_DIR / "mcp-servers/embeddings-mcp/server.py"
@@ -355,6 +391,12 @@ class GatewayTests(unittest.TestCase):
                 self.assertIn("fixture_echo", gateway.tools(api.read_config()[0]))
                 result = await gateway.call_tool("fixture_echo", {})
                 self.assertFalse(result.isError)
+                # Cached tools become unavailable as soon as the local
+                # command changes, even before the watcher sees the edit.
+                edit(path, lambda d: d["mcp"]["fixture-mcp"]["command"].append("fixture-argument"))
+                self.assertNotIn("fixture_echo", gateway.tools(api.read_config()[0]))
+                self.assertTrue((await gateway.call_tool("fixture_echo", {})).isError)
+                edit(path, lambda d: d["mcp"]["fixture-mcp"]["command"].pop())
                 pending = asyncio.create_task(gateway.call_tool("fixture_slow", {}))
                 async with asyncio.timeout(5):
                     while not running.exists():

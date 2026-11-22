@@ -104,7 +104,7 @@ class AggregationTests(TaskObserverTestCase):
     """Root-SKILL.md source aggregation (R301-R304 stay intact)."""
 
     def test_index_contains_task_observer_exactly_once(self):
-        index = json.loads((UI_DIR / "skills/all-skills.json").read_text())
+        index = json.loads((UI_DIR / "skills/all-skills.json").read_text(encoding="utf-8"))
         names = [s["name"] for s in index["skills"]]
         self.assertEqual(names.count("task-observer"), 1)
         entry = next(s for s in index["skills"] if s["name"] == "task-observer")

@@ -61,6 +61,7 @@ class LinkSkillsTests(unittest.TestCase):
             "systematic-debugging", "test-driven-development",
             "using-git-worktrees", "using-superpowers",
             "verification-before-completion", "writing-plans", "writing-skills",
+            "git-workflow",
         }
         for target in (claude, agents):
             self.assertEqual({path.name for path in target.iterdir()}, expected)

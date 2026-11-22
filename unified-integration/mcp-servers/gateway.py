@@ -568,6 +568,11 @@ class Gateway:
                     return failed("Credentials changed; MCP reconnect is in progress.")
                 if not worker.task or worker.task.done():
                     return failed("External MCP is unavailable.")
+                # Re-check tool availability with fresh config to prevent
+                # stale schema bypass (credential rotation during queue wait)
+                entry = self.tools(config).get(name)
+                if not entry:
+                    return failed("Tool is unavailable in the current ui.api.json configuration.")
                 response = await worker.call(original, arguments)
 
             return types.CallToolResult.model_validate(

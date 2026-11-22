@@ -16,6 +16,14 @@ def state_root() -> Path:
     path = Path(os.environ.get('AGENT_ENHANCEMENTS_STATE_DIR', ROOT / '.agentenhancements')).expanduser()
     if not path.is_absolute():
         raise ValueError('AE state directory must be absolute')
+    # Validate override is not a symlink to prevent state directory escape
+    if os.environ.get('AGENT_ENHANCEMENTS_STATE_DIR'):
+        try:
+            if path.is_symlink():
+                raise OSError('AGENT_ENHANCEMENTS_STATE_DIR override must not be a symlink')
+        except OSError:
+            # On some platforms is_symlink may fail; treat as validation failure
+            raise
     return path
 
 

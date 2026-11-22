@@ -563,15 +563,16 @@ EOF
                 esac
 
                 # Sanitize skill name: it is used as a directory name, so it
-                # must not contain path separators (prevents escaping the
-                # target directory on copy).
+                # must not contain path separators, null bytes, control chars,
+                # or Unicode tricks (prevents escaping the target directory).
                 skill_name="${skill_name//\//-}"
-
-                # Reject path-relative names: "." and ".." resolve outside
-                # the category directory and would misplace the copy
-                # ("by-category/general/.." is the by-category tree root).
+                skill_name="${skill_name//\\/-}"
+                skill_name="${skill_name//$'\0'/}"
+                # Strip control characters (ASCII < 32, DEL = 127)
+                skill_name=$(printf '%s' "$skill_name" | tr -d '\000-\037\177')
+                # Reject names that normalize to empty or are path-relative
                 if [ -z "$skill_name" ] || [ "$skill_name" = "." ] || [ "$skill_name" = ".." ]; then
-                    log_warn "Skipping skill with invalid name '${skill_name}' in $skill_dir"
+                    log_warn "Skipping skill with invalid name in $skill_dir"
                     continue
                 fi
 
@@ -1162,10 +1163,16 @@ def init_db():
     try:
         if not stat.S_ISREG(os.fstat(descriptor).st_mode):
             raise OSError("Memory database must be a regular file")
-        os.fchmod(descriptor, 0o600)
-    finally:
+        # Windows does not have os.fchmod; chmod the path after close
         os.close(descriptor)
-    with sqlite3.connect(DB_PATH) as conn:
+        try:
+            os.chmod(DB_PATH, 0o600)
+        except OSError:
+            pass
+    finally:
+        pass
+    conn = sqlite3.connect(DB_PATH)
+    try:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS memories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1185,6 +1192,9 @@ def init_db():
         conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_project ON memories(agent, project)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_type ON memories(memory_type)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_expires ON memories(expires_at)")
+        conn.commit()
+    finally:
+        conn.close()
 
 def save_memory(key, value, memory_type="session_context", project=None, metadata=None, ttl_days=None):
     if project is None:
@@ -1200,18 +1210,23 @@ def save_memory(key, value, memory_type="session_context", project=None, metadat
 
     meta_json = json.dumps(metadata) if metadata else None
 
-    with sqlite3.connect(DB_PATH) as conn:
+    conn = sqlite3.connect(DB_PATH)
+    try:
         conn.execute("""
             INSERT OR REPLACE INTO memories
             (agent, project, memory_type, key, value, metadata, updated_at, expires_at)
             VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?)
         """, (AGENT, project, memory_type, key, value, meta_json, expires_at))
+        conn.commit()
+    finally:
+        conn.close()
 
 def load_memory(key, memory_type="session_context", project=None):
     if project is None:
         project = os.path.realpath(os.getcwd())
 
-    with sqlite3.connect(DB_PATH) as conn:
+    conn = sqlite3.connect(DB_PATH)
+    try:
         cursor = conn.execute("""
             SELECT value FROM memories
             WHERE agent=? AND project=? AND memory_type=? AND key=?
@@ -1220,12 +1235,15 @@ def load_memory(key, memory_type="session_context", project=None):
         """, (AGENT, project, memory_type, key))
         row = cursor.fetchone()
         return row[0] if row else None
+    finally:
+        conn.close()
 
 def list_memories(memory_type=None, project=None, limit=20):
     if project is None:
         project = os.path.realpath(os.getcwd())
 
-    with sqlite3.connect(DB_PATH) as conn:
+    conn = sqlite3.connect(DB_PATH)
+    try:
         if memory_type:
             cursor = conn.execute("""
                 SELECT memory_type, key, value, metadata, updated_at
@@ -1253,25 +1271,35 @@ def list_memories(memory_type=None, project=None, limit=20):
             }
             for row in cursor.fetchall()
         ]
+    finally:
+        conn.close()
 
 def delete_memory(key, memory_type="session_context", project=None):
     if project is None:
         project = os.path.realpath(os.getcwd())
 
-    with sqlite3.connect(DB_PATH) as conn:
+    conn = sqlite3.connect(DB_PATH)
+    try:
         cursor = conn.execute("""
             DELETE FROM memories
             WHERE agent=? AND project=? AND memory_type=? AND key=?
         """, (AGENT, project, memory_type, key))
+        conn.commit()
         return cursor.rowcount > 0
+    finally:
+        conn.close()
 
 def cleanup_expired():
-    with sqlite3.connect(DB_PATH) as conn:
+    conn = sqlite3.connect(DB_PATH)
+    try:
         cursor = conn.execute("""
             DELETE FROM memories
             WHERE expires_at IS NOT NULL AND expires_at < datetime('now')
         """)
+        conn.commit()
         return cursor.rowcount
+    finally:
+        conn.close()
 
 def main():
     if len(sys.argv) < 2:
@@ -1297,7 +1325,7 @@ def main():
         project = sys.argv[5] if len(sys.argv) > 5 else None
         ttl = int(sys.argv[6]) if len(sys.argv) > 6 else None
         save_memory(key, value, mem_type, project, ttl_days=ttl)
-        print(f"Saved: {key} ({mem_type})")
+        print("Saved: %s (%s)" % (key, mem_type))
 
     elif command == "load":
         if len(sys.argv) < 3:
@@ -1310,7 +1338,7 @@ def main():
         if value:
             print(value)
         else:
-            print(f"Memory not found: {key}", file=sys.stderr)
+            print("Memory not found: %s" % key, file=sys.stderr)
             sys.exit(1)
 
     elif command == "list":
@@ -1319,7 +1347,7 @@ def main():
         limit = int(sys.argv[4]) if len(sys.argv) > 4 else 20
         memories = list_memories(mem_type, project, limit)
         for m in memories:
-            print(f"[{m['type']}] {m['key']}: {m['value']} (updated: {m['updated']})")
+            print("[%s] %s: %s (updated: %s)" % (m['type'], m['key'], m['value'], m['updated']))
 
     elif command == "delete":
         if len(sys.argv) < 3:
@@ -1329,17 +1357,17 @@ def main():
         mem_type = sys.argv[3] if len(sys.argv) > 3 else "session_context"
         project = sys.argv[4] if len(sys.argv) > 4 else None
         if delete_memory(key, mem_type, project):
-            print(f"Deleted: {key}")
+            print("Deleted: %s" % key)
         else:
-            print(f"Not found: {key}")
+            print("Not found: %s" % key)
             sys.exit(1)
 
     elif command == "cleanup":
         count = cleanup_expired()
-        print(f"Cleaned up {count} expired memories")
+        print("Cleaned up %d expired memories" % count)
 
     else:
-        print(f"Unknown command: {command}")
+        print("Unknown command: %s" % command)
         sys.exit(1)
 
 if __name__ == "__main__":
@@ -1628,10 +1656,13 @@ def merge_configs(base, update):
 merge_configs(existing, enhancement)
 # Preserve comments/quoting and avoid a backup when only serialization
 # would change. Canonical YAML also distinguishes bool/int value changes.
-if yaml.safe_dump(existing, sort_keys=True) == before:
+# Use sort_keys=True consistently for both comparison and output to
+# ensure idempotence (prevents config churn on re-runs).
+after = yaml.safe_dump(existing, sort_keys=True)
+if after == before:
     print(original, end='')
 else:
-    print(yaml.dump(existing, default_flow_style=False, sort_keys=False))
+    print(after)
 "); then
         log_error "Merge failed for $target_file (existing file not valid YAML?) - original kept, skipping this agent"
         return 0
@@ -2061,7 +2092,7 @@ class SkillsLoader:
         """Load the aggregated skills index"""
         index_file = SKILLS_DIR / "all-skills.json"
         if index_file.exists():
-            with open(index_file) as f:
+            with open(index_file, encoding="utf-8") as f:
                 return json.load(f)
         return {"skills": []}
 
@@ -2075,8 +2106,18 @@ class SkillsLoader:
             # or say "Agent Skills". Those are not incompatible agent names.
             if compatible and self.agent not in compatible:
                 continue
+            # Fix tags to ensure they're strings
+            tags = skill.get("tags") or []
+            if isinstance(tags, list):
+                tags = [str(t).lower() for t in tags]
+            elif isinstance(tags, str):
+                tags = [t.strip().lower() for t in tags.split(",") if t.strip()]
+            else:
+                tags = []
+            skill_fixed = dict(skill)
+            skill_fixed["tags"] = tags
             candidates.append({
-                **skill, "type": "skill", "_skill": skill,
+                **skill_fixed, "type": "skill", "_skill": skill_fixed,
                 "natively_linked_by_default": skill.get("source") in DEFAULT_NATIVE_SOURCES,
             })
         # Return the original skill records: ranking metadata stays internal.
@@ -2085,8 +2126,21 @@ class SkillsLoader:
 
     def skill_path(self, skill_name: str) -> Optional[Path]:
         """Resolve either supported layout while preventing path traversal."""
-        if not skill_name or Path(skill_name).name != skill_name or skill_name in {".", ".."}:
+        if not skill_name:
             return None
+        # Reject path separators, null bytes, control chars, and relative paths
+        if (Path(skill_name).name != skill_name or
+            skill_name in {".", ".."} or
+            "/" in skill_name or
+            "\\" in skill_name or
+            "\0" in skill_name or
+            any(ord(c) < 32 or ord(c) == 127 for c in skill_name)):
+            return None
+        # On case-insensitive filesystems, normalize to prevent case-folding attacks
+        try:
+            skill_name = skill_name.casefold()
+        except AttributeError:
+            pass
         root = SKILLS_DIR.resolve()
         categories = SKILLS_DIR / "by-category"
         directories = sorted(categories.iterdir()) if categories.is_dir() else []
@@ -2198,10 +2252,18 @@ class AgentMemory:
         try:
             if not stat.S_ISREG(os.fstat(descriptor).st_mode):
                 raise OSError("memory database must be a regular file")
-            os.fchmod(descriptor, 0o600)
+            # Windows doesn't have os.fchmod; chmod the path after close
         finally:
             os.close(descriptor)
-        with sqlite3.connect(DB_PATH) as conn:
+        # Ensure file permissions are restrictive (Windows: chmod on path)
+        try:
+            os.chmod(DB_PATH, 0o600)
+        except OSError:
+            pass
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            # Enable WAL mode for better concurrent access on Windows
+            conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS memories (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -2220,7 +2282,14 @@ class AgentMemory:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_project ON memories(agent, project)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_type ON memories(memory_type)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_expires ON memories(expires_at)")
-        DB_PATH.chmod(0o600)
+            conn.commit()
+        finally:
+            conn.close()
+        # Ensure file permissions are restrictive (Windows: chmod on path)
+        try:
+            DB_PATH.chmod(0o600)
+        except OSError:
+            pass
 
     def save(self, key: str, value: str, memory_type: str = "session_context",
              metadata: Optional[Dict] = None, ttl_days: Optional[int] = None) -> None:
@@ -2235,16 +2304,21 @@ class AgentMemory:
 
         meta_json = json.dumps(metadata) if metadata else None
 
-        with sqlite3.connect(DB_PATH) as conn:
+        conn = sqlite3.connect(DB_PATH)
+        try:
             conn.execute("""
                 INSERT OR REPLACE INTO memories
                 (agent, project, memory_type, key, value, metadata, updated_at, expires_at)
                 VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?)
             """, (self.agent, self.project, memory_type, key, value, meta_json, expires_at))
+            conn.commit()
+        finally:
+            conn.close()
 
     def load(self, key: str, memory_type: str = "session_context") -> Optional[str]:
         """Load a memory"""
-        with sqlite3.connect(DB_PATH) as conn:
+        conn = sqlite3.connect(DB_PATH)
+        try:
             cursor = conn.execute("""
                 SELECT value FROM memories
                 WHERE agent=? AND project=? AND memory_type=? AND key=?
@@ -2253,10 +2327,13 @@ class AgentMemory:
             """, (self.agent, self.project, memory_type, key))
             row = cursor.fetchone()
             return row[0] if row else None
+        finally:
+            conn.close()
 
     def list(self, memory_type: Optional[str] = None, limit: int = 20) -> List[Dict]:
         """List memories"""
-        with sqlite3.connect(DB_PATH) as conn:
+        conn = sqlite3.connect(DB_PATH)
+        try:
             if memory_type:
                 cursor = conn.execute("""
                     SELECT memory_type, key, value, metadata, updated_at
@@ -2284,24 +2361,34 @@ class AgentMemory:
                 }
                 for row in cursor.fetchall()
             ]
+        finally:
+            conn.close()
 
     def delete(self, key: str, memory_type: str = "session_context") -> bool:
         """Delete a memory"""
-        with sqlite3.connect(DB_PATH) as conn:
+        conn = sqlite3.connect(DB_PATH)
+        try:
             cursor = conn.execute("""
                 DELETE FROM memories
                 WHERE agent=? AND project=? AND memory_type=? AND key=?
             """, (self.agent, self.project, memory_type, key))
+            conn.commit()
             return cursor.rowcount > 0
+        finally:
+            conn.close()
 
     def cleanup_expired(self) -> int:
         """Remove expired memories"""
-        with sqlite3.connect(DB_PATH) as conn:
+        conn = sqlite3.connect(DB_PATH)
+        try:
             cursor = conn.execute("""
                 DELETE FROM memories
                 WHERE expires_at IS NOT NULL AND expires_at < datetime('now')
             """)
+            conn.commit()
             return cursor.rowcount
+        finally:
+            conn.close()
 
 
 def main():

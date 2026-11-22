@@ -67,8 +67,21 @@ class SkillsLoader:
 
     def skill_path(self, skill_name: str) -> Optional[Path]:
         """Resolve either supported layout while preventing path traversal."""
-        if not skill_name or Path(skill_name).name != skill_name or skill_name in {".", ".."}:
+        if not skill_name:
             return None
+        # Reject path separators, null bytes, control chars, and relative paths
+        if (Path(skill_name).name != skill_name or
+            skill_name in {".", ".."} or
+            "/" in skill_name or
+            "\\" in skill_name or
+            "\0" in skill_name or
+            any(ord(c) < 32 or ord(c) == 127 for c in skill_name)):
+            return None
+        # On case-insensitive filesystems, normalize to prevent case-folding attacks
+        try:
+            skill_name = skill_name.casefold()
+        except AttributeError:
+            pass
         root = SKILLS_DIR.resolve()
         categories = SKILLS_DIR / "by-category"
         directories = sorted(categories.iterdir()) if categories.is_dir() else []

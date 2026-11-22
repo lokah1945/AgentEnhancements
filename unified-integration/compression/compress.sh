@@ -10,5 +10,9 @@ case "$MODE" in
     auto|code|logs|json|markdown|generic) ;;
     *) printf 'Unknown mode: %s\n' "$MODE" >&2; exit 2 ;;
 esac
-if [ "$INPUT" = "-" ]; then INPUT=/dev/stdin; fi
-exec python3 "$UNIFIED_DIR/scripts/compress.py" "$MODE" "$AGENT" < "$INPUT"
+# On Windows /dev/stdin may not exist; use cat to pipe stdin instead
+if [ "$INPUT" = "-" ]; then
+    exec python3 "$UNIFIED_DIR/scripts/compress.py" "$MODE" "$AGENT"
+else
+    exec python3 "$UNIFIED_DIR/scripts/compress.py" "$MODE" "$AGENT" < "$INPUT"
+fi

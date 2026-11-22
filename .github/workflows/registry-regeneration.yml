@@ -77,7 +77,9 @@ jobs:
       - name: Build capability registry
         run: |
           # Refresh the skills index from vendored sources before building its consumers.
-          bash unified-integration/setup.sh >/dev/null
+          if ! bash unified-integration/setup.sh; then
+            echo "::error::setup.sh failed"; exit 1;
+          fi
           python3 unified-integration/scripts/registry.py build
           echo "agent-registry.json and all-skills.json regenerated"
 
@@ -87,12 +89,16 @@ jobs:
           # family counts from the agent-registry.json snapshot on disk, so
           # the old order left the L0 map one stage behind (audit 2026-11-19
           # §15; setup.sh already builds the registry first).
-          python3 unified-integration/scripts/build-library-map.py
+          if ! python3 unified-integration/scripts/build-library-map.py; then
+            echo "::error::build-library-map.py failed"; exit 1;
+          fi
           echo "library-map.json regenerated"
 
       - name: Validate catalog
         run: |
-          python3 unified-integration/scripts/catalog-validate.py
+          if ! python3 unified-integration/scripts/catalog-validate.py; then
+            echo "::error::catalog-validate.py failed"; exit 1;
+          fi
 
       - name: Verify generated capability counts
         run: python3 scripts/generate_capability_counts.py --check

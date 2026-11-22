@@ -49,7 +49,7 @@ class DeterministicIndexTests(unittest.TestCase):
         self.assertIn("skills.sort(key=lambda s: s['name'])", self.src)
 
     def test_committed_index_is_sorted(self):
-        index = json.loads((UI_DIR / "skills" / "all-skills.json").read_text())
+        index = json.loads((UI_DIR / "skills" / "all-skills.json").read_text(encoding="utf-8"))
         names = [s["name"] for s in index["skills"]]
         self.assertEqual(names, sorted(names),
                          "committed all-skills.json must be sorted by name")
@@ -128,7 +128,7 @@ class DocumentationConsistencyTests(unittest.TestCase):
 
     def test_readme_skill_count_matches_index(self):
         readme = (REPO_DIR / "README.md").read_text()
-        index = json.loads((UI_DIR / "skills" / "all-skills.json").read_text())
+        index = json.loads((UI_DIR / "skills" / "all-skills.json").read_text(encoding="utf-8"))
         m = re.search(r"\*{2}([\d,]+) specialized skills/agents\*{2}", readme)
         self.assertIsNotNone(m, "README must state the index size")
         stated = int(m.group(1).replace(",", ""))
@@ -141,8 +141,8 @@ class DocumentationConsistencyTests(unittest.TestCase):
         self.assertRegex(prompt, r"3,000\+ curated skills")
 
     def test_registry_stats_match_index(self):
-        registry = json.loads((UI_DIR / "skills" / "agent-registry.json").read_text())
-        index = json.loads((UI_DIR / "skills" / "all-skills.json").read_text())
+        registry = json.loads((UI_DIR / "skills" / "agent-registry.json").read_text(encoding="utf-8"))
+        index = json.loads((UI_DIR / "skills" / "all-skills.json").read_text(encoding="utf-8"))
         by_type = registry["stats"]["by_type"]
         self.assertEqual(by_type.get("skill"), index["total_skills"])
         self.assertEqual(registry["stats"]["total"],

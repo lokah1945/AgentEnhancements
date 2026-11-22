@@ -48,30 +48,31 @@ def ready(directory: Path, identity: dict[str, str]) -> bool:
         return False
 
 
-def install(directory: Path, identity: dict[str, str]) -> None:
+def install(directory: Path, identity: dict[str, str], lock_bytes: bytes) -> None:
     """Install hash-verified wheels, check dependencies and exercise stdio."""
     python = str(directory / "bin/python")
     uv = shutil.which("uv")
-    options = ["--require-hashes", "--only-binary", ":all:", "-r", str(REQUIREMENTS)]
-    if uv:
-        commands = (
-            [uv, "venv", "--python", sys.executable, str(directory)],
-            [uv, "pip", "install", "--python", python, *options],
-            [uv, "pip", "check", "--python", python],
-        )
-    else:
-        pip = [python, "-m", "pip", "--disable-pip-version-check"]
-        commands = (
-            [sys.executable, "-m", "venv", str(directory)],
-            [*pip, "install", *options],
-            [*pip, "check"],
-        )
-    for command in commands:
-        subprocess.run(command, check=True, stdout=sys.stderr)
+    with tempfile.NamedTemporaryFile(dir=directory.parent, suffix=".txt") as lockfile:
+        lockfile.write(lock_bytes)
+        lockfile.flush()
+        options = ["--require-hashes", "--only-binary", ":all:", "-r", lockfile.name]
+        if uv:
+            commands = (
+                [uv, "venv", "--python", sys.executable, str(directory)],
+                [uv, "pip", "install", "--python", python, *options],
+                [uv, "pip", "check", "--python", python],
+            )
+        else:
+            pip = [python, "-m", "pip", "--disable-pip-version-check"]
+            commands = (
+                [sys.executable, "-m", "venv", str(directory)],
+                [*pip, "install", *options],
+                [*pip, "check"],
+            )
+        for command in commands:
+            subprocess.run(command, check=True, stdout=sys.stderr)
     subprocess.run([python, str(PROTOCOL_CHECK)],
                    check=True, stdout=sys.stderr, timeout=60)
-    if hashlib.sha256(REQUIREMENTS.read_bytes()).hexdigest() != identity["requirements_sha256"]:
-        raise ValueError("Requirements changed while the environment was being prepared")
     record = {**identity, "path": str(directory), "packages": packages(directory)}
     (directory / RECORD).write_text(json.dumps(record, indent=2, sort_keys=True) + "\n",
                                     encoding="utf-8")
@@ -112,24 +113,33 @@ def prepare() -> Path:
     root = runtime_root()
     active = root / "venv"
     generations = root / "environments"
-    identity = {"requirements_sha256": hashlib.sha256(REQUIREMENTS.read_bytes()).hexdigest(),
-                "python": sys.version.split()[0], "platform": sysconfig.get_platform()}
     descriptor = os.open(root / ".prepare.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     with os.fdopen(descriptor, "r+") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
+        lock_bytes = REQUIREMENTS.read_bytes()
+        identity = {"requirements_sha256": hashlib.sha256(lock_bytes).hexdigest(),
+                    "python": sys.version.split()[0], "platform": sysconfig.get_platform()}
+
+        def verify_lock() -> None:
+            if REQUIREMENTS.read_bytes() != lock_bytes:
+                raise ValueError("Requirements changed while the environment was being prepared")
+
         current = managed_target(active, generations)
         if ready(current, identity):
+            verify_lock()
             return active / "bin/python"
         generations.mkdir(mode=0o700, exist_ok=True)
         for candidate in sorted(generations.glob("venv-*")):
             if candidate.is_dir() and not candidate.is_symlink() and ready(candidate, identity):
+                verify_lock()
                 activate(active, candidate)
                 return active / "bin/python"
 
         candidate = Path(tempfile.mkdtemp(prefix="venv-", dir=generations))
         try:
             print("[setup-mcp] Preparing locked Python runtime", file=sys.stderr)
-            install(candidate, identity)
+            install(candidate, identity, lock_bytes)
+            verify_lock()
             activate(active, candidate)
         except BaseException:
             if not active.is_symlink() or root / os.readlink(active) != candidate:

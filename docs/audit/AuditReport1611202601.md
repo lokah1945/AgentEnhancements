@@ -1,5 +1,7 @@
 # AgentEnhancements Full Audit Report — 2026-11-16
 
+> Historical record, superseded by [docs/audit/ENTERPRISE_RELEASE_2026-11-23.md](ENTERPRISE_RELEASE_2026-11-23.md). Readiness claims here are not current.
+
 > **Audit Date:** 2026-11-16  
 > **Auditor:** OpenCode + AgentEnhancements Integration  
 > **Scope:** Complete project structure, MCP servers, skill registry, plugin catalog, native integrations, memory, compression, task observer, OpenCode plugin  

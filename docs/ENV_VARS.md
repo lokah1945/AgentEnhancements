@@ -36,8 +36,17 @@ history immediately.
     and vision-mcp images follow the same roots; vision-mcp additionally
     accepts only PNG, JPEG, GIF, BMP, TIFF and WebP files.
 
+- **Var:** `YOU_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`,
+  `FIRECRAWL_API_KEY`, `NEWSAPI_KEY`, `SERPER_API_KEY` (any one)
+  - **Server:** search-mcp
+  - **Required:** at least one, set in `ui.api.json` `api_keys`
+  - **Purpose:** credentialed web/news search (`search_web`). search-mcp is
+    hidden until at least one of these holds a key
+    (`api_config.BUILTIN_ANY_OF`). Keyless arXiv and Google News RSS stay
+    available.
+
 The remaining in-house servers (task-router, graphrag, arxiv,
-google-news, video, style) need **no** environment variables.
+google-news, style) need **no** environment variables.
 
 **task-router-mcp** runs arbitrary bash/python payloads with your user
 privileges. It is **hidden by default** and must be enabled explicitly in
@@ -149,6 +158,13 @@ privileges. It is **hidden by default** and must be enabled explicitly in
 - **Variable:** `AGENT_ENHANCEMENTS_BUILD_HEADROOM`
   - **Purpose:** Build headroom by default
   - **Default:** `1` (set to `0` to skip)
+
+- **Variable:** `INSTALL_SYSTEM_LAUNCHER`
+  - **Purpose:** Setup-time only. `1` makes `setup.sh` symlink
+    `/usr/local/bin/agent-enhanced` to `unified-integration/launch-agent.sh`;
+    if the directory is not writable, setup warns and you use the repo-local
+    launcher instead
+  - **Default:** `0`
 
 - **Variable:** `AGENT_SKILLS_NATIVE_TARGETS`
   - **Purpose:** Skill link targets (colon-separated)

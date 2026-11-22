@@ -7,6 +7,8 @@ audience: maintainers
 
 ## Final production readiness audit and remediation (2026-11-20 to 2026-11-22)
 
+> Historical record, superseded by [docs/audit/ENTERPRISE_RELEASE_2026-11-23.md](ENTERPRISE_RELEASE_2026-11-23.md). Readiness claims here are not current.
+
 Agent: Claude Code (Claude Opus 5.5) | Session:
 `fdc7d37d-642e-4ec9-96f6-a1ab893d503a` | Branch:
 `fix/final-audit-remediation` | Base: `master@fc893cf4`.

@@ -1,5 +1,7 @@
 # agent_browser MCP Server - Comprehensive Audit Report
 
+> Historical record, superseded by [docs/audit/ENTERPRISE_RELEASE_2026-11-23.md](../../docs/audit/ENTERPRISE_RELEASE_2026-11-23.md). Readiness claims here are not current.
+
 **Date:** 2026-11-19  
 **Version:** 1.0.0  
 **Auditor:** Systematic Debugging Analysis

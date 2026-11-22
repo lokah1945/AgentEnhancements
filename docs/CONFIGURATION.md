@@ -138,9 +138,12 @@ the `preflight` section of the same private `ui.api.json`:
               "api_key_ref": "PREFLIGHT_API_KEY"}
 ```
 
-`0` (or a missing section) keeps the default discovery cards. `1` lets a
-host adapter supply a native selection (Claude Code and Codex only); without
-that handoff the turn stays on the default path. `2` uses `endpoint` (HTTPS
+`0` (or a missing section) keeps the default discovery cards. `1` is
+reserved for a host-native selection adapter; none ships today (Claude Code
+and Codex offer no pre-inference selection surface; OpenCode and Hermes are
+unsupported), so a configured Mode 1 runs Mode 0 on every prompt and
+`doctor.py`/status report requested 1, effective 0
+(`mode1_native_selection_unavailable`). `2` uses `endpoint` (HTTPS
 base URL), `sdk` (`openai` or `anthropic`), `model` and the key held in
 `api_keys[api_key_ref]` of this file. On modes 0/1 the Mode 2 fields are kept
 but unused. No environment variable, keyring, key file or `model.json` is a
@@ -181,6 +184,13 @@ protocols, deadlines and verification.
   - **Purpose:** Optional Rust build during setup/update
   - **Default:** `1`; set `0` to skip the build
 
+- **Variable:** `INSTALL_SYSTEM_LAUNCHER`
+  - **Purpose:** Setup-time only. `1` makes `setup.sh` symlink
+    `/usr/local/bin/agent-enhanced` to `unified-integration/launch-agent.sh`.
+    If that directory is not writable, setup warns and you use the
+    repo-local launcher instead.
+  - **Default:** `0` (no system-wide link)
+
 - **Variable:** `AGENT_ENHANCEMENTS_API_FILE`
   - **Purpose:** Optional private API file override for isolated
     tests/installations
@@ -198,9 +208,8 @@ protocols, deadlines and verification.
   - **Purpose:** OpenCode configuration parent
   - **Default:** `~/.config`
 
-- **Variable:** `XDG_DATA_HOME`
-  - **Purpose:** Isolated Python environment parent
-  - **Default:** `~/.local/share`
+The Python runtime always lives at
+`<checkout>/.agentenhancements/runtime/venv`; XDG data settings do not move it.
 
 - **Variable:** `HERMES_HOME`
   - **Purpose:** Hermes data root; selected profiles live below `profiles/`
@@ -408,9 +417,9 @@ requires rerunning setup; old managed paths are refreshed while personal
 plugins, credentials and approvals are preserved.
 
 `AGENT_ENHANCEMENTS_STATE_DIR` is an optional absolute override for isolated
-fixtures. Existing explicit memory/API/model-file overrides remain
-supported. The normal setup command rejects state, memory, API/model or headroom
-overrides outside the checkout. Isolated low-level fixture utilities keep
+fixtures. Existing explicit memory/API overrides remain supported
+(`AGENT_ENHANCEMENTS_MODEL_FILE` is retired, CONTRACT §8.2). The normal setup
+command rejects state, memory, API or headroom overrides outside the checkout. Isolated low-level fixture utilities keep
 their explicit override support.
 No global AE memory or model file is imported implicitly. Back up and
 review old state before a deliberate migration; setup does not move or

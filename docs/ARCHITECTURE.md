@@ -106,9 +106,10 @@ and skill-index schemas are unchanged.
    committed registry remains a fallback.
 4. **setup_memory** - writes `memory/config.yaml`, `init-memory.sh` and the
    per-agent memory hooks (Python, parameterized SQL + thin bash wrappers).
-5. **setup_compression** - locates headroom, optionally builds it when
-   `AGENT_ENHANCEMENTS_BUILD_HEADROOM=1`, and writes the standalone wrapper.
-   The default uses an existing binary or the Python fallback.
+5. **setup_compression** - locates headroom; when no release binary exists
+   and cargo is available it builds it by default
+   (`AGENT_ENHANCEMENTS_BUILD_HEADROOM=0` skips the build), otherwise it uses
+   the Python fallback, and writes the standalone wrapper.
 6. **create_agent_configs** - merges hooks/prompts into each detected
    agent's own config (`~/.claude/settings.json`, `~/.codex/AGENTS.md`,
    ...). The four native adapters preserve user hooks, MCP servers, providers

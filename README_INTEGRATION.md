@@ -246,13 +246,14 @@ AgentEnhancements/
 ├── unified-integration/                # installation pipeline
 │   ├── setup.sh                        # installer (9 agent CLIs)
 │   ├── update-skills.sh                # registry re-builder
-│   ├── mcp-servers/                    # 9 in-house MCP servers + installer
+│   ├── mcp-servers/                    # 10 in-house MCP servers + installer
 │ # template
 │   ├── scripts/setup-mcp.sh            # shared native MCP configuration
 │ # installer
 │   ├── skills/
 │   │   ├── all-skills.json             # 3,378 skills aggregated registry
-│   │   ├── agent-registry.json         # per-agent install mapping
+│   │   ├── agent-registry.json         # capability registry (skills +
+│   │   │                               # plugins + MCP + built-ins)
 │   │   ├── by-category/                # 10 functional categories
 │   │   └── by-agent/                   # per-agent file lists
 │   ├── prompts/                        # 10 system-prompt variants
@@ -260,7 +261,8 @@ AgentEnhancements/
 │   │   ├── claude-code-system-prompt.txt
 │   │   ├── codex-system-prompt.txt
 │   │   └── ... (7 more)
-│   ├── hooks/                          # 16 hook scripts
+│   ├── memory/hooks/                   # per-agent memory hooks (9 agents
+│   │                                   # × .py + .sh)
 │   ├── memory/, compression/           # cross-session state
 │   ├── scripts/                        # shared utility scripts
 │   └── tests/                          # integration regression modules
@@ -507,11 +509,17 @@ plugin guides form a separate catalog surface.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
-│ plugin-catalog/catalog.json + vendored upstream projects           │
-│   ↓ (scaffold_modular_skills.sh)                                   │
-│ skills/<cat>/<slug>/SKILL.md + manifest.json                       │
-│   ↓ (update-skills.sh, scans all SKILL.md)                         │
+│ plugin-catalog/catalog.json                                        │
+│   ↓ (scripts/scaffold_modular_skills.sh + generate_skills_index.py)│
+│ skills/<cat>/<slug>/SKILL.md + manifest.json  (guide tree; not     │
+│                                                aggregated)         │
+│                                                                    │
+│ vendored upstream skill bundles                                    │
+│   ↓ (setup.sh aggregate_skills(); update-skills.sh pulls the       │
+│      vendored repos, then runs setup.sh)                           │
 │ unified-integration/skills/all-skills.json  (3,378 skills)         │
+│   ↓ (registry.py build: + catalog, MCP manifest, built-ins)        │
+│ unified-integration/skills/agent-registry.json                     │
 │   ↓ (setup.sh, per-agent dispatch)                                 │
 │ ~/.claude/CLAUDE.md      ~/.codex/AGENTS.md      ~/.cursor/...     │
 │ ~/.config/opencode/...  ~/.gemini/...           ~/.kiro/...       │

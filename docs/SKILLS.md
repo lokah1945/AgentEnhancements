@@ -106,7 +106,7 @@ and task-observer (1).
 
 ```bash
 bash unified-integration/scripts/link-skills.sh                    # default set
-bash unified-integration/scripts/link-skills.sh --set superpowers  # one source
+bash unified-integration/scripts/link-skills.sh --set Superpowers  # one source (case-insensitive)
 bash unified-integration/scripts/link-skills.sh <skill-name>       # specific skills
 bash unified-integration/scripts/link-skills.sh --set all          # everything
 bash unified-integration/scripts/link-skills.sh --status

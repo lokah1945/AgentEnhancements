@@ -224,7 +224,7 @@ json5
 keyring
 ```
 - ⚠️ No version pinning in requirements.txt
-- ⚠️ No `pip-audit` / `safety` in CI
+- ✅ `pip-audit` gates the hashed lock in `.github/workflows/dependency-audit.yml` (C-03 resolved)
 - ⚠️ `keyring` optional but used for Mode 2 keys
 
 ---
@@ -304,11 +304,12 @@ DB_PATH.chmod(0o600)
 **Risk:** Violates least privilege; compromised agent = full tool access  
 **Fix:** Audit each agent, declare explicit tool lists
 
-### C-03: No SBOM / Dependency Scanning
+### C-03: No SBOM / Dependency Scanning — RESOLVED (dependency scanning)
 **Severity:** MEDIUM  
+**Status:** Resolved for vulnerability scanning; SBOM generation remains open (P1 item 4)  
 **Issue:** No automated supply chain monitoring for Python/Node/Rust deps  
 **Risk:** Vulnerable transitive dependencies undetected  
-**Fix:** Add `pip-audit`, `npm audit`, `cargo deny` to CI
+**Resolution:** `.github/workflows/dependency-audit.yml` runs a gating scan (no `|| true`) weekly, on demand, and whenever a scanned lock file changes: `pip-audit --require-hashes` on `unified-integration/requirements.txt`, `npm audit --audit-level=high` on `mcp-servers/agent_browser` and `ECC`, and `cargo audit` on `headroom/Cargo.lock` and `ECC/ecc2/Cargo.lock`. `.github/dependabot.yml` proposes weekly updates for GitHub Actions, the pip lock in `unified-integration/` and npm in `mcp-servers/agent_browser` (vendored upstream trees are scanned but excluded from Dependabot).
 
 ### C-04: Model.json Key Resolver — Keyring Optional
 **Severity:** LOW  
@@ -323,7 +324,7 @@ DB_PATH.chmod(0o600)
 ### P0 — Immediate
 1. **Refactor hooks.json** — Extract bootstrap to shared module, add integrity hashes
 2. **Least privilege agents** — Replace `tools: "*"` with explicit lists
-3. **Add supply chain scanning** — `pip-audit`, `npm audit`, `cargo deny` in CI
+3. ~~**Add supply chain scanning**~~ — done: `pip-audit`, `npm audit`, `cargo audit` in `.github/workflows/dependency-audit.yml` (C-03)
 
 ### P1 — Hardening
 4. **SBOM generation** — CycloneDX/SPDX for all components
@@ -332,7 +333,7 @@ DB_PATH.chmod(0o600)
 
 ### P2 — Monitoring
 7. **Secret scanning in CI** — `gitleaks`/`trufflehog` on every push
-8. **Dependency update bot** — Renovate/Dependabot for all ecosystems
+8. **Dependency update bot** — Dependabot covers GitHub Actions, pip and agent_browser npm (`.github/dependabot.yml`); vendored trees are intentionally excluded
 9. **Audit log for config changes** — Track ui.api.json, model.json modifications
 
 ### P3 — Architecture

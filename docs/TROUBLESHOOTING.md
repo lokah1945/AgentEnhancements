@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
 version: 1.6
-last_updated: 2026-11-20
+last_updated: 2026-11-23
 audience: users
 ---
 
@@ -25,6 +25,18 @@ Prompt files are copied from `system-prompts-and-models-of-ai-tools/`.
 Some agents (e.g. Copilot) have no prompt source in that collection - the
 warning is expected and the universal prompt is still written.
 
+**"Python >= 3.11 is required" during setup**
+The MCP runtime lock targets Python 3.11 or newer, and setup builds it with
+the `python3` on `PATH` (stock macOS `python3` is 3.9). Put a newer
+`python3` first on `PATH` and re-run setup.
+
+**Setup warns about ambiguous or unbalanced agent-enhancements markers**
+An instructions file (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md` or the Windsurf
+rule) has a missing, repeated or reversed
+`<!-- agent-enhancements:begin/end -->` marker. Setup leaves that file
+unchanged rather than guess which text to replace. Fix the markers by hand
+and re-run setup.
+
 **`cargo: command not found` during setup**
 Optional. headroom needs a Rust toolchain to build; without it the setup
 logs `cargo not found, will use fallback compression` and continues with
@@ -40,8 +52,10 @@ use a sandbox/approval bypass to solve this.
 **OpenCode plugin list is initially empty**
 Plugins initialize asynchronously. Wait for the location to finish warming and
 verify `agentenhancements` has `state.status: active` through `/api/plugin`.
-The adapter targets OpenCode 2 (verified with 2.2.5 and 2.3.0); setup refuses
-OpenCode 1 before changing its configuration. Upgrade the CLI first.
+The adapter targets OpenCode 2 (verified with 2.2.5 and 2.3.0). With an older
+`opencode` on `PATH`, setup warns and skips the OpenCode integration before
+changing any OpenCode file, then continues with the other hosts. Upgrade the
+CLI and re-run setup.
 
 **A selected agent is missing or a Hermes profile is not configured**
 Check the saved `host-selection.json` described in

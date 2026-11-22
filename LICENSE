@@ -25,8 +25,9 @@ NOTICE — scope of this license and vendored third-party content
 --------------------------------------------------------------------------------
 
 The MIT grant above covers the AgentEnhancements integration layer authored
-in this repository: unified-integration/, plugin-catalog/, scripts/, skills/
-generated index, docs/, and the repository-level configuration files.
+in this repository: unified-integration/, mcp-servers/ (the in-house
+agent_browser server), plugin-catalog/, scripts/, skills/ generated index,
+docs/, and the repository-level configuration files.
 
 The following directories are VENDORED COPIES of third-party projects and are
 distributed under their own upstream licenses, which take precedence over the

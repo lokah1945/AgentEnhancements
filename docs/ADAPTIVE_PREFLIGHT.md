@@ -276,7 +276,7 @@ host actions, not semantic relevance, inference quality or provider pricing.
 
 ### Verification
 
-- `tests/test_adaptive_preflight.py` - 73 regression tests: config
+- `tests/test_adaptive_preflight.py` - regression tests covering: config
   contract, Mode 0 parity (byte-identical renders, single memory
   effect, zero egress), selection parsing, exact-ID resolution,
   package rendering inside the 400-token slot, and a full Mode 2

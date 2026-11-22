@@ -55,8 +55,10 @@ Context: CONTRACT R101 violation
 Co-Authored-By: Claude Code <abc123>
 ```
 
-CI validates conventional subjects and warns when the `Agent:` trailer is
-missing (human commits are exempt).
+CI checks these conventions in advisory mode only: it emits a warning (it
+never fails the build) for a non-conventional subject or a missing `Agent:`
+trailer, so reviewers must still enforce R201/R206 (human commits are exempt
+from the trailer).
 
 ### Things that need human approval first (CONTRACT §4.2)
 

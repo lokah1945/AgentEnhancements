@@ -1,11 +1,56 @@
 ---
 title: Changelog
-version: 1.8
-last_updated: 2026-11-22
+version: 1.9
+last_updated: 2026-11-23
 audience: all
 ---
 
 ## Changelog
+
+## 2026-11-23 — End-to-end audit, branch consolidation and enterprise gates
+
+Consolidates every branch into `master`: `fix/enterprise-release-gates` and
+its duplicate `fix/production-certification` were fast-forwarded (nine
+credential-boundary, config-migration, discovery and OpenCode fixes plus the
+[enterprise release record](audit/ENTERPRISE_RELEASE_2026-11-23.md)).
+`origin/Windows` is superseded: it forked at PR #12 and its useful parts were
+ported by hand (relative root update scripts, gating dependency scanning,
+private smoke-test logs, honest host list in the universal prompt); the rest
+(stray `C/` trees, `*_v2` modules, the `setup.sh` rewrite) regressed master.
+Its history is kept by a no-content merge and the `archive/windows-2026-11`
+tag. A 69-finding audit (59 confirmed after adversarial verification) was
+fixed; each code fix carries a regression test (486 → 613 tests).
+
+- Security: Mode 2 preflight enforces one wall-clock deadline covering DNS,
+  TLS and slow headers; OpenAI-compatible base URLs must be HTTPS (loopback
+  HTTP allowed) before a bearer key is sent; memory recall redacts before
+  truncating; preflight `tool:` IDs bind only to exact `mcp:` entries.
+- Data safety: task-observer rollback picks only the exact skill's backup;
+  `merge_agents_md` leaves files with unbalanced markers untouched and keeps
+  symlinked instruction files; native config writes keep dotfile symlinks;
+  Hermes `config.yaml` comments are preserved; `link-skills.sh --migrate`
+  quotes stale link paths.
+- Installer: an OpenCode 1.x CLI on PATH skips only OpenCode instead of
+  aborting setup; multi-host installs continue past one failing host;
+  macOS `sed -i` and Python >= 3.11 are checked explicitly.
+- Discovery: `registry.py show --json` always emits valid JSON; bare-prefix
+  and typed lookups are exact; `--limit` and `AE_MAX_SKILL_CARDS` reject
+  malformed values; compress.py accepts non-UTF-8 input and preserves
+  output bytes; catalog-validate checks manifest coverage.
+- MCP servers: google-news honours non-English editions and returns errors
+  instead of raising on transport failures; graphrag corpus IDs no longer
+  collide; task-router reaps children and workspaces; ffmpeg thumbnail/concat
+  report missing output; video timeline rejects NaN/Infinity and null text
+  positions; vision detects the real image type; macOS `/tmp` media roots
+  resolve; the smoke test runs in an isolated state directory.
+- CI/ops: new gating `dependency-audit.yml` (pip-audit, npm audit, cargo
+  audit) and Dependabot for actions and lock files; timeouts on every job;
+  the commit-message check also covers pull requests; `cadence.sh` uses the
+  checkout-local observer workspace and builds the registry before the map.
+- Docs: corrected server counts, storage paths, Mode 1 support, launcher
+  opt-in, hook lists and requirements; historical reports that claimed
+  readiness now point to the current release record
+  ([audit index](audit/README.md)).
 
 ## 2026-11-22 — Final production readiness audit remediation
 

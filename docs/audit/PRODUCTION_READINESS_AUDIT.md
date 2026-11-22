@@ -7,6 +7,8 @@ audience: maintainers
 
 # Production Readiness Audit - AgentEnhancements
 
+> Historical record, superseded by [docs/audit/ENTERPRISE_RELEASE_2026-11-23.md](ENTERPRISE_RELEASE_2026-11-23.md). Readiness claims here are not current.
+
 | | |
 |---|---|
 | **Repository** | `https://github.com/lokah1945/AgentEnhancements` |

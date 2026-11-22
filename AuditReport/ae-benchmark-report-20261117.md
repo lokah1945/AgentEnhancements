@@ -1,5 +1,7 @@
 # AgentEnhancements (AE) — Comprehensive Benchmark & Validation Report
 
+> Historical record, superseded by [docs/audit/ENTERPRISE_RELEASE_2026-11-23.md](../docs/audit/ENTERPRISE_RELEASE_2026-11-23.md). Readiness claims here are not current.
+
 **Generated:** 2026-11-17  
 **Test Workspace:** `/tmp/ae-test-Ob3QJf` (isolated, no production impact)  
 **Source Repository:** `/root/project/AgentEnhancements`  

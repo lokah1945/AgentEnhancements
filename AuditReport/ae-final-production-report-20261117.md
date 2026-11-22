@@ -1,5 +1,7 @@
 # AgentEnhancements (AE) — Final Production Deployment Report
 
+> Historical record, superseded by [docs/audit/ENTERPRISE_RELEASE_2026-11-23.md](../docs/audit/ENTERPRISE_RELEASE_2026-11-23.md). Readiness claims here are not current.
+
 **Generated:** 2026-11-17  
 **Status:** ✅ DEPLOYED TO GITHUB (master branch)  
 **Git Commit:** `f71f53a5` - `feat: add search provider round-robin support`

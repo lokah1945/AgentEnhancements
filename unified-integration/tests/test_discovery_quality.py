@@ -35,6 +35,18 @@ class DiscoveryQualityTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.isolation.__exit__(None, None, None)
 
+    def test_absolute_file_paths_do_not_add_directory_keywords_to_intent(self):
+        prompt = "Inspect the local video {} and verify the container metadata before editing."
+
+        def ranked(file):
+            matches = self.registry.rank_entries(self.entries, prompt.format(file), 5)
+            return [entry["id"] for _, entry in matches]
+
+        expected = ranked("synthetic.mp4")
+        self.assertTrue(expected)
+        self.assertEqual(ranked("/tmp/preflight-release/security-audit/synthetic.mp4"), expected)
+        self.assertEqual(ranked(r"C:\preflight-release\security-audit\synthetic.mp4"), expected)
+
     def test_bilingual_fixture_has_resolving_acceptable_alternatives(self):
         cases = json.loads(FIXTURE.read_text(encoding="utf-8"))["cases"]
         self.assertEqual(len(cases), 50)

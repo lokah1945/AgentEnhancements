@@ -280,6 +280,9 @@ BUILT_IN_CAPABILITIES = [
 ]
 
 
+_DIRECTORY_PREFIX = re.compile(r"(?<![\w:/])(?:[A-Za-z]:[\\/]|(?:~|\.\.?)?/)(?:[\w.+@%-]+[\\/])+")
+
+
 def _tokenize(text: str) -> List[str]:
     """Lowercase word tokens for scoring, minus stop words."""
     normalized = re.sub(r"\bperangkat\s+lunak\b", "software", (text or "").casefold())
@@ -604,8 +607,11 @@ def rank_entries(entries: List[Dict[str, Any]], query: str,
     keyword matches stay below CARD_MIN_SCORE and are dropped, so a
     no-relevance query returns nothing instead of noise.
     """
+    # Directory names describe the checkout, not the task. Keep the filename
+    # and extension, which can still be useful signals for format skills.
+    query = _DIRECTORY_PREFIX.sub("", query or "")
     tokens = _tokenize(query)
-    query_lower = (query or "").lower()
+    query_lower = query.lower()
     if not tokens:
         return []
     weights = token_weights(tokens)
@@ -788,7 +794,7 @@ def _card(entry: Dict[str, Any], score: Optional[int] = None) -> Dict[str, Any]:
         "name": entry.get("name", ""),
         "summary": (entry.get("description") or "").strip()[:140],
         "ready": ready.get("ready", "unknown"),
-        "detail": f"registry.py show {entry.get('name') or entry.get('id')}",
+        "detail": f"registry.py show {entry.get('id') or entry.get('name')}",
     }
     if entry.get("risk") == "offensive":
         card["risk"] = "offensive - needs explicit authorization"
@@ -923,20 +929,20 @@ def cmd_search(query: str, entry_type: str = "", limit: int = 8,
 
 
 def cmd_map(task: str, limit: int = 8, as_json: bool = False) -> int:
-    """Map a task description to skills, plugins, MCP servers and built-ins."""
+    """Map a task to bounded groups of complete capability cards."""
     entries = usable_entries(load_all_entries())
     skills = [e for e in entries if e["type"] == "skill"]
     plugins = [e for e in entries if e["type"] == "plugin"]
     mcps = [e for e in entries if e["type"] == "mcp"]
     capabilities = [e for e in entries if e["type"] == "capability"]
 
-    ranked_skills = rank_entries(skills, task, min(limit, MAX_SEARCH_CARDS))
+    ranked_skills = rank_entries(skills, task, max(0, min(limit, MAX_SEARCH_CARDS)))
     ranked_plugins = rank_entries(plugins, task, 5)
     ranked_caps = rank_entries(capabilities, task, 4)
 
     matched_plugin_slugs = {e.get("slug") or e.get("name", "") for _, e in ranked_plugins}
     mcp_scored = []
-    weights_map = token_weights(_tokenize(task))
+    weights_map = token_weights(_tokenize(_DIRECTORY_PREFIX.sub("", task)))
     for entry in mcps:
         score = score_mcp(entry, weights_map)
         if any(slug in entry.get("for_plugins", []) for slug in matched_plugin_slugs):
@@ -947,7 +953,7 @@ def cmd_map(task: str, limit: int = 8, as_json: bool = False) -> int:
     ranked_mcp = mcp_scored[:5]
 
     plan = {
-        "task": task,
+        "task": clamp_to_budget(task, 100, label="task"),
         "skills": [_card(e, s) for s, e in ranked_skills],
         "plugins": [_card(e, s) for s, e in ranked_plugins],
         "mcp_servers": [_card(e, s) for s, e in ranked_mcp],
@@ -962,32 +968,30 @@ def cmd_map(task: str, limit: int = 8, as_json: bool = False) -> int:
         ],
     }
 
-    if as_json:
-        print(clamp_to_budget(json.dumps(plan, indent=2),
-                              MAX_SEARCH_PAGE * 2, label="registry map"))
-        return 0
+    sections = {"skills": "Skills", "plugins": "Catalog plugins",
+                "mcp_servers": "MCP servers"}
 
-    print("=== Capability Map ===")
-    print(f"Task: {task}")
-    print()
-    for section in ("skills", "plugins", "mcp_servers"):
-        labels = {"skills": "Skills", "plugins": "Catalog plugins",
-                  "mcp_servers": "MCP servers"}
-        print(f"{labels[section]} ({len(plan[section])}):")
-        if plan[section]:
-            for card in plan[section]:
-                print(_format_card(card))
-        else:
-            print("  (none matched)")
-        print()
-    print("Built-in capabilities (always available):")
-    for card in plan["always_available"]:
-        print(_format_card(card))
-    print()
-    print("Hints:")
-    for hint in plan["hints"]:
-        print(f"  - {hint}")
-    return 0
+    def render() -> str:
+        if as_json:
+            return json.dumps(plan, ensure_ascii=False, separators=(",", ":"))
+        lines = ["=== Capability Map ===", f"Task: {plan['task']}", ""]
+        for section, label in sections.items():
+            cards = plan[section]
+            lines.append(f"{label} ({len(cards)}):")
+            lines.extend([_format_card(card) for card in cards] or ["  (none matched)"])
+            lines.append("")
+        lines.append("Built-in capabilities (always available):")
+        lines.extend(_format_card(card) for card in plan["always_available"])
+        lines.extend(["", "Hints:", *(f"  - {hint}" for hint in plan["hints"])])
+        return "\n".join(lines)
+
+    while True:
+        output = render()
+        largest = max((*sections, "always_available"), key=lambda group: len(plan[group]))
+        if approx_tokens(output + "\n") <= MAX_SEARCH_PAGE * 2 or not plan[largest]:
+            print(output)
+            return 0
+        plan[largest].pop()
 
 
 def find_entry(identifier: str) -> Optional[Dict[str, Any]]:

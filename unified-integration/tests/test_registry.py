@@ -146,6 +146,25 @@ class RegistryCliTests(unittest.TestCase):
         self.assertIn("Capability Map", out)
         self.assertIn("pdf", out)
 
+    def test_long_map_queries_return_complete_bounded_cards(self):
+        budget = load_module("registry_budget_test", UI_DIR / "scripts/context_budget.py")
+
+        task = "api python refactor test " * 500
+        for flags in ((), ("--json",)):
+            with self.subTest(flags=flags):
+                code, out, err = self._run("map", task, *flags)
+                self.assertEqual(code, 0, err)
+                if flags:
+                    plan = json.loads(out)
+                    self.assertTrue(plan["always_available"])
+                    self.assertTrue(plan["skills"])
+                    for card in plan["skills"]:
+                        self.assertEqual(card["detail"], f"registry.py show {card['id']}")
+                else:
+                    self.assertIn("Built-in capabilities", out)
+                    self.assertIn("Hints:", out)
+                self.assertLessEqual(budget.approx_tokens(out), budget.MAX_SEARCH_PAGE * 2)
+
     def test_search_type_filter(self):
         code, out, err = self._run("search", "pdf", "--type", "capability")
         self.assertEqual(code, 0, err)

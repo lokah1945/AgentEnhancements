@@ -80,6 +80,13 @@ def external_fingerprint(settings: dict, config: dict) -> str:
     return hashlib.sha256(json.dumps([settings, env], sort_keys=True).encode()).hexdigest()
 
 
+def external_launch_current(name: str, fingerprint: str, config: dict) -> bool:
+    """Require both current readiness and a matching launch configuration."""
+    settings = config.get("mcp", {}).get(name)
+    return bool(settings and server_state(name, config)["visible"]
+                and external_fingerprint(settings, config) == fingerprint)
+
+
 def slim_schema(definition: types.Tool) -> types.Tool:
     """Drop wire-redundant weight from a tool definition.
 
@@ -160,6 +167,7 @@ class External:
         self.name = name
         self.settings = settings
         self.config = config
+        self.fingerprint = external_fingerprint(settings, config)
         self.tools: list[types.Tool] = []
         self.queue: asyncio.Queue = asyncio.Queue()
         self.ready = asyncio.Event()
@@ -183,6 +191,8 @@ class External:
             command=command[0], args=command[1:], env=env, cwd=str(ROOT)
         )
         try:
+            if not external_launch_current(self.name, self.fingerprint, read_config()[0]):
+                return
             with open(os.devnull, "w") as errors:
                 async with stdio_client(params, errlog=errors) as (reader, writer):
                     async with ClientSession(
@@ -204,6 +214,15 @@ class External:
                             if item is None:
                                 break
                             tool, arguments, result = item
+                            if result.done():
+                                continue
+                            if not external_launch_current(
+                                self.name, self.fingerprint, read_config()[0],
+                            ):
+                                result.set_result(failed(
+                                    "External MCP configuration or credentials changed."
+                                ))
+                                continue
                             try:
                                 response = await session.call_tool(tool, arguments)
                             except McpError:
@@ -318,6 +337,14 @@ class Gateway:
                 self.fingerprints[name] = fingerprint
                 worker.task = asyncio.create_task(worker.run())
 
+    def current_external(self, name: str, config: dict) -> External | None:
+        """Find a live, authorized worker for this configuration snapshot."""
+        worker = self.externals.get(name)
+        if (worker and worker.ready.is_set() and worker.task and not worker.task.done()
+                and external_launch_current(name, self.fingerprints.get(name, ""), config)):
+            return worker
+        return None
+
     def tools(self, config: dict) -> dict[str, tuple[str, str, types.Tool]]:
         """Build a fresh tool catalog; local subsets require no cloud credential.
 
@@ -336,20 +363,24 @@ class Gateway:
         }
         sources = {
             **self.definitions,
-            **{name: worker.tools for name, worker in self.externals.items()
-               if worker.ready.is_set() and worker.task and not worker.task.done()
-               and self.fingerprints[name] == external_fingerprint(
-                   config.get("mcp", {}).get(name, {}), config)},
+            **{name: worker.tools for name in self.externals
+               if (worker := self.current_external(name, config)) is not None},
         }
         builtin_prefixes = {server.removesuffix("-mcp") for server in BUILTINS}
         for name, definitions in sources.items():
-            if not server_state(name, config)["visible"]:
+            if name in BUILTINS and not server_state(name, config)["visible"]:
                 continue
             if name not in BUILTINS and name.removesuffix("-mcp") in builtin_prefixes:
                 continue  # would answer under a built-in's tool names
             for original in definitions:
                 if not tool_available(name, original.name, config):
                     continue
+                if name not in BUILTINS:
+                    metadata = original.model_dump(mode="json", exclude_none=True)
+                    if _redact_payload(metadata, config) != metadata:
+                        # Do not rewrite a tool's name or validation rules
+                        # when its definition contains credential material.
+                        continue
                 tool = slim_schema(original)
                 tool.name = public_name(name, original.name)
                 if name not in BUILTINS and (
@@ -426,13 +457,15 @@ class Gateway:
         """
         config, _ = read_config()
         report: dict[str, Any] = {}
-        for entry in self.tools(config).values():
-            server, original = entry[0], entry[1]
-            if server == "__gateway__" or original == "health":
-                continue
+        visible = dict.fromkeys(server for server, _, _ in self.tools(config).values()
+                                if server != "__gateway__")
+        for server in visible:
             try:
                 if server in self.modules:
                     async with self.module_locks[server]:
+                        config, _ = read_config()
+                        if not server_state(server, config)["visible"]:
+                            continue
                         result = await asyncio.to_thread(
                             lambda s=server: asyncio.run(
                                 self.modules[s].mcp.call_tool("health", {})
@@ -474,8 +507,9 @@ class Gateway:
                         **extras,
                     }
                 else:
-                    worker = self.externals.get(server)
-                    if worker is None or not worker.ready.is_set():
+                    config, _ = read_config()
+                    worker = self.current_external(server, config)
+                    if worker is None:
                         report[server] = {"status": "unavailable"}
                         continue
                     response = await worker.call("health", {})
@@ -492,12 +526,11 @@ class Gateway:
                     # Same redaction the call_tool path applies: external
                     # MCPs may echo environment values in error text. Only
                     # provenance fields survive, string-clamped.
-                    _config = config
                     report[server] = {
                         "status": payload.get("status", "unknown"),
                         **{
                             k: (
-                                str(redact(str(v)[:200], _config))
+                                v[:200]
                                 if isinstance(v, str) else v
                             )
                             for k, v in payload.items()
@@ -542,16 +575,15 @@ class Gateway:
             )
         server, original, tool = entry
         try:
-            jsonschema.validate(arguments, tool.inputSchema)
-        except jsonschema.ValidationError:
-            return failed(
-                "Arguments do not match this tool's currently available schema."
-            )
-        try:
             if server in self.modules:
                 # Bundled sync tools include blocking IO. Keep the MCP event
                 # loop available for cancellation, list changes and other calls.
                 async with self.module_locks[server]:
+                    config, _ = read_config()
+                    live = self.tools(config).get(name)
+                    if live is None:
+                        return failed("Tool is unavailable in the current ui.api.json configuration.")
+                    jsonschema.validate(arguments, live[2].inputSchema)
                     result = await asyncio.to_thread(
                         lambda: asyncio.run(
                             self.modules[server].mcp.call_tool(original, arguments)
@@ -587,12 +619,15 @@ class Gateway:
                 ):
                     response.isError = True
             else:
-                # tools(config) already excluded workers from a stale launch or key.
+                jsonschema.validate(arguments, tool.inputSchema)
+                # External.run rechecks credentials and command when dispatching.
                 response = await self.externals[server].call(original, arguments)
 
             return types.CallToolResult.model_validate(
                 _redact_payload(response.model_dump(mode="json"), config)
             )
+        except jsonschema.ValidationError:
+            return failed("Arguments do not match this tool's currently available schema.")
         except Exception:
             return failed(
                 "MCP execution failed. Verify input files and backend availability."

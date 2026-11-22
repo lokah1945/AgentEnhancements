@@ -204,10 +204,17 @@ def validate_document(doc: Any) -> dict:
 
 
 def _load_raw(path: Path) -> Any:
-    """Parse the file with duplicate-field rejection and a size bound."""
-    if path.stat().st_size > 1024 * 1024:
+    """Read a bounded regular file and reject duplicate JSON fields."""
+    limit = 1024 * 1024
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
+    with os.fdopen(descriptor, "rb") as stream:
+        info = os.fstat(stream.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_size > limit:
+            raise ValueError("configuration is not a regular file within the size limit")
+        raw = stream.read(limit + 1)
+    if len(raw) > limit:
         raise ValueError("configuration too large")
-    return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_unique_object)
+    return json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object)
 
 
 def read_config() -> tuple[dict, str | None]:
@@ -371,26 +378,23 @@ def server_state(name: str, config: dict | None = None) -> dict:
             "disabled" if "enabled" in settings else "disabled_by_default"
         )
         return {"visible": False, "reason": reason}
-    any_of = list(settings.get("any_of", [])) or list(BUILTIN_ANY_OF.get(name, ()))
-    if name in BUILTINS:
-        # Built-in local tools remain useful during a partial/invalid JSON
-        # edit; credential-only built-ins need one usable key (any_of).
-        if any_of and not any(has_usable_key(ref, config) for ref in any_of):
-            return {"visible": False, "reason": "missing_credentials",
-                    "missing_any_of": any_of}
-        if name == "ffmpeg-mcp" and not (shutil.which("ffmpeg") or shutil.which("ffprobe")):
-            return {"visible": False, "reason": "executable_not_installed"}
-        return {"visible": True, "reason": "local_tools_available"}
-    if error:
-        return {"visible": False, "reason": error}
-    if not settings:
-        return {"visible": False, "reason": "not_configured"}
+    if name not in BUILTINS:
+        if error:
+            return {"visible": False, "reason": error}
+        if not settings:
+            return {"visible": False, "reason": "not_configured"}
     missing = [key for key in settings.get("required", []) if not value(key, config)]
     if missing:
         return {"visible": False, "reason": "missing_credentials", "missing": missing}
+    any_of = list(settings.get("any_of", [])) or list(BUILTIN_ANY_OF.get(name, ()))
     if any_of and not any(has_usable_key(ref, config) for ref in any_of):
         return {"visible": False, "reason": "missing_credentials",
                 "missing_any_of": any_of}
+    if name in BUILTINS:
+        # Local defaults remain useful during a partial or invalid JSON edit.
+        if name == "ffmpeg-mcp" and not (shutil.which("ffmpeg") or shutil.which("ffprobe")):
+            return {"visible": False, "reason": "executable_not_installed"}
+        return {"visible": True, "reason": "local_tools_available"}
     command = settings.get("command", [])
     if not command:
         return {"visible": False, "reason": "runtime_not_configured"}
@@ -417,24 +421,27 @@ def _legacy_preflight_dir() -> Path:
     return config_root()
 
 
-def _read_private_text(path: Path, limit: int = 64 * 1024) -> str | None:
-    """Read a regular, owner-only, non-symlink file; None when unsafe/absent."""
+def _read_legacy_text(path: Path, *, private: bool = True) -> str | None:
+    """Read an owned regular legacy file without following symlinks."""
+    limit = 64 * 1024
     try:
         descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
                              | getattr(os, "O_NONBLOCK", 0))
     except OSError:
         return None
-    with os.fdopen(descriptor, "r", encoding="utf-8") as stream:
+    with os.fdopen(descriptor, "rb") as stream:
         info = os.fstat(stream.fileno())
-        if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077:
+        if not stat.S_ISREG(info.st_mode) or info.st_size > limit:
+            return None
+        if private and info.st_mode & 0o077:
             return None
         if hasattr(os, "getuid") and info.st_uid != os.getuid():
             return None
         try:
-            text = stream.read(limit + 1)
-        except UnicodeError:
+            raw = stream.read(limit + 1)
+            return raw.decode("utf-8") if len(raw) <= limit else None
+        except (OSError, UnicodeError):
             return None
-        return None if len(text) > limit else text
 
 
 def _write_private_atomic(path: Path, text: str) -> None:
@@ -499,13 +506,8 @@ def migrate(legacy_dir: Path | None = None) -> dict:
     marker = directory / "legacy-preflight.imported"
     imported = False
     if "preflight" not in doc and not marker.exists():
-        legacy = _read_private_text(directory / "model.json")
-        if legacy is None and (directory / "model.json").is_file():
-            # Readable but not owner-only: still non-secret settings.
-            try:
-                legacy = (directory / "model.json").read_text(encoding="utf-8")[:65536]
-            except (OSError, UnicodeError):
-                legacy = None
+        # Non-secret settings could be readable by other users in old installs.
+        legacy = _read_legacy_text(directory / "model.json", private=False)
         preflight: dict[str, Any] | None = None
         if legacy is not None:
             try:
@@ -522,7 +524,7 @@ def migrate(legacy_dir: Path | None = None) -> dict:
                     "api_key_ref": PREFLIGHT_KEY_REF,
                 }
                 report["legacy_model_json"] = "imported"
-        key_text = _read_private_text(directory / "preflight.key")
+        key_text = _read_legacy_text(directory / "preflight.key")
         legacy_key = next(
             (line.strip() for line in (key_text or "").splitlines() if line.strip()), ""
         )

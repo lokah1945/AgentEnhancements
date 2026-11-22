@@ -46,6 +46,18 @@ def edit(path, change):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_builtin_required_reference_is_checked_live(self):
+        with configuration() as path:
+            server = "embeddings-mcp"
+            ref = "LOCAL_FIXTURE_REQUIRED"
+            self.assertTrue(api.server_state(server)["visible"])
+            edit(path, lambda doc: doc["mcp"].setdefault(server, {}).update(required=[ref]))
+            self.assertEqual(api.server_state(server), {
+                "visible": False, "reason": "missing_credentials", "missing": [ref],
+            })
+            edit(path, lambda doc: doc["api_keys"].update({ref: "fixture-value"}))
+            self.assertTrue(api.server_state(server)["visible"])
+
     def test_private_initialization_preserves_edits(self):
         with configuration() as path:
             self.assertEqual(path.stat().st_mode & 0o777, 0o600)
@@ -351,12 +363,19 @@ class GatewayTests(unittest.TestCase):
             root = Path(temporary)
             marker = root / "started"
             running = root / "running"
+            release = root / "release"
             server = root / "server.py"
             server.write_text(
                 "from pathlib import Path\nimport os\nfrom mcp.server.fastmcp import FastMCP\n"
                 f"Path({str(marker)!r}).write_text('started')\n"
                 "mcp=FastMCP('fixture')\n@mcp.tool()\ndef echo() -> dict:\n"
                 " return {'authorized':bool(os.getenv('FIXTURE_KEY'))}\n"
+                "@mcp.tool()\nasync def wait_for_release() -> dict:\n"
+                f" Path({str(running)!r}).touch()\n"
+                " import asyncio\n"
+                f" while not Path({str(release)!r}).exists():\n"
+                "  await asyncio.sleep(0.01)\n"
+                " return {'ready':True}\n"
                 "@mcp.tool()\nasync def slow() -> dict:\n"
                 f" Path({str(running)!r}).touch()\n"
                 " import asyncio\n await asyncio.sleep(30)\n return {'ok':True}\n"
@@ -397,6 +416,20 @@ class GatewayTests(unittest.TestCase):
                 self.assertNotIn("fixture_echo", gateway.tools(api.read_config()[0]))
                 self.assertTrue((await gateway.call_tool("fixture_echo", {})).isError)
                 edit(path, lambda d: d["mcp"]["fixture-mcp"]["command"].pop())
+                first = asyncio.create_task(gateway.call_tool("fixture_wait_for_release", {}))
+                async with asyncio.timeout(5):
+                    while not running.exists():
+                        await asyncio.sleep(0.01)
+                queued = asyncio.create_task(gateway.call_tool("fixture_echo", {}))
+                async with asyncio.timeout(5):
+                    while len(worker.pending) < 2:
+                        await asyncio.sleep(0.01)
+                edit(path, lambda d: d["api_keys"].update(FIXTURE_KEY=""))
+                release.touch()
+                await asyncio.wait_for(first, timeout=3)
+                self.assertTrue((await asyncio.wait_for(queued, timeout=3)).isError)
+                edit(path, lambda d: d["api_keys"].update(FIXTURE_KEY="external-local-fixture"))
+                running.unlink()
                 pending = asyncio.create_task(gateway.call_tool("fixture_slow", {}))
                 async with asyncio.timeout(5):
                     while not running.exists():

@@ -322,7 +322,7 @@ class Gateway:
             return worker
         return None
 
-    def tools(self, config: dict) -> dict[str, tuple[str, str, types.Tool]]:
+    def tools(self, config: dict, *, include_external: bool = True) -> dict[str, tuple[str, str, types.Tool]]:
         """Build a fresh tool catalog; local subsets require no cloud credential.
 
         Per-server ``health`` tools are consolidated into ONE gateway-level
@@ -338,11 +338,10 @@ class Gateway:
             for server, definitions in self.definitions.items()
             for tool in definitions
         }
-        sources = {
-            **self.definitions,
-            **{name: worker.tools for name in self.externals
-               if (worker := self.current_external(name, config)) is not None},
-        }
+        sources = dict(self.definitions)
+        if include_external:
+            sources.update({name: worker.tools for name in self.externals
+                            if (worker := self.current_external(name, config)) is not None})
         builtin_prefixes = {server.removesuffix("-mcp") for server in BUILTINS}
         for name, definitions in sources.items():
             if name in BUILTINS and not server_state(name, config)["visible"]:
@@ -424,6 +423,21 @@ class Gateway:
             ),
         )
 
+    def _call_bundled(self, server: str, original: str, arguments: dict) -> tuple[Any, dict] | None:
+        """Recheck readiness inside the executor, immediately before invocation."""
+        config, _ = read_config()
+        if original == "health":
+            if not server_state(server, config)["visible"]:
+                return None
+        else:
+            name = public_name(server, original)
+            live = self.tools(config, include_external=False).get(name)
+            if live is None:
+                return None
+            jsonschema.validate(arguments, live[2].inputSchema)
+        result = asyncio.run(self.modules[server].mcp.call_tool(original, arguments))
+        return result, config
+
     async def _run_health(self) -> types.CallToolResult:
         """Fan out to every visible backend's health entry point.
 
@@ -440,14 +454,10 @@ class Gateway:
             try:
                 if server in self.modules:
                     async with self.module_locks[server]:
-                        config, _ = read_config()
-                        if not server_state(server, config)["visible"]:
-                            continue
-                        result = await asyncio.to_thread(
-                            lambda s=server: asyncio.run(
-                                self.modules[s].mcp.call_tool("health", {})
-                            )
-                        )
+                        outcome = await asyncio.to_thread(self._call_bundled, server, "health", {})
+                    if outcome is None:
+                        continue
+                    result, _ = outcome
                     if isinstance(result, tuple):
                         parts, data = list(result[0]), result[1]
                     elif isinstance(result, dict):
@@ -556,16 +566,10 @@ class Gateway:
                 # Bundled sync tools include blocking IO. Keep the MCP event
                 # loop available for cancellation, list changes and other calls.
                 async with self.module_locks[server]:
-                    config, _ = read_config()
-                    live = self.tools(config).get(name)
-                    if live is None:
-                        return failed("Tool is unavailable in the current ui.api.json configuration.")
-                    jsonschema.validate(arguments, live[2].inputSchema)
-                    result = await asyncio.to_thread(
-                        lambda: asyncio.run(
-                            self.modules[server].mcp.call_tool(original, arguments)
-                        )
-                    )
+                    outcome = await asyncio.to_thread(self._call_bundled, server, original, arguments)
+                if outcome is None:
+                    return failed("Tool is unavailable in the current ui.api.json configuration.")
+                result, config = outcome
                 if isinstance(result, tuple):
                     response = types.CallToolResult(
                         content=list(result[0]), structuredContent=result[1]

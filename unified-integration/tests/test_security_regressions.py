@@ -379,7 +379,7 @@ class GatewayHealthSecurityTests(IsolatedSecurityTest):
     def test_builtin_rechecks_readiness_after_awaiting_backend_lock(self):
         gateway_module = self.module("queued_gateway", SERVERS / "gateway.py")
 
-        async def check():
+        async def check(*, in_executor_queue):
             gateway = gateway_module.Gateway()
             server = "embeddings-mcp"
             called = []
@@ -393,16 +393,33 @@ class GatewayHealthSecurityTests(IsolatedSecurityTest):
                 name="embed", inputSchema={"type": "object", "properties": {}},
             )
             gateway.definitions[server] = [tool]
-            async with gateway.module_locks[server]:
-                pending = asyncio.create_task(gateway.call_tool("embeddings_embed", {}))
-                await asyncio.sleep(0)
+            def revoke():
                 self.config["mcp"][server] = {"enabled": False}
                 self.write_config()
-            response = await asyncio.wait_for(pending, timeout=3)
+
+            if in_executor_queue:
+                submit = asyncio.to_thread
+
+                async def revoke_before_running(function, *args):
+                    revoke()
+                    return await submit(function, *args)
+
+                with patch.object(asyncio, "to_thread", revoke_before_running):
+                    response = await gateway.call_tool("embeddings_embed", {})
+            else:
+                async with gateway.module_locks[server]:
+                    pending = asyncio.create_task(gateway.call_tool("embeddings_embed", {}))
+                    await asyncio.sleep(0)
+                    revoke()
+                response = await asyncio.wait_for(pending, timeout=3)
             self.assertTrue(response.isError)
             self.assertEqual(called, [])
 
-        asyncio.run(check())
+        for in_executor_queue in (False, True):
+            with self.subTest(in_executor_queue=in_executor_queue):
+                self.config["mcp"].clear()
+                self.write_config()
+                asyncio.run(check(in_executor_queue=in_executor_queue))
 
     def test_health_redacts_secrets_before_truncation_in_every_field(self):
         gateway_module = self.module("health_gateway", SERVERS / "gateway.py")

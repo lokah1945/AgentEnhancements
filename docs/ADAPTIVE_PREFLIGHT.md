@@ -84,8 +84,9 @@ Rules (enforced by `scripts/adaptive_preflight.py` and its tests):
   `model` and an `api_key_ref` naming an `api_keys` reference (default
   `PREFLIGHT_API_KEY`). On Mode 0/1 these fields are stored but ignored,
   so switching modes never loses the custom setup.
-- The file is re-read once per UserPromptSubmit. Writers should use
-  atomic replace; changes apply from the next prompt.
+- Each selector invocation uses one validated snapshot for its endpoint,
+  key and prompt redaction. Save configuration with an atomic replacement
+  to apply edits to subsequent prompts.
 - A legacy `.agentenhancements/config/model.json` is no longer read;
   `api_config.py migrate` imports it once (see below).
 
@@ -119,7 +120,8 @@ imports an owner-only `preflight.key` and the legacy `model.json` once when
 `ui.api.json` has no `preflight` section. Keyring entries are not imported:
 copy that key into `api_keys.PREFLIGHT_API_KEY` by hand.
 
-A missing key falls back to Mode 0 before any network attempt.
+A missing `api_keys` reference falls back to Mode 0 before any network
+attempt. Status reports `api_key_unavailable` and effective Mode 0.
 
 #### Mode 1 contract
 
@@ -286,7 +288,8 @@ host actions, not semantic relevance, inference quality or provider pricing.
 - `scripts/doctor.py` prints an advisory preflight summary (requested
   and effective mode, diagnosis code, key presence - never the key).
 
-Actual host pilot: OpenCode v2.3.2, one AE gateway per standalone host, an
+The original Code Mode pilot used OpenCode v2.3.2, one AE gateway per
+standalone host, an
 HTTPS selector fixture (`fixture-selector`) and a separate local main-model
 fixture (`ae-fixture/fixture`, OpenAI-compatible streaming). The first main
 request contains the unchanged decoded user prompt, the selected package and
@@ -325,15 +328,17 @@ reads OpenMontage's integration file; it does not prove an OpenMontage runtime.
 OpenCode bridge entry point is active. Catalog-plugin runtime readiness is
 explicitly not certified.
 
-Reproduce with the checkout venv, a fresh output directory under ignored
-checkout state, installed OpenCode 2 and ffmpeg. No user credentials are needed:
+Run with the checkout venv, a private temporary output directory, OpenCode 2
+and ffmpeg. The release report covers both delivery profiles and independent
+token measurements. [Release evidence](audit/ENTERPRISE_RELEASE_2026-11-23.md)
 
 ```bash
 AE_PYTHON=".agentenhancements/runtime/venv/bin/python"
+AE_SMOKE_OUTPUT="$(mktemp -d)"
 "$AE_PYTHON" unified-integration/tests/smoke-adaptive-preflight.py \
-  --output .agentenhancements/cache/preflight-proof --mode 2
+  --output "$AE_SMOKE_OUTPUT/direct" --mode 2 --tool-mode direct
 "$AE_PYTHON" unified-integration/tests/smoke-adaptive-preflight.py \
-  --output .agentenhancements/cache/preflight-proof --mode 0
+  --output "$AE_SMOKE_OUTPUT/code" --mode 0 --tool-mode code
 # Additional independent cases: --scenario abstain|lookup|stale|unavailable|guide
 ```
 

@@ -18,9 +18,11 @@ servers and built-in capabilities. Reads `all-skills.json`,
     MCP + capabilities). Run automatically by `setup.sh` after aggregation.
 
 - **Command:** `map "<task>" [--limit N] [--json]`
-  - **Description:** Activation plan for a natural-language task: top skills
-    (with paths and native-link status), matching plugins, relevant MCP servers,
-    always-available capabilities and usage hints.
+  - **Description:** Activation plan for a natural-language task with ranked
+    skills, plugins, MCP servers and built-ins. Both output formats use a
+    1,600-token aggregate budget. Long task labels and lower-ranked cards
+    yield space before serialization. The JSON object includes the task,
+    ranked groups, built-ins and hints. Every card links to its typed ID.
 
 - **Command:** `search "<query>" [--type T] [--limit N] [--catalog] [--json]`
   - **Description:** Scored search across every entry type (or one type:
@@ -41,7 +43,8 @@ servers and built-in capabilities. Reads `all-skills.json`,
 Scoring uses the shared registry ranker: English/Indonesian intent terms,
 weighted synonyms, format aliases, name/phrase matches and an abstention
 floor. Host compatibility filters candidates without adding relevance.
-Readiness checks the actual source file and native link target.
+Readiness checks the actual source file and native link target. Ranking of
+file references uses their names and extensions and ignores directory prefixes.
 
 Importable functions: `load_skill_entries()`, `load_plugin_entries()`,
 `load_mcp_entries()`, `load_capability_entries()`, `load_all_entries()` and
@@ -85,15 +88,19 @@ credential-output command, and never reads agent settings/provider credentials.
 Bundled tools are namespaced, for example `embeddings_embed`, `vision_compare`
 and `graphrag_query`. The cloud-only `vision_describe` disappears with an
 empty `OPENAI_API_KEY`; embeddings restrict the backend enum to `local`.
-Current schema validation and credential checks run on every call. Failures
-use `isError: true`. Polling discovers edits without a manual tool invocation.
+Current schema validation and credential checks run on every call. The
+gateway rechecks bundled calls inside the worker before invocation and
+external calls as they leave the worker queue. `ae_health` checks each
+visible backend once. Failures use `isError: true`. Polling discovers
+edits without a manual tool invocation.
 
 External servers use `mcp.<name>.command` arrays and `env` reference mappings
 in the same file. AE launches installed entry points directly. Configuration
 diagnostics report `host_handshake_required` for commands eligible to connect.
 A package runner reports `package_launcher_requires_provisioning`. The
-gateway proxies tool schemas and results. OAuth and account permissions are
-managed by the provider or the host.
+gateway omits external tool definitions containing configured or recognized
+credential text. OAuth and account permissions are managed by the provider
+or the host.
 
 ### Native linking - `unified-integration/scripts/link-skills.sh`
 

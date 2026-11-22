@@ -148,6 +148,13 @@ Run `bash unified-integration/setup.sh` to prepare the locked runtime and
 refresh native bridges, then run `setup-mcp.sh --check`. A reused runtime
 can start without package registry access. Fresh preparation needs the
 locked wheels from a package index or a populated local installer cache.
+Setup takes the requirements snapshot after acquiring the runtime lock and
+uses those bytes for installation and generation identity. If the lockfile
+changes during preparation, rerun setup with the reviewed version present
+throughout the run.
+Migration backs up the configuration bytes it used. If it reports
+`config_changed_during_migration`, verify the saved configuration and
+rerun migration after the edit completes.
 Operating systems without a compatible wheel fail during setup and retain
 the previously selected environment. Close active AE host sessions before a
 dependency upgrade so their processes retain one set of Python packages.

@@ -203,8 +203,8 @@ def validate_document(doc: Any) -> dict:
     return normalized
 
 
-def _load_raw(path: Path) -> Any:
-    """Read a bounded regular file and reject duplicate JSON fields."""
+def _read_raw_bytes(path: Path) -> bytes:
+    """Read a bounded regular file through one descriptor."""
     limit = 1024 * 1024
     descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
     with os.fdopen(descriptor, "rb") as stream:
@@ -214,13 +214,20 @@ def _load_raw(path: Path) -> Any:
         raw = stream.read(limit + 1)
     if len(raw) > limit:
         raise ValueError("configuration too large")
-    return json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object)
+    return raw
+
+
+def _load_raw(path: Path) -> tuple[Any, bytes]:
+    """Return the parsed document and its exact source bytes."""
+    raw = _read_raw_bytes(path)
+    return json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object), raw
 
 
 def read_config() -> tuple[dict, str | None]:
     """Read a complete snapshot; malformed/missing files fail closed for cloud APIs."""
     try:
-        return validate_document(_load_raw(config_path())), None
+        document, _ = _load_raw(config_path())
+        return validate_document(document), None
     except (OSError, ValueError, TypeError, UnicodeError, RecursionError):
         # Exception text can include source JSON and credentials. Keep it private.
         return {
@@ -468,15 +475,26 @@ def _read_legacy_text(path: Path, *, private: bool = True) -> str | None:
             return None
 
 
-def _write_private_atomic(path: Path, text: str) -> None:
+class ConfigurationChanged(Exception):
+    """The source changed while a migration was preparing its replacement."""
+
+
+def _write_private_atomic(path: Path, text: str, *, expected: bytes | None = None) -> None:
     """Same-directory temp file (0600), fsync, then atomic replace."""
     descriptor, temporary = tempfile.mkstemp(dir=path.parent, prefix=".ui-api-")
     try:
         os.fchmod(descriptor, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="") as stream:
             stream.write(text)
             stream.flush()
             os.fsync(stream.fileno())
+        if expected is not None:
+            try:
+                matches = not path.is_symlink() and _read_raw_bytes(path) == expected
+            except (OSError, ValueError):
+                matches = False
+            if not matches:
+                raise ConfigurationChanged
         os.replace(temporary, path)
     except BaseException:
         try:
@@ -506,7 +524,7 @@ def migrate(legacy_dir: Path | None = None) -> dict:
     if path.is_symlink() or not path.is_file():
         return {"status": "refused", "reason": "not_a_regular_file"}
     try:
-        raw = _load_raw(path)
+        raw, source = _load_raw(path)
         validate_document(raw)
     except (OSError, ValueError, TypeError, UnicodeError, RecursionError):
         return {"status": "refused", "reason": "config_unavailable_or_invalid"}
@@ -569,8 +587,12 @@ def migrate(legacy_dir: Path | None = None) -> dict:
     backup = path.with_name(
         f"{path.name}.backup.{time.strftime('%Y%m%d%H%M%S')}-{os.getpid()}"
     )
-    _write_private_atomic(backup, path.read_text(encoding="utf-8"))
-    _write_private_atomic(path, text)
+    _write_private_atomic(backup, source.decode("utf-8"))
+    try:
+        _write_private_atomic(path, text, expected=source)
+    except ConfigurationChanged:
+        return {"status": "refused", "reason": "config_changed_during_migration",
+                "backup": str(backup)}
     if imported:
         _write_private_atomic(marker, f"imported into {path.name} {time.strftime('%Y-%m-%dT%H:%M:%S')}\n")
     report.update(status="migrated", to_version=CONFIG_VERSION, backup=str(backup))

@@ -6,15 +6,38 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNIFIED_DIR="$(cd "$SCRIPT_DIR/../unified-integration" && pwd)"
-WORKSPACE="${AGENT_MEMORY_ROOT:-$HOME/.agent-memory}/task-observer"
 
 log() { printf '[cadence] %s\n' "$*"; }
 warn() { printf '[cadence] WARN: %s\n' "$*" >&2; }
 
+# Resolve the observation workspace with task-observer.py's own resolver
+# (TASK_OBSERVER_WORKSPACE, then AGENT_MEMORY_ROOT, then
+# AGENT_ENHANCEMENTS_STATE_DIR/memory, then <repo>/.agentenhancements/memory)
+# so the shell and Python defaults can never drift apart.
+resolve_workspace() {
+    python3 - "$UNIFIED_DIR/scripts" <<'PY'
+import importlib.util
+import sys
+
+scripts = sys.argv[1]
+sys.path.insert(0, scripts)
+spec = importlib.util.spec_from_file_location("task_observer", f"{scripts}/task-observer.py")
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+print(module.workspace_root())
+PY
+}
+
 # Weekly: Task Observer Review
 review_observer() {
     log "Running weekly task observer review..."
-    
+
+    local WORKSPACE
+    if ! WORKSPACE="$(resolve_workspace)"; then
+        warn "Could not resolve the task observer workspace"
+        return 1
+    fi
+
     if [ ! -d "$WORKSPACE" ]; then
         warn "Task observer workspace not found at $WORKSPACE"
         return 1
@@ -39,13 +62,14 @@ review_observer() {
 audit_registry() {
     log "Running monthly registry audit..."
     
-    # Regenerate library map
-    log "Regenerating library map..."
-    python3 "$UNIFIED_DIR/scripts/build-library-map.py"
-    
     # Build registry
     log "Building capability registry..."
     python3 "$UNIFIED_DIR/scripts/registry.py" build
+
+    # Regenerate library map. Must run AFTER registry.py build: the map reads
+    # its family counts from agent-registry.json (as in registry-regeneration.yml).
+    log "Regenerating library map..."
+    python3 "$UNIFIED_DIR/scripts/build-library-map.py"
     
     # Validate catalog
     log "Validating plugin catalog..."

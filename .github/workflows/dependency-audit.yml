@@ -1,0 +1,91 @@
+name: Dependency audit
+
+# Gating vulnerability scan of the locked dependency sets. Kept separate from
+# ci.yml so an advisory published upstream cannot turn unrelated pushes red:
+# it runs weekly, on demand, and whenever a lock file it scans changes.
+# No step may end in `|| true`. An unfixable advisory in vendored code gets a
+# documented `--ignore <ID>` next to the command that reports it.
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - 'unified-integration/requirements*.txt'
+      - 'unified-integration/requirements.in'
+      - 'mcp-servers/agent_browser/package*.json'
+      - 'ECC/package-lock.json'
+      - 'headroom/Cargo.lock'
+      - 'ECC/ecc2/Cargo.lock'
+      - '.github/workflows/dependency-audit.yml'
+  pull_request:
+    paths:
+      - 'unified-integration/requirements*.txt'
+      - 'unified-integration/requirements.in'
+      - 'mcp-servers/agent_browser/package*.json'
+      - 'ECC/package-lock.json'
+      - 'headroom/Cargo.lock'
+      - 'ECC/ecc2/Cargo.lock'
+      - '.github/workflows/dependency-audit.yml'
+  workflow_dispatch:
+  schedule:
+    # Weekly on Monday 03:00 UTC
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: pip-audit (runtime lock)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.11"
+      - name: Install pip-audit
+        run: python3 -m pip install --disable-pip-version-check pip-audit==2.10.1
+      - name: Audit unified-integration/requirements.txt
+        # The lock is fully pinned with hashes, so pip-audit resolves it
+        # without installing anything. The per-server requirements.txt files
+        # under unified-integration/mcp-servers/ are unpinned ranges that the
+        # runtime satisfies from this lock, so they are not audited separately.
+        run: |
+          pip-audit --progress-spinner off --require-hashes --disable-pip \
+            -r unified-integration/requirements.txt
+
+  node:
+    name: npm audit (lock files)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+      - name: Audit agent_browser production dependencies
+        run: npm audit --omit=dev --audit-level=high --package-lock-only
+        working-directory: mcp-servers/agent_browser
+      - name: Audit ECC dependencies
+        run: npm audit --audit-level=high --package-lock-only
+        working-directory: ECC
+
+  rust:
+    name: cargo audit (lock files)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked --version 0.21.2
+      - name: Audit headroom/Cargo.lock
+        run: cargo audit --file headroom/Cargo.lock
+      - name: Audit ECC/ecc2/Cargo.lock
+        run: cargo audit --file ECC/ecc2/Cargo.lock

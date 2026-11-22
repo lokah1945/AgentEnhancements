@@ -180,7 +180,7 @@ change in this repository.
 | Agent | Permitted Specializations |
 | ------- | --------------------------- |
 | **Claude Code** | Hook integration, CLAUDE.md generation, settings.json |
-| **Codex** | Codex config.yaml, multi-agent workflows |
+| **Codex** | Codex config.toml / hooks.json, multi-agent workflows |
 | **Cursor** | Cursor settings.json, prompt optimization |
 | **Gemini CLI** | Large context budget tuning |
 | **Copilot** | VS Code integration patterns |
@@ -397,9 +397,13 @@ unified-integration/
 - `bash -n` on all `.sh` files
 - `python3 -m py_compile` on all `.py` files
 - `markdownlint` on all `.md` files
-- Conventional commit message validation
+- Conventional commit subject check (advisory CI warning)
 - No `fixed|new|v\d+|temp|backup` in filenames
-- **Agent identity validation in commit metadata**
+- Dependency vulnerability audit of the lock files (`pip-audit`,
+  `npm audit`, `cargo audit`; weekly and on lock-file changes,
+  `.github/workflows/dependency-audit.yml`)
+- **Agent identity (`Agent:` trailer) check in commit metadata**
+  (advisory CI warning; human maintainer commits exempt)
 
 ### 9.2 Human Review Required For
 
@@ -421,7 +425,8 @@ unified-integration/
   - **Action:** Revert immediately, incident review
 
 - **Severity:** **Audit Failure** (missing agent identity)
-  - **Action:** Block push, require re-commit with metadata
+  - **Action:** Flagged by CI warning; reviewer requires re-commit with
+    metadata before merge
 
 ---
 

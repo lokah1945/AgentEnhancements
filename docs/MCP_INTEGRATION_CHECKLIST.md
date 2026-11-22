@@ -15,16 +15,15 @@ verification before installation.
 
 ## Prepare the shared runtime
 
-- [ ] Run `bash unified-integration/scripts/setup-mcp.sh --prepare`.
 - [ ] Run `bash unified-integration/setup.sh` for the selected native hosts.
 - [ ] Run `bash unified-integration/scripts/setup-mcp.sh --check` to exercise
   the bundled backends and gateway through the actual stdio protocol.
 - [ ] Inspect `python3 unified-integration/scripts/api_config.py status` for
   readiness reasons. The command reports presence, never credential values.
 
-Use the prepared interpreter and `unified-integration/requirements.txt`.
-An unconstrained installation of `mcp` or `fastmcp` can select an incompatible
-SDK; avoid a separate global Python environment.
+Setup installs the locked wheels and verifies the candidate interpreter
+before publishing it. `--check` uses the prepared interpreter and a private
+fixture with empty credentials. See [runtime upgrades](UPDATING.md#34-python-runtime-lock).
 
 ## Enable an external server when a task needs it
 
@@ -35,6 +34,8 @@ SDK; avoid a separate global Python environment.
   install every external candidate or execute commands from the roadmap.
 - [ ] Add an installed `command` array and credential-reference `env` mapping
   under that ID in the private root `ui.api.json`.
+- [ ] Point `command` at the local executable or interpreter and script.
+  Package managers and ephemeral package runners are blocked by the gateway.
 - [ ] Complete OAuth where needed; client IDs/secrets alone are insufficient.
 - [ ] Restrict filesystem roots and preserve the host's tool approvals.
 - [ ] Verify `api_config.py status`, the host's tool list and a local fixture

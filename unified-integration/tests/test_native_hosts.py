@@ -6,6 +6,8 @@ import io
 import json
 import os
 from pathlib import Path
+import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -66,6 +68,9 @@ class NativeHostTests(unittest.TestCase):
             note = (root / "profiles" / name / "SOUL.md").read_text()
             self.assertTrue(note.startswith("Personal identity.\n"))
             self.assertEqual(note.count("<!-- agent-enhancements:begin -->"), 1)
+            command = next(part for part in note.split("`") if part.endswith(" --print"))
+            self.assertEqual(shlex.split(command),
+                             ["python3", str(UI_DIR / "scripts/build-library-map.py"), "--print"])
 
     def test_opencode_v1_refused_before_changing_user_config(self):
         binary = self.home / "bin/opencode"
@@ -358,6 +363,32 @@ class HermesPluginTests(unittest.TestCase):
 
 
 class LibraryMapTests(unittest.TestCase):
+    def test_print_reads_only_the_published_map_from_a_foreign_directory(self):
+        with tempfile.TemporaryDirectory(prefix="ae map's ") as directory:
+            root = Path(directory) / "checkout"
+            scripts = root / "unified-integration/scripts"
+            scripts.mkdir(parents=True)
+            for name in ("build-library-map.py", "context_budget.py"):
+                shutil.copyfile(UI_DIR / "scripts" / name, scripts / name)
+            published = root / "skills/library-map.json"
+            published.parent.mkdir()
+            original = (UI_DIR.parent / "skills/library-map.json").read_bytes()
+            published.write_bytes(original)
+            stamp = published.stat().st_mtime_ns
+
+            result = subprocess.run([sys.executable, str(scripts / "build-library-map.py"), "--print"],
+                                    cwd=directory, text=True, capture_output=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stderr, "")
+            expected = json.loads(original)["rendered"].replace(
+                "python3 unified-integration/scripts/registry.py",
+                shlex.join(["python3", str(scripts / "registry.py")]))
+            self.assertEqual(result.stdout, expected)
+            registry_lines = [line for line in result.stdout.splitlines() if line.startswith("  python3 ")]
+            self.assertEqual([shlex.split(line)[2] for line in registry_lines], ["search", "show", "map"])
+            self.assertEqual(published.read_bytes(), original)
+            self.assertEqual(published.stat().st_mtime_ns, stamp)
+
     def test_estimate_and_timestamp_changes_do_not_rewrite_an_unchanged_map(self):
         module = load_module("ae_map_test", UI_DIR / "scripts/build-library-map.py")
         with tempfile.TemporaryDirectory() as directory:

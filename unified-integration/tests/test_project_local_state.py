@@ -23,6 +23,9 @@ class ProjectLocalStateTests(unittest.TestCase):
             shutil.copyfile(path, self.scripts / path.name)
         shutil.copyfile(UI_DIR / 'scripts/setup-mcp.sh', self.scripts / 'setup-mcp.sh')
         (self.scripts.parent / 'requirements.txt').write_text('fixture-package==1.0\n')
+        check = self.scripts.parent / 'mcp-servers/check-protocol.py'
+        check.parent.mkdir()
+        check.write_text('print("fixture protocol check")\n')
         self.home = self.root / 'external-home'
         self.home.mkdir()
         self.env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE='1',
@@ -59,7 +62,7 @@ print(json.dumps([str(memory.MEMORY_ROOT),str(adaptive_preflight.model_config_pa
                       'pathlib.Path(os.environ["AE_TEST_ENV_MARKER"]).write_text(os.environ.get("CARGO_TARGET_DIR",""))\n'
                       'if sys.argv[1]=="venv":\n'
                       ' p=pathlib.Path(sys.argv[-1])/"bin/python"\n'
-                      ' p.parent.mkdir(parents=True);p.write_text("#!/bin/sh\\nexit 0\\n");p.chmod(0o700)\n')
+                      ' p.parent.mkdir(parents=True);p.write_text("#!/bin/sh\\nprintf \'{}\\\\n\'\\n");p.chmod(0o700)\n')
         uv.chmod(0o700)
         marker = self.repo / 'captured-build-path'
         env = dict(self.env, PATH=str(tools)+os.pathsep+os.environ['PATH'],

@@ -16,12 +16,14 @@ template plus one line per FAMILY (about a dozen), never per entry, so a
 10x catalog growth adds zero tokens to L0 (mandate §12 scale fixture).
 
 Run:  python3 scripts/build-library-map.py [--text-out PATH] [--json-out PATH]
+      python3 scripts/build-library-map.py --print
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -176,14 +178,40 @@ itself does not grow when the catalog grows).
 """
 
 
+def print_bootstrap() -> int:
+    """Read the published model-facing map without rebuilding either index."""
+    try:
+        rendered = json.loads(OUT_JSON.read_text(encoding="utf-8"))["rendered"]
+        if not isinstance(rendered, str) or not rendered.strip():
+            raise ValueError("missing rendered text")
+    except (OSError, ValueError, KeyError, TypeError, RecursionError):
+        print("Library map unavailable. Use the registry search command.", file=sys.stderr)
+        return 1
+
+    command = shlex.join(["python3", str(SCRIPT_DIR / "registry.py")])
+    rendered = rendered.replace("python3 unified-integration/scripts/registry.py", command)
+    if approx_tokens(rendered) > MAX_BOOTSTRAP:
+        print("Library map exceeds the bootstrap budget. Use the registry search command.",
+              file=sys.stderr)
+        return 1
+    print(rendered.rstrip())
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--print", dest="print_map", action="store_true",
+                        help="print only the published model-facing map")
     parser.add_argument("--text-out", default=None,
                         help="also write the rendered L0 card to this path")
     parser.add_argument("--json-out", default=None,
                         help="write the JSON map here instead of the default")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
+    if args.print_map:
+        if args.text_out is not None or args.json_out is not None:
+            parser.error("--print cannot be combined with --text-out or --json-out")
+        return print_bootstrap()
     index = load_index()
     try:
         registry_meta = json.loads(REGISTRY.read_text(encoding="utf-8"))
@@ -212,8 +240,7 @@ def main() -> int:
 
     out_json = Path(args.json_out) if args.json_out else OUT_JSON
     out_json.parent.mkdir(parents=True, exist_ok=True)
-    # The rendered text IS the L0 card an agent reads via `cat`; persist
-    # it inside the JSON so one file serves machines and agents alike.
+    # One published file serves machine readers and the render-only bridge.
     document = {**data, "bootstrap_tokens_approx": cost, "rendered": text}
     try:
         previous = json.loads(out_json.read_text(encoding="utf-8"))

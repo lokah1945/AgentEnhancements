@@ -72,6 +72,10 @@ BUILTIN_ANY_OF = {
         "SERPER_API_KEY",
     ),
 }
+PACKAGE_LAUNCHERS = frozenset({
+    "bun", "bunx", "corepack", "npm", "npm-cli.js", "npx", "npx-cli.js",
+    "pip", "pip3", "pipx", "pnpm", "pnpx", "uv", "uvx", "yarn",
+})
 SECRET_PATTERN = re.compile(
     r"(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+|(?<![A-Za-z0-9])sk-(?:ant-)?[A-Za-z0-9_-]{16,}"
     r"|\bAKIA[A-Z0-9]{16}\b"
@@ -319,8 +323,43 @@ def redact(text: str, config: dict | None = None) -> str:
     return SECRET_PATTERN.sub("[redacted]", text)
 
 
+def external_command(command: list[str]) -> list[str]:
+    """Resolve configured placeholders and paths relative to the gateway cwd."""
+    resolved = [arg.replace("{repo}", str(ROOT)).replace("{python}", sys.executable)
+                for arg in command]
+    if os.sep in resolved[0] and not Path(resolved[0]).is_absolute():
+        resolved[0] = str(ROOT / resolved[0])
+    return resolved
+
+
+def external_launch_blocker(command: list[str]) -> str:
+    """Validate a local launch entry point without executing package runners."""
+    if not command[0] or any("\0" in arg for arg in command):
+        return "invalid_launch_command"
+    executable = Path(command[0]).name.removesuffix(".cmd").removesuffix(".exe")
+    if executable in PACKAGE_LAUNCHERS:
+        return "package_launcher_requires_provisioning"
+    found = shutil.which(command[0])
+    if not found:
+        return "executable_not_installed"
+    if Path(os.path.realpath(found)).name in PACKAGE_LAUNCHERS:
+        return "package_launcher_requires_provisioning"
+    args = command[1:]
+    python = re.fullmatch(r"python(?:\d+(?:\.\d+)?)?", executable)
+    if python and len(args) >= 2 and args[0] == "-m" and args[1].split(".")[0] in PACKAGE_LAUNCHERS:
+        return "package_launcher_requires_provisioning"
+    if args and not args[0].startswith("-") and (
+            python or executable in {"node", "nodejs"}):
+        script = Path(os.path.realpath(ROOT / args[0]))
+        if script.name in PACKAGE_LAUNCHERS:
+            return "package_launcher_requires_provisioning"
+        if not script.is_file():
+            return "executable_not_installed"
+    return ""
+
+
 def server_state(name: str, config: dict | None = None) -> dict:
-    """Return redacted readiness; configuration alone is not a connectivity probe."""
+    """Return eligibility to expose built-ins or connect a configured external."""
     if config is None:
         config, error = read_config()
     else:
@@ -339,6 +378,8 @@ def server_state(name: str, config: dict | None = None) -> dict:
         if any_of and not any(has_usable_key(ref, config) for ref in any_of):
             return {"visible": False, "reason": "missing_credentials",
                     "missing_any_of": any_of}
+        if name == "ffmpeg-mcp" and not (shutil.which("ffmpeg") or shutil.which("ffprobe")):
+            return {"visible": False, "reason": "executable_not_installed"}
         return {"visible": True, "reason": "local_tools_available"}
     if error:
         return {"visible": False, "reason": error}
@@ -353,12 +394,10 @@ def server_state(name: str, config: dict | None = None) -> dict:
     command = settings.get("command", [])
     if not command:
         return {"visible": False, "reason": "runtime_not_configured"}
-    executable = (
-        command[0].replace("{python}", sys.executable).replace("{repo}", str(ROOT))
-    )
-    if not shutil.which(executable):
-        return {"visible": False, "reason": "executable_not_installed"}
-    return {"visible": True, "reason": "configured"}
+    blocker = external_launch_blocker(external_command(command))
+    if blocker:
+        return {"visible": False, "reason": blocker}
+    return {"visible": True, "reason": "configured", "verification": "host_handshake_required"}
 
 
 def cloud_available(
@@ -530,6 +569,8 @@ def status() -> dict:
             key: len(keys(key, config)) for key in config.get("api_keys", {})
         },
         "servers": {name: server_state(name, config) for name in names},
+        "system_prerequisites": {name: bool(shutil.which(name))
+                                 for name in ("ffmpeg", "ffprobe", "tesseract")},
         "cloud_tools": {
             "vision_describe": cloud_available("vision-mcp", config=config),
             "embeddings_openai": cloud_available("embeddings-mcp", config=config),

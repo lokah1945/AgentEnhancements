@@ -375,8 +375,11 @@ class GatewayHealthSecurityTests(IsolatedSecurityTest):
 
             gateway.externals["fixture-mcp"] = SimpleNamespace(
                 tools=[types.Tool(name="fixture", inputSchema={"type": "object"})],
-                ready=ready, call=call,
+                ready=ready, call=call, task=asyncio.get_running_loop().create_future(),
             )
+            config, _ = gateway_module.read_config()
+            gateway.fingerprints["fixture-mcp"] = gateway_module.external_fingerprint(
+                config["mcp"]["fixture-mcp"], config)
             return await gateway.call_tool("ae_health", {})
 
         response = asyncio.run(check())

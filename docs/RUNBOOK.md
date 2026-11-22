@@ -56,15 +56,17 @@ Pulihkan hanya perubahan yang tidak diperlukan; bundle adalah pin kanonik.
 #### 2. MCP gateway hidup?
 
 ```bash
-bash unified-integration/scripts/setup-mcp.sh --prepare   # cetak path venv
-bash unified-integration/scripts/setup-mcp.sh --check     # 10/10 harus ok
+bash unified-integration/setup.sh
+bash unified-integration/scripts/setup-mcp.sh --check     # 11/11
+python3 unified-integration/scripts/api_config.py status
 ```
 
-`[FAIL] agent-enhancements` → jalankan gateway manual dengan stderr
-terlihat: `python unified-integration/mcp-servers/gateway.py`; kunci
-umum: dependensi venv (jalankan ulang --prepare), ui.api.json rusak
-(hapus dan `api_config.py init`), backend eksternal tidak dikonfigurasi
-(masih ok — hanya `status: unavailable`).
+`--check` memakai interpreter checkout dan konfigurasi fixture kosong untuk
+memeriksa stdio bawaan. Untuk `host_handshake_required`, periksa tool pada
+sesi host dan lakukan panggilan fixture dengan izin yang diperlukan.
+Jika setup gagal, lihat diagnosis paket atau protokol dan ikuti petunjuk
+[pemulihan runtime](UPDATING.md#72-full-rollback). Bila `ui.api.json`
+tidak valid, perbaiki JSON atau pulihkan salinan yang sudah diverifikasi.
 
 #### 3. Konteks sesi dalam budget?
 
@@ -114,7 +116,7 @@ wajib mendaftar di `context_budget.COLD_START_CHANNELS` + test CI.
 ### Keputusan rilis (gates)
 
 1. `run-tests.py` 100% (skip by design hanya untuk env-dependen).
-2. `setup-mcp.sh --check` 10/10.
+2. `setup-mcp.sh --check` 11/11.
 3. Routing benchmark ≥95%/≥90% (dataset 41+10 di docs/benchmark).
 4. `git diff --exit-code -- skills/` setelah scaffold+generate (no drift).
 5. Bundle checksum pristine.

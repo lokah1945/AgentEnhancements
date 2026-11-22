@@ -17,6 +17,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import sys
 import time
 from typing import Any
@@ -36,6 +37,7 @@ from api_config import (
     ROOT,
     BUILTIN_ANY_OF,
     cloud_available,
+    external_command,
     has_usable_key,
     read_config,
     redact,
@@ -59,10 +61,23 @@ def public_name(server: str, tool: str) -> str:
 
 def tool_available(server: str, original: str, config: dict) -> bool:
     """Shared current availability gate, also used to reject stale host views."""
-    return original != "health" and not (
-        server == "vision-mcp" and original == "describe"
-        and not cloud_available(server, config=config)
-    )
+    if original == "health":
+        return False
+    if server == "vision-mcp" and original == "describe":
+        return cloud_available(server, config=config)
+    if server == "ffmpeg-mcp":
+        return bool(shutil.which("ffprobe" if original == "probe" else "ffmpeg"))
+    if server == "video-mcp" and original == "render":
+        return bool(shutil.which("ffmpeg"))
+    if server == "vision-mcp" and original == "ocr":
+        return bool(shutil.which("tesseract"))
+    return True
+
+
+def external_fingerprint(settings: dict, config: dict) -> str:
+    """Bind an external tool view to its launch command and mapped credentials."""
+    env = {key: value(ref, config) for key, ref in settings.get("env", {}).items()}
+    return hashlib.sha256(json.dumps([settings, env], sort_keys=True).encode()).hexdigest()
 
 
 def slim_schema(definition: types.Tool) -> types.Tool:
@@ -154,10 +169,7 @@ class External:
 
     async def run(self) -> None:
         """Initialize only an explicitly configured installed backend."""
-        command = [
-            arg.replace("{repo}", str(ROOT)).replace("{python}", sys.executable)
-            for arg in self.settings["command"]
-        ]
+        command = external_command(self.settings["command"])
         # MCP SDK supplies a minimal platform environment. Only references from
         # this backend are added; unrelated API keys are never forwarded. A
         # stdio subprocess receives one secret at start (the stable first
@@ -289,13 +301,7 @@ class Gateway:
             for name, settings in config.get("mcp", {}).items():
                 if name in BUILTINS or not server_state(name, config)["visible"]:
                     continue
-                env = {
-                    key: value(ref, config)
-                    for key, ref in settings.get("env", {}).items()
-                }
-                desired[name] = hashlib.sha256(
-                    json.dumps([settings, env], sort_keys=True).encode()
-                ).hexdigest()
+                desired[name] = external_fingerprint(settings, config)
             for name in list(self.externals):
                 worker = self.externals[name]
                 retry = (
@@ -330,7 +336,10 @@ class Gateway:
         }
         sources = {
             **self.definitions,
-            **{key: worker.tools for key, worker in self.externals.items()},
+            **{name: worker.tools for name, worker in self.externals.items()
+               if worker.ready.is_set() and worker.task and not worker.task.done()
+               and self.fingerprints[name] == external_fingerprint(
+                   config.get("mcp", {}).get(name, {}), config)},
         }
         builtin_prefixes = {server.removesuffix("-mcp") for server in BUILTINS}
         for name, definitions in sources.items():
@@ -578,16 +587,8 @@ class Gateway:
                 ):
                     response.isError = True
             else:
-                # A rotation invalidates the previous backend immediately,
-                # including the interval before the polling watcher runs.
-                worker = self.externals[server]
-                refs = worker.settings.get("env", {})
-                if any(
-                    value(ref, config) != value(ref, worker.config)
-                    for ref in refs.values()
-                ):
-                    return failed("Credentials changed; MCP reconnect is in progress.")
-                response = await worker.call(original, arguments)
+                # tools(config) already excluded workers from a stale launch or key.
+                response = await self.externals[server].call(original, arguments)
 
             return types.CallToolResult.model_validate(
                 _redact_payload(response.model_dump(mode="json"), config)

@@ -1,0 +1,5399 @@
+{
+  "tested_implementation_tree": "e8b94e95d08d69675cd864cc64befead9a43a286",
+  "paired_workflow": {
+    "baseline": {
+      "repo_sha": "373eaaf6ff6c635820cbbc3117ba5fe32199c7e0",
+      "sources_sha256": {
+        "registry.py": "5df9bf849c3eafb88300cb847cd24429f22cc2b86de307e130a9e3569b8c4fc4",
+        "runtime.py": "8901e54e951d40e654d4170739792adf4f1e0e6f89d0c882524107bcb002ab2b",
+        "gateway.py": "e55ecae938a24c069367181399355512f9522876e60a67f7765e750f49ede9fa",
+        "setup.sh": "09763b63e60b11c05413732dc06925b5431828d00d63b43ecc1282ab9ae7f831"
+      },
+      "env": {
+        "python": "3.12.14",
+        "os": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "codex": "codex-cli 0.172.0-alpha.2"
+      },
+      "method": "tiktoken o200k_base proxy after normalizing fixture paths. Native descriptions reconstructed. Tool schema projection assumes eager exposure. No model endpoint used.",
+      "native_skill_descriptions": 16,
+      "native_marker_bytes": 1094,
+      "l0_bytes": 3601,
+      "l0_rendered_only_proxy": 471,
+      "l0_read": "cat",
+      "l0_cli_ms": 1.152,
+      "channels": {
+        "native_marker": 213,
+        "l0": 942,
+        "observer_cold": 122,
+        "memory_recall": 39,
+        "native_descriptions": 1065,
+        "tool_schema_eager_projection": 1468
+      },
+      "stdio_mcp": {
+        "wire_bytes": 6326,
+        "protocol": "2025-11-25",
+        "search_shape_visible_without_key": false,
+        "initialize_and_list_ms": 452.62590299989824,
+        "embedding_256": true,
+        "video_width_32": true,
+        "video_tool_result_proxy": 79,
+        "tool_count": 24,
+        "startup_ms": {
+          "n": 5,
+          "p50": 435.16,
+          "p95": 581.825,
+          "max": 581.825
+        }
+      },
+      "codex_native_mcp_list": true,
+      "codex_mcp_list_cli_ms": 17.991,
+      "session_start_ms": {
+        "cold": 42.23,
+        "with_prior_note": 47.394
+      },
+      "prompt_submit_ms": {
+        "n": 35,
+        "p50": 150.129,
+        "p95": 327.834,
+        "max": 352.153
+      },
+      "checks_passed": 5,
+      "checks_total": 7,
+      "rows": [
+        {
+          "case": "typescript-refactor",
+          "prompt": "Refactor our TypeScript module for readability without changing the public API. Preserve behavior with existing tests.",
+          "passed": false,
+          "accepted_skill": null,
+          "hook_rank": null,
+          "selected_skill_body_bytes": 0,
+          "hook_candidates": [
+            "api-contract-testing",
+            "agency-testing-api-tester",
+            "api-testing-observability-api-mock",
+            "agency-testing-test-results-analyzer",
+            "expo-module",
+            "agency-testing-test-automation-engineer",
+            "hunt-spa-api",
+            "fp-refactor"
+          ],
+          "reached_via": null,
+          "cost": {
+            "prompt_slot": 238,
+            "search_page": 440,
+            "detail_page": 0,
+            "skill_detail_body": 0,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 183.024,
+            "p95": 352.153,
+            "max": 352.153
+          },
+          "search_cli_ms": 221.574,
+          "detail_cli_ms": 0,
+          "cold_start_proxy": 4048,
+          "cold_start_with_prior_note": 4087,
+          "fixture_path_total_ae_proxy": 4048
+        },
+        {
+          "case": "python-debug",
+          "prompt": "The Python service crashes while parsing its JSON config. Reproduce the bug and find its root cause before editing.",
+          "passed": false,
+          "accepted_skill": null,
+          "hook_rank": null,
+          "selected_skill_body_bytes": 0,
+          "hook_candidates": [
+            "monte-carlo-analyze-root-cause",
+            "debugging-and-error-recovery",
+            "phase-gated-debugging",
+            "code-showcase-systematic-debugging",
+            "copy-editing",
+            "n8n-code-python",
+            "distributed-debugging-debug-trace",
+            "bug-hunt-swarm"
+          ],
+          "reached_via": null,
+          "cost": {
+            "prompt_slot": 251,
+            "search_page": 461,
+            "detail_page": 0,
+            "skill_detail_body": 0,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 154.652,
+            "p95": 156.888,
+            "max": 156.888
+          },
+          "search_cli_ms": 314.05,
+          "detail_cli_ms": 0,
+          "cold_start_proxy": 4061,
+          "cold_start_with_prior_note": 4100,
+          "fixture_path_total_ae_proxy": 4061
+        },
+        {
+          "case": "defensive-review",
+          "prompt": "Model security threats for this payment service using STRIDE.",
+          "passed": true,
+          "accepted_skill": "threat-modeling",
+          "hook_rank": 4,
+          "selected_skill_body_bytes": 17552,
+          "hook_candidates": [
+            "agent-security-hardening",
+            "container-security-hardening",
+            "agency-security-architect",
+            "threat-modeling",
+            "ai-security-hardening",
+            "openclaw-security-hardening",
+            "agency-security-incident-responder",
+            "agency-security-threat-intelligence-analyst"
+          ],
+          "reached_via": "hook",
+          "cost": {
+            "prompt_slot": 234,
+            "search_page": 427,
+            "detail_page": 114,
+            "skill_detail_body": 3805,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 147.818,
+            "p95": 154.683,
+            "max": 154.683
+          },
+          "search_cli_ms": 138.38,
+          "detail_cli_ms": 56.648,
+          "cold_start_proxy": 4044,
+          "cold_start_with_prior_note": 4083,
+          "fixture_path_total_ae_proxy": 7963
+        },
+        {
+          "case": "documentation",
+          "prompt": "Prepare a formal offer letter as a Word document.",
+          "passed": true,
+          "accepted_skill": "docx",
+          "hook_rank": 1,
+          "selected_skill_body_bytes": 6897,
+          "hook_candidates": [
+            "docx",
+            "azure-ai-translation-document-py",
+            "documentation",
+            "documentation-generation-doc-generate",
+            "documentation-templates",
+            "agency-specialized-document-generator",
+            "documentation-and-adrs",
+            "documentation-lookup"
+          ],
+          "reached_via": "hook",
+          "cost": {
+            "prompt_slot": 225,
+            "search_page": 436,
+            "detail_page": 116,
+            "skill_detail_body": 1759,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 147.949,
+            "p95": 153.151,
+            "max": 153.151
+          },
+          "search_cli_ms": 129.734,
+          "detail_cli_ms": 52.954,
+          "cold_start_proxy": 4035,
+          "cold_start_with_prior_note": 4074,
+          "fixture_path_total_ae_proxy": 5910
+        },
+        {
+          "case": "research-permissions",
+          "prompt": "Research competing approaches to retrieval augmented generation and write a cited report.",
+          "passed": true,
+          "accepted_skill": "deep-research-framework",
+          "hook_rank": 2,
+          "selected_skill_body_bytes": 4974,
+          "hook_candidates": [
+            "uxkin-research",
+            "deep-research-framework",
+            "deep-research",
+            "research-prompt",
+            "geo-report",
+            "geo-report-pdf",
+            "report-writing",
+            "reports-analytics"
+          ],
+          "reached_via": "hook",
+          "cost": {
+            "prompt_slot": 226,
+            "search_page": 430,
+            "detail_page": 117,
+            "skill_detail_body": 1076,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 149.603,
+            "p95": 236.645,
+            "max": 236.645
+          },
+          "search_cli_ms": 132.048,
+          "detail_cli_ms": 59.556,
+          "cold_start_proxy": 4036,
+          "cold_start_with_prior_note": 4075,
+          "fixture_path_total_ae_proxy": 5229
+        },
+        {
+          "case": "local-video",
+          "prompt": "Edit this interview footage into short video clips with subtitles.",
+          "passed": true,
+          "accepted_skill": "agency-marketing-short-video-editing-coach",
+          "hook_rank": 2,
+          "selected_skill_body_bytes": 31236,
+          "hook_candidates": [
+            "short",
+            "agency-marketing-short-video-editing-coach",
+            "beatra-ai-video-studio",
+            "videodb",
+            "video-editing",
+            "video-router",
+            "video-content-extractor",
+            "videodb-skills"
+          ],
+          "reached_via": "hook",
+          "cost": {
+            "prompt_slot": 238,
+            "search_page": 425,
+            "detail_page": 136,
+            "skill_detail_body": 6994,
+            "local_tool_result": 79
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 143.507,
+            "p95": 153.703,
+            "max": 153.703
+          },
+          "search_cli_ms": 135.204,
+          "detail_cli_ms": 55.634,
+          "cold_start_proxy": 4048,
+          "cold_start_with_prior_note": 4087,
+          "fixture_path_total_ae_proxy": 11257
+        },
+        {
+          "case": "abstain",
+          "prompt": "Berapa hasil 17 dikali 23?",
+          "passed": true,
+          "accepted_skill": null,
+          "hook_rank": null,
+          "selected_skill_body_bytes": 0,
+          "hook_candidates": [],
+          "reached_via": null,
+          "cost": {
+            "prompt_slot": 0,
+            "search_page": 41,
+            "detail_page": 0,
+            "skill_detail_body": 0,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 140.836,
+            "p95": 229.578,
+            "max": 229.578
+          },
+          "search_cli_ms": 132.488,
+          "detail_cli_ms": 0,
+          "cold_start_proxy": 3810,
+          "cold_start_with_prior_note": 3849,
+          "fixture_path_total_ae_proxy": 3810
+        }
+      ],
+      "prepared_checkout_state_bytes": 72030546,
+      "max_child_process_rss_kib": 99888
+    },
+    "feature": {
+      "repo_sha": "8ecf036f8be13a458645397deb46b58fafa553b8",
+      "sources_sha256": {
+        "registry.py": "57f5865a0b672eb6a7c411e569f6b4d610dbb4787359e19dd1e331df6b22b966",
+        "runtime.py": "8901e54e951d40e654d4170739792adf4f1e0e6f89d0c882524107bcb002ab2b",
+        "gateway.py": "15aa22b84da46f8939e1e4aa665f0919f5804716a69b66eca885f7c224d5319f",
+        "setup.sh": "a9ec89fa22dd2a39ec8616e0cd852c10956936a90adc620275c099face1547fc"
+      },
+      "env": {
+        "python": "3.12.14",
+        "os": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "codex": "codex-cli 0.172.0-alpha.2"
+      },
+      "method": "tiktoken o200k_base proxy after normalizing fixture paths. Native descriptions reconstructed. Tool schema projection assumes eager exposure. No model endpoint used.",
+      "native_skill_descriptions": 16,
+      "native_marker_bytes": 1057,
+      "l0_bytes": 2154,
+      "l0_rendered_only_proxy": 471,
+      "l0_read": "build-library-map.py --print",
+      "l0_cli_ms": 26.622,
+      "channels": {
+        "native_marker": 196,
+        "l0": 486,
+        "observer_cold": 122,
+        "memory_recall": 39,
+        "native_descriptions": 1065,
+        "tool_schema_eager_projection": 1468
+      },
+      "stdio_mcp": {
+        "wire_bytes": 6326,
+        "protocol": "2025-11-25",
+        "search_shape_visible_without_key": false,
+        "initialize_and_list_ms": 383.3524239998951,
+        "embedding_256": true,
+        "video_width_32": true,
+        "video_tool_result_proxy": 78,
+        "tool_count": 24,
+        "startup_ms": {
+          "n": 5,
+          "p50": 441.919,
+          "p95": 578.81,
+          "max": 578.81
+        }
+      },
+      "codex_native_mcp_list": true,
+      "codex_mcp_list_cli_ms": 22.64,
+      "session_start_ms": {
+        "cold": 41.032,
+        "with_prior_note": 42.347
+      },
+      "prompt_submit_ms": {
+        "n": 35,
+        "p50": 159.002,
+        "p95": 293.113,
+        "max": 295.58
+      },
+      "checks_passed": 5,
+      "checks_total": 7,
+      "rows": [
+        {
+          "case": "typescript-refactor",
+          "prompt": "Refactor our TypeScript module for readability without changing the public API. Preserve behavior with existing tests.",
+          "passed": false,
+          "accepted_skill": null,
+          "hook_rank": null,
+          "selected_skill_body_bytes": 0,
+          "hook_candidates": [
+            "api-contract-testing",
+            "agency-testing-api-tester",
+            "api-testing-observability-api-mock",
+            "agency-testing-test-results-analyzer",
+            "expo-module",
+            "agency-testing-test-automation-engineer",
+            "hunt-spa-api",
+            "fp-refactor"
+          ],
+          "reached_via": null,
+          "cost": {
+            "prompt_slot": 238,
+            "search_page": 440,
+            "detail_page": 0,
+            "skill_detail_body": 0,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 169.237,
+            "p95": 293.113,
+            "max": 293.113
+          },
+          "search_cli_ms": 142.766,
+          "detail_cli_ms": 0,
+          "cold_start_proxy": 3575,
+          "cold_start_with_prior_note": 3614,
+          "fixture_path_total_ae_proxy": 3575
+        },
+        {
+          "case": "python-debug",
+          "prompt": "The Python service crashes while parsing its JSON config. Reproduce the bug and find its root cause before editing.",
+          "passed": false,
+          "accepted_skill": null,
+          "hook_rank": null,
+          "selected_skill_body_bytes": 0,
+          "hook_candidates": [
+            "monte-carlo-analyze-root-cause",
+            "debugging-and-error-recovery",
+            "phase-gated-debugging",
+            "code-showcase-systematic-debugging",
+            "copy-editing",
+            "n8n-code-python",
+            "distributed-debugging-debug-trace",
+            "bug-hunt-swarm"
+          ],
+          "reached_via": null,
+          "cost": {
+            "prompt_slot": 251,
+            "search_page": 461,
+            "detail_page": 0,
+            "skill_detail_body": 0,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 162.098,
+            "p95": 180.172,
+            "max": 180.172
+          },
+          "search_cli_ms": 156.416,
+          "detail_cli_ms": 0,
+          "cold_start_proxy": 3588,
+          "cold_start_with_prior_note": 3627,
+          "fixture_path_total_ae_proxy": 3588
+        },
+        {
+          "case": "defensive-review",
+          "prompt": "Model security threats for this payment service using STRIDE.",
+          "passed": true,
+          "accepted_skill": "threat-modeling",
+          "hook_rank": 4,
+          "selected_skill_body_bytes": 17552,
+          "hook_candidates": [
+            "agent-security-hardening",
+            "container-security-hardening",
+            "agency-security-architect",
+            "threat-modeling",
+            "ai-security-hardening",
+            "openclaw-security-hardening",
+            "agency-security-incident-responder",
+            "agency-security-threat-intelligence-analyst"
+          ],
+          "reached_via": "hook",
+          "cost": {
+            "prompt_slot": 234,
+            "search_page": 427,
+            "detail_page": 114,
+            "skill_detail_body": 3805,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 161.343,
+            "p95": 295.58,
+            "max": 295.58
+          },
+          "search_cli_ms": 135.889,
+          "detail_cli_ms": 58.123,
+          "cold_start_proxy": 3571,
+          "cold_start_with_prior_note": 3610,
+          "fixture_path_total_ae_proxy": 7490
+        },
+        {
+          "case": "documentation",
+          "prompt": "Prepare a formal offer letter as a Word document.",
+          "passed": true,
+          "accepted_skill": "docx",
+          "hook_rank": 1,
+          "selected_skill_body_bytes": 6897,
+          "hook_candidates": [
+            "docx",
+            "azure-ai-translation-document-py",
+            "documentation",
+            "documentation-generation-doc-generate",
+            "documentation-templates",
+            "agency-specialized-document-generator",
+            "documentation-and-adrs",
+            "documentation-lookup"
+          ],
+          "reached_via": "hook",
+          "cost": {
+            "prompt_slot": 225,
+            "search_page": 436,
+            "detail_page": 116,
+            "skill_detail_body": 1759,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 154.901,
+            "p95": 174.857,
+            "max": 174.857
+          },
+          "search_cli_ms": 137.417,
+          "detail_cli_ms": 171.927,
+          "cold_start_proxy": 3562,
+          "cold_start_with_prior_note": 3601,
+          "fixture_path_total_ae_proxy": 5437
+        },
+        {
+          "case": "research-permissions",
+          "prompt": "Research competing approaches to retrieval augmented generation and write a cited report.",
+          "passed": true,
+          "accepted_skill": "deep-research-framework",
+          "hook_rank": 2,
+          "selected_skill_body_bytes": 4974,
+          "hook_candidates": [
+            "uxkin-research",
+            "deep-research-framework",
+            "deep-research",
+            "research-prompt",
+            "geo-report",
+            "geo-report-pdf",
+            "report-writing",
+            "reports-analytics"
+          ],
+          "reached_via": "hook",
+          "cost": {
+            "prompt_slot": 226,
+            "search_page": 430,
+            "detail_page": 117,
+            "skill_detail_body": 1076,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 142.658,
+            "p95": 149.418,
+            "max": 149.418
+          },
+          "search_cli_ms": 151.08,
+          "detail_cli_ms": 56.598,
+          "cold_start_proxy": 3563,
+          "cold_start_with_prior_note": 3602,
+          "fixture_path_total_ae_proxy": 4756
+        },
+        {
+          "case": "local-video",
+          "prompt": "Edit this interview footage into short video clips with subtitles.",
+          "passed": true,
+          "accepted_skill": "agency-marketing-short-video-editing-coach",
+          "hook_rank": 2,
+          "selected_skill_body_bytes": 31236,
+          "hook_candidates": [
+            "short",
+            "agency-marketing-short-video-editing-coach",
+            "beatra-ai-video-studio",
+            "videodb",
+            "video-editing",
+            "video-router",
+            "video-content-extractor",
+            "videodb-skills"
+          ],
+          "reached_via": "hook",
+          "cost": {
+            "prompt_slot": 238,
+            "search_page": 425,
+            "detail_page": 136,
+            "skill_detail_body": 6994,
+            "local_tool_result": 78
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 155.44,
+            "p95": 181.011,
+            "max": 181.011
+          },
+          "search_cli_ms": 137.339,
+          "detail_cli_ms": 58.89,
+          "cold_start_proxy": 3575,
+          "cold_start_with_prior_note": 3614,
+          "fixture_path_total_ae_proxy": 10783
+        },
+        {
+          "case": "abstain",
+          "prompt": "Berapa hasil 17 dikali 23?",
+          "passed": true,
+          "accepted_skill": null,
+          "hook_rank": null,
+          "selected_skill_body_bytes": 0,
+          "hook_candidates": [],
+          "reached_via": null,
+          "cost": {
+            "prompt_slot": 0,
+            "search_page": 41,
+            "detail_page": 0,
+            "skill_detail_body": 0,
+            "local_tool_result": 0
+          },
+          "hook_ms": {
+            "n": 5,
+            "p50": 138.968,
+            "p95": 239.9,
+            "max": 239.9
+          },
+          "search_cli_ms": 122.53,
+          "detail_cli_ms": 0,
+          "cold_start_proxy": 3337,
+          "cold_start_with_prior_note": 3376,
+          "fixture_path_total_ae_proxy": 3337
+        }
+      ],
+      "prepared_checkout_state_bytes": 72044304,
+      "max_child_process_rss_kib": 99896
+    }
+  },
+  "frozen_discovery": {
+    "baseline": {
+      "fixture_sha256": "d54bc497947ef5b2b1970c52011d27ff454dd34528ed23db839a4410aea4adb0",
+      "source_sha256": {
+        "registry.py": "5df9bf849c3eafb88300cb847cd24429f22cc2b86de307e130a9e3569b8c4fc4",
+        "load-skills.py": "ee2991ff5951d0a82678144dfbaccdd1eb414675902bb289c71f02307454ace5",
+        "runtime.py": "8901e54e951d40e654d4170739792adf4f1e0e6f89d0c882524107bcb002ab2b",
+        "context_budget.py": "0c52392d7d9dfebffd06b8ec103fc5b06dd59e2dd67c9b7834ffd48fcdcd334a"
+      },
+      "source_changed_during_run": false,
+      "method": "Paired natural task intents; acceptable alternatives were chosen from capability descriptions and router policy before the baseline run. This is a small lexical-discovery regression corpus, not a semantic or task-completion evaluation. No fixture text is consumed by production ranking.",
+      "repo": "/baseline-checkout",
+      "cases": 50,
+      "token_measurement": "documented chars/4 fallback",
+      "quality": {
+        "registry_map": {
+          "all": {
+            "n": 40,
+            "top1_hits": 25,
+            "top3_hits": 30
+          },
+          "positive": {
+            "n": 32,
+            "top1_hits": 23,
+            "top3_hits": 27
+          },
+          "ambiguous": {
+            "n": 8,
+            "top1_hits": 2,
+            "top3_hits": 3
+          },
+          "en": {
+            "n": 20,
+            "top1_hits": 11,
+            "top3_hits": 15
+          },
+          "id": {
+            "n": 20,
+            "top1_hits": 14,
+            "top3_hits": 15
+          },
+          "negative": {
+            "n": 6,
+            "abstained": 6
+          }
+        },
+        "loader": {
+          "all": {
+            "n": 40,
+            "top1_hits": 25,
+            "top3_hits": 30
+          },
+          "positive": {
+            "n": 32,
+            "top1_hits": 23,
+            "top3_hits": 27
+          },
+          "ambiguous": {
+            "n": 8,
+            "top1_hits": 2,
+            "top3_hits": 3
+          },
+          "en": {
+            "n": 20,
+            "top1_hits": 11,
+            "top3_hits": 15
+          },
+          "id": {
+            "n": 20,
+            "top1_hits": 14,
+            "top3_hits": 15
+          },
+          "negative": {
+            "n": 6,
+            "abstained": 6
+          }
+        },
+        "hook": {
+          "all": {
+            "n": 40,
+            "top1_hits": 25,
+            "top3_hits": 30
+          },
+          "positive": {
+            "n": 32,
+            "top1_hits": 23,
+            "top3_hits": 27
+          },
+          "ambiguous": {
+            "n": 8,
+            "top1_hits": 2,
+            "top3_hits": 3
+          },
+          "en": {
+            "n": 20,
+            "top1_hits": 11,
+            "top3_hits": 15
+          },
+          "id": {
+            "n": 20,
+            "top1_hits": 14,
+            "top3_hits": 15
+          },
+          "negative": {
+            "n": 6,
+            "abstained": 6
+          }
+        }
+      },
+      "latency_ms": {
+        "registry": {
+          "p50": 113.176,
+          "p95": 160.338,
+          "max": 227.038
+        },
+        "loader": {
+          "p50": 85.479,
+          "p95": 146.403,
+          "max": 184.182
+        },
+        "hook": {
+          "p50": 184.727,
+          "p95": 254.524,
+          "max": 445.72
+        }
+      },
+      "tokens": {
+        "registry": {
+          "p50": 940.0,
+          "p95": 1261,
+          "max": 1414
+        },
+        "hook": {
+          "p50": 276.0,
+          "p95": 301,
+          "max": 311
+        }
+      },
+      "registry_invalid_json": 0,
+      "cards": {
+        "registry_cards": 314,
+        "registry_complete_cards": 314,
+        "hook_cards": 309,
+        "hook_complete_summaries": 308,
+        "hook_detail_pointers": 0,
+        "hook_readiness_labels": 0
+      },
+      "unavailable_mcp": {
+        "n": 4,
+        "advertised": 0,
+        "ready": 0
+      },
+      "rows": [
+        {
+          "id": "word-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Prepare a formal offer letter as a Word document.",
+          "acceptable_ids": [
+            "skill:docx"
+          ],
+          "registry_ms": 148.27097800002775,
+          "registry_tokens": 1053,
+          "registry_map": [
+            "skill:docx",
+            "skill:azure-ai-translation-document-py",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 98.42465000002676,
+          "loader": [
+            "skill:docx",
+            "skill:azure-ai-translation-document-py",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:agency-specialized-document-generator",
+            "skill:documentation-and-adrs",
+            "skill:documentation-lookup"
+          ],
+          "hook_ms": 174.1032099999984,
+          "hook": [
+            "skill:docx",
+            "skill:azure-ai-translation-document-py",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:agency-specialized-document-generator",
+            "skill:documentation-and-adrs",
+            "skill:documentation-lookup"
+          ],
+          "hook_tokens": 293,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "word-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Siapkan surat penawaran resmi dalam dokumen Word.",
+          "acceptable_ids": [
+            "skill:docx"
+          ],
+          "registry_ms": 143.70106600000554,
+          "registry_tokens": 855,
+          "registry_map": [
+            "skill:docx",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:word-count-structure-checker"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 96.32988900000328,
+          "loader": [
+            "skill:docx",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:word-count-structure-checker"
+          ],
+          "hook_ms": 214.19099000002007,
+          "hook": [
+            "skill:docx",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:word-count-structure-checker"
+          ],
+          "hook_tokens": 189,
+          "hook_cards": 5,
+          "hook_complete_summaries": 5,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "sheet-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Clean this Excel workbook and add formulas for the totals.",
+          "acceptable_ids": [
+            "skill:xlsx"
+          ],
+          "registry_ms": 103.71539099998017,
+          "registry_tokens": 953,
+          "registry_map": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build",
+            "skill:add-app-clip",
+            "skill:clean-code",
+            "skill:clean-code-guard"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 77.42481899998666,
+          "loader": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build",
+            "skill:add-app-clip",
+            "skill:clean-code",
+            "skill:clean-code-guard",
+            "skill:bilig-workpaper"
+          ],
+          "hook_ms": 141.3066040000217,
+          "hook": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build",
+            "skill:add-app-clip",
+            "skill:clean-code",
+            "skill:clean-code-guard",
+            "skill:bilig-workpaper"
+          ],
+          "hook_tokens": 214,
+          "hook_cards": 6,
+          "hook_complete_summaries": 6,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "sheet-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Bersihkan buku kerja Excel ini dan tambahkan rumus untuk totalnya.",
+          "acceptable_ids": [
+            "skill:xlsx"
+          ],
+          "registry_ms": 88.47126400002026,
+          "registry_tokens": 648,
+          "registry_map": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build"
+          ],
+          "registry_complete_cards": 4,
+          "registry_cards": 4,
+          "registry_parse_error": false,
+          "loader_ms": 85.77576599998338,
+          "loader": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build"
+          ],
+          "hook_ms": 175.51657100000284,
+          "hook": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build"
+          ],
+          "hook_tokens": 96,
+          "hook_cards": 2,
+          "hook_complete_summaries": 2,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "slides-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Turn the quarterly results into a PowerPoint presentation.",
+          "acceptable_ids": [
+            "skill:pptx"
+          ],
+          "registry_ms": 83.29427800003941,
+          "registry_tokens": 1054,
+          "registry_map": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:pptx-deck-creation",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 65.86429700001872,
+          "loader": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:pptx-deck-creation",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides",
+            "skill:python-pptx-generator",
+            "skill:2slides-ppt-generator",
+            "skill:slideops"
+          ],
+          "hook_ms": 146.93118700000696,
+          "hook": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:pptx-deck-creation",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides",
+            "skill:python-pptx-generator",
+            "skill:2slides-ppt-generator",
+            "skill:slideops"
+          ],
+          "hook_tokens": 280,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "slides-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Ubah hasil kuartalan menjadi presentasi PowerPoint.",
+          "acceptable_ids": [
+            "skill:pptx"
+          ],
+          "registry_ms": 91.43690500002322,
+          "registry_tokens": 1051,
+          "registry_map": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides",
+            "skill:pptx-deck-creation"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 93.06530999998586,
+          "loader": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides",
+            "skill:pptx-deck-creation",
+            "skill:python-pptx-generator",
+            "skill:2slides-ppt-generator",
+            "skill:mdpr-skill"
+          ],
+          "hook_ms": 166.3897610000049,
+          "hook": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides",
+            "skill:pptx-deck-creation",
+            "skill:python-pptx-generator",
+            "skill:2slides-ppt-generator",
+            "skill:mdpr-skill"
+          ],
+          "hook_tokens": 281,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "pdf-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Extract the tables from this PDF and merge the remaining pages.",
+          "acceptable_ids": [
+            "skill:pdf"
+          ],
+          "registry_ms": 89.35446499998534,
+          "registry_tokens": 1199,
+          "registry_map": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:extract-document-data",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator"
+          ],
+          "registry_complete_cards": 10,
+          "registry_cards": 10,
+          "registry_parse_error": false,
+          "loader_ms": 67.67647499998475,
+          "loader": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:extract-document-data",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator",
+            "skill:curlshot",
+            "skill:papers-skill"
+          ],
+          "hook_ms": 151.78211599999258,
+          "hook": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:extract-document-data",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator",
+            "skill:curlshot",
+            "skill:papers-skill"
+          ],
+          "hook_tokens": 241,
+          "hook_cards": 7,
+          "hook_complete_summaries": 7,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "pdf-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Ekstrak tabel dari PDF ini dan gabungkan halaman sisanya.",
+          "acceptable_ids": [
+            "skill:pdf"
+          ],
+          "registry_ms": 96.43401599998924,
+          "registry_tokens": 937,
+          "registry_map": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator",
+            "skill:curlshot"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 83.4696979999876,
+          "loader": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator",
+            "skill:curlshot",
+            "skill:papers-skill"
+          ],
+          "hook_ms": 176.4140989999987,
+          "hook": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator",
+            "skill:curlshot",
+            "skill:papers-skill"
+          ],
+          "hook_tokens": 209,
+          "hook_cards": 6,
+          "hook_complete_summaries": 6,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "mcp-build-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Build an MCP server that exposes our inventory API as tools.",
+          "acceptable_ids": [
+            "skill:mcp-builder"
+          ],
+          "registry_ms": 92.19953600000963,
+          "registry_tokens": 1230,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:n8n-mcp-tools-expert",
+            "skill:keenable-search-mcp",
+            "skill:not-human-search-mcp"
+          ],
+          "registry_complete_cards": 11,
+          "registry_cards": 11,
+          "registry_parse_error": false,
+          "loader_ms": 72.30801400004339,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:n8n-mcp-tools-expert",
+            "skill:keenable-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:aws-mcp-setup",
+            "skill:parallel-search-mcp",
+            "skill:hf-mcp"
+          ],
+          "hook_ms": 167.6982339999995,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:n8n-mcp-tools-expert",
+            "skill:keenable-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:aws-mcp-setup",
+            "skill:parallel-search-mcp",
+            "skill:hf-mcp"
+          ],
+          "hook_tokens": 277,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "mcp-build-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Bangun server MCP yang menyediakan API inventaris kami sebagai tool.",
+          "acceptable_ids": [
+            "skill:mcp-builder"
+          ],
+          "registry_ms": 104.53647999997884,
+          "registry_tokens": 1208,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:mcp-server-security",
+            "skill:ai-agent-tool-routing",
+            "skill:helium-mcp"
+          ],
+          "registry_complete_cards": 10,
+          "registry_cards": 10,
+          "registry_parse_error": false,
+          "loader_ms": 95.55171499999915,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:mcp-server-security",
+            "skill:ai-agent-tool-routing",
+            "skill:keenable-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:claude-api",
+            "skill:aws-mcp-setup"
+          ],
+          "hook_ms": 227.3623309999948,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:mcp-server-security",
+            "skill:ai-agent-tool-routing",
+            "skill:keenable-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:claude-api",
+            "skill:aws-mcp-setup"
+          ],
+          "hook_tokens": 279,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "skill-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Create a reusable skill and evaluate how reliably its trigger works.",
+          "acceptable_ids": [
+            "skill:skill-creator",
+            "skill:writing-skills"
+          ],
+          "registry_ms": 96.3566189999483,
+          "registry_tokens": 978,
+          "registry_map": [
+            "skill:yao-meta-skill",
+            "skill:cc-skill-continuous-learning",
+            "skill:smartui-skill",
+            "skill:hyperexecute-skill",
+            "skill:skill-optimizer"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 65.0112159999594,
+          "loader": [
+            "skill:yao-meta-skill",
+            "skill:cc-skill-continuous-learning",
+            "skill:smartui-skill",
+            "skill:hyperexecute-skill",
+            "skill:skill-optimizer",
+            "skill:skill-creator",
+            "skill:skill-scout",
+            "skill:task-observer"
+          ],
+          "hook_ms": 151.2110549999761,
+          "hook": [
+            "skill:yao-meta-skill",
+            "skill:cc-skill-continuous-learning",
+            "skill:smartui-skill",
+            "skill:hyperexecute-skill",
+            "skill:skill-optimizer",
+            "skill:skill-creator",
+            "skill:skill-scout",
+            "skill:task-observer"
+          ],
+          "hook_tokens": 278,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "skill-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Buat skill yang dapat dipakai ulang dan evaluasi keandalan pemicunya.",
+          "acceptable_ids": [
+            "skill:skill-creator",
+            "skill:writing-skills"
+          ],
+          "registry_ms": 107.94517499999756,
+          "registry_tokens": 956,
+          "registry_map": [
+            "skill:skill-creator",
+            "skill:skill-scout",
+            "skill:skill-gap-analysis",
+            "skill:skill-host-compat",
+            "skill:skill-improver"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 111.54592399998364,
+          "loader": [
+            "skill:skill-creator",
+            "skill:skill-scout",
+            "skill:skill-gap-analysis",
+            "skill:skill-host-compat",
+            "skill:skill-improver",
+            "skill:skill-installer",
+            "skill:skill-issue",
+            "skill:skill-optimizer"
+          ],
+          "hook_ms": 181.06551699997908,
+          "hook": [
+            "skill:skill-creator",
+            "skill:skill-scout",
+            "skill:skill-gap-analysis",
+            "skill:skill-host-compat",
+            "skill:skill-improver",
+            "skill:skill-installer",
+            "skill:skill-issue",
+            "skill:skill-optimizer"
+          ],
+          "hook_tokens": 274,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "browser-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Test this local web app with Playwright and capture a browser screenshot.",
+          "acceptable_ids": [
+            "skill:webapp-testing",
+            "skill:playwright-skill"
+          ],
+          "registry_ms": 160.3375939999978,
+          "registry_tokens": 932,
+          "registry_map": [
+            "skill:webapp-testing",
+            "skill:progressive-web-app",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:applicationinsights-web-ts",
+            "skill:agency-testing-test-results-analyzer"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 96.47085900002139,
+          "loader": [
+            "skill:webapp-testing",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:applicationinsights-web-ts",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:replica-test",
+            "skill:azure-microsoft-playwright-testing-ts",
+            "skill:browser-testing-with-devtools",
+            "skill:web-security-testing"
+          ],
+          "hook_ms": 208.32714400000896,
+          "hook": [
+            "skill:webapp-testing",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:applicationinsights-web-ts",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:replica-test",
+            "skill:azure-microsoft-playwright-testing-ts",
+            "skill:browser-testing-with-devtools",
+            "skill:web-security-testing"
+          ],
+          "hook_tokens": 311,
+          "hook_cards": 8,
+          "hook_complete_summaries": 7,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "browser-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Uji aplikasi web lokal ini dengan Playwright dan ambil tangkapan layar browser.",
+          "acceptable_ids": [
+            "skill:webapp-testing",
+            "skill:playwright-skill"
+          ],
+          "registry_ms": 214.7982699999602,
+          "registry_tokens": 936,
+          "registry_map": [
+            "skill:webapp-testing",
+            "skill:azure-microsoft-playwright-testing-ts",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:applicationinsights-web-ts"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 94.30493700000397,
+          "loader": [
+            "skill:webapp-testing",
+            "skill:azure-microsoft-playwright-testing-ts",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:applicationinsights-web-ts",
+            "skill:assay",
+            "skill:browser-qa",
+            "skill:go-playwright"
+          ],
+          "hook_ms": 201.19537699997636,
+          "hook": [
+            "skill:webapp-testing",
+            "skill:azure-microsoft-playwright-testing-ts",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:applicationinsights-web-ts",
+            "skill:assay",
+            "skill:browser-qa",
+            "skill:go-playwright"
+          ],
+          "hook_tokens": 288,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "claude-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Add streaming responses using the Anthropic Claude API and SDK.",
+          "acceptable_ids": [
+            "skill:claude-api"
+          ],
+          "registry_ms": 109.14739200001122,
+          "registry_tokens": 982,
+          "registry_map": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 105.59551000000056,
+          "loader": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk",
+            "skill:gemini-api-dev",
+            "skill:gemini-api-integration",
+            "skill:gemini-interactions-api"
+          ],
+          "hook_ms": 173.73289799996883,
+          "hook": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk",
+            "skill:gemini-api-dev",
+            "skill:gemini-api-integration",
+            "skill:gemini-interactions-api"
+          ],
+          "hook_tokens": 286,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "claude-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Tambahkan respons streaming memakai API dan SDK Claude dari Anthropic.",
+          "acceptable_ids": [
+            "skill:claude-api"
+          ],
+          "registry_ms": 121.89218200001051,
+          "registry_tokens": 984,
+          "registry_map": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 70.6784220000145,
+          "loader": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk",
+            "skill:gemini-api-integration",
+            "skill:gemini-interactions-api",
+            "skill:gemini-live-api-dev"
+          ],
+          "hook_ms": 200.9571650000339,
+          "hook": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk",
+            "skill:gemini-api-integration",
+            "skill:gemini-interactions-api",
+            "skill:gemini-live-api-dev"
+          ],
+          "hook_tokens": 287,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "debug-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "The application crashes after login; reproduce the bug and find its root cause.",
+          "acceptable_ids": [
+            "skill:systematic-debugging",
+            "skill:debugger",
+            "skill:debugging-strategies",
+            "skill:debugging-toolkit"
+          ],
+          "registry_ms": 118.74552000000449,
+          "registry_tokens": 833,
+          "registry_map": [
+            "skill:monte-carlo-analyze-root-cause",
+            "skill:debugging-and-error-recovery",
+            "skill:phase-gated-debugging",
+            "skill:code-showcase-systematic-debugging",
+            "skill:distributed-debugging-debug-trace"
+          ],
+          "registry_complete_cards": 5,
+          "registry_cards": 5,
+          "registry_parse_error": false,
+          "loader_ms": 81.12222900001598,
+          "loader": [
+            "skill:monte-carlo-analyze-root-cause",
+            "skill:debugging-and-error-recovery",
+            "skill:phase-gated-debugging",
+            "skill:code-showcase-systematic-debugging",
+            "skill:distributed-debugging-debug-trace",
+            "skill:bug-hunt-swarm",
+            "skill:error-debugging-multi-agent-review",
+            "skill:bug-hunter"
+          ],
+          "hook_ms": 220.99939599996787,
+          "hook": [
+            "skill:monte-carlo-analyze-root-cause",
+            "skill:debugging-and-error-recovery",
+            "skill:phase-gated-debugging",
+            "skill:code-showcase-systematic-debugging",
+            "skill:distributed-debugging-debug-trace",
+            "skill:bug-hunt-swarm",
+            "skill:error-debugging-multi-agent-review",
+            "skill:bug-hunter"
+          ],
+          "hook_tokens": 297,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "debug-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Aplikasi macet sesudah login; reproduksi kerusakan dan temukan akar masalahnya.",
+          "acceptable_ids": [
+            "skill:systematic-debugging",
+            "skill:debugger",
+            "skill:debugging-strategies",
+            "skill:debugging-toolkit"
+          ],
+          "registry_ms": 144.85062300002483,
+          "registry_tokens": 791,
+          "registry_map": [
+            "skill:distributed-debugging-debug-trace",
+            "skill:debugging-and-error-recovery",
+            "skill:bugs-are-annoying",
+            "skill:debugging-toolkit",
+            "skill:systematic-debugging"
+          ],
+          "registry_complete_cards": 5,
+          "registry_cards": 5,
+          "registry_parse_error": false,
+          "loader_ms": 146.4028590000339,
+          "loader": [
+            "skill:distributed-debugging-debug-trace",
+            "skill:debugging-and-error-recovery",
+            "skill:bugs-are-annoying",
+            "skill:debugging-toolkit",
+            "skill:systematic-debugging",
+            "skill:error-debugging-error-analysis"
+          ],
+          "hook_ms": 292.4226009999984,
+          "hook": [
+            "skill:distributed-debugging-debug-trace",
+            "skill:debugging-and-error-recovery",
+            "skill:bugs-are-annoying",
+            "skill:debugging-toolkit",
+            "skill:systematic-debugging",
+            "skill:error-debugging-error-analysis"
+          ],
+          "hook_tokens": 226,
+          "hook_cards": 6,
+          "hook_complete_summaries": 6,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "review-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Review this pull request for code quality before we merge it.",
+          "acceptable_ids": [
+            "skill:requesting-code-review",
+            "skill:code-review-excellence",
+            "skill:code-review-and-quality",
+            "skill:five-axis-code-review",
+            "skill:code-reviewer"
+          ],
+          "registry_ms": 118.96417500003054,
+          "registry_tokens": 803,
+          "registry_map": [
+            "skill:code-review-and-quality",
+            "skill:requesting-code-review",
+            "skill:five-axis-code-review",
+            "skill:receiving-code-review",
+            "skill:flutter-dart-code-review"
+          ],
+          "registry_complete_cards": 5,
+          "registry_cards": 5,
+          "registry_parse_error": false,
+          "loader_ms": 92.85355000002937,
+          "loader": [
+            "skill:code-review-and-quality",
+            "skill:requesting-code-review",
+            "skill:five-axis-code-review",
+            "skill:receiving-code-review",
+            "skill:flutter-dart-code-review",
+            "skill:plankton-code-quality",
+            "skill:codex-review",
+            "skill:code-review-sensei"
+          ],
+          "hook_ms": 254.5241400000009,
+          "hook": [
+            "skill:code-review-and-quality",
+            "skill:requesting-code-review",
+            "skill:five-axis-code-review",
+            "skill:receiving-code-review",
+            "skill:flutter-dart-code-review",
+            "skill:plankton-code-quality",
+            "skill:codex-review",
+            "skill:code-review-sensei"
+          ],
+          "hook_tokens": 287,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "review-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Tinjau pull request ini untuk kualitas kode sebelum digabungkan.",
+          "acceptable_ids": [
+            "skill:requesting-code-review",
+            "skill:code-review-excellence",
+            "skill:code-review-and-quality",
+            "skill:five-axis-code-review",
+            "skill:code-reviewer"
+          ],
+          "registry_ms": 143.3540330000369,
+          "registry_tokens": 361,
+          "registry_map": [
+            "skill:requesting-code-review"
+          ],
+          "registry_complete_cards": 1,
+          "registry_cards": 1,
+          "registry_parse_error": false,
+          "loader_ms": 73.68165500002988,
+          "loader": [
+            "skill:requesting-code-review"
+          ],
+          "hook_ms": 202.99788599999147,
+          "hook": [
+            "skill:requesting-code-review"
+          ],
+          "hook_tokens": 68,
+          "hook_cards": 1,
+          "hook_complete_summaries": 1,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "threat-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Model security threats for this payment service using STRIDE.",
+          "acceptable_ids": [
+            "skill:threat-modeling",
+            "skill:threat-modeling-expert",
+            "skill:stride-analysis-patterns"
+          ],
+          "registry_ms": 116.48207399997546,
+          "registry_tokens": 888,
+          "registry_map": [
+            "skill:agent-security-hardening",
+            "skill:container-security-hardening",
+            "skill:agency-security-architect",
+            "skill:threat-modeling",
+            "skill:ai-security-hardening"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 101.78794299997662,
+          "loader": [
+            "skill:agent-security-hardening",
+            "skill:container-security-hardening",
+            "skill:agency-security-architect",
+            "skill:threat-modeling",
+            "skill:ai-security-hardening",
+            "skill:openclaw-security-hardening",
+            "skill:agency-security-incident-responder",
+            "skill:agency-security-threat-intelligence-analyst"
+          ],
+          "hook_ms": 164.34227799999235,
+          "hook": [
+            "skill:agent-security-hardening",
+            "skill:container-security-hardening",
+            "skill:agency-security-architect",
+            "skill:threat-modeling",
+            "skill:ai-security-hardening",
+            "skill:openclaw-security-hardening",
+            "skill:agency-security-incident-responder",
+            "skill:agency-security-threat-intelligence-analyst"
+          ],
+          "hook_tokens": 301,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "threat-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Modelkan ancaman keamanan layanan pembayaran ini memakai STRIDE.",
+          "acceptable_ids": [
+            "skill:threat-modeling",
+            "skill:threat-modeling-expert",
+            "skill:stride-analysis-patterns"
+          ],
+          "registry_ms": 128.3397689999788,
+          "registry_tokens": 838,
+          "registry_map": [
+            "skill:container-security-hardening",
+            "skill:agency-security-threat-detection-engineer",
+            "skill:agency-security-threat-intelligence-analyst",
+            "skill:agent-security-hardening",
+            "skill:ai-security-hardening"
+          ],
+          "registry_complete_cards": 5,
+          "registry_cards": 5,
+          "registry_parse_error": false,
+          "loader_ms": 92.6361619999625,
+          "loader": [
+            "skill:container-security-hardening",
+            "skill:agency-security-threat-detection-engineer",
+            "skill:agency-security-threat-intelligence-analyst",
+            "skill:agent-security-hardening",
+            "skill:ai-security-hardening",
+            "skill:openclaw-security-hardening",
+            "skill:stride-analysis-patterns",
+            "skill:threat-modeling-expert"
+          ],
+          "hook_ms": 182.67131900000777,
+          "hook": [
+            "skill:container-security-hardening",
+            "skill:agency-security-threat-detection-engineer",
+            "skill:agency-security-threat-intelligence-analyst",
+            "skill:agent-security-hardening",
+            "skill:ai-security-hardening",
+            "skill:openclaw-security-hardening",
+            "skill:stride-analysis-patterns",
+            "skill:threat-modeling-expert"
+          ],
+          "hook_tokens": 304,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "architecture-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Evaluate software architecture tradeoffs and record the system design decision in an ADR.",
+          "acceptable_ids": [
+            "skill:architecture",
+            "skill:software-architecture",
+            "skill:architecture-decision-records",
+            "skill:agency-engineering-software-architect"
+          ],
+          "registry_ms": 111.15210000002662,
+          "registry_tokens": 935,
+          "registry_map": [
+            "skill:architecture",
+            "skill:radix-ui-design-system",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:design-system"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 83.01751700003024,
+          "loader": [
+            "skill:architecture",
+            "skill:radix-ui-design-system",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:design-system",
+            "skill:software-architecture",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-ux-architect"
+          ],
+          "hook_ms": 230.36134599999514,
+          "hook": [
+            "skill:architecture",
+            "skill:radix-ui-design-system",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:design-system",
+            "skill:software-architecture",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-ux-architect"
+          ],
+          "hook_tokens": 293,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "architecture-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Evaluasi kompromi arsitektur perangkat lunak dan catat keputusan desain sistem dalam ADR.",
+          "acceptable_ids": [
+            "skill:architecture",
+            "skill:software-architecture",
+            "skill:architecture-decision-records",
+            "skill:agency-engineering-software-architect"
+          ],
+          "registry_ms": 125.9170539999559,
+          "registry_tokens": 938,
+          "registry_map": [
+            "skill:architecture",
+            "skill:software-architecture",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:agency-design-ux-architect"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 108.95712999996476,
+          "loader": [
+            "skill:architecture",
+            "skill:software-architecture",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:agency-design-ux-architect",
+            "skill:ontoly-software-graph",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller"
+          ],
+          "hook_ms": 206.71119899998303,
+          "hook": [
+            "skill:architecture",
+            "skill:software-architecture",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:agency-design-ux-architect",
+            "skill:ontoly-software-graph",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller"
+          ],
+          "hook_tokens": 297,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "ci-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Set up GitHub Actions workflows for continuous integration, tests and deployment.",
+          "acceptable_ids": [
+            "skill:github-actions",
+            "skill:github-actions-templates",
+            "skill:github-actions-advanced",
+            "skill:github-workflow-automation"
+          ],
+          "registry_ms": 148.10025999997833,
+          "registry_tokens": 863,
+          "registry_map": [
+            "skill:github",
+            "skill:github-actions-debugger",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-actions-templates"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 120.54859099998794,
+          "loader": [
+            "skill:github",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-actions-templates",
+            "skill:makepad-deployment",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:agentic-actions-auditor",
+            "skill:deployment-patterns"
+          ],
+          "hook_ms": 235.9773500000415,
+          "hook": [
+            "skill:github",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-actions-templates",
+            "skill:makepad-deployment",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:agentic-actions-auditor",
+            "skill:deployment-patterns"
+          ],
+          "hook_tokens": 265,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "ci-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Siapkan workflow GitHub Actions untuk integrasi berkelanjutan, pengujian, dan deployment.",
+          "acceptable_ids": [
+            "skill:github-actions",
+            "skill:github-actions-templates",
+            "skill:github-actions-advanced",
+            "skill:github-workflow-automation"
+          ],
+          "registry_ms": 115.50691399997959,
+          "registry_tokens": 865,
+          "registry_map": [
+            "skill:github",
+            "skill:github-actions-templates",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-actions-debugger"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 109.75929500000348,
+          "loader": [
+            "skill:github",
+            "skill:github-actions-templates",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-workflow-automation",
+            "skill:makepad-deployment",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:agency-testing-workflow-optimizer"
+          ],
+          "hook_ms": 207.14191700000129,
+          "hook": [
+            "skill:github",
+            "skill:github-actions-templates",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-workflow-automation",
+            "skill:makepad-deployment",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:agency-testing-workflow-optimizer"
+          ],
+          "hook_tokens": 270,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "ui-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Design a new dashboard UI with a coherent color palette and typography.",
+          "acceptable_ids": [
+            "skill:frontend-design",
+            "skill:ui-ux-pro-max",
+            "skill:design-system",
+            "skill:agency-design-ui-designer"
+          ],
+          "registry_ms": 115.20001000002367,
+          "registry_tokens": 1073,
+          "registry_map": [
+            "skill:ckw-design",
+            "skill:agency-design-ui-designer",
+            "skill:ui-ux-pro-max",
+            "skill:build-ui",
+            "skill:agency-design-ui-finish-gate-reviewer"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 102.28834800000186,
+          "loader": [
+            "skill:ckw-design",
+            "skill:agency-design-ui-designer",
+            "skill:ui-ux-pro-max",
+            "skill:build-ui",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:anti-ui-slop",
+            "skill:radix-ui-design-system",
+            "skill:stitch-design-taste"
+          ],
+          "hook_ms": 169.2785410000397,
+          "hook": [
+            "skill:ckw-design",
+            "skill:agency-design-ui-designer",
+            "skill:ui-ux-pro-max",
+            "skill:build-ui",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:anti-ui-slop",
+            "skill:radix-ui-design-system",
+            "skill:stitch-design-taste"
+          ],
+          "hook_tokens": 283,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "ui-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Rancang tampilan dashboard baru dengan palet warna dan tipografi yang konsisten.",
+          "acceptable_ids": [
+            "skill:frontend-design",
+            "skill:ui-ux-pro-max",
+            "skill:design-system",
+            "skill:agency-design-ui-designer"
+          ],
+          "registry_ms": 138.33874200003038,
+          "registry_tokens": 927,
+          "registry_map": [
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect",
+            "skill:agency-design-ux-researcher"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 110.60524999999188,
+          "loader": [
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect",
+            "skill:agency-design-ux-researcher",
+            "skill:kpi-dashboard-design",
+            "skill:radix-ui-design-system",
+            "skill:stitch-ui-design"
+          ],
+          "hook_ms": 166.63219700001264,
+          "hook": [
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect",
+            "skill:agency-design-ux-researcher",
+            "skill:kpi-dashboard-design",
+            "skill:radix-ui-design-system",
+            "skill:stitch-ui-design"
+          ],
+          "hook_tokens": 298,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "video-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Edit this interview footage into short video clips with subtitles.",
+          "acceptable_ids": [
+            "skill:video-editing",
+            "skill:agency-marketing-short-video-editing-coach"
+          ],
+          "registry_ms": 132.75354900002867,
+          "registry_tokens": 1010,
+          "registry_map": [
+            "skill:short",
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:beatra-ai-video-studio",
+            "skill:videodb",
+            "skill:video-editing"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 77.64580899998919,
+          "loader": [
+            "skill:short",
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:beatra-ai-video-studio",
+            "skill:videodb",
+            "skill:video-editing",
+            "skill:video-router",
+            "skill:video-content-extractor",
+            "skill:videodb-skills"
+          ],
+          "hook_ms": 215.82882699999573,
+          "hook": [
+            "skill:short",
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:beatra-ai-video-studio",
+            "skill:videodb",
+            "skill:video-editing",
+            "skill:video-router",
+            "skill:video-content-extractor",
+            "skill:videodb-skills"
+          ],
+          "hook_tokens": 273,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "video-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Sunting rekaman wawancara ini menjadi klip video pendek dengan subtitle.",
+          "acceptable_ids": [
+            "skill:video-editing",
+            "skill:agency-marketing-short-video-editing-coach"
+          ],
+          "registry_ms": 107.55772699997124,
+          "registry_tokens": 1048,
+          "registry_map": [
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:video-content-extractor",
+            "skill:video-router",
+            "skill:lanshu-create-ai-presenter-video",
+            "skill:seek-and-analyze-video"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 82.98334500000237,
+          "loader": [
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:video-content-extractor",
+            "skill:video-router",
+            "skill:lanshu-create-ai-presenter-video",
+            "skill:video-editing",
+            "skill:videodb",
+            "skill:videodb-skills",
+            "skill:film-crew"
+          ],
+          "hook_ms": 195.50551600002564,
+          "hook": [
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:video-content-extractor",
+            "skill:video-router",
+            "skill:lanshu-create-ai-presenter-video",
+            "skill:video-editing",
+            "skill:videodb",
+            "skill:videodb-skills",
+            "skill:film-crew"
+          ],
+          "hook_tokens": 283,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "postgres-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Optimize a slow PostgreSQL query; inspect EXPLAIN plans and index selection.",
+          "acceptable_ids": [
+            "skill:postgresql-optimization",
+            "skill:postgresql",
+            "skill:postgres-best-practices",
+            "skill:sql-optimization-patterns",
+            "skill:postgres-patterns",
+            "skill:supabase-postgres-best-practices"
+          ],
+          "registry_ms": 122.97689299998638,
+          "registry_tokens": 966,
+          "registry_map": [
+            "skill:postgresql",
+            "skill:django-perf-review",
+            "skill:swiftui-performance-audit",
+            "skill:vector-index-tuning",
+            "skill:postgresql-optimization"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 90.30782199999976,
+          "loader": [
+            "skill:postgresql",
+            "skill:django-perf-review",
+            "skill:swiftui-performance-audit",
+            "skill:vector-index-tuning",
+            "skill:postgresql-optimization",
+            "skill:performance-testing-review-ai-review",
+            "skill:performance-testing-review-multi-agent-review",
+            "skill:performance-tuning"
+          ],
+          "hook_ms": 163.72939400002906,
+          "hook": [
+            "skill:postgresql",
+            "skill:django-perf-review",
+            "skill:swiftui-performance-audit",
+            "skill:vector-index-tuning",
+            "skill:postgresql-optimization",
+            "skill:performance-testing-review-ai-review",
+            "skill:performance-testing-review-multi-agent-review",
+            "skill:performance-tuning"
+          ],
+          "hook_tokens": 288,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "postgres-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Optimalkan query PostgreSQL yang lambat; periksa rencana EXPLAIN dan pemilihan indeks.",
+          "acceptable_ids": [
+            "skill:postgresql-optimization",
+            "skill:postgresql",
+            "skill:postgres-best-practices",
+            "skill:sql-optimization-patterns",
+            "skill:postgres-patterns",
+            "skill:supabase-postgres-best-practices"
+          ],
+          "registry_ms": 132.99037499996302,
+          "registry_tokens": 1025,
+          "registry_map": [
+            "skill:postgresql",
+            "skill:postgresql-optimization",
+            "skill:postgresql-cli",
+            "skill:postgresql-devsec",
+            "skill:receiving-code-review"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 107.75258099999974,
+          "loader": [
+            "skill:postgresql",
+            "skill:postgresql-optimization",
+            "skill:postgresql-cli",
+            "skill:postgresql-devsec",
+            "skill:receiving-code-review"
+          ],
+          "hook_ms": 199.0052240000182,
+          "hook": [
+            "skill:postgresql",
+            "skill:postgresql-optimization",
+            "skill:postgresql-cli",
+            "skill:postgresql-devsec",
+            "skill:receiving-code-review"
+          ],
+          "hook_tokens": 180,
+          "hook_cards": 5,
+          "hook_complete_summaries": 5,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "graph-en",
+          "language": "en",
+          "kind": "ambiguous",
+          "prompt": "Extract entities and relationships from these documents into a knowledge graph.",
+          "acceptable_ids": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:rag-engineer",
+            "skill:rag-implementation"
+          ],
+          "registry_ms": 100.61556600004451,
+          "registry_tokens": 1065,
+          "registry_map": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:bdistill-knowledge-extraction",
+            "skill:extract-document-data",
+            "skill:knowledge-base",
+            "skill:knowledge-ops"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 73.76554700005045,
+          "loader": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:bdistill-knowledge-extraction",
+            "skill:extract-document-data",
+            "skill:knowledge-base",
+            "skill:knowledge-ops"
+          ],
+          "hook_ms": 188.2924980000098,
+          "hook": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:bdistill-knowledge-extraction",
+            "skill:extract-document-data",
+            "skill:knowledge-base",
+            "skill:knowledge-ops"
+          ],
+          "hook_tokens": 198,
+          "hook_cards": 5,
+          "hook_complete_summaries": 5,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "graph-id",
+          "language": "id",
+          "kind": "ambiguous",
+          "prompt": "Ekstrak entitas dan hubungan dari dokumen ini menjadi graf pengetahuan.",
+          "acceptable_ids": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:rag-engineer",
+            "skill:rag-implementation"
+          ],
+          "registry_ms": 95.16355099998464,
+          "registry_tokens": 1066,
+          "registry_map": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:documentation",
+            "skill:knowledge-base",
+            "skill:compile-knowledge",
+            "skill:documentation-generation-doc-generate"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 68.01910399997269,
+          "loader": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:documentation",
+            "skill:knowledge-base",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:knowledge-ops",
+            "skill:docs-governance"
+          ],
+          "hook_ms": 192.22056699999257,
+          "hook": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:knowledge-base",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:knowledge-ops",
+            "skill:docs-governance"
+          ],
+          "hook_tokens": 260,
+          "hook_cards": 7,
+          "hook_complete_summaries": 7,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "research-en",
+          "language": "en",
+          "kind": "ambiguous",
+          "prompt": "Research competing approaches to retrieval augmented generation and write a cited report.",
+          "acceptable_ids": [
+            "skill:deep-research",
+            "skill:deep-research-framework",
+            "skill:agency-research-synthesist",
+            "skill:research-ops"
+          ],
+          "registry_ms": 91.28311300003134,
+          "registry_tokens": 942,
+          "registry_map": [
+            "skill:gemini-deep-research",
+            "skill:uxkin-research",
+            "skill:deep-research-framework",
+            "skill:deep-research",
+            "skill:research-prompt"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 68.80290599997352,
+          "loader": [
+            "skill:uxkin-research",
+            "skill:deep-research-framework",
+            "skill:deep-research",
+            "skill:research-prompt",
+            "skill:geo-report",
+            "skill:geo-report-pdf",
+            "skill:report-writing",
+            "skill:reports-analytics"
+          ],
+          "hook_ms": 206.49030900000298,
+          "hook": [
+            "skill:uxkin-research",
+            "skill:deep-research-framework",
+            "skill:deep-research",
+            "skill:research-prompt",
+            "skill:geo-report",
+            "skill:geo-report-pdf",
+            "skill:report-writing",
+            "skill:reports-analytics"
+          ],
+          "hook_tokens": 261,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "research-id",
+          "language": "id",
+          "kind": "ambiguous",
+          "prompt": "Riset pendekatan alternatif retrieval augmented generation dan tulis laporan dengan kutipan sumber.",
+          "acceptable_ids": [
+            "skill:deep-research",
+            "skill:deep-research-framework",
+            "skill:agency-research-synthesist",
+            "skill:research-ops"
+          ],
+          "registry_ms": 94.50089699998898,
+          "registry_tokens": 538,
+          "registry_map": [
+            "skill:ii-commons",
+            "skill:video-router"
+          ],
+          "registry_complete_cards": 3,
+          "registry_cards": 3,
+          "registry_parse_error": false,
+          "loader_ms": 68.62829800002146,
+          "loader": [
+            "skill:ii-commons",
+            "skill:video-router"
+          ],
+          "hook_ms": 210.6635849999634,
+          "hook": [
+            "skill:ii-commons",
+            "skill:video-router"
+          ],
+          "hook_tokens": 94,
+          "hook_cards": 2,
+          "hook_complete_summaries": 2,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "plan-en",
+          "language": "en",
+          "kind": "ambiguous",
+          "prompt": "Turn these product requirements into an implementation plan before coding.",
+          "acceptable_ids": [
+            "skill:writing-plans",
+            "skill:brainstorming",
+            "skill:concise-planning",
+            "skill:plan-writing"
+          ],
+          "registry_ms": 117.84681299997146,
+          "registry_tokens": 891,
+          "registry_map": [
+            "skill:seo-plan",
+            "skill:agency-specialized-master-plan-architect",
+            "skill:marketing-plan",
+            "skill:product-capability",
+            "skill:concise-planning"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 85.18305600000531,
+          "loader": [
+            "skill:seo-plan",
+            "skill:agency-specialized-master-plan-architect",
+            "skill:marketing-plan",
+            "skill:product-capability",
+            "skill:concise-planning",
+            "skill:plan-ledger-tasks-yylo",
+            "skill:planning-and-task-breakdown",
+            "skill:requirements-writing"
+          ],
+          "hook_ms": 175.8775469999705,
+          "hook": [
+            "skill:seo-plan",
+            "skill:agency-specialized-master-plan-architect",
+            "skill:marketing-plan",
+            "skill:product-capability",
+            "skill:concise-planning",
+            "skill:plan-ledger-tasks-yylo",
+            "skill:planning-and-task-breakdown",
+            "skill:requirements-writing"
+          ],
+          "hook_tokens": 288,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "plan-id",
+          "language": "id",
+          "kind": "ambiguous",
+          "prompt": "Ubah persyaratan produk ini menjadi rencana implementasi sebelum menulis kode.",
+          "acceptable_ids": [
+            "skill:writing-plans",
+            "skill:brainstorming",
+            "skill:concise-planning",
+            "skill:plan-writing"
+          ],
+          "registry_ms": 227.03784600003019,
+          "registry_tokens": 475,
+          "registry_map": [
+            "skill:product-capability"
+          ],
+          "registry_complete_cards": 2,
+          "registry_cards": 2,
+          "registry_parse_error": false,
+          "loader_ms": 184.18187100002115,
+          "loader": [
+            "skill:product-capability"
+          ],
+          "hook_ms": 445.71952900003,
+          "hook": [
+            "skill:product-capability"
+          ],
+          "hook_tokens": 67,
+          "hook_cards": 1,
+          "hook_complete_summaries": 1,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "compression-en",
+          "language": "en",
+          "kind": "ambiguous",
+          "prompt": "Compress a long agent conversation to reduce its context token budget.",
+          "acceptable_ids": [
+            "skill:context-compression",
+            "skill:context-optimization"
+          ],
+          "registry_ms": 159.32047600000487,
+          "registry_tokens": 1261,
+          "registry_map": [
+            "skill:recursive-context-pruning-token-budgeting",
+            "skill:context-budget",
+            "skill:token-budget-advisor",
+            "skill:agency-engineering-multi-agent-systems-architect",
+            "skill:enterprise-agent-ops"
+          ],
+          "registry_complete_cards": 9,
+          "registry_cards": 9,
+          "registry_parse_error": false,
+          "loader_ms": 73.95787999996628,
+          "loader": [
+            "skill:context-budget",
+            "skill:token-budget-advisor",
+            "skill:agency-engineering-multi-agent-systems-architect",
+            "skill:enterprise-agent-ops",
+            "skill:hierarchical-agent-memory",
+            "skill:multi-agent-patterns",
+            "skill:review-multi-agent-orchestration",
+            "skill:context-agent"
+          ],
+          "hook_ms": 172.63686000001144,
+          "hook": [
+            "skill:context-budget",
+            "skill:token-budget-advisor",
+            "skill:agency-engineering-multi-agent-systems-architect",
+            "skill:enterprise-agent-ops",
+            "skill:hierarchical-agent-memory",
+            "skill:multi-agent-patterns",
+            "skill:review-multi-agent-orchestration",
+            "skill:context-agent"
+          ],
+          "hook_tokens": 294,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "compression-id",
+          "language": "id",
+          "kind": "ambiguous",
+          "prompt": "Kompres percakapan agent yang panjang agar anggaran token konteks berkurang.",
+          "acceptable_ids": [
+            "skill:context-compression",
+            "skill:context-optimization"
+          ],
+          "registry_ms": 131.66275000003225,
+          "registry_tokens": 1144,
+          "registry_map": [
+            "skill:recursive-context-pruning-token-budgeting",
+            "skill:crypto-bd-agent",
+            "skill:hierarchical-agent-memory",
+            "skill:token-card",
+            "skill:soroban-token-minter"
+          ],
+          "registry_complete_cards": 9,
+          "registry_cards": 9,
+          "registry_parse_error": false,
+          "loader_ms": 68.536048999988,
+          "loader": [
+            "skill:crypto-bd-agent",
+            "skill:hierarchical-agent-memory",
+            "skill:token-card",
+            "skill:soroban-token-minter",
+            "skill:agent-architecture-audit",
+            "skill:agent-eval",
+            "skill:agent-evals",
+            "skill:agent-evaluation"
+          ],
+          "hook_ms": 176.7714979999937,
+          "hook": [
+            "skill:crypto-bd-agent",
+            "skill:hierarchical-agent-memory",
+            "skill:token-card",
+            "skill:soroban-token-minter",
+            "skill:agent-architecture-audit",
+            "skill:agent-eval",
+            "skill:agent-evals",
+            "skill:agent-evaluation"
+          ],
+          "hook_tokens": 279,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "thanks-en",
+          "language": "en",
+          "kind": "negative",
+          "prompt": "Thanks, that answers my question.",
+          "acceptable_ids": [],
+          "registry_ms": 89.26761700001862,
+          "registry_tokens": 251,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 68.18165300001056,
+          "loader": [],
+          "hook_ms": 149.91666800000303,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "thanks-id",
+          "language": "id",
+          "kind": "negative",
+          "prompt": "Terima kasih, itu sudah menjawab pertanyaan saya.",
+          "acceptable_ids": [],
+          "registry_ms": 91.07227800001283,
+          "registry_tokens": 255,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 84.31940799999893,
+          "loader": [],
+          "hook_ms": 181.04541200000313,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "arithmetic-en",
+          "language": "en",
+          "kind": "negative",
+          "prompt": "What is 17 multiplied by 23?",
+          "acceptable_ids": [],
+          "registry_ms": 107.50167600002669,
+          "registry_tokens": 250,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 168.04156000000603,
+          "loader": [],
+          "hook_ms": 180.32603000000336,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "arithmetic-id",
+          "language": "id",
+          "kind": "negative",
+          "prompt": "Berapa hasil 17 dikali 23?",
+          "acceptable_ids": [],
+          "registry_ms": 130.09734199999912,
+          "registry_tokens": 249,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 63.36055300005228,
+          "loader": [],
+          "hook_ms": 213.34236800004192,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "translation-en",
+          "language": "en",
+          "kind": "negative",
+          "prompt": "Translate good morning into Indonesian.",
+          "acceptable_ids": [],
+          "registry_ms": 96.86910599998555,
+          "registry_tokens": 252,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 92.8661440000269,
+          "loader": [],
+          "hook_ms": 173.7365569999838,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "translation-id",
+          "language": "id",
+          "kind": "negative",
+          "prompt": "Terjemahkan selamat pagi ke bahasa Inggris.",
+          "acceptable_ids": [],
+          "registry_ms": 103.09948199994778,
+          "registry_tokens": 253,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 82.60408299997835,
+          "loader": [],
+          "hook_ms": 184.23430199999302,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "figma-en",
+          "language": "en",
+          "kind": "unavailable_mcp",
+          "prompt": "Use figma-mcp to inspect the design tokens in our Figma file.",
+          "acceptable_ids": [],
+          "unavailable_id": "mcp:figma-mcp",
+          "registry_ms": 103.05338800003483,
+          "registry_tokens": 1383,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:product-design",
+            "skill:agency-design-ui-designer",
+            "skill:design-ux",
+            "skill:agency-design-ui-finish-gate-reviewer"
+          ],
+          "registry_complete_cards": 12,
+          "registry_cards": 12,
+          "registry_parse_error": false,
+          "loader_ms": 93.68265500000916,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:product-design",
+            "skill:agency-design-ui-designer",
+            "skill:design-ux",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:ckw-design",
+            "skill:agency-design-ux-researcher"
+          ],
+          "hook_ms": 185.22021899997299,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:product-design",
+            "skill:agency-design-ui-designer",
+            "skill:design-ux",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:ckw-design",
+            "skill:agency-design-ux-researcher"
+          ],
+          "hook_tokens": 288,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0,
+          "unavailable_ready": "no",
+          "unavailable_blocker": "not_configured",
+          "unavailable_advertised": false
+        },
+        {
+          "id": "figma-id",
+          "language": "id",
+          "kind": "unavailable_mcp",
+          "prompt": "Gunakan figma-mcp untuk memeriksa token desain di berkas Figma kami.",
+          "acceptable_ids": [],
+          "unavailable_id": "mcp:figma-mcp",
+          "registry_ms": 109.62393399995563,
+          "registry_tokens": 1414,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect"
+          ],
+          "registry_complete_cards": 13,
+          "registry_cards": 13,
+          "registry_parse_error": false,
+          "loader_ms": 87.94189200000346,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect",
+            "skill:agency-design-ux-researcher",
+            "skill:radix-ui-design-system",
+            "skill:stitch-ui-design"
+          ],
+          "hook_ms": 253.03670200003126,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect",
+            "skill:agency-design-ux-researcher",
+            "skill:radix-ui-design-system",
+            "skill:stitch-ui-design"
+          ],
+          "hook_tokens": 295,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0,
+          "unavailable_ready": "no",
+          "unavailable_blocker": "not_configured",
+          "unavailable_advertised": false
+        },
+        {
+          "id": "tavily-en",
+          "language": "en",
+          "kind": "unavailable_mcp",
+          "prompt": "Search the web through tavily-mcp for current results.",
+          "acceptable_ids": [],
+          "unavailable_id": "mcp:tavily-mcp",
+          "registry_ms": 136.16913800001385,
+          "registry_tokens": 1178,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp",
+            "skill:not-human-search-mcp",
+            "skill:serply-search-mcp"
+          ],
+          "registry_complete_cards": 10,
+          "registry_cards": 10,
+          "registry_parse_error": false,
+          "loader_ms": 73.02700599996115,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:tavily-web",
+            "skill:pi-web-search",
+            "skill:etsy-search-listings",
+            "skill:desearch-mcp"
+          ],
+          "hook_ms": 193.85438000000477,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:tavily-web",
+            "skill:pi-web-search",
+            "skill:etsy-search-listings",
+            "skill:desearch-mcp"
+          ],
+          "hook_tokens": 275,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0,
+          "unavailable_ready": "no",
+          "unavailable_blocker": "not_configured",
+          "unavailable_advertised": false
+        },
+        {
+          "id": "tavily-id",
+          "language": "id",
+          "kind": "unavailable_mcp",
+          "prompt": "Cari hasil web terbaru melalui tavily-mcp.",
+          "acceptable_ids": [],
+          "unavailable_id": "mcp:tavily-mcp",
+          "registry_ms": 86.22739099996579,
+          "registry_tokens": 1164,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:tavily-web",
+            "skill:desearch-mcp",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp"
+          ],
+          "registry_complete_cards": 10,
+          "registry_cards": 10,
+          "registry_parse_error": false,
+          "loader_ms": 68.37289100002408,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:tavily-web",
+            "skill:desearch-mcp",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp",
+            "skill:mcp-dependency-drift-audit",
+            "skill:webly",
+            "skill:sandbase-mcp"
+          ],
+          "hook_ms": 152.36126799999283,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:tavily-web",
+            "skill:desearch-mcp",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp",
+            "skill:mcp-dependency-drift-audit",
+            "skill:webly",
+            "skill:sandbase-mcp"
+          ],
+          "hook_tokens": 275,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0,
+          "unavailable_ready": "no",
+          "unavailable_blocker": "not_configured",
+          "unavailable_advertised": false
+        }
+      ]
+    },
+    "feature": {
+      "fixture_sha256": "d54bc497947ef5b2b1970c52011d27ff454dd34528ed23db839a4410aea4adb0",
+      "source_sha256": {
+        "registry.py": "57f5865a0b672eb6a7c411e569f6b4d610dbb4787359e19dd1e331df6b22b966",
+        "load-skills.py": "ee2991ff5951d0a82678144dfbaccdd1eb414675902bb289c71f02307454ace5",
+        "runtime.py": "8901e54e951d40e654d4170739792adf4f1e0e6f89d0c882524107bcb002ab2b",
+        "context_budget.py": "0c52392d7d9dfebffd06b8ec103fc5b06dd59e2dd67c9b7834ffd48fcdcd334a"
+      },
+      "source_changed_during_run": false,
+      "method": "Paired natural task intents; acceptable alternatives were chosen from capability descriptions and router policy before the baseline run. This is a small lexical-discovery regression corpus, not a semantic or task-completion evaluation. No fixture text is consumed by production ranking.",
+      "repo": "/feature-checkout",
+      "cases": 50,
+      "token_measurement": "documented chars/4 fallback",
+      "quality": {
+        "registry_map": {
+          "all": {
+            "n": 40,
+            "top1_hits": 25,
+            "top3_hits": 30
+          },
+          "positive": {
+            "n": 32,
+            "top1_hits": 23,
+            "top3_hits": 27
+          },
+          "ambiguous": {
+            "n": 8,
+            "top1_hits": 2,
+            "top3_hits": 3
+          },
+          "en": {
+            "n": 20,
+            "top1_hits": 11,
+            "top3_hits": 15
+          },
+          "id": {
+            "n": 20,
+            "top1_hits": 14,
+            "top3_hits": 15
+          },
+          "negative": {
+            "n": 6,
+            "abstained": 6
+          }
+        },
+        "loader": {
+          "all": {
+            "n": 40,
+            "top1_hits": 25,
+            "top3_hits": 30
+          },
+          "positive": {
+            "n": 32,
+            "top1_hits": 23,
+            "top3_hits": 27
+          },
+          "ambiguous": {
+            "n": 8,
+            "top1_hits": 2,
+            "top3_hits": 3
+          },
+          "en": {
+            "n": 20,
+            "top1_hits": 11,
+            "top3_hits": 15
+          },
+          "id": {
+            "n": 20,
+            "top1_hits": 14,
+            "top3_hits": 15
+          },
+          "negative": {
+            "n": 6,
+            "abstained": 6
+          }
+        },
+        "hook": {
+          "all": {
+            "n": 40,
+            "top1_hits": 25,
+            "top3_hits": 30
+          },
+          "positive": {
+            "n": 32,
+            "top1_hits": 23,
+            "top3_hits": 27
+          },
+          "ambiguous": {
+            "n": 8,
+            "top1_hits": 2,
+            "top3_hits": 3
+          },
+          "en": {
+            "n": 20,
+            "top1_hits": 11,
+            "top3_hits": 15
+          },
+          "id": {
+            "n": 20,
+            "top1_hits": 14,
+            "top3_hits": 15
+          },
+          "negative": {
+            "n": 6,
+            "abstained": 6
+          }
+        }
+      },
+      "latency_ms": {
+        "registry": {
+          "p50": 105.402,
+          "p95": 150.977,
+          "max": 191.38
+        },
+        "loader": {
+          "p50": 81.162,
+          "p95": 117.22,
+          "max": 138.951
+        },
+        "hook": {
+          "p50": 173.122,
+          "p95": 285.199,
+          "max": 308.473
+        }
+      },
+      "tokens": {
+        "registry": {
+          "p50": 940.0,
+          "p95": 1261,
+          "max": 1414
+        },
+        "hook": {
+          "p50": 276.0,
+          "p95": 301,
+          "max": 311
+        }
+      },
+      "registry_invalid_json": 0,
+      "cards": {
+        "registry_cards": 314,
+        "registry_complete_cards": 314,
+        "hook_cards": 309,
+        "hook_complete_summaries": 308,
+        "hook_detail_pointers": 0,
+        "hook_readiness_labels": 0
+      },
+      "unavailable_mcp": {
+        "n": 4,
+        "advertised": 0,
+        "ready": 0
+      },
+      "rows": [
+        {
+          "id": "word-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Prepare a formal offer letter as a Word document.",
+          "acceptable_ids": [
+            "skill:docx"
+          ],
+          "registry_ms": 116.48303800006943,
+          "registry_tokens": 1053,
+          "registry_map": [
+            "skill:docx",
+            "skill:azure-ai-translation-document-py",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 95.38244800000939,
+          "loader": [
+            "skill:docx",
+            "skill:azure-ai-translation-document-py",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:agency-specialized-document-generator",
+            "skill:documentation-and-adrs",
+            "skill:documentation-lookup"
+          ],
+          "hook_ms": 266.6854179999518,
+          "hook": [
+            "skill:docx",
+            "skill:azure-ai-translation-document-py",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:agency-specialized-document-generator",
+            "skill:documentation-and-adrs",
+            "skill:documentation-lookup"
+          ],
+          "hook_tokens": 293,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "word-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Siapkan surat penawaran resmi dalam dokumen Word.",
+          "acceptable_ids": [
+            "skill:docx"
+          ],
+          "registry_ms": 141.45578200009368,
+          "registry_tokens": 855,
+          "registry_map": [
+            "skill:docx",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:word-count-structure-checker"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 104.74340099995061,
+          "loader": [
+            "skill:docx",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:word-count-structure-checker"
+          ],
+          "hook_ms": 267.26461700013715,
+          "hook": [
+            "skill:docx",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:word-count-structure-checker"
+          ],
+          "hook_tokens": 189,
+          "hook_cards": 5,
+          "hook_complete_summaries": 5,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "sheet-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Clean this Excel workbook and add formulas for the totals.",
+          "acceptable_ids": [
+            "skill:xlsx"
+          ],
+          "registry_ms": 139.9891569999454,
+          "registry_tokens": 953,
+          "registry_map": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build",
+            "skill:add-app-clip",
+            "skill:clean-code",
+            "skill:clean-code-guard"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 106.85087699994256,
+          "loader": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build",
+            "skill:add-app-clip",
+            "skill:clean-code",
+            "skill:clean-code-guard",
+            "skill:bilig-workpaper"
+          ],
+          "hook_ms": 155.01708100009637,
+          "hook": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build",
+            "skill:add-app-clip",
+            "skill:clean-code",
+            "skill:clean-code-guard",
+            "skill:bilig-workpaper"
+          ],
+          "hook_tokens": 214,
+          "hook_cards": 6,
+          "hook_complete_summaries": 6,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "sheet-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Bersihkan buku kerja Excel ini dan tambahkan rumus untuk totalnya.",
+          "acceptable_ids": [
+            "skill:xlsx"
+          ],
+          "registry_ms": 110.42960000008861,
+          "registry_tokens": 648,
+          "registry_map": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build"
+          ],
+          "registry_complete_cards": 4,
+          "registry_cards": 4,
+          "registry_parse_error": false,
+          "loader_ms": 74.72131399981663,
+          "loader": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build"
+          ],
+          "hook_ms": 174.78398299999753,
+          "hook": [
+            "skill:xlsx",
+            "skill:spreadsheet-manual-build"
+          ],
+          "hook_tokens": 96,
+          "hook_cards": 2,
+          "hook_complete_summaries": 2,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "slides-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Turn the quarterly results into a PowerPoint presentation.",
+          "acceptable_ids": [
+            "skill:pptx"
+          ],
+          "registry_ms": 97.54505599994445,
+          "registry_tokens": 1054,
+          "registry_map": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:pptx-deck-creation",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 66.23481199994785,
+          "loader": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:pptx-deck-creation",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides",
+            "skill:python-pptx-generator",
+            "skill:2slides-ppt-generator",
+            "skill:slideops"
+          ],
+          "hook_ms": 189.50824099988495,
+          "hook": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:pptx-deck-creation",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides",
+            "skill:python-pptx-generator",
+            "skill:2slides-ppt-generator",
+            "skill:slideops"
+          ],
+          "hook_tokens": 280,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "slides-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Ubah hasil kuartalan menjadi presentasi PowerPoint.",
+          "acceptable_ids": [
+            "skill:pptx"
+          ],
+          "registry_ms": 94.29473400018651,
+          "registry_tokens": 1051,
+          "registry_map": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides",
+            "skill:pptx-deck-creation"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 70.7248769999751,
+          "loader": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides",
+            "skill:pptx-deck-creation",
+            "skill:python-pptx-generator",
+            "skill:2slides-ppt-generator",
+            "skill:mdpr-skill"
+          ],
+          "hook_ms": 154.97172400000636,
+          "hook": [
+            "skill:pptx",
+            "skill:presentation-deck",
+            "skill:frontend-slides",
+            "skill:frontend-slides-frontend-slides",
+            "skill:pptx-deck-creation",
+            "skill:python-pptx-generator",
+            "skill:2slides-ppt-generator",
+            "skill:mdpr-skill"
+          ],
+          "hook_tokens": 281,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "pdf-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Extract the tables from this PDF and merge the remaining pages.",
+          "acceptable_ids": [
+            "skill:pdf"
+          ],
+          "registry_ms": 83.55002800021794,
+          "registry_tokens": 1199,
+          "registry_map": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:extract-document-data",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator"
+          ],
+          "registry_complete_cards": 10,
+          "registry_cards": 10,
+          "registry_parse_error": false,
+          "loader_ms": 74.50851899989175,
+          "loader": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:extract-document-data",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator",
+            "skill:curlshot",
+            "skill:papers-skill"
+          ],
+          "hook_ms": 157.60826900009306,
+          "hook": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:extract-document-data",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator",
+            "skill:curlshot",
+            "skill:papers-skill"
+          ],
+          "hook_tokens": 241,
+          "hook_cards": 7,
+          "hook_complete_summaries": 7,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "pdf-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Ekstrak tabel dari PDF ini dan gabungkan halaman sisanya.",
+          "acceptable_ids": [
+            "skill:pdf"
+          ],
+          "registry_ms": 86.8765729999268,
+          "registry_tokens": 937,
+          "registry_map": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator",
+            "skill:curlshot"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 65.60016599996743,
+          "loader": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator",
+            "skill:curlshot",
+            "skill:papers-skill"
+          ],
+          "hook_ms": 138.9137920000394,
+          "hook": [
+            "skill:pdf",
+            "skill:geo-report-pdf",
+            "skill:pdf-conversion-router",
+            "skill:2slides-ppt-generator",
+            "skill:curlshot",
+            "skill:papers-skill"
+          ],
+          "hook_tokens": 209,
+          "hook_cards": 6,
+          "hook_complete_summaries": 6,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "mcp-build-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Build an MCP server that exposes our inventory API as tools.",
+          "acceptable_ids": [
+            "skill:mcp-builder"
+          ],
+          "registry_ms": 92.85218499985604,
+          "registry_tokens": 1230,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:n8n-mcp-tools-expert",
+            "skill:keenable-search-mcp",
+            "skill:not-human-search-mcp"
+          ],
+          "registry_complete_cards": 11,
+          "registry_cards": 11,
+          "registry_parse_error": false,
+          "loader_ms": 117.69234700000197,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:n8n-mcp-tools-expert",
+            "skill:keenable-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:aws-mcp-setup",
+            "skill:parallel-search-mcp",
+            "skill:hf-mcp"
+          ],
+          "hook_ms": 147.54278899999917,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:n8n-mcp-tools-expert",
+            "skill:keenable-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:aws-mcp-setup",
+            "skill:parallel-search-mcp",
+            "skill:hf-mcp"
+          ],
+          "hook_tokens": 277,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "mcp-build-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Bangun server MCP yang menyediakan API inventaris kami sebagai tool.",
+          "acceptable_ids": [
+            "skill:mcp-builder"
+          ],
+          "registry_ms": 90.24106199990456,
+          "registry_tokens": 1208,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:mcp-server-security",
+            "skill:ai-agent-tool-routing",
+            "skill:helium-mcp"
+          ],
+          "registry_complete_cards": 10,
+          "registry_cards": 10,
+          "registry_parse_error": false,
+          "loader_ms": 65.96708999995826,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:mcp-server-security",
+            "skill:ai-agent-tool-routing",
+            "skill:keenable-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:claude-api",
+            "skill:aws-mcp-setup"
+          ],
+          "hook_ms": 144.37060600016594,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:mcp-server-patterns",
+            "skill:mcp-server-security",
+            "skill:ai-agent-tool-routing",
+            "skill:keenable-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:claude-api",
+            "skill:aws-mcp-setup"
+          ],
+          "hook_tokens": 279,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "skill-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Create a reusable skill and evaluate how reliably its trigger works.",
+          "acceptable_ids": [
+            "skill:skill-creator",
+            "skill:writing-skills"
+          ],
+          "registry_ms": 84.90634999998292,
+          "registry_tokens": 978,
+          "registry_map": [
+            "skill:yao-meta-skill",
+            "skill:cc-skill-continuous-learning",
+            "skill:smartui-skill",
+            "skill:hyperexecute-skill",
+            "skill:skill-optimizer"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 75.24391500010097,
+          "loader": [
+            "skill:yao-meta-skill",
+            "skill:cc-skill-continuous-learning",
+            "skill:smartui-skill",
+            "skill:hyperexecute-skill",
+            "skill:skill-optimizer",
+            "skill:skill-creator",
+            "skill:skill-scout",
+            "skill:task-observer"
+          ],
+          "hook_ms": 139.54929399983484,
+          "hook": [
+            "skill:yao-meta-skill",
+            "skill:cc-skill-continuous-learning",
+            "skill:smartui-skill",
+            "skill:hyperexecute-skill",
+            "skill:skill-optimizer",
+            "skill:skill-creator",
+            "skill:skill-scout",
+            "skill:task-observer"
+          ],
+          "hook_tokens": 278,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "skill-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Buat skill yang dapat dipakai ulang dan evaluasi keandalan pemicunya.",
+          "acceptable_ids": [
+            "skill:skill-creator",
+            "skill:writing-skills"
+          ],
+          "registry_ms": 107.03280799998538,
+          "registry_tokens": 956,
+          "registry_map": [
+            "skill:skill-creator",
+            "skill:skill-scout",
+            "skill:skill-gap-analysis",
+            "skill:skill-host-compat",
+            "skill:skill-improver"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 90.58601300012015,
+          "loader": [
+            "skill:skill-creator",
+            "skill:skill-scout",
+            "skill:skill-gap-analysis",
+            "skill:skill-host-compat",
+            "skill:skill-improver",
+            "skill:skill-installer",
+            "skill:skill-issue",
+            "skill:skill-optimizer"
+          ],
+          "hook_ms": 161.57384999996793,
+          "hook": [
+            "skill:skill-creator",
+            "skill:skill-scout",
+            "skill:skill-gap-analysis",
+            "skill:skill-host-compat",
+            "skill:skill-improver",
+            "skill:skill-installer",
+            "skill:skill-issue",
+            "skill:skill-optimizer"
+          ],
+          "hook_tokens": 274,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "browser-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Test this local web app with Playwright and capture a browser screenshot.",
+          "acceptable_ids": [
+            "skill:webapp-testing",
+            "skill:playwright-skill"
+          ],
+          "registry_ms": 105.00546999992366,
+          "registry_tokens": 932,
+          "registry_map": [
+            "skill:webapp-testing",
+            "skill:progressive-web-app",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:applicationinsights-web-ts",
+            "skill:agency-testing-test-results-analyzer"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 82.47593500004768,
+          "loader": [
+            "skill:webapp-testing",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:applicationinsights-web-ts",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:replica-test",
+            "skill:azure-microsoft-playwright-testing-ts",
+            "skill:browser-testing-with-devtools",
+            "skill:web-security-testing"
+          ],
+          "hook_ms": 175.4943779999394,
+          "hook": [
+            "skill:webapp-testing",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:applicationinsights-web-ts",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:replica-test",
+            "skill:azure-microsoft-playwright-testing-ts",
+            "skill:browser-testing-with-devtools",
+            "skill:web-security-testing"
+          ],
+          "hook_tokens": 311,
+          "hook_cards": 8,
+          "hook_complete_summaries": 7,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "browser-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Uji aplikasi web lokal ini dengan Playwright dan ambil tangkapan layar browser.",
+          "acceptable_ids": [
+            "skill:webapp-testing",
+            "skill:playwright-skill"
+          ],
+          "registry_ms": 110.61491999998907,
+          "registry_tokens": 936,
+          "registry_map": [
+            "skill:webapp-testing",
+            "skill:azure-microsoft-playwright-testing-ts",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:applicationinsights-web-ts"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 83.83510199996635,
+          "loader": [
+            "skill:webapp-testing",
+            "skill:azure-microsoft-playwright-testing-ts",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:applicationinsights-web-ts",
+            "skill:assay",
+            "skill:browser-qa",
+            "skill:go-playwright"
+          ],
+          "hook_ms": 162.36998199997288,
+          "hook": [
+            "skill:webapp-testing",
+            "skill:azure-microsoft-playwright-testing-ts",
+            "skill:agency-testing-test-automation-engineer",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:applicationinsights-web-ts",
+            "skill:assay",
+            "skill:browser-qa",
+            "skill:go-playwright"
+          ],
+          "hook_tokens": 288,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "claude-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Add streaming responses using the Anthropic Claude API and SDK.",
+          "acceptable_ids": [
+            "skill:claude-api"
+          ],
+          "registry_ms": 108.79216600005748,
+          "registry_tokens": 982,
+          "registry_map": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 80.54732499999773,
+          "loader": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk",
+            "skill:gemini-api-dev",
+            "skill:gemini-api-integration",
+            "skill:gemini-interactions-api"
+          ],
+          "hook_ms": 285.19883599983586,
+          "hook": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk",
+            "skill:gemini-api-dev",
+            "skill:gemini-api-integration",
+            "skill:gemini-interactions-api"
+          ],
+          "hook_tokens": 286,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "claude-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Tambahkan respons streaming memakai API dan SDK Claude dari Anthropic.",
+          "acceptable_ids": [
+            "skill:claude-api"
+          ],
+          "registry_ms": 105.04890400011391,
+          "registry_tokens": 984,
+          "registry_map": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 74.073602999988,
+          "loader": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk",
+            "skill:gemini-api-integration",
+            "skill:gemini-interactions-api",
+            "skill:gemini-live-api-dev"
+          ],
+          "hook_ms": 173.32463000002463,
+          "hook": [
+            "skill:claude-api",
+            "skill:api-sdk-generator",
+            "skill:vercel-ai-sdk-expert",
+            "skill:agency-engineering-api-platform-engineer",
+            "skill:copilot-sdk",
+            "skill:gemini-api-integration",
+            "skill:gemini-interactions-api",
+            "skill:gemini-live-api-dev"
+          ],
+          "hook_tokens": 287,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "debug-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "The application crashes after login; reproduce the bug and find its root cause.",
+          "acceptable_ids": [
+            "skill:systematic-debugging",
+            "skill:debugger",
+            "skill:debugging-strategies",
+            "skill:debugging-toolkit"
+          ],
+          "registry_ms": 124.23890099989876,
+          "registry_tokens": 833,
+          "registry_map": [
+            "skill:monte-carlo-analyze-root-cause",
+            "skill:debugging-and-error-recovery",
+            "skill:phase-gated-debugging",
+            "skill:code-showcase-systematic-debugging",
+            "skill:distributed-debugging-debug-trace"
+          ],
+          "registry_complete_cards": 5,
+          "registry_cards": 5,
+          "registry_parse_error": false,
+          "loader_ms": 91.2044709998554,
+          "loader": [
+            "skill:monte-carlo-analyze-root-cause",
+            "skill:debugging-and-error-recovery",
+            "skill:phase-gated-debugging",
+            "skill:code-showcase-systematic-debugging",
+            "skill:distributed-debugging-debug-trace",
+            "skill:bug-hunt-swarm",
+            "skill:error-debugging-multi-agent-review",
+            "skill:bug-hunter"
+          ],
+          "hook_ms": 200.80276399994545,
+          "hook": [
+            "skill:monte-carlo-analyze-root-cause",
+            "skill:debugging-and-error-recovery",
+            "skill:phase-gated-debugging",
+            "skill:code-showcase-systematic-debugging",
+            "skill:distributed-debugging-debug-trace",
+            "skill:bug-hunt-swarm",
+            "skill:error-debugging-multi-agent-review",
+            "skill:bug-hunter"
+          ],
+          "hook_tokens": 297,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "debug-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Aplikasi macet sesudah login; reproduksi kerusakan dan temukan akar masalahnya.",
+          "acceptable_ids": [
+            "skill:systematic-debugging",
+            "skill:debugger",
+            "skill:debugging-strategies",
+            "skill:debugging-toolkit"
+          ],
+          "registry_ms": 135.03777300002184,
+          "registry_tokens": 791,
+          "registry_map": [
+            "skill:distributed-debugging-debug-trace",
+            "skill:debugging-and-error-recovery",
+            "skill:bugs-are-annoying",
+            "skill:debugging-toolkit",
+            "skill:systematic-debugging"
+          ],
+          "registry_complete_cards": 5,
+          "registry_cards": 5,
+          "registry_parse_error": false,
+          "loader_ms": 116.19674899998245,
+          "loader": [
+            "skill:distributed-debugging-debug-trace",
+            "skill:debugging-and-error-recovery",
+            "skill:bugs-are-annoying",
+            "skill:debugging-toolkit",
+            "skill:systematic-debugging",
+            "skill:error-debugging-error-analysis"
+          ],
+          "hook_ms": 222.16487199989388,
+          "hook": [
+            "skill:distributed-debugging-debug-trace",
+            "skill:debugging-and-error-recovery",
+            "skill:bugs-are-annoying",
+            "skill:debugging-toolkit",
+            "skill:systematic-debugging",
+            "skill:error-debugging-error-analysis"
+          ],
+          "hook_tokens": 226,
+          "hook_cards": 6,
+          "hook_complete_summaries": 6,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "review-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Review this pull request for code quality before we merge it.",
+          "acceptable_ids": [
+            "skill:requesting-code-review",
+            "skill:code-review-excellence",
+            "skill:code-review-and-quality",
+            "skill:five-axis-code-review",
+            "skill:code-reviewer"
+          ],
+          "registry_ms": 118.90231200004564,
+          "registry_tokens": 803,
+          "registry_map": [
+            "skill:code-review-and-quality",
+            "skill:requesting-code-review",
+            "skill:five-axis-code-review",
+            "skill:receiving-code-review",
+            "skill:flutter-dart-code-review"
+          ],
+          "registry_complete_cards": 5,
+          "registry_cards": 5,
+          "registry_parse_error": false,
+          "loader_ms": 91.59853599999224,
+          "loader": [
+            "skill:code-review-and-quality",
+            "skill:requesting-code-review",
+            "skill:five-axis-code-review",
+            "skill:receiving-code-review",
+            "skill:flutter-dart-code-review",
+            "skill:plankton-code-quality",
+            "skill:codex-review",
+            "skill:code-review-sensei"
+          ],
+          "hook_ms": 166.87148699998033,
+          "hook": [
+            "skill:code-review-and-quality",
+            "skill:requesting-code-review",
+            "skill:five-axis-code-review",
+            "skill:receiving-code-review",
+            "skill:flutter-dart-code-review",
+            "skill:plankton-code-quality",
+            "skill:codex-review",
+            "skill:code-review-sensei"
+          ],
+          "hook_tokens": 287,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "review-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Tinjau pull request ini untuk kualitas kode sebelum digabungkan.",
+          "acceptable_ids": [
+            "skill:requesting-code-review",
+            "skill:code-review-excellence",
+            "skill:code-review-and-quality",
+            "skill:five-axis-code-review",
+            "skill:code-reviewer"
+          ],
+          "registry_ms": 109.92012400015483,
+          "registry_tokens": 361,
+          "registry_map": [
+            "skill:requesting-code-review"
+          ],
+          "registry_complete_cards": 1,
+          "registry_cards": 1,
+          "registry_parse_error": false,
+          "loader_ms": 101.16795300018566,
+          "loader": [
+            "skill:requesting-code-review"
+          ],
+          "hook_ms": 308.4729900001548,
+          "hook": [
+            "skill:requesting-code-review"
+          ],
+          "hook_tokens": 68,
+          "hook_cards": 1,
+          "hook_complete_summaries": 1,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "threat-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Model security threats for this payment service using STRIDE.",
+          "acceptable_ids": [
+            "skill:threat-modeling",
+            "skill:threat-modeling-expert",
+            "skill:stride-analysis-patterns"
+          ],
+          "registry_ms": 123.50492400014446,
+          "registry_tokens": 888,
+          "registry_map": [
+            "skill:agent-security-hardening",
+            "skill:container-security-hardening",
+            "skill:agency-security-architect",
+            "skill:threat-modeling",
+            "skill:ai-security-hardening"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 75.73226799991062,
+          "loader": [
+            "skill:agent-security-hardening",
+            "skill:container-security-hardening",
+            "skill:agency-security-architect",
+            "skill:threat-modeling",
+            "skill:ai-security-hardening",
+            "skill:openclaw-security-hardening",
+            "skill:agency-security-incident-responder",
+            "skill:agency-security-threat-intelligence-analyst"
+          ],
+          "hook_ms": 181.2023559998579,
+          "hook": [
+            "skill:agent-security-hardening",
+            "skill:container-security-hardening",
+            "skill:agency-security-architect",
+            "skill:threat-modeling",
+            "skill:ai-security-hardening",
+            "skill:openclaw-security-hardening",
+            "skill:agency-security-incident-responder",
+            "skill:agency-security-threat-intelligence-analyst"
+          ],
+          "hook_tokens": 301,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "threat-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Modelkan ancaman keamanan layanan pembayaran ini memakai STRIDE.",
+          "acceptable_ids": [
+            "skill:threat-modeling",
+            "skill:threat-modeling-expert",
+            "skill:stride-analysis-patterns"
+          ],
+          "registry_ms": 118.68600200000401,
+          "registry_tokens": 838,
+          "registry_map": [
+            "skill:container-security-hardening",
+            "skill:agency-security-threat-detection-engineer",
+            "skill:agency-security-threat-intelligence-analyst",
+            "skill:agent-security-hardening",
+            "skill:ai-security-hardening"
+          ],
+          "registry_complete_cards": 5,
+          "registry_cards": 5,
+          "registry_parse_error": false,
+          "loader_ms": 106.22591400010606,
+          "loader": [
+            "skill:container-security-hardening",
+            "skill:agency-security-threat-detection-engineer",
+            "skill:agency-security-threat-intelligence-analyst",
+            "skill:agent-security-hardening",
+            "skill:ai-security-hardening",
+            "skill:openclaw-security-hardening",
+            "skill:stride-analysis-patterns",
+            "skill:threat-modeling-expert"
+          ],
+          "hook_ms": 208.11129999992772,
+          "hook": [
+            "skill:container-security-hardening",
+            "skill:agency-security-threat-detection-engineer",
+            "skill:agency-security-threat-intelligence-analyst",
+            "skill:agent-security-hardening",
+            "skill:ai-security-hardening",
+            "skill:openclaw-security-hardening",
+            "skill:stride-analysis-patterns",
+            "skill:threat-modeling-expert"
+          ],
+          "hook_tokens": 304,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "architecture-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Evaluate software architecture tradeoffs and record the system design decision in an ADR.",
+          "acceptable_ids": [
+            "skill:architecture",
+            "skill:software-architecture",
+            "skill:architecture-decision-records",
+            "skill:agency-engineering-software-architect"
+          ],
+          "registry_ms": 102.77650700004415,
+          "registry_tokens": 935,
+          "registry_map": [
+            "skill:architecture",
+            "skill:radix-ui-design-system",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:design-system"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 86.43126600009055,
+          "loader": [
+            "skill:architecture",
+            "skill:radix-ui-design-system",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:design-system",
+            "skill:software-architecture",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-ux-architect"
+          ],
+          "hook_ms": 184.89428700013377,
+          "hook": [
+            "skill:architecture",
+            "skill:radix-ui-design-system",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:design-system",
+            "skill:software-architecture",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-ux-architect"
+          ],
+          "hook_tokens": 293,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "architecture-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Evaluasi kompromi arsitektur perangkat lunak dan catat keputusan desain sistem dalam ADR.",
+          "acceptable_ids": [
+            "skill:architecture",
+            "skill:software-architecture",
+            "skill:architecture-decision-records",
+            "skill:agency-engineering-software-architect"
+          ],
+          "registry_ms": 150.97702299999582,
+          "registry_tokens": 938,
+          "registry_map": [
+            "skill:architecture",
+            "skill:software-architecture",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:agency-design-ux-architect"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 111.04555700012497,
+          "loader": [
+            "skill:architecture",
+            "skill:software-architecture",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:agency-design-ux-architect",
+            "skill:ontoly-software-graph",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller"
+          ],
+          "hook_ms": 207.82923100000517,
+          "hook": [
+            "skill:architecture",
+            "skill:software-architecture",
+            "skill:agency-design-ui-designer",
+            "skill:architecture-decision-records",
+            "skill:agency-design-ux-architect",
+            "skill:ontoly-software-graph",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller"
+          ],
+          "hook_tokens": 297,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "ci-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Set up GitHub Actions workflows for continuous integration, tests and deployment.",
+          "acceptable_ids": [
+            "skill:github-actions",
+            "skill:github-actions-templates",
+            "skill:github-actions-advanced",
+            "skill:github-workflow-automation"
+          ],
+          "registry_ms": 120.7123330000286,
+          "registry_tokens": 863,
+          "registry_map": [
+            "skill:github",
+            "skill:github-actions-debugger",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-actions-templates"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 117.21992399998271,
+          "loader": [
+            "skill:github",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-actions-templates",
+            "skill:makepad-deployment",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:agentic-actions-auditor",
+            "skill:deployment-patterns"
+          ],
+          "hook_ms": 271.8618129999868,
+          "hook": [
+            "skill:github",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-actions-templates",
+            "skill:makepad-deployment",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:agentic-actions-auditor",
+            "skill:deployment-patterns"
+          ],
+          "hook_tokens": 265,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "ci-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Siapkan workflow GitHub Actions untuk integrasi berkelanjutan, pengujian, dan deployment.",
+          "acceptable_ids": [
+            "skill:github-actions",
+            "skill:github-actions-templates",
+            "skill:github-actions-advanced",
+            "skill:github-workflow-automation"
+          ],
+          "registry_ms": 102.18653299989455,
+          "registry_tokens": 865,
+          "registry_map": [
+            "skill:github",
+            "skill:github-actions-templates",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-actions-debugger"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 82.58433100013463,
+          "loader": [
+            "skill:github",
+            "skill:github-actions-templates",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-workflow-automation",
+            "skill:makepad-deployment",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:agency-testing-workflow-optimizer"
+          ],
+          "hook_ms": 173.7259520000407,
+          "hook": [
+            "skill:github",
+            "skill:github-actions-templates",
+            "skill:github-actions",
+            "skill:github-actions-advanced",
+            "skill:github-workflow-automation",
+            "skill:makepad-deployment",
+            "skill:agency-testing-test-results-analyzer",
+            "skill:agency-testing-workflow-optimizer"
+          ],
+          "hook_tokens": 270,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "ui-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Design a new dashboard UI with a coherent color palette and typography.",
+          "acceptable_ids": [
+            "skill:frontend-design",
+            "skill:ui-ux-pro-max",
+            "skill:design-system",
+            "skill:agency-design-ui-designer"
+          ],
+          "registry_ms": 102.98854600000595,
+          "registry_tokens": 1073,
+          "registry_map": [
+            "skill:ckw-design",
+            "skill:agency-design-ui-designer",
+            "skill:ui-ux-pro-max",
+            "skill:build-ui",
+            "skill:agency-design-ui-finish-gate-reviewer"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 76.74938699983613,
+          "loader": [
+            "skill:ckw-design",
+            "skill:agency-design-ui-designer",
+            "skill:ui-ux-pro-max",
+            "skill:build-ui",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:anti-ui-slop",
+            "skill:radix-ui-design-system",
+            "skill:stitch-design-taste"
+          ],
+          "hook_ms": 184.6696529999008,
+          "hook": [
+            "skill:ckw-design",
+            "skill:agency-design-ui-designer",
+            "skill:ui-ux-pro-max",
+            "skill:build-ui",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:anti-ui-slop",
+            "skill:radix-ui-design-system",
+            "skill:stitch-design-taste"
+          ],
+          "hook_tokens": 283,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "ui-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Rancang tampilan dashboard baru dengan palet warna dan tipografi yang konsisten.",
+          "acceptable_ids": [
+            "skill:frontend-design",
+            "skill:ui-ux-pro-max",
+            "skill:design-system",
+            "skill:agency-design-ui-designer"
+          ],
+          "registry_ms": 124.74043699990034,
+          "registry_tokens": 927,
+          "registry_map": [
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect",
+            "skill:agency-design-ux-researcher"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 74.38508099994579,
+          "loader": [
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect",
+            "skill:agency-design-ux-researcher",
+            "skill:kpi-dashboard-design",
+            "skill:radix-ui-design-system",
+            "skill:stitch-ui-design"
+          ],
+          "hook_ms": 171.67192600004455,
+          "hook": [
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect",
+            "skill:agency-design-ux-researcher",
+            "skill:kpi-dashboard-design",
+            "skill:radix-ui-design-system",
+            "skill:stitch-ui-design"
+          ],
+          "hook_tokens": 298,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "video-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Edit this interview footage into short video clips with subtitles.",
+          "acceptable_ids": [
+            "skill:video-editing",
+            "skill:agency-marketing-short-video-editing-coach"
+          ],
+          "registry_ms": 96.02439300010701,
+          "registry_tokens": 1010,
+          "registry_map": [
+            "skill:short",
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:beatra-ai-video-studio",
+            "skill:videodb",
+            "skill:video-editing"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 77.21063100007086,
+          "loader": [
+            "skill:short",
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:beatra-ai-video-studio",
+            "skill:videodb",
+            "skill:video-editing",
+            "skill:video-router",
+            "skill:video-content-extractor",
+            "skill:videodb-skills"
+          ],
+          "hook_ms": 167.6398860001882,
+          "hook": [
+            "skill:short",
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:beatra-ai-video-studio",
+            "skill:videodb",
+            "skill:video-editing",
+            "skill:video-router",
+            "skill:video-content-extractor",
+            "skill:videodb-skills"
+          ],
+          "hook_tokens": 273,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "video-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Sunting rekaman wawancara ini menjadi klip video pendek dengan subtitle.",
+          "acceptable_ids": [
+            "skill:video-editing",
+            "skill:agency-marketing-short-video-editing-coach"
+          ],
+          "registry_ms": 128.89976599990405,
+          "registry_tokens": 1048,
+          "registry_map": [
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:video-content-extractor",
+            "skill:video-router",
+            "skill:lanshu-create-ai-presenter-video",
+            "skill:seek-and-analyze-video"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 74.71882599998025,
+          "loader": [
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:video-content-extractor",
+            "skill:video-router",
+            "skill:lanshu-create-ai-presenter-video",
+            "skill:video-editing",
+            "skill:videodb",
+            "skill:videodb-skills",
+            "skill:film-crew"
+          ],
+          "hook_ms": 167.48606299984203,
+          "hook": [
+            "skill:agency-marketing-short-video-editing-coach",
+            "skill:video-content-extractor",
+            "skill:video-router",
+            "skill:lanshu-create-ai-presenter-video",
+            "skill:video-editing",
+            "skill:videodb",
+            "skill:videodb-skills",
+            "skill:film-crew"
+          ],
+          "hook_tokens": 283,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "postgres-en",
+          "language": "en",
+          "kind": "positive",
+          "prompt": "Optimize a slow PostgreSQL query; inspect EXPLAIN plans and index selection.",
+          "acceptable_ids": [
+            "skill:postgresql-optimization",
+            "skill:postgresql",
+            "skill:postgres-best-practices",
+            "skill:sql-optimization-patterns",
+            "skill:postgres-patterns",
+            "skill:supabase-postgres-best-practices"
+          ],
+          "registry_ms": 174.03930599994055,
+          "registry_tokens": 966,
+          "registry_map": [
+            "skill:postgresql",
+            "skill:django-perf-review",
+            "skill:swiftui-performance-audit",
+            "skill:vector-index-tuning",
+            "skill:postgresql-optimization"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 90.73500900012732,
+          "loader": [
+            "skill:postgresql",
+            "skill:django-perf-review",
+            "skill:swiftui-performance-audit",
+            "skill:vector-index-tuning",
+            "skill:postgresql-optimization",
+            "skill:performance-testing-review-ai-review",
+            "skill:performance-testing-review-multi-agent-review",
+            "skill:performance-tuning"
+          ],
+          "hook_ms": 172.91980699997112,
+          "hook": [
+            "skill:postgresql",
+            "skill:django-perf-review",
+            "skill:swiftui-performance-audit",
+            "skill:vector-index-tuning",
+            "skill:postgresql-optimization",
+            "skill:performance-testing-review-ai-review",
+            "skill:performance-testing-review-multi-agent-review",
+            "skill:performance-tuning"
+          ],
+          "hook_tokens": 288,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "postgres-id",
+          "language": "id",
+          "kind": "positive",
+          "prompt": "Optimalkan query PostgreSQL yang lambat; periksa rencana EXPLAIN dan pemilihan indeks.",
+          "acceptable_ids": [
+            "skill:postgresql-optimization",
+            "skill:postgresql",
+            "skill:postgres-best-practices",
+            "skill:sql-optimization-patterns",
+            "skill:postgres-patterns",
+            "skill:supabase-postgres-best-practices"
+          ],
+          "registry_ms": 111.59097899985682,
+          "registry_tokens": 1025,
+          "registry_map": [
+            "skill:postgresql",
+            "skill:postgresql-optimization",
+            "skill:postgresql-cli",
+            "skill:postgresql-devsec",
+            "skill:receiving-code-review"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 111.8733789999169,
+          "loader": [
+            "skill:postgresql",
+            "skill:postgresql-optimization",
+            "skill:postgresql-cli",
+            "skill:postgresql-devsec",
+            "skill:receiving-code-review"
+          ],
+          "hook_ms": 188.34381300007408,
+          "hook": [
+            "skill:postgresql",
+            "skill:postgresql-optimization",
+            "skill:postgresql-cli",
+            "skill:postgresql-devsec",
+            "skill:receiving-code-review"
+          ],
+          "hook_tokens": 180,
+          "hook_cards": 5,
+          "hook_complete_summaries": 5,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "graph-en",
+          "language": "en",
+          "kind": "ambiguous",
+          "prompt": "Extract entities and relationships from these documents into a knowledge graph.",
+          "acceptable_ids": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:rag-engineer",
+            "skill:rag-implementation"
+          ],
+          "registry_ms": 97.42167600006724,
+          "registry_tokens": 1065,
+          "registry_map": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:bdistill-knowledge-extraction",
+            "skill:extract-document-data",
+            "skill:knowledge-base",
+            "skill:knowledge-ops"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 70.98192300009032,
+          "loader": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:bdistill-knowledge-extraction",
+            "skill:extract-document-data",
+            "skill:knowledge-base",
+            "skill:knowledge-ops"
+          ],
+          "hook_ms": 159.51793599992925,
+          "hook": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:bdistill-knowledge-extraction",
+            "skill:extract-document-data",
+            "skill:knowledge-base",
+            "skill:knowledge-ops"
+          ],
+          "hook_tokens": 198,
+          "hook_cards": 5,
+          "hook_complete_summaries": 5,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "graph-id",
+          "language": "id",
+          "kind": "ambiguous",
+          "prompt": "Ekstrak entitas dan hubungan dari dokumen ini menjadi graf pengetahuan.",
+          "acceptable_ids": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:rag-engineer",
+            "skill:rag-implementation"
+          ],
+          "registry_ms": 105.75546599989138,
+          "registry_tokens": 1066,
+          "registry_map": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:documentation",
+            "skill:knowledge-base",
+            "skill:compile-knowledge",
+            "skill:documentation-generation-doc-generate"
+          ],
+          "registry_complete_cards": 8,
+          "registry_cards": 8,
+          "registry_parse_error": false,
+          "loader_ms": 75.61822899992876,
+          "loader": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:documentation",
+            "skill:knowledge-base",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:knowledge-ops",
+            "skill:docs-governance"
+          ],
+          "hook_ms": 197.59872700001324,
+          "hook": [
+            "skill:agency-engineering-knowledge-graph-engineer",
+            "skill:knowledge-base",
+            "skill:documentation",
+            "skill:documentation-generation-doc-generate",
+            "skill:documentation-templates",
+            "skill:knowledge-ops",
+            "skill:docs-governance"
+          ],
+          "hook_tokens": 260,
+          "hook_cards": 7,
+          "hook_complete_summaries": 7,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "research-en",
+          "language": "en",
+          "kind": "ambiguous",
+          "prompt": "Research competing approaches to retrieval augmented generation and write a cited report.",
+          "acceptable_ids": [
+            "skill:deep-research",
+            "skill:deep-research-framework",
+            "skill:agency-research-synthesist",
+            "skill:research-ops"
+          ],
+          "registry_ms": 104.08149800014144,
+          "registry_tokens": 942,
+          "registry_map": [
+            "skill:gemini-deep-research",
+            "skill:uxkin-research",
+            "skill:deep-research-framework",
+            "skill:deep-research",
+            "skill:research-prompt"
+          ],
+          "registry_complete_cards": 7,
+          "registry_cards": 7,
+          "registry_parse_error": false,
+          "loader_ms": 85.85121599980994,
+          "loader": [
+            "skill:uxkin-research",
+            "skill:deep-research-framework",
+            "skill:deep-research",
+            "skill:research-prompt",
+            "skill:geo-report",
+            "skill:geo-report-pdf",
+            "skill:report-writing",
+            "skill:reports-analytics"
+          ],
+          "hook_ms": 171.5828240000974,
+          "hook": [
+            "skill:uxkin-research",
+            "skill:deep-research-framework",
+            "skill:deep-research",
+            "skill:research-prompt",
+            "skill:geo-report",
+            "skill:geo-report-pdf",
+            "skill:report-writing",
+            "skill:reports-analytics"
+          ],
+          "hook_tokens": 261,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "research-id",
+          "language": "id",
+          "kind": "ambiguous",
+          "prompt": "Riset pendekatan alternatif retrieval augmented generation dan tulis laporan dengan kutipan sumber.",
+          "acceptable_ids": [
+            "skill:deep-research",
+            "skill:deep-research-framework",
+            "skill:agency-research-synthesist",
+            "skill:research-ops"
+          ],
+          "registry_ms": 102.96380499994484,
+          "registry_tokens": 538,
+          "registry_map": [
+            "skill:ii-commons",
+            "skill:video-router"
+          ],
+          "registry_complete_cards": 3,
+          "registry_cards": 3,
+          "registry_parse_error": false,
+          "loader_ms": 77.61407899988626,
+          "loader": [
+            "skill:ii-commons",
+            "skill:video-router"
+          ],
+          "hook_ms": 293.52039399987007,
+          "hook": [
+            "skill:ii-commons",
+            "skill:video-router"
+          ],
+          "hook_tokens": 94,
+          "hook_cards": 2,
+          "hook_complete_summaries": 2,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "plan-en",
+          "language": "en",
+          "kind": "ambiguous",
+          "prompt": "Turn these product requirements into an implementation plan before coding.",
+          "acceptable_ids": [
+            "skill:writing-plans",
+            "skill:brainstorming",
+            "skill:concise-planning",
+            "skill:plan-writing"
+          ],
+          "registry_ms": 103.32912700005181,
+          "registry_tokens": 891,
+          "registry_map": [
+            "skill:seo-plan",
+            "skill:agency-specialized-master-plan-architect",
+            "skill:marketing-plan",
+            "skill:product-capability",
+            "skill:concise-planning"
+          ],
+          "registry_complete_cards": 6,
+          "registry_cards": 6,
+          "registry_parse_error": false,
+          "loader_ms": 81.77751499988517,
+          "loader": [
+            "skill:seo-plan",
+            "skill:agency-specialized-master-plan-architect",
+            "skill:marketing-plan",
+            "skill:product-capability",
+            "skill:concise-planning",
+            "skill:plan-ledger-tasks-yylo",
+            "skill:planning-and-task-breakdown",
+            "skill:requirements-writing"
+          ],
+          "hook_ms": 154.0993989999606,
+          "hook": [
+            "skill:seo-plan",
+            "skill:agency-specialized-master-plan-architect",
+            "skill:marketing-plan",
+            "skill:product-capability",
+            "skill:concise-planning",
+            "skill:plan-ledger-tasks-yylo",
+            "skill:planning-and-task-breakdown",
+            "skill:requirements-writing"
+          ],
+          "hook_tokens": 288,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "plan-id",
+          "language": "id",
+          "kind": "ambiguous",
+          "prompt": "Ubah persyaratan produk ini menjadi rencana implementasi sebelum menulis kode.",
+          "acceptable_ids": [
+            "skill:writing-plans",
+            "skill:brainstorming",
+            "skill:concise-planning",
+            "skill:plan-writing"
+          ],
+          "registry_ms": 122.06995600013215,
+          "registry_tokens": 475,
+          "registry_map": [
+            "skill:product-capability"
+          ],
+          "registry_complete_cards": 2,
+          "registry_cards": 2,
+          "registry_parse_error": false,
+          "loader_ms": 77.61913599983927,
+          "loader": [
+            "skill:product-capability"
+          ],
+          "hook_ms": 171.63535199983926,
+          "hook": [
+            "skill:product-capability"
+          ],
+          "hook_tokens": 67,
+          "hook_cards": 1,
+          "hook_complete_summaries": 1,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "compression-en",
+          "language": "en",
+          "kind": "ambiguous",
+          "prompt": "Compress a long agent conversation to reduce its context token budget.",
+          "acceptable_ids": [
+            "skill:context-compression",
+            "skill:context-optimization"
+          ],
+          "registry_ms": 99.3456190001325,
+          "registry_tokens": 1261,
+          "registry_map": [
+            "skill:recursive-context-pruning-token-budgeting",
+            "skill:context-budget",
+            "skill:token-budget-advisor",
+            "skill:agency-engineering-multi-agent-systems-architect",
+            "skill:enterprise-agent-ops"
+          ],
+          "registry_complete_cards": 9,
+          "registry_cards": 9,
+          "registry_parse_error": false,
+          "loader_ms": 73.06536299984145,
+          "loader": [
+            "skill:context-budget",
+            "skill:token-budget-advisor",
+            "skill:agency-engineering-multi-agent-systems-architect",
+            "skill:enterprise-agent-ops",
+            "skill:hierarchical-agent-memory",
+            "skill:multi-agent-patterns",
+            "skill:review-multi-agent-orchestration",
+            "skill:context-agent"
+          ],
+          "hook_ms": 149.93888399999378,
+          "hook": [
+            "skill:context-budget",
+            "skill:token-budget-advisor",
+            "skill:agency-engineering-multi-agent-systems-architect",
+            "skill:enterprise-agent-ops",
+            "skill:hierarchical-agent-memory",
+            "skill:multi-agent-patterns",
+            "skill:review-multi-agent-orchestration",
+            "skill:context-agent"
+          ],
+          "hook_tokens": 294,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "compression-id",
+          "language": "id",
+          "kind": "ambiguous",
+          "prompt": "Kompres percakapan agent yang panjang agar anggaran token konteks berkurang.",
+          "acceptable_ids": [
+            "skill:context-compression",
+            "skill:context-optimization"
+          ],
+          "registry_ms": 132.6153909999448,
+          "registry_tokens": 1144,
+          "registry_map": [
+            "skill:recursive-context-pruning-token-budgeting",
+            "skill:crypto-bd-agent",
+            "skill:hierarchical-agent-memory",
+            "skill:token-card",
+            "skill:soroban-token-minter"
+          ],
+          "registry_complete_cards": 9,
+          "registry_cards": 9,
+          "registry_parse_error": false,
+          "loader_ms": 77.37271800010603,
+          "loader": [
+            "skill:crypto-bd-agent",
+            "skill:hierarchical-agent-memory",
+            "skill:token-card",
+            "skill:soroban-token-minter",
+            "skill:agent-architecture-audit",
+            "skill:agent-eval",
+            "skill:agent-evals",
+            "skill:agent-evaluation"
+          ],
+          "hook_ms": 156.01140900002974,
+          "hook": [
+            "skill:crypto-bd-agent",
+            "skill:hierarchical-agent-memory",
+            "skill:token-card",
+            "skill:soroban-token-minter",
+            "skill:agent-architecture-audit",
+            "skill:agent-eval",
+            "skill:agent-evals",
+            "skill:agent-evaluation"
+          ],
+          "hook_tokens": 279,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "thanks-en",
+          "language": "en",
+          "kind": "negative",
+          "prompt": "Thanks, that answers my question.",
+          "acceptable_ids": [],
+          "registry_ms": 116.48766300004354,
+          "registry_tokens": 251,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 75.08162299996002,
+          "loader": [],
+          "hook_ms": 163.79599399988365,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "thanks-id",
+          "language": "id",
+          "kind": "negative",
+          "prompt": "Terima kasih, itu sudah menjawab pertanyaan saya.",
+          "acceptable_ids": [],
+          "registry_ms": 99.21227999984694,
+          "registry_tokens": 255,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 138.95111500005441,
+          "loader": [],
+          "hook_ms": 203.22241100006977,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "arithmetic-en",
+          "language": "en",
+          "kind": "negative",
+          "prompt": "What is 17 multiplied by 23?",
+          "acceptable_ids": [],
+          "registry_ms": 101.71863700020367,
+          "registry_tokens": 250,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 87.80070199986767,
+          "loader": [],
+          "hook_ms": 191.59287399997993,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "arithmetic-id",
+          "language": "id",
+          "kind": "negative",
+          "prompt": "Berapa hasil 17 dikali 23?",
+          "acceptable_ids": [],
+          "registry_ms": 95.58970199987016,
+          "registry_tokens": 249,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 70.23270700005924,
+          "loader": [],
+          "hook_ms": 157.49367900002653,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "translation-en",
+          "language": "en",
+          "kind": "negative",
+          "prompt": "Translate good morning into Indonesian.",
+          "acceptable_ids": [],
+          "registry_ms": 91.70975899996847,
+          "registry_tokens": 252,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 69.44395799996528,
+          "loader": [],
+          "hook_ms": 184.61638200005837,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "translation-id",
+          "language": "id",
+          "kind": "negative",
+          "prompt": "Terjemahkan selamat pagi ke bahasa Inggris.",
+          "acceptable_ids": [],
+          "registry_ms": 102.0366139998714,
+          "registry_tokens": 253,
+          "registry_map": [],
+          "registry_complete_cards": 0,
+          "registry_cards": 0,
+          "registry_parse_error": false,
+          "loader_ms": 72.02412500009814,
+          "loader": [],
+          "hook_ms": 146.86229099993398,
+          "hook": [],
+          "hook_tokens": 0,
+          "hook_cards": 0,
+          "hook_complete_summaries": 0,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0
+        },
+        {
+          "id": "figma-en",
+          "language": "en",
+          "kind": "unavailable_mcp",
+          "prompt": "Use figma-mcp to inspect the design tokens in our Figma file.",
+          "acceptable_ids": [],
+          "unavailable_id": "mcp:figma-mcp",
+          "registry_ms": 109.46230700005799,
+          "registry_tokens": 1383,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:product-design",
+            "skill:agency-design-ui-designer",
+            "skill:design-ux",
+            "skill:agency-design-ui-finish-gate-reviewer"
+          ],
+          "registry_complete_cards": 12,
+          "registry_cards": 12,
+          "registry_parse_error": false,
+          "loader_ms": 81.83026599999721,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:product-design",
+            "skill:agency-design-ui-designer",
+            "skill:design-ux",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:ckw-design",
+            "skill:agency-design-ux-researcher"
+          ],
+          "hook_ms": 173.4532330001457,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:product-design",
+            "skill:agency-design-ui-designer",
+            "skill:design-ux",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:ckw-design",
+            "skill:agency-design-ux-researcher"
+          ],
+          "hook_tokens": 288,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0,
+          "unavailable_ready": "no",
+          "unavailable_blocker": "not_configured",
+          "unavailable_advertised": false
+        },
+        {
+          "id": "figma-id",
+          "language": "id",
+          "kind": "unavailable_mcp",
+          "prompt": "Gunakan figma-mcp untuk memeriksa token desain di berkas Figma kami.",
+          "acceptable_ids": [],
+          "unavailable_id": "mcp:figma-mcp",
+          "registry_ms": 191.3795119999122,
+          "registry_tokens": 1414,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect"
+          ],
+          "registry_complete_cards": 13,
+          "registry_cards": 13,
+          "registry_parse_error": false,
+          "loader_ms": 87.7244780001547,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect",
+            "skill:agency-design-ux-researcher",
+            "skill:radix-ui-design-system",
+            "skill:stitch-ui-design"
+          ],
+          "hook_ms": 188.89197799990143,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:agency-design-ui-designer",
+            "skill:agency-design-ui-finish-gate-reviewer",
+            "skill:agency-design-visual-storyteller",
+            "skill:agency-design-ux-architect",
+            "skill:agency-design-ux-researcher",
+            "skill:radix-ui-design-system",
+            "skill:stitch-ui-design"
+          ],
+          "hook_tokens": 295,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0,
+          "unavailable_ready": "no",
+          "unavailable_blocker": "not_configured",
+          "unavailable_advertised": false
+        },
+        {
+          "id": "tavily-en",
+          "language": "en",
+          "kind": "unavailable_mcp",
+          "prompt": "Search the web through tavily-mcp for current results.",
+          "acceptable_ids": [],
+          "unavailable_id": "mcp:tavily-mcp",
+          "registry_ms": 99.05540299996574,
+          "registry_tokens": 1178,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp",
+            "skill:not-human-search-mcp",
+            "skill:serply-search-mcp"
+          ],
+          "registry_complete_cards": 10,
+          "registry_cards": 10,
+          "registry_parse_error": false,
+          "loader_ms": 75.59792500001095,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:tavily-web",
+            "skill:pi-web-search",
+            "skill:etsy-search-listings",
+            "skill:desearch-mcp"
+          ],
+          "hook_ms": 139.96009599986792,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp",
+            "skill:serply-search-mcp",
+            "skill:tavily-web",
+            "skill:pi-web-search",
+            "skill:etsy-search-listings",
+            "skill:desearch-mcp"
+          ],
+          "hook_tokens": 275,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0,
+          "unavailable_ready": "no",
+          "unavailable_blocker": "not_configured",
+          "unavailable_advertised": false
+        },
+        {
+          "id": "tavily-id",
+          "language": "id",
+          "kind": "unavailable_mcp",
+          "prompt": "Cari hasil web terbaru melalui tavily-mcp.",
+          "acceptable_ids": [],
+          "unavailable_id": "mcp:tavily-mcp",
+          "registry_ms": 89.44834500016441,
+          "registry_tokens": 1164,
+          "registry_map": [
+            "skill:mcp-builder",
+            "skill:tavily-web",
+            "skill:desearch-mcp",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp"
+          ],
+          "registry_complete_cards": 10,
+          "registry_cards": 10,
+          "registry_parse_error": false,
+          "loader_ms": 96.19914700010668,
+          "loader": [
+            "skill:mcp-builder",
+            "skill:tavily-web",
+            "skill:desearch-mcp",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp",
+            "skill:mcp-dependency-drift-audit",
+            "skill:webly",
+            "skill:sandbase-mcp"
+          ],
+          "hook_ms": 172.6071169998704,
+          "hook": [
+            "skill:mcp-builder",
+            "skill:tavily-web",
+            "skill:desearch-mcp",
+            "skill:keenable-search-mcp",
+            "skill:parallel-search-mcp",
+            "skill:mcp-dependency-drift-audit",
+            "skill:webly",
+            "skill:sandbase-mcp"
+          ],
+          "hook_tokens": 275,
+          "hook_cards": 8,
+          "hook_complete_summaries": 8,
+          "hook_detail_pointers": 0,
+          "hook_readiness_labels": 0,
+          "unavailable_ready": "no",
+          "unavailable_blocker": "not_configured",
+          "unavailable_advertised": false
+        }
+      ]
+    }
+  },
+  "isolated_checks": {
+    "integration_run_total": {
+      "baseline": 471,
+      "feature": 475
+    },
+    "integration_skips": 4,
+    "ecc_total_passed": 8292,
+    "mcp_stdio_checks": 11,
+    "codex_doctor_passed": true,
+    "setup_concurrent_completed": 2,
+    "failed_upgrade_kept_previous": true,
+    "rollback_reused_previous": true,
+    "relocation_mcp_stdio_checks": 11
+  }
+}

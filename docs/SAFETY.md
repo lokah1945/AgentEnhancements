@@ -137,6 +137,14 @@ Panduan replica-skill mensyaratkan disiplin clean-room:
 
 ### 5. License Compliance
 
+Setup checks the Python wheel hashes against the repository lock and runs
+the bundled MCP smoke checks with empty credentials. External MCP servers
+require a deliberately installed entry point and authorized credentials.
+The gateway rejects package runners such as `npx` and `uvx`. Review the
+installed executable and its behavior before granting host permissions.
+The entry point check covers launcher forms that AE recognizes. User-owned
+scripts and executables still run with the permissions granted by the host.
+
 Setiap manifest katalog punya field `source.license`. Status:
 
 - **Plugin:** replica-skill

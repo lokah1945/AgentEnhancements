@@ -117,6 +117,20 @@ class DiscoveryQualityTests(unittest.TestCase):
                 self.assertNotIn("loaded automatically", entry["activation"])
                 self.assertIn("command", entry["activation"])
 
+    def test_catalog_search_can_find_blocked_entries_in_a_bounded_json_page(self):
+        from context_budget import MAX_SEARCH_PAGE, approx_tokens
+
+        command = [sys.executable, str(UI_DIR / 'scripts/registry.py'), 'search',
+                   'figma design ' * 500, '--type', 'mcp', '--json']
+        default = subprocess.check_output(command, text=True, env=self.environment, timeout=10)
+        catalog = subprocess.check_output([*command, '--catalog'], text=True,
+                                          env=self.environment, timeout=10)
+        self.assertNotIn('mcp:figma-mcp', default)
+        figma = next(card for card in json.loads(catalog)['cards'] if card['id'] == 'mcp:figma-mcp')
+        self.assertEqual(figma['ready'], 'no')
+        self.assertEqual(figma['blocker'], 'not_configured')
+        self.assertLessEqual(approx_tokens(catalog), MAX_SEARCH_PAGE)
+
     def test_missing_skill_files_are_not_reported_ready(self):
         entry = {"type": "skill", "name": "missing-discovery-skill",
                  "path": "unified-integration/skills/missing-discovery-skill/SKILL.md",
@@ -149,16 +163,21 @@ class DiscoveryQualityTests(unittest.TestCase):
         # ready "built-in" although AE ships only its guide (CONTRACT 8.1).
         for vendored in ("False", "True"):
             state = self.registry.entry_readiness(
-                {"type": "plugin", "name": "fixture-plugin", "vendored": vendored})
+                {"type": "plugin", "name": "fixture-plugin", "vendored": vendored,
+                 "path": "plugin-catalog/code/agent-skills-addyosmani/SKILL.md"})
             self.assertEqual(state["ready"], "yes")
             self.assertIn("guide only", state["how"])
             self.assertNotIn("built-in", state["how"])
         self.assertEqual(self.registry.entry_readiness(
             {"type": "capability", "name": "memory"})["how"], "built-in")
+        self.assertEqual(self.registry.entry_readiness(
+            {"type": "plugin", "path": "missing/SKILL.md"}),
+            {"ready": "no", "blocker": "guide_file_unavailable"})
 
     def test_ready_cards_print_how_they_are_ready(self):
         card = self.registry._card({"type": "plugin", "id": "plugin:fixture",
-                                    "name": "fixture", "vendored": "False"}, score=2.5)
+                                    "name": "fixture", "vendored": "False",
+                                    "path": "plugin-catalog/code/agent-skills-addyosmani/SKILL.md"}, score=2.5)
         rendered = self.registry._format_card(card)
         self.assertNotIn("ready: yes ()", rendered)
         self.assertIn("ready: yes (guide only", rendered)

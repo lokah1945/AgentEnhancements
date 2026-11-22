@@ -20,7 +20,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from api_config import BUILTINS
 
 
-async def check(name: str, script: str, health_tool: str = "health") -> bool:
+async def check(name: str, script: str, environment: dict[str, str],
+                health_tool: str = "health") -> bool:
     """Initialize one subprocess and call its advertised health tool."""
     try:
         async with asyncio.timeout(25):
@@ -29,6 +30,7 @@ async def check(name: str, script: str, health_tool: str = "health") -> bool:
                     StdioServerParameters(
                         command=sys.executable,
                         args=[script],
+                        env=environment,
                     ),
                     errlog=log,
                 ) as (read, write):
@@ -95,15 +97,20 @@ async def check(name: str, script: str, health_tool: str = "health") -> bool:
 
 
 async def main() -> None:
-    """Probe the exact built server set in the canonical template."""
+    """Probe bundled servers without reading the user's integrations or state."""
     directory = Path(__file__).resolve().parent
-    results = await asyncio.gather(
-        *[
-            check(name, str(directory / name / "server.py"))
-            for name in BUILTINS
-        ],
-        check("agent-enhancements", str(directory / "gateway.py"), "ae_health"),
-    )
+    with tempfile.TemporaryDirectory(prefix="ae-protocol-") as temporary:
+        fixture = Path(temporary)
+        api = fixture / "ui.api.json"
+        api.write_text('{"version":2,"api_keys":{},"mcp":{}}\n', encoding="utf-8")
+        environment = {"AGENT_ENHANCEMENTS_API_FILE": str(api),
+                       "AGENT_ENHANCEMENTS_STATE_DIR": str(fixture / "state"),
+                       "AGENT_MEMORY_ROOT": str(fixture / "state/memory")}
+        results = await asyncio.gather(
+            *(check(name, str(directory / name / "server.py"), environment)
+              for name in BUILTINS),
+            check("agent-enhancements", str(directory / "gateway.py"), environment, "ae_health"),
+        )
     print(f"MCP protocol: {sum(results)}/{len(results)} passed")
     if not all(results):
         raise SystemExit(1)

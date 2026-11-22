@@ -22,9 +22,11 @@ servers and built-in capabilities. Reads `all-skills.json`,
     (with paths and native-link status), matching plugins, relevant MCP servers,
     always-available capabilities and usage hints.
 
-- **Command:** `search "<query>" [--type T] [--limit N] [--json]`
+- **Command:** `search "<query>" [--type T] [--limit N] [--catalog] [--json]`
   - **Description:** Scored search across every entry type (or one type:
-    `skill`, `plugin`, `mcp`, `capability`).
+    `skill`, `plugin`, `mcp`, `capability`). Includes unavailable candidates
+    and their blockers when `--catalog` is supplied. Text and JSON results
+    carry at most five complete cards within the search-page token budget.
 
 - **Command:** `show <name-or-id> [--json]`
   - **Description:** One entry by id (`skill:docx`) or name (`docx`), including
@@ -54,7 +56,8 @@ information for maintainers; they are not runtime connectivity probes.
 `scripts/api_config.py init` creates the private root `ui.api.json` once;
 `migrate` upgrades it to schema version 2 once (idempotent, private backup,
 atomic replace, value-free JSON report; exit code 1 when refused).
-`status` returns only per-reference key counts and readiness reasons.
+`status` returns per-reference key counts, readiness reasons and the presence
+of `ffmpeg`, `ffprobe` and `tesseract` on `PATH`.
 Importable functions:
 
 - `read_config()`: validated snapshot; `api_keys` is normalized to
@@ -86,9 +89,11 @@ Current schema validation and credential checks run on every call. Failures
 use `isError: true`. Polling discovers edits without a manual tool invocation.
 
 External servers use `mcp.<name>.command` arrays and `env` reference mappings
-in the same file. Commands run directly, without a shell or npm installation
-step. The gateway proxies tool schemas/results and owns subprocess lifetimes;
-it does not proxy external prompts/resources or complete OAuth grants.
+in the same file. AE launches installed entry points directly. Configuration
+diagnostics report `host_handshake_required` for commands eligible to connect.
+A package runner reports `package_launcher_requires_provisioning`. The
+gateway proxies tool schemas and results. OAuth and account permissions are
+managed by the provider or the host.
 
 ### Native linking - `unified-integration/scripts/link-skills.sh`
 

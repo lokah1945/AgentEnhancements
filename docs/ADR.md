@@ -141,6 +141,34 @@ asli — tidak dimodifikasi (respect upstream).
 
 **Rationale**: Konsisten preferensi maintainer; meminimalkan diff upstream.
 
+### ADR-009 — Penyajian tool dan provisioning lintas host
+
+Implementasi memerlukan persetujuan maintainer.
+
+Setup sudah memverifikasi runtime bundel. Namespace MCP dan izin tool tetap
+berlaku sepanjang sesi. Pisahkan keputusan berikut dari perbaikan installer.
+
+1. Pertahankan profil 16 skill sampai pilot membuktikan bahwa bridge yang
+   lebih kecil mempertahankan discovery otomatis. Migrasi hanya menyentuh
+   symlink milik AE dan memerlukan baseline host serta jalur rollback.
+2. Gunakan penundaan schema yang didukung host. Perubahan `tools/list` karena
+   otorisasi mengikuti protokol yang dinegosiasikan. Untuk MCP 2026-07-28,
+   daftar tidak boleh berubah sebagai efek dari pemanggilan tool lain atau
+   berbeda per koneksi. Bukti harus menunjukkan tool yang tersedia bagi
+   model dan permission yang dipakai pada panggilan aktual.
+3. Uji perubahan discovery saat runtime dengan tugas yang baru memerlukan
+   kapabilitas setelah membaca kode. Sematkan hanya petunjuk yang relevan
+   dan beri batas budget per kanal. Mode 1 memerlukan jalur native yang
+   terdokumentasi dan pembuktian autentikasi serta fallback pada host.
+4. Untuk menambah provisioning eksternal, pilih satu kandidat terverifikasi
+   per PR. Sertakan rilis, lisensi, checksum, transitif, platform, izin,
+   analisis biaya disk, smoke test dan rencana upgrade. Gunakan setup dan
+   gateway yang sama. Integrasi OAuth mengikuti mekanisme host atau vendor.
+
+Sebelum persetujuan, catat per-host skema model-visible, penggunaan skill dan
+hasil tugas dengan model, izin dan fixture yang sama. Ikuti batas perubahan
+[CONTRACT §4.2](../CONTRACT.md#42-what-no-agent-may-do-without-explicit-human-approval).
+
 ### Template ADR
 
 ```markdown

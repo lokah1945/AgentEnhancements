@@ -79,8 +79,10 @@ and skill-index schemas are unchanged.
 
 ### Setup pipeline (`setup.sh`)
 
-0. **prepare runtime** - create an isolated Python environment and install
-   declared dependencies; no global pip installation.
+0. **prepare runtime** - select the checkout-local Python environment for the
+   current lock and platform. A new environment installs hash-verified wheels
+   and passes dependency and stdio checks before the stable interpreter path
+   switches. See [runtime upgrades](UPDATING.md#34-python-runtime-lock).
 1. **detect_agents** - probes PATH for known agent CLIs; writes
    `config/detected-agents.sh` (machine-specific, never hand-edited).
    A saved machine-local host selection filters the detected agents.
@@ -111,7 +113,9 @@ and skill-index schemas are unchanged.
    agent's own config (`~/.claude/settings.json`, `~/.codex/AGENTS.md`,
    ...). The four native adapters preserve user hooks, MCP servers, providers
    and instruction/plugin arrays. Backups are written next to changed files.
-   One native `agent-enhancements` gateway loads the ten built MCP servers.
+   One native `agent-enhancements` gateway loads the ten bundled Python MCP
+   backends. Each tool with an external executable or credential requirement
+   is published only while its prerequisites are present.
    OpenCode 2 uses `mcp.servers`, `disabled` and `environment`; the adapter
    migrates legacy flat entries. Its prompt hook waits for the managed MCP
    connection before the first model request captures available tools.
@@ -197,9 +201,12 @@ Offline tool subsets remain available with empty keys. External subprocesses
 start only with configured requirements and commands, receive only their
 mapped credentials (the first usable key), and are replaced on key rotation.
 First-party adapters such as `search-mcp` pick a key per HTTP request from
-the in-process credential pool instead. The registry snapshot
-retains the full catalog; agent-facing search/map/list filters unavailable
-MCPs using the live API configuration.
+the in-process credential pool instead. The registry snapshot retains the
+full catalog. Agent-facing search, map and list use live configuration.
+Explicit `search --catalog` includes blocked candidates with a diagnosis.
+External tools appear in the gateway after a successful handshake and
+`tools/list`. The live host inventory determines which exact tool IDs
+preflight can mark callable.
 
 - One setup script, one index, one memory system, one compression system
   (CONTRACT §2.1).

@@ -130,6 +130,28 @@ cd ECC && npm install --no-audit --no-fund && npm run build:opencode
 node tests/run-all.js
 ```
 
+#### 3.4 Python runtime lock
+
+`requirements.in` lists direct dependencies and compatibility ranges.
+`requirements.txt` pins the resolved versions and allowed wheel hashes.
+Refresh the lock in a reviewed change and verify setup on the intended OS,
+architecture and Python version.
+
+```bash
+uv pip compile --universal --python-version 3.11 --generate-hashes \
+  --only-binary :all: --no-header --no-annotate \
+  --output-file unified-integration/requirements.txt \
+  unified-integration/requirements.in
+```
+
+Run `bash unified-integration/setup.sh` to prepare the locked runtime and
+refresh native bridges, then run `setup-mcp.sh --check`. A reused runtime
+can start without package registry access. Fresh preparation needs the
+locked wheels from a package index or a populated local installer cache.
+Operating systems without a compatible wheel fail during setup and retain
+the previously selected environment. Close active AE host sessions before a
+dependency upgrade so their processes retain one set of Python packages.
+
 ---
 
 ### 4. Updating This Repository
@@ -206,6 +228,19 @@ git checkout <previous-commit> -- <vendored-dir>
 ```
 
 #### 7.2 Full Rollback
+
+After switching to a revision with the versioned installer, run setup.
+It reuses a matching verified environment at the original checkout path.
+New generations are built alongside the active one and published after
+verification. Retained generations consume disk space. Wait for host
+sessions using a retired environment to finish before removing it.
+
+The first upgrade preserves the physical legacy environment under
+`.agentenhancements/runtime/legacy-venv-*`. For a rollback to a revision
+that predates this installer, stop the AE host sessions. Move the active
+`venv` symlink aside, restore the saved physical directory to its original
+`runtime/venv` path, then run setup from the older revision. A virtual
+environment's installed command paths depend on its original location.
 
 ```bash
 # 1. Roll this repository back

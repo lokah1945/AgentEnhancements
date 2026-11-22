@@ -290,9 +290,8 @@ Python aliases within the prepared venv produce the same
 hook and gateway commands, avoiding redundant backups and hook trust changes.
 An OpenCode 1 installation is refused before its native
 configuration is rewritten.
-Dependencies are installed in
-`.agentenhancements/runtime/venv`;
-no global pip environment is modified. `requirements.txt` defines dependencies.
+Dependencies are installed into a checkout-local environment. Host bridges
+use the stable `.agentenhancements/runtime/venv` path.
 Malformed native config aborts setup with an error instead of reporting success.
 Codex hook trust and CLI authentication remain the application's own controls.
 
@@ -360,10 +359,16 @@ recreates missing personas or imports credentials from another host.
 
 ### Dependency refresh and privacy hardening
 
-Setup records a SHA-256 digest of `requirements.txt` beside the isolated
-venv. A changed requirements file or missing import triggers installation;
-unchanged requirements preserve the environment. Filelock requires at least
-4.2.1 (Python 3.11 or later).
+Setup prepares Python 3.11+ dependencies from a SHA-256 wheel lock. Each
+verified environment records the lock digest, Python version, platform,
+absolute path and installed package versions in its own `ae-runtime.json`.
+Matching environments are reused. Newly prepared environments pass the
+bundled stdio smoke test before the interpreter path changes.
+
+In `api_config.py status`, a configured external command is eligible to
+connect. Check the gateway and the host's live tool list for confirmed
+availability. For a blocked package launcher, install the verified release
+separately and set its local entry point in `mcp.<id>.command`.
 
 Memory initialization creates private storage before SQLite opens it and
 refuses a database symlink. Runtime/observer notes and audit text redact
@@ -382,7 +387,8 @@ AE-owned dependencies and state live under the active checkout's ignored
 `.agentenhancements/` directory. Paths resolve from the installed source,
 independently of the current working directory or global XDG settings:
 
-- `runtime/venv/`: the Python interpreter and MCP dependencies.
+- `runtime/venv/`: stable path to the active Python environment.
+- `runtime/environments/`: verified environments and version records.
 - `config/model.json`, `config/preflight.key`: legacy adaptive-selector
   files, imported once by `api_config.py migrate` and no longer read.
 - `config/host-selection.json`: native host/profile preferences.

@@ -2553,8 +2553,17 @@ main() {
     echo ""
 
     python3 "$UNIFIED_DIR/scripts/project_paths.py" validate
-    eval "$(python3 "$UNIFIED_DIR/scripts/project_paths.py" shell)"
-    local runtime_python
+    local state_environment runtime_python setup_lock
+    state_environment="$(python3 "$UNIFIED_DIR/scripts/project_paths.py" shell)"
+    eval "$state_environment"
+    setup_lock="$(python3 "$UNIFIED_DIR/scripts/project_paths.py" runtime)/.setup.lock"
+    if [ -L "$setup_lock" ]; then
+        log_error 'Refusing a symlinked setup lock'
+        return 1
+    fi
+    # Keep the lock on the inherited file descriptor for this entire setup.
+    exec 9<>"$setup_lock"
+    python3 -c 'from fcntl import flock, LOCK_EX; flock(9, LOCK_EX)'
     runtime_python="$(bash "$UNIFIED_DIR/scripts/setup-mcp.sh" --prepare)"
     export PATH="$(dirname "$runtime_python"):$PATH"
     python3 "$UNIFIED_DIR/scripts/api_config.py" init
@@ -2618,6 +2627,7 @@ main() {
     echo "  AGENT_ENHANCEMENTS_BASE_DIR - Override base directory (default: repository root detected from setup.sh location)"
     echo "  AGENT_MEMORY_ROOT - Override memory storage location (default: checkout/.agentenhancements/memory)"
     echo "  HEADROOM_BIN - Override headroom binary path"
+    exec 9>&-
 }
 
 main "$@"

@@ -92,9 +92,11 @@ function toolRef(tool) {
 
 export function deliveredTools(context, inventory, input) {
   const system = input.system.filter((part) => part.type === "text").map((part) => part.text).join("\n")
+  const references = new Set([...context.matchAll(/^(?:  use: |- \S+ \[callable\] use: )(.+)$/gm)]
+    .flatMap((match) => match[1].split(", ")))
   return (inventory?.tools || []).every((tool) => {
     const ref = toolRef(tool)
-    if (!context.includes(ref)) return true
+    if (!references.has(ref)) return true
     return tool.codemode ? codeModeDelivery(tool, ref, system, input.tools?.execute) :
       JSON.stringify(input.tools?.[tool.id]?.input) === JSON.stringify(tool.input_schema)
   })

@@ -27,6 +27,7 @@ try {
     return count
   }
   const ref = 'tools["agent-enhancements"].ffmpeg_probe'
+  const packaged = "  use: " + ref
   const inventory = { tools: [{ name: "ffmpeg_probe", id: "agent-enhancements_ffmpeg_probe",
     namespace: "agent-enhancements", codemode: true,
     input_schema: { type: "object", properties: { path: { type: "string" } }, required: ["path"] },
@@ -34,17 +35,27 @@ try {
   const catalog = (declaration) => [{ type: "text", text:
     "## Code Mode tools (call only inside `execute`)\n\n- agent-enhancements (1 tools)\n  - " + declaration }]
   const wire = { tools: { execute: { input: { type: "object", properties: { code: { type: "string" } } } } } }
-  assert.equal(deliveredTools(ref, inventory, { ...wire, system: catalog(ref + "({\n  path: string,\n}): Promise<unknown>") }), true)
-  assert.equal(deliveredTools(ref, inventory, { ...wire, system: catalog(ref + "({\n  wrongParameter: boolean,\n}): Promise<unknown>") }), false)
-  assert.equal(deliveredTools(ref, inventory, { ...wire, system: [{ type: "text", text: "You can use " + ref }] }), false)
+  assert.equal(deliveredTools(packaged, inventory, { ...wire, system: catalog(ref + "({\n  path: string,\n}): Promise<unknown>") }), true)
+  assert.equal(deliveredTools(packaged, inventory, { ...wire, system: catalog(ref + "({\n  wrongParameter: boolean,\n}): Promise<unknown>") }), false)
+  assert.equal(deliveredTools(packaged, inventory, { ...wire, system: [{ type: "text", text: "You can use " + ref }] }), false)
   const constrained = { tools: [{ ...inventory.tools[0], input_schema: {
     ...inventory.tools[0].input_schema, additionalProperties: false,
   } }] }
-  assert.equal(deliveredTools(ref, constrained, { ...wire, system: catalog(ref + "({\n  path: string,\n}): Promise<unknown>") }), false)
+  assert.equal(deliveredTools(packaged, constrained, { ...wire, system: catalog(ref + "({\n  path: string,\n}): Promise<unknown>") }), false)
   const malformed = { tools: [{ ...inventory.tools[0], input_schema: {
     type: "object", properties: { path: null }, required: ["path"],
   } }] }
-  assert.equal(deliveredTools(ref, malformed, { ...wire, system: catalog(ref + "({\n  path: string,\n}): Promise<unknown>") }), false)
+  assert.equal(deliveredTools(packaged, malformed, { ...wire, system: catalog(ref + "({\n  path: string,\n}): Promise<unknown>") }), false)
+  const direct = ["embeddings_embed", "embeddings_embed_batch"].map((name) => ({
+    name, id: "agent-enhancements_" + name, namespace: "agent-enhancements", codemode: false,
+    input_schema: { type: "object" },
+  }))
+  const batch = direct[1].id
+  const batchOnly = { system: [], tools: { [batch]: { input: direct[1].input_schema } } }
+  const compact = "- tool:embeddings-mcp/embeddings_embed_batch [callable] use: " + batch
+  assert.equal(deliveredTools("  use: " + batch, { tools: direct }, batchOnly), true)
+  assert.equal(deliveredTools(compact, { tools: direct }, batchOnly), true)
+  assert.equal(deliveredTools(compact, { tools: direct }, { system: [], tools: {} }), false)
   const large = await runtime({ hook_event_name: "UserPromptSubmit", session_id: "large-inventory", cwd: root,
     prompt: "security audit", ae_host_inventory: { tools: [{ input_schema: { description: "x".repeat(2_001_000) } }] },
   }, true)

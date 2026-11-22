@@ -496,22 +496,16 @@ def _host_tools(agent: str, event: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def _server_tools(server: str, tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Match exact observed gateway names using the gateway's own mapping."""
+    """Match observed tool names using the shared gateway naming policy."""
     if not tools:
         return []
-    if "gateway_mapping" not in _MODULE_CACHE:
-        spec = importlib.util.spec_from_file_location(
-            "ae_preflight_gateway_mapping", SCRIPT_DIR.parent / "mcp-servers/gateway.py")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        _MODULE_CACHE["gateway_mapping"] = module
-    gateway = _MODULE_CACHE["gateway_mapping"]
-    public_name = gateway.public_name
-    config, _ = _api_config().read_config()
+    api = _api_config()
+    public_name = api.public_name
+    config, _ = api.read_config()
     prefix = public_name(server, "")
     return [tool for tool in tools if tool["name"].startswith(prefix)
             and tool["name"] == public_name(server, tool["name"][len(prefix):])
-            and gateway.tool_available(server, tool["name"][len(prefix):], config)]
+            and api.tool_available(server, tool["name"][len(prefix):], config)]
 
 
 def _tool_ref(tool: Dict[str, Any]) -> str:

@@ -330,6 +330,30 @@ def redact(text: str, config: dict | None = None) -> str:
     return SECRET_PATTERN.sub("[redacted]", text)
 
 
+def public_name(server: str, tool: str) -> str:
+    """Keep portable MCP names unique and below the 64 character limit."""
+    raw = server.removesuffix("-mcp").replace("-", "_") + "_" + tool
+    safe = re.sub(r"[^a-zA-Z0-9_-]", "_", raw)
+    if len(safe) > 64 or safe != raw:
+        safe = safe[:51] + "_" + hashlib.sha256(raw.encode()).hexdigest()[:12]
+    return safe
+
+
+def tool_available(server: str, original: str, config: dict) -> bool:
+    """Check tool-specific prerequisites shared by gateway and preflight."""
+    if original == "health":
+        return False
+    if server == "vision-mcp" and original == "describe":
+        return cloud_available(server, config=config)
+    if server == "ffmpeg-mcp":
+        return bool(shutil.which("ffprobe" if original == "probe" else "ffmpeg"))
+    if server == "video-mcp" and original == "render":
+        return bool(shutil.which("ffmpeg"))
+    if server == "vision-mcp" and original == "ocr":
+        return bool(shutil.which("tesseract"))
+    return True
+
+
 def external_command(command: list[str]) -> list[str]:
     """Resolve configured placeholders and paths relative to the gateway cwd."""
     resolved = [arg.replace("{repo}", str(ROOT)).replace("{python}", sys.executable)

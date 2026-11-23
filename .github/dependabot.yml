@@ -9,10 +9,17 @@ updates:
     schedule:
       interval: weekly
 
+  # requirements.txt is a universal, wheels-only, hash-pinned lock compiled
+  # by uv (docs/UPDATING.md). Dependabot regenerates it with pip-compile,
+  # which cannot reproduce that lock, so version updates are disabled
+  # (limit 0) and only security-update PRs open here. Treat such a PR as a
+  # signal: regenerate the lock with the documented uv command on its branch.
+  # The dependency-audit workflow fails any lock that does not match it.
   - package-ecosystem: pip
     directory: /unified-integration
     schedule:
       interval: weekly
+    open-pull-requests-limit: 0
 
   - package-ecosystem: npm
     directory: /mcp-servers/agent_browser

@@ -3,8 +3,11 @@ name: Dependency audit
 # Gating vulnerability scan of the locked dependency sets. Kept separate from
 # ci.yml so an advisory published upstream cannot turn unrelated pushes red:
 # it runs weekly, on demand, and whenever a lock file it scans changes.
-# No step may end in `|| true`. An unfixable advisory in vendored code gets a
-# documented `--ignore <ID>` next to the command that reports it.
+# No step may end in `|| true`. An advisory in a vendored Cargo.lock that a
+# semver-compatible patch fixes is cleared with
+# `cargo update -p <crate> --precise <version>` in that lock (then
+# `cargo test --locked` in the crate). Only an advisory with no compatible fix
+# gets a documented `--ignore <ID>` next to the command that reports it.
 
 on:
   push:
@@ -46,8 +49,23 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.11"
-      - name: Install pip-audit
-        run: python3 -m pip install --disable-pip-version-check pip-audit==2.10.1
+      - name: Install pip-audit and uv
+        run: python3 -m pip install --disable-pip-version-check pip-audit==2.10.1 uv==0.11.32
+      - name: Check the lock matches requirements.in
+        # Reruns the docs/UPDATING.md compile command, seeded with the
+        # committed pins (hashes stripped, so uv recomputes every hash), and
+        # fails on any difference. This catches lock edits that bypass that
+        # command (hand edits, Dependabot's pip-compile rewrites): changed or
+        # dropped hashes, non-universal markers, sdists, unresolved pins.
+        run: |
+          lock=unified-integration/requirements.txt
+          sed -e '/--hash=/d' -e 's/ \\$//' "$lock" > "$RUNNER_TEMP/expected.txt"
+          uv pip compile --quiet --universal --python-version 3.11 \
+            --generate-hashes --only-binary :all: --no-header --no-annotate \
+            --output-file "$RUNNER_TEMP/expected.txt" \
+            unified-integration/requirements.in
+          sed '/^#/d' "$lock" | sed '/./,$!d' > "$RUNNER_TEMP/committed.txt"
+          diff -u "$RUNNER_TEMP/committed.txt" "$RUNNER_TEMP/expected.txt"
       - name: Audit unified-integration/requirements.txt
         # The lock is fully pinned with hashes, so pip-audit resolves it
         # without installing anything. The per-server requirements.txt files
@@ -84,7 +102,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Install cargo-audit
-        run: cargo install cargo-audit --locked --version 0.21.2
+        # >= 0.22 is required: older releases cannot parse the CVSS 4.0
+        # vectors now present in the RustSec advisory database.
+        run: cargo install cargo-audit --locked --version 0.23.0
+      - name: Fetch RustSec advisory database
+        run: |
+          cargo audit --version
+          cargo audit update-db
       - name: Audit headroom/Cargo.lock
         run: cargo audit --file headroom/Cargo.lock
       - name: Audit ECC/ecc2/Cargo.lock

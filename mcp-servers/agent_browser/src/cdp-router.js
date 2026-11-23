@@ -1,15 +1,19 @@
 /**
  * cdp-router.js - CDP connection management and routing
  *
- * Manages CDP sessions for pages, frames, workers, and iframes
- * Handles auto-attachment for iframes/workers (Sentinel pattern)
+ * Keeps one CDP session per tab (page) of a browser session. Pages get stable
+ * ids assigned here (Playwright exposes none publicly), so lookups by id or by
+ * 'default' (the active tab) always hit the cache instead of opening a new
+ * CDP session and re-running the init scripts on every tool call.
  */
 
-const { buildCDPEmulationConfig, applyCDPEmulation, applyHeadlessDefense } = require('./launch-config');
+const crypto = require('crypto');
+const { applyCDPEmulation, applyHeadlessDefense } = require('./launch-config');
 
 class CDPRouter {
   constructor() {
-    this.sessions = new Map(); // sessionId -> { browser, context, pages, cdpClients, pageListeners }
+    this.sessions = new Map(); // sessionId -> session state (see registerSession)
+    this.pageIds = new WeakMap(); // Playwright Page -> stable page id
   }
 
   /**
@@ -20,12 +24,15 @@ class CDPRouter {
       browser,
       context,
       pages: new Map(), // pageId -> { page, cdp, frameId, mainFrame }
+      pending: new Map(), // pageId -> Promise<cdp> while a CDP session is being set up
       cdpClients: new Map(), // targetId -> cdpSession
-      pageListeners: new Set(),
-      defaultPage: defaultPage,
-      emulationConfig: emulationConfig // Store for applying to new pages
+      eventHandlers: [],
+      defaultPage: defaultPage || null,
+      activePage: null,
+      emulationConfig: emulationConfig || null,
+      tabCount: 0
     });
-    console.log(`[CDPRouter] Registered session: ${sessionId}`);
+    console.error(`[CDPRouter] Registered session: ${sessionId}`);
   }
 
   /**
@@ -40,57 +47,121 @@ class CDPRouter {
   }
 
   /**
-   * Get or create CDP session for a page
+   * Stable id for a Playwright page, assigned on first sight.
+   */
+  getPageId(page) {
+    let id = this.pageIds.get(page);
+    if (!id) {
+      id = `page_${crypto.randomUUID()}`;
+      this.pageIds.set(page, id);
+    }
+    return id;
+  }
+
+  /** Open pages of the session, in the browser's tab order. */
+  listOpenPages(session) {
+    let pages = [];
+    try {
+      pages = session.context.pages();
+    } catch (e) {
+      pages = [];
+    }
+    return pages.filter((p) => !p.isClosed());
+  }
+
+  /** The page 'default' refers to: the active tab, else the first open tab. */
+  resolveDefaultPage(session) {
+    for (const candidate of [session.activePage, session.defaultPage]) {
+      if (candidate && !candidate.isClosed()) return candidate;
+    }
+    const [first] = this.listOpenPages(session);
+    if (first) session.defaultPage = first;
+    return first || null;
+  }
+
+  /**
+   * Find page by ID
+   */
+  findPageById(session, pageId) {
+    const known = session.pages.get(pageId);
+    if (known && !known.page.isClosed()) return known.page;
+    return this.listOpenPages(session).find((p) => this.getPageId(p) === pageId) || null;
+  }
+
+  /**
+   * Get (or create once) the CDP session for a page.
    */
   async getPageCDP(sessionId, pageId = 'default', emulationConfig = null) {
     const session = this.getSession(sessionId);
-    const pageData = session.pages.get(pageId);
-
-    if (pageData?.cdp) {
-      return pageData.cdp;
-    }
-
-    // Find page by ID or use default
-    let page;
-    if (pageId !== 'default') {
-      page = this.findPageById(session, pageId);
-    } else {
-      page = session.defaultPage || session.context.pages()[0];
-    }
-
+    const page = pageId === 'default' ? this.resolveDefaultPage(session) : this.findPageById(session, pageId);
     if (!page) {
       throw new Error(`Page not found: ${pageId}`);
     }
-
-    // Create CDP session
-    const cdp = await session.context.newCDPSession(page);
-
-    // Enable required domains
-    await this.enableRequiredDomains(cdp);
-
-    // Use provided emulationConfig or fall back to session's stored config
-    const effectiveEmulationConfig = emulationConfig || session.emulationConfig;
-    if (effectiveEmulationConfig) {
-      await applyCDPEmulation(cdp, effectiveEmulationConfig);
-    }
-
-    // Apply headless defense to new page session
-    await applyHeadlessDefense(cdp);
-
-    // Store
     const pid = this.getPageId(page);
-    session.pages.set(pid, { page, cdp, frameId: page.mainFrame()._id, mainFrame: true });
+    const existing = session.pages.get(pid);
+    if (existing && existing.cdp) return existing.cdp;
+    if (session.pending.has(pid)) return session.pending.get(pid);
 
-    return cdp;
+    const setup = this.attachPage(session, page, pid, emulationConfig || session.emulationConfig);
+    session.pending.set(pid, setup);
+    try {
+      return await setup;
+    } finally {
+      session.pending.delete(pid);
+    }
+  }
+
+  /** Create and instrument the CDP session for one page and index it. */
+  async attachPage(session, page, pid, emulationConfig) {
+    const cdp = await session.context.newCDPSession(page);
+    try {
+      await this.enableRequiredDomains(cdp);
+      if (emulationConfig) {
+        await applyCDPEmulation(cdp, emulationConfig);
+      }
+      await applyHeadlessDefense(cdp);
+      let frameId = null;
+      try {
+        const { frameTree } = await cdp.send('Page.getFrameTree');
+        frameId = frameTree.frame.id;
+      } catch (e) {
+        console.error('[CDPRouter] Page.getFrameTree failed:', e.message);
+      }
+      session.pages.set(pid, { page, cdp, frameId, mainFrame: true });
+      if (typeof page.once === 'function') {
+        page.once('close', () => this.forgetPage(session, pid));
+      }
+      this.updateTabCount(session);
+      return cdp;
+    } catch (error) {
+      try { await cdp.detach(); } catch (e) {}
+      throw error;
+    }
+  }
+
+  /** Drop a page from the index and release its CDP session and handlers. */
+  forgetPage(session, pid) {
+    const pageData = session.pages.get(pid);
+    if (!pageData) return Promise.resolve();
+    session.pages.delete(pid);
+    session.eventHandlers = session.eventHandlers.filter((h) => {
+      if (h.cdp !== pageData.cdp) return true;
+      try { h.cdp.off(`${h.domain}.${h.event}`, h.handler); } catch (e) {}
+      return false;
+    });
+    if (session.activePage === pageData.page) session.activePage = null;
+    if (session.defaultPage === pageData.page) session.defaultPage = null;
+    this.updateTabCount(session);
+    return Promise.resolve()
+      .then(() => pageData.cdp && pageData.cdp.detach())
+      .catch(() => {});
   }
 
   /**
    * Enable required CDP domains
    * Note: Only page-level domains are enabled here.
-   * Browser-level domains (Target, Browser, etc.) require a browser-level CDP session.
    */
   async enableRequiredDomains(cdp) {
-    // Domains available on page-level CDP sessions
     const pageDomains = [
       'Page',
       'Runtime',
@@ -104,79 +175,12 @@ class CDPRouter {
       'DOMSnapshot'
     ];
 
-    // Domains that require browser-level session (handled separately if needed)
-    // 'Input' - use Input.dispatchMouseEvent directly without enable
-    // 'Target' - browser level only
-    // 'Emulation' - handled by Playwright launch options + applyCDPEmulation
-    // 'Storage' - may not be available on all targets
-    // 'ServiceWorker' - browser level only
-
     for (const domain of pageDomains) {
       try {
         await cdp.send(`${domain}.enable`);
       } catch (e) {
-        console.debug(`[CDPRouter] Domain ${domain} not available:`, e.message);
+        console.error(`[CDPRouter] Domain ${domain} not available:`, e.message);
       }
-    }
-
-    // Input domain: commands work without explicit enable on page sessions
-    // Emulation: applied via applyCDPEmulation() after this
-    // Target.autoAttach: requires browser-level session (see setupAutoAttach)
-
-    // Set up auto-attach for iframes/workers (requires browser-level session)
-    // This will be called with browser-level session separately
-    // await this.setupAutoAttach(cdp); // Moved to initializeBrowser with browser session
-  }
-
-  /**
-   * Setup Target.autoAttach for iframe/worker coverage (Sentinel pattern)
-   */
-  async setupAutoAttach(cdp) {
-    try {
-      await cdp.send('Target.setAutoAttach', {
-        autoAttach: true,
-        waitForDebuggerOnStart: true, // Pause child targets before ANY JS executes
-        flatten: true, // All nested frames accessible from this session
-        // Only attach to these target types
-        // Note: '*' attaches to all, but we can filter
-      });
-
-      // Handle attached targets
-      cdp.on('Target.attachedToTarget', async ({ sessionId, targetInfo, waitingForDebugger }) => {
-        console.log(`[CDPRouter] Target attached: ${targetInfo.type} - ${targetInfo.url?.substring(0, 80)}`);
-
-        try {
-          const childSession = await cdp.session({ sessionId });
-
-          // Enable domains on child
-          await this.enableRequiredDomains(childSession);
-
-          // Apply headless defense to child
-          await applyHeadlessDefense(childSession);
-
-          // Apply emulation to child
-          // Note: Child inherits parent's emulation but we reinforce
-
-          // Resume if waiting
-          if (waitingForDebugger) {
-            await childSession.send('Runtime.runIfWaitingForDebugger');
-          }
-
-          console.log(`[CDPRouter] Child target instrumented: ${targetInfo.type}`);
-        } catch (e) {
-          console.warn('[CDPRouter] Failed to instrument child target:', e.message);
-          // Still try to resume
-          if (waitingForDebugger) {
-            try {
-              await cdp.send('Runtime.runIfWaitingForDebugger', {}, sessionId);
-            } catch (e2) {}
-          }
-        }
-      });
-
-      console.log('[CDPRouter] Auto-attach configured (iframe + worker + SW + shared_worker)');
-    } catch (e) {
-      console.warn('[CDPRouter] Auto-attach setup failed:', e.message);
     }
   }
 
@@ -188,27 +192,32 @@ class CDPRouter {
     return applyCDPEmulation(cdp, config);
   }
 
+  /** CDP session of the tab whose main frame is `frameId`. */
+  async cdpForFrame(sessionId, frameId) {
+    await this.getPageCDP(sessionId, 'default');
+    const session = this.getSession(sessionId);
+    for (const page of this.listOpenPages(session)) {
+      await this.getPageCDP(sessionId, this.getPageId(page));
+    }
+    for (const pageData of session.pages.values()) {
+      if (pageData.frameId === frameId) return pageData.cdp;
+    }
+    throw new Error(`Frame not found: ${frameId} (only tab main frames can be targeted)`);
+  }
+
   /**
    * Send raw CDP command
    */
   async sendCDP(sessionId, domain, method, params, target = {}) {
     const session = this.getSession(sessionId);
-
-    let cdp = session.cdpClients.get('main') || await this.getPageCDP(sessionId, 'default');
-
-    // If targeting specific frame/worker
-    if (target.frameId) {
-      // Find CDP session for frame
-      for (const [pid, pageData] of session.pages) {
-        if (pageData.frameId === target.frameId) {
-          cdp = pageData.cdp;
-          break;
-        }
-      }
-    } else if (target.targetId) {
-      cdp = session.cdpClients.get(target.targetId) || cdp;
+    let cdp;
+    if (target && target.frameId) {
+      cdp = await this.cdpForFrame(sessionId, target.frameId);
+    } else if (target && target.targetId && session.cdpClients.has(target.targetId)) {
+      cdp = session.cdpClients.get(target.targetId);
+    } else {
+      cdp = await this.getPageCDP(sessionId, 'default');
     }
-
     return cdp.send(`${domain}.${method}`, params || {});
   }
 
@@ -223,18 +232,9 @@ class CDPRouter {
       frameId = null
     } = options;
 
-    const session = this.getSession(sessionId);
-
-    let cdp = await this.getPageCDP(sessionId, 'default');
-
-    if (target === 'frame' && frameId) {
-      for (const [pid, pageData] of session.pages) {
-        if (pageData.frameId === frameId) {
-          cdp = pageData.cdp;
-          break;
-        }
-      }
-    }
+    const cdp = target === 'frame' && frameId
+      ? await this.cdpForFrame(sessionId, frameId)
+      : await this.getPageCDP(sessionId, 'default');
 
     const result = await cdp.send('Runtime.evaluate', {
       expression,
@@ -245,49 +245,48 @@ class CDPRouter {
     });
 
     if (result.exceptionDetails) {
-      throw new Error(`JS Evaluation error: ${result.exceptionDetails.text}`);
+      const detail = result.exceptionDetails.exception && result.exceptionDetails.exception.description;
+      throw new Error(`JS Evaluation error: ${detail || result.exceptionDetails.text}`);
     }
 
-    return result.result?.value;
+    return result.result ? result.result.value : undefined;
   }
 
   /**
-   * Subscribe to CDP events
+   * Subscribe to CDP events (logged to stderr; cdp_subscribe forwards them as
+   * MCP notifications instead).
    */
-  async subscribe(sessionId, domain, event, callback) {
+  async subscribe(sessionId, domain, event) {
     const session = this.getSession(sessionId);
     const cdp = await this.getPageCDP(sessionId, 'default');
-
     const handler = (...args) => {
-      // Callback would be handled via MCP notification system
-      console.log(`[CDPRouter] Event: ${domain}.${event}`, args[0]);
+      console.error(`[CDPRouter] Event: ${domain}.${event}`, args[0]);
     };
-
     cdp.on(`${domain}.${event}`, handler);
-
-    // Store handler for cleanup
-    if (!session.eventHandlers) session.eventHandlers = [];
     session.eventHandlers.push({ domain, event, handler, cdp });
-
     return { subscribed: true, domain, event };
   }
 
   /**
-   * Get all pages in session
+   * List the session's open tabs.
    */
-  getPages(sessionId) {
+  async getPages(sessionId) {
     const session = this.getSession(sessionId);
+    const active = this.resolveDefaultPage(session);
     const pages = [];
-
-    for (const [pid, pageData] of session.pages) {
+    for (const page of this.listOpenPages(session)) {
+      let title = '';
+      try {
+        title = await page.title();
+      } catch (e) {}
       pages.push({
-        pageId: pid,
-        url: pageData.page.url(),
-        title: pageData.page.title(),
-        isMainFrame: pageData.mainFrame
+        pageId: this.getPageId(page),
+        url: page.url(),
+        title,
+        isMainFrame: true,
+        active: page === active
       });
     }
-
     return pages;
   }
 
@@ -297,193 +296,88 @@ class CDPRouter {
   async createPage(sessionId, url = 'about:blank') {
     const session = this.getSession(sessionId);
     const page = await session.context.newPage();
+    const pid = this.getPageId(page);
+    const cdp = await this.getPageCDP(sessionId, pid);
 
-    if (url !== 'about:blank') {
+    if (url && url !== 'about:blank') {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
     }
-
-    const pid = this.getPageId(page);
-    const cdp = await session.context.newCDPSession(page);
-    await this.enableRequiredDomains(cdp);
-
-    // Apply emulation and defense to new page
-    if (session.emulationConfig) {
-      await applyCDPEmulation(cdp, session.emulationConfig);
-    }
-    await applyHeadlessDefense(cdp);
-
-    session.pages.set(pid, { page, cdp, frameId: page.mainFrame()._id, mainFrame: true });
-
-    // Update tab count
-    this.updateTabCount(sessionId);
 
     return { pageId: pid, page, cdp };
   }
 
   /**
-   * Close page
-   */
-  async closePage(sessionId, pageId) {
-    const session = this.getSession(sessionId);
-    const pageData = session.pages.get(pageId);
-
-    if (pageData) {
-      await pageData.page.close();
-      session.pages.delete(pageId);
-      this.updateTabCount(sessionId);
-      return { success: true };
-    }
-
-    throw new Error(`Page not found: ${pageId}`);
-  }
-
-  /**
-   * Switch to page (bring to front)
+   * Switch to page (bring to front); it becomes the target of 'default'.
    */
   async bringToFront(sessionId, pageId) {
     const session = this.getSession(sessionId);
-    const pageData = session.pages.get(pageId);
-
-    if (pageData) {
-      await pageData.page.bringToFront();
-      return { success: true };
+    const page = this.findPageById(session, pageId);
+    if (!page) {
+      throw new Error(`Page not found: ${pageId}`);
     }
-
-    throw new Error(`Page not found: ${pageId}`);
+    await page.bringToFront();
+    session.activePage = page;
+    return { success: true };
   }
 
   /**
-   * Get page ID from page object
+   * Close a page, its CDP session and its event handlers
    */
-  getPageId(page) {
-    // Generate stable page ID - use frame ID if available, otherwise generate UUID
-    const frame = page.mainFrame();
-    if (frame._id) {
-      return frame._id;
+  async closePage(sessionId, pageId) {
+    const session = this.getSession(sessionId);
+    const page = this.findPageById(session, pageId);
+    if (!page) {
+      throw new Error(`Page not found: ${pageId}`);
     }
-    // Fallback: generate unique ID based on page GUID or timestamp
-    return `page_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    await this.forgetPage(session, this.getPageId(page));
+    try {
+      await page.close();
+    } catch (e) {}
+    return { success: true };
   }
 
   /**
-   * Find page by ID
+   * Update the session's tab count
    */
-  findPageById(session, pageId) {
-    const pageData = session.pages.get(pageId);
-    return pageData?.page;
-  }
-
-  /**
-   * Update tab count in session manager
-   */
-  updateTabCount(sessionId) {
-    const session = this.sessions.get(sessionId);
+  updateTabCount(sessionOrId) {
+    const session = typeof sessionOrId === 'string' ? this.sessions.get(sessionOrId) : sessionOrId;
     if (session) {
       session.tabCount = session.pages.size;
     }
   }
 
   /**
-   * Clean up session
+   * Clean up session: handlers, CDP sessions, context and browser
    */
   async closeSession(sessionId) {
     const session = this.sessions.get(sessionId);
     if (!session) return;
+    this.sessions.delete(sessionId);
 
-    // Clean up event handlers (subscriptions)
-    if (session.eventHandlers) {
-      for (const { domain, event, handler, cdp } of session.eventHandlers) {
-        try {
-          cdp.off(`${domain}.${event}`, handler);
-        } catch (e) {}
-      }
-      session.eventHandlers = [];
-    }
-
-    // Close all page CDP sessions
-    for (const [pid, pageData] of session.pages) {
+    for (const { domain, event, handler, cdp } of session.eventHandlers) {
       try {
-        if (pageData.cdp) {
-          await pageData.cdp.detach();
-        }
-      } catch (e) {}
-      try {
-        await pageData.page.close();
+        cdp.off(`${domain}.${event}`, handler);
       } catch (e) {}
     }
+    session.eventHandlers = [];
 
-    // Close context
+    for (const pageData of session.pages.values()) {
+      try {
+        if (pageData.cdp) await pageData.cdp.detach();
+      } catch (e) {}
+    }
+    session.pages.clear();
+
     try {
       await session.context.close();
     } catch (e) {}
-
-    // Close browser
-    try {
-      await session.browser.close();
-    } catch (e) {}
-
-    this.sessions.delete(sessionId);
-    console.log(`[CDPRouter] Closed session: ${sessionId}`);
-  }
-
-  /**
-   * Clean up page CDP session and event handlers
-   */
-  async closePage(sessionId, pageId) {
-    const session = this.getSession(sessionId);
-    const pageData = session.pages.get(pageId);
-
-    if (pageData) {
-      // Clean up event handlers for this page's CDP
-      if (session.eventHandlers) {
-        session.eventHandlers = session.eventHandlers.filter(h => h.cdp !== pageData.cdp);
-      }
+    if (session.browser && session.browser !== session.context) {
       try {
-        if (pageData.cdp) {
-          await pageData.cdp.detach();
-        }
+        await session.browser.close();
       } catch (e) {}
-      try {
-        await pageData.page.close();
-      } catch (e) {}
-      session.pages.delete(pageId);
-      this.updateTabCount(sessionId);
-      return { success: true };
     }
 
-    throw new Error(`Page not found: ${pageId}`);
-  }
-
-  /**
-   * Get CDP session for a specific target (frame, worker, iframe)
-   */
-  async getTargetCDP(sessionId, targetType, targetId = null) {
-    const session = this.getSession(sessionId);
-
-    if (targetType === 'page') {
-      return this.getPageCDP(sessionId, 'default');
-    }
-
-    // For frames/workers, we need to find the target
-    // This is handled by Target.setAutoAttach above
-    // We can also use Target.getTargets to find specific targets
-
-    const targets = await session.cdpClients.get('main')?.send('Target.getTargets');
-    if (targets) {
-      const target = targets.targetInfos.find(t => t.type === targetType && (!targetId || t.targetId === targetId));
-      if (target) {
-        // Check if we already have a session
-        let cdp = session.cdpClients.get(target.targetId);
-        if (!cdp) {
-          cdp = await session.context.newCDPSession(session.pages.values().next().value?.page);
-          await cdp.send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
-          session.cdpClients.set(target.targetId, cdp);
-        }
-        return cdp;
-      }
-    }
-
-    throw new Error(`Target not found: ${targetType}${targetId ? ` ${targetId}` : ''}`);
+    console.error(`[CDPRouter] Closed session: ${sessionId}`);
   }
 }
 

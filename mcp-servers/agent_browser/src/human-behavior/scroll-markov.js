@@ -192,7 +192,7 @@ async function humanScroll(cdp, config) {
       const result = await cdp.send('Runtime.evaluate', {
         expression: `
           (function() {
-            const el = document.querySelector('${selector.replace(/'/g, "\\'")}');
+            const el = document.querySelector(${JSON.stringify(String(selector))});
             if (!el) return null;
             const rect = el.getBoundingClientRect();
             return { x: rect.left, y: rect.top, width: rect.width, height: rect.height, scrollTop: el.scrollTop, scrollLeft: el.scrollLeft, scrollHeight: el.scrollHeight, scrollWidth: el.scrollWidth };

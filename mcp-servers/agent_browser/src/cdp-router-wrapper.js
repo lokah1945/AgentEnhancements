@@ -3,18 +3,39 @@
  * and handle browser lifecycle
  */
 
-const { chromium } = require('playwright');
 const { SessionManager } = require('./session-manager');
 const { CDPRouter } = require('./cdp-router');
-const { buildLaunchArgs, buildCDPEmulationConfig, applyCDPEmulation } = require('./launch-config');
-const { HEADLESS_DEFENSE_SCRIPT, applyHeadlessDefense } = require('./defense-script');
+const { buildLaunchArgs, buildCDPEmulationConfig, applyCDPEmulation, isInsecureMode } = require('./launch-config');
+
+// Playwright is loaded on first launch, so the protocol layer and the session
+// tools work (and are testable) without node_modules installed.
+let browserLauncher = null;
+
+function getBrowserLauncher() {
+  if (!browserLauncher) {
+    browserLauncher = require('playwright').chromium;
+  }
+  return browserLauncher;
+}
+
+/**
+ * Replace the object whose launchPersistentContext() starts browsers (tests
+ * use a stub). Pass null to restore Playwright's chromium. Returns the
+ * previous launcher.
+ */
+function setBrowserLauncher(launcher) {
+  const previous = browserLauncher;
+  browserLauncher = launcher;
+  return previous;
+}
 
 let sessionManager = null;
 let cdpRouter = null;
-let activeBrowsers = new Map(); // sessionId -> { browser, context }
+const activeBrowsers = new Map(); // sessionId -> { browser, context }
 // Track pending initializations to prevent race conditions
 const initLocks = new Map(); // sessionId -> Promise
 
+/** The process-wide SessionManager shared by every tool. */
 function getSessionManager() {
   if (!sessionManager) {
     sessionManager = new SessionManager();
@@ -22,6 +43,7 @@ function getSessionManager() {
   return sessionManager;
 }
 
+/** The process-wide CDPRouter shared by every tool. */
 function getCDPRouter() {
   if (!cdpRouter) {
     cdpRouter = new CDPRouter();
@@ -30,44 +52,75 @@ function getCDPRouter() {
 }
 
 /**
- * Initialize browser for session
+ * Initialize browser for session (idempotent while the browser is running).
  */
 async function initializeBrowser(sessionId, config = {}) {
+  if (activeBrowsers.has(sessionId)) {
+    return activeBrowsers.get(sessionId);
+  }
   // Prevent race condition: if initialization already in progress, wait for it
   if (initLocks.has(sessionId)) {
-    console.log(`[BrowserLauncher] Session ${sessionId} initialization already in progress, waiting...`);
+    console.error(`[BrowserLauncher] Session ${sessionId} initialization already in progress, waiting...`);
     return initLocks.get(sessionId);
   }
 
-  const initPromise = (async () => {
-    const mgr = getSessionManager();
-    const session = await mgr.getSession(sessionId);
+  const initPromise = launchSessionBrowser(sessionId, config);
+  initLocks.set(sessionId, initPromise);
+  try {
+    return await initPromise;
+  } finally {
+    initLocks.delete(sessionId);
+  }
+}
 
-  const launchConfig = {
-    headless: config.headless !== false,
+async function launchSessionBrowser(sessionId, config) {
+  const mgr = getSessionManager();
+  const session = await mgr.getSession(sessionId);
+  const insecure = isInsecureMode();
+  const headless = config.headless !== false;
+
+  // '' makes Playwright use a temporary profile that it deletes on close.
+  let userDataDir = session.profilePath || '';
+  if (insecure) {
+    console.error('[BrowserLauncher] WARNING: AGENT_BROWSER_INSECURE is set: web security, site isolation and ' +
+      'certificate checks are disabled and a throwaway profile is used for session ' + sessionId);
+    userDataDir = '';
+  }
+
+  const browser = await getBrowserLauncher().launchPersistentContext(userDataDir, {
+    executablePath: config.executablePath,
+    headless,
     args: buildLaunchArgs({
       viewport: session.viewport,
       locale: session.locale,
-      headless: config.headless !== false,
-      proxy: session.proxy
+      headless,
+      proxy: session.proxy,
+      insecure
     }),
-    userDataDir: session.profilePath
-  };
-
-  // Launch persistent context
-  const browser = await chromium.launchPersistentContext(session.profilePath, {
-    executablePath: config.executablePath,
-    headless: launchConfig.headless,
-    args: launchConfig.args,
     viewport: null, // CLI args only
     ignoreDefaultArgs: ['--enable-automation', '--disable-extensions'],
     userAgent: config.userAgent,
-    permissions: ['geolocation', 'notifications', 'camera', 'microphone'],
     timezoneId: session.timezone,
     locale: session.locale,
     geolocation: config.geolocation
   });
 
+  const router = getCDPRouter();
+  try {
+    return await instrumentBrowser(sessionId, session, browser, router, config);
+  } catch (error) {
+    console.error(`[BrowserLauncher] Session ${sessionId} initialization failed:`, error.message);
+    activeBrowsers.delete(sessionId);
+    if (router.sessions.has(sessionId)) {
+      await router.closeSession(sessionId).catch(() => {});
+    }
+    await browser.close().catch(() => {});
+    throw error;
+  }
+}
+
+async function instrumentBrowser(sessionId, session, browser, router, config) {
+  const mgr = getSessionManager();
   // Get default page
   const pages = browser.pages();
   let page = pages[0];
@@ -277,11 +330,11 @@ async function initializeBrowser(sessionId, config = {}) {
 
   // PRIMARY: context.addInitScript() - CONTEXT-WIDE, fires on EVERY document
   await browser.addInitScript(defenseScript);
-  console.log('[agent_browser] Context-wide headless defense registered (addInitScript)');
+  console.error('[agent_browser] Context-wide headless defense registered (addInitScript)');
 
   // REINFORCEMENT: CDP Page.addScriptToEvaluateOnNewDocument - per-page backup
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: defenseScript });
-  console.log('[agent_browser] CDP per-page defense registered');
+  console.error('[agent_browser] CDP per-page defense registered');
 
   // Build emulation config
   const emulationConfig = buildCDPEmulationConfig({
@@ -294,30 +347,38 @@ async function initializeBrowser(sessionId, config = {}) {
   // Apply CDP emulation to initial page
   await applyCDPEmulation(cdp, emulationConfig);
 
-  // Register with CDP router (pass emulationConfig for new pages)
-  const router = getCDPRouter();
+  // Register with CDP router (pass emulationConfig for new pages). The CDP
+  // session created above becomes the cached session of the default page.
   router.registerSession(sessionId, { browser, context: browser, defaultPage: page, emulationConfig });
+  const routed = router.getSession(sessionId);
+  const pageId = router.getPageId(page);
+  let frameId = null;
+  try {
+    frameId = (await cdp.send('Page.getFrameTree')).frameTree.frame.id;
+  } catch (e) {}
+  await router.enableRequiredDomains(cdp);
+  routed.pages.set(pageId, { page, cdp, frameId, mainFrame: true });
+  if (typeof page.once === 'function') {
+    page.once('close', () => router.forgetPage(routed, pageId));
+  }
+  router.updateTabCount(routed);
 
-  // Store browser reference
-  activeBrowsers.set(sessionId, { browser, context: browser });
+  const entry = { browser, context: browser };
+  activeBrowsers.set(sessionId, entry);
 
-  // Mark session active
+  // Chromium exiting on its own (crash, window closed) must not leave stale state.
+  if (typeof browser.once === 'function') {
+    browser.once('close', () => {
+      if (activeBrowsers.get(sessionId) !== entry) return;
+      console.error(`[BrowserLauncher] Session ${sessionId} browser exited`);
+      releaseSession(sessionId).catch(() => {});
+    });
+  }
+
   mgr.markSessionActive(sessionId);
 
-  console.log(`[BrowserLauncher] Session ${sessionId} browser initialized`);
+  console.error(`[BrowserLauncher] Session ${sessionId} browser initialized`);
   return { browser, context: browser, page, cdp };
-  })();
-
-  // Store the promise in the lock map
-  initLocks.set(sessionId, initPromise);
-
-  try {
-    const result = await initPromise;
-    return result;
-  } finally {
-    // Release the lock
-    initLocks.delete(sessionId);
-  }
 }
 
 /**
@@ -334,25 +395,32 @@ async function getBrowser(sessionId) {
   return browserData;
 }
 
+/** Forget every piece of in-process state for a session. */
+async function releaseSession(sessionId) {
+  activeBrowsers.delete(sessionId);
+  // Lazy require: cdp-direct requires this module.
+  require('./tools/cdp-direct').stopCapturesForSession(sessionId);
+  await getCDPRouter().closeSession(sessionId);
+  getSessionManager().markSessionClosed(sessionId);
+}
+
 /**
- * Close browser for session
+ * Close browser for session. Returns true when a browser was running.
  */
 async function closeBrowser(sessionId) {
+  const pending = initLocks.get(sessionId);
+  if (pending) {
+    await pending.catch(() => {});
+  }
   const browserData = activeBrowsers.get(sessionId);
+  await releaseSession(sessionId);
   if (browserData) {
     try {
       await browserData.context.close();
     } catch (e) {}
-    try {
-      await browserData.browser.close();
-    } catch (e) {}
-    activeBrowsers.delete(sessionId);
   }
-
-  const mgr = getSessionManager();
-  mgr.markSessionClosed(sessionId);
-
-  console.log(`[BrowserLauncher] Session ${sessionId} browser closed`);
+  console.error(`[BrowserLauncher] Session ${sessionId} browser closed`);
+  return Boolean(browserData);
 }
 
 /**
@@ -390,7 +458,7 @@ async function closePage(sessionId, pageId) {
 /**
  * List pages
  */
-function listPages(sessionId) {
+async function listPages(sessionId) {
   const router = getCDPRouter();
   return router.getPages(sessionId);
 }
@@ -445,7 +513,10 @@ module.exports = {
   sendCDP,
   evaluate,
   subscribe,
+  getSessionManager,
   getSessionManagerInstance,
+  getCDPRouter,
   getCDPRouterInstance,
+  setBrowserLauncher,
   activeBrowsers
 };

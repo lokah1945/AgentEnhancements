@@ -231,7 +231,7 @@ async function applyHeadlessDefense(cdp) {
       awaitPromise: false
     });
 
-    console.log('[agent_browser] CDP: Headless defense applied');
+    console.error('[agent_browser] CDP: Headless defense applied');
   } catch (e) {
     console.warn('[agent_browser] CDP: Headless defense failed:', e.message);
   }

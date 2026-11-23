@@ -12,51 +12,11 @@ const {
   humanDwell,
   calculateTargetPoint
 } = require('../human-behavior');
+const { findElement: findElementBase } = require('./dom-utils');
 
-/**
- * Find element and get bounding box
- */
-async function findElement(cdp, selector, xpath) {
-  if (xpath) {
-    const result = await cdp.send('Runtime.evaluate', {
-      expression: `
-        (function() {
-          const xpath = '${xpath.replace(/'/g, "\\'")}';
-          const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-          return result.singleNodeValue;
-        })()
-      `,
-      returnByValue: false
-    });
-
-    if (!result.result?.objectId) {
-      throw new Error(`Element not found for xpath: ${xpath}`);
-    }
-
-    const box = await cdp.send('DOM.getBoxModel', { objectId: result.result.objectId });
-    return { objectId: result.result.objectId, box: box.model };
-  }
-
-  if (selector) {
-    const result = await cdp.send('Runtime.evaluate', {
-      expression: `
-        (function() {
-          const el = document.querySelector('${selector.replace(/'/g, "\\'")}');
-          return el;
-        })()
-      `,
-      returnByValue: false
-    });
-
-    if (!result.result?.objectId) {
-      throw new Error(`Element not found for selector: ${selector}`);
-    }
-
-    const box = await cdp.send('DOM.getBoxModel', { objectId: result.result.objectId });
-    return { objectId: result.result.objectId, box: box.model };
-  }
-
-  throw new Error('Either selector or xpath must be provided');
+/** Find an element and its box model. */
+function findElement(cdp, selector, xpath) {
+  return findElementBase(cdp, selector, xpath, { withBox: true });
 }
 
 /**

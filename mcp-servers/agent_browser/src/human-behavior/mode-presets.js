@@ -351,5 +351,6 @@ module.exports = {
   getModeConfig,
   listModes,
   mergeWithPreset,
+  deepMerge,
   getModeDescription
 };

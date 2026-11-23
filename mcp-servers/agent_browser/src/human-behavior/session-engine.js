@@ -58,11 +58,11 @@ async function executePageview(cdp, config) {
 
   try {
     // === PHASE 1: CRITICAL (0-10s) ===
-    console.log('[SessionEngine] Phase: CRITICAL - Page orientation');
+    console.error('[SessionEngine] Phase: CRITICAL - Page orientation');
     result.phases.critical = await executeCriticalPhase(cdp, { viewportSize, persona });
 
     // === PHASE 2: DECISION (10-30s) ===
-    console.log('[SessionEngine] Phase: DECISION - Scanning & interaction');
+    console.error('[SessionEngine] Phase: DECISION - Scanning & interaction');
     result.phases.decision = await executeDecisionPhase(cdp, {
       phaseDurations,
       clickConfig,
@@ -75,7 +75,7 @@ async function executePageview(cdp, config) {
     });
 
     // === PHASE 3: COMMITTED (30s+) ===
-    console.log('[SessionEngine] Phase: COMMITTED - Deep engagement');
+    console.error('[SessionEngine] Phase: COMMITTED - Deep engagement');
     result.phases.committed = await executeCommittedPhase(cdp, {
       phaseDurations,
       clickConfig,
@@ -273,7 +273,7 @@ async function runSession(cdp, config) {
     }
 
     const url = urls[i];
-    console.log(`[SessionEngine] Pageview ${i + 1}/${urls.length}: ${url}`);
+    console.error(`[SessionEngine] Pageview ${i + 1}/${urls.length}: ${url}`);
 
     // Navigate to URL
     try {

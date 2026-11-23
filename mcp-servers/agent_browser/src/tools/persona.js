@@ -2,8 +2,14 @@
  * persona.js - Persona configuration MCP tools
  */
 
-const { getModeConfig, listModes, mergeWithPreset } = require('../human-behavior/mode-presets');
-const { generatePersona, getPersonaTemplate, listPersonaTemplates, validatePersona } = require('../human-behavior/profiles');
+const { getModeConfig, listModes, mergeWithPreset, deepMerge } = require('../human-behavior/mode-presets');
+const {
+  getPersonaTemplate,
+  listPersonaTemplates,
+  validatePersona,
+  generateSessionVariation,
+  applySessionVariation
+} = require('../human-behavior/profiles');
 
 /**
  * Set persona for session
@@ -23,18 +29,20 @@ async function personaSet(args, context) {
   if (persona && !preset) {
     finalPersona = mergeWithPreset(finalPersona?.mode || 'normal', persona);
   }
+  if (!finalPersona) {
+    finalPersona = getModeConfig('normal');
+  }
 
   // Generate session variation
-  const { generateSessionVariation, applySessionVariation } = require('../human-behavior/profiles');
   finalPersona.sessionVariation = generateSessionVariation();
   applySessionVariation(finalPersona);
 
-  // Store in session (would need session storage)
-  // For now, return the persona
+  // Personas are not stored per session: pass the returned persona as the
+  // `persona` argument of the interaction tools.
   return {
     success: true,
     persona: finalPersona,
-    applied: true
+    applied: false
   };
 }
 
@@ -109,9 +117,7 @@ async function personaCreate(args, context) {
     const persona = getPersonaTemplate(template);
 
     if (overrides) {
-      const { deepMerge } = require('../human-behavior/profiles');
       const merged = deepMerge(persona, overrides);
-      const { applySessionVariation } = require('../human-behavior/profiles');
       merged.sessionVariation = generateSessionVariation();
       applySessionVariation(merged);
       return { success: true, persona: merged };

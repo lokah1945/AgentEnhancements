@@ -3,6 +3,13 @@
  */
 
 const { getCDPRouter } = require('../cdp-router-wrapper');
+const {
+  findElement,
+  querySelectorExpression,
+  querySelectorAllExpression,
+  xpathExpression,
+  xpathAllExpression
+} = require('./dom-utils');
 
 /**
  * Extract data from page
@@ -19,30 +26,12 @@ async function extract(args, context) {
     // Custom extraction script
     expression = script;
   } else if (xpath) {
-    expression = `
-      (function() {
-        const xpath = '${xpath.replace(/'/g, "\\'")}';
-        const result = document.evaluate(xpath, document, null,
-          ${multiple ? 'XPathResult.ORDERED_NODE_SNAPSHOT_TYPE' : 'XPathResult.FIRST_ORDERED_NODE_TYPE'},
-          null);
-        ${multiple ? `
-          const nodes = [];
-          for (let i = 0; i < result.snapshotLength; i++) {
-            nodes.push(result.snapshotItem(i));
-          }
-          return nodes;
-        ` : `
-          return result.singleNodeValue;
-        `}
-      })()
-    `;
+    // Always an array so single and multiple results are read the same way.
+    expression = multiple ? xpathAllExpression(xpath) : `[${xpathExpression(xpath)}].filter(Boolean)`;
   } else if (selector) {
-    expression = `
-      (function() {
-        const elements = ${multiple ? `Array.from(document.querySelectorAll('${selector.replace(/'/g, "\\'")}'))` : `document.querySelector('${selector.replace(/'/g, "\\'")}')`};
-        return elements;
-      })()
-    `;
+    expression = multiple
+      ? querySelectorAllExpression(selector)
+      : `[${querySelectorExpression(selector)}].filter(Boolean)`;
   } else {
     throw new Error('Either selector, xpath, or script must be provided');
   }
@@ -93,7 +82,7 @@ async function extract(args, context) {
           }`,
           returnByValue: true
         });
-        elements.push(desc.result?.value);
+        if (desc.result?.value) elements.push(desc.result.value);
       }
     }
 
@@ -117,7 +106,7 @@ async function extract(args, context) {
           functionDeclaration: `function() { return { tagName: this.tagName, textContent: this.textContent, href: this.href }; }`,
           returnByValue: true
         });
-        elements.push(desc.result?.value);
+        if (desc.result?.value) elements.push(desc.result.value);
       }
     }
     data = elements.map(e => {
@@ -163,37 +152,6 @@ async function getAttributes(args, context) {
   });
 
   return { success: true, attributes: result.result?.value };
-}
-
-/**
- * Find element helper
- */
-async function findElement(cdp, selector, xpath) {
-  if (xpath) {
-    const result = await cdp.send('Runtime.evaluate', {
-      expression: `
-        (function() {
-          const xpath = '${xpath.replace(/'/g, "\\'")}';
-          const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-          return result.singleNodeValue;
-        })()
-      `,
-      returnByValue: false
-    });
-    if (!result.result?.objectId) throw new Error(`Element not found for xpath: ${xpath}`);
-    return { objectId: result.result.objectId };
-  }
-
-  if (selector) {
-    const result = await cdp.send('Runtime.evaluate', {
-      expression: `document.querySelector('${selector.replace(/'/g, "\\'")}')`,
-      returnByValue: false
-    });
-    if (!result.result?.objectId) throw new Error(`Element not found for selector: ${selector}`);
-    return { objectId: result.result.objectId };
-  }
-
-  throw new Error('Either selector or xpath must be provided');
 }
 
 /**

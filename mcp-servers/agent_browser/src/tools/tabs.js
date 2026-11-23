@@ -34,7 +34,7 @@ async function tabSwitch(args, context) {
 
   let pageId = tabId;
   if (tabIndex !== undefined) {
-    const pages = router.getPages(sessionId);
+    const pages = await router.getPages(sessionId);
     if (tabIndex >= 0 && tabIndex < pages.length) {
       pageId = pages[tabIndex].pageId;
     } else {
@@ -61,7 +61,7 @@ async function tabClose(args, context) {
 
   let pageId = tabId;
   if (tabIndex !== undefined) {
-    const pages = router.getPages(sessionId);
+    const pages = await router.getPages(sessionId);
     if (tabIndex >= 0 && tabIndex < pages.length) {
       pageId = pages[tabIndex].pageId;
     } else {
@@ -85,7 +85,7 @@ async function tabList(args, context) {
   const { sessionId } = args;
 
   const router = getCDPRouter();
-  const pages = router.getPages(sessionId);
+  const pages = await router.getPages(sessionId);
 
   return {
     success: true,
@@ -94,7 +94,7 @@ async function tabList(args, context) {
       pageId: p.pageId,
       url: p.url,
       title: p.title,
-      isMainFrame: p.isMainFrame
+      active: p.active
     })),
     count: pages.length
   };
@@ -110,7 +110,7 @@ async function tabGet(args, context) {
 
   let pageId = tabId;
   if (tabIndex !== undefined) {
-    const pages = router.getPages(sessionId);
+    const pages = await router.getPages(sessionId);
     if (tabIndex >= 0 && tabIndex < pages.length) {
       pageId = pages[tabIndex].pageId;
     } else {

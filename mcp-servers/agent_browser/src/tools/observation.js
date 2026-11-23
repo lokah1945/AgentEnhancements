@@ -3,6 +3,7 @@
  */
 
 const { getCDPRouter } = require('../cdp-router-wrapper');
+const { querySelectorExpression, xpathExpression } = require('./dom-utils');
 
 /**
  * Take screenshot via CDP
@@ -15,14 +16,18 @@ async function screenshot(args, context) {
 
   let screenshotOptions = {
     format: format || 'png',
-    quality: quality || 90,
     fromSurface: true,
     captureBeyondViewport: fullPage || false
   };
+  if (screenshotOptions.format === 'jpeg') {
+    // CDP only accepts quality for lossy formats.
+    screenshotOptions.quality = quality || 90;
+  }
 
   if (omitBackground) {
     screenshotOptions.captureBeyondViewport = false;
     screenshotOptions.format = 'png'; // PNG supports transparency
+    delete screenshotOptions.quality;
   }
 
   if (clip) {
@@ -41,12 +46,12 @@ async function screenshot(args, context) {
 
     if (xpath) {
       elementResult = await cdp.send('Runtime.evaluate', {
-        expression: `document.evaluate('${xpath.replace(/'/g, "\\'")}', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue`,
+        expression: xpathExpression(xpath),
         returnByValue: false
       });
     } else {
       elementResult = await cdp.send('Runtime.evaluate', {
-        expression: `document.querySelector('${selector.replace(/'/g, "\\'")}')`,
+        expression: querySelectorExpression(selector),
         returnByValue: false
       });
     }

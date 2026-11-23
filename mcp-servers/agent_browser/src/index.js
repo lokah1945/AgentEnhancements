@@ -1,90 +1,49 @@
 /**
- * agent_browser MCP Server - Pure CDP browser automation
+ * agent_browser MCP Server - CDP browser automation over MCP (JSON-RPC 2.0).
+ *
+ * Transports:
+ *   - stdio (default): newline-delimited JSON-RPC frames on stdin/stdout.
+ *     stdout carries protocol frames only; every diagnostic goes to stderr.
+ *   - HTTP (MCP_HTTP_PORT set): POST /mcp with application/json bodies,
+ *     bound to 127.0.0.1 by default (see startHttpServer).
  */
+
+if (require.main === module) {
+  // Keep the stdio protocol channel clean, including for anything a
+  // dependency logs while it loads.
+  for (const level of ['log', 'info', 'debug']) {
+    console[level] = (...args) => console.error(...args);
+  }
+}
+
+const crypto = require('crypto');
 const http = require('http');
-const EventEmitter = require('events');
 const {
   initializeBrowser,
   closeBrowser,
-  getPageCDP,
-  createPage,
-  switchTab,
-  closePage,
-  listPages,
-  sendCDP,
-  evaluate,
-  subscribe,
-  getSessionManagerInstance,
   activeBrowsers
 } = require('./cdp-router-wrapper');
+const { notificationManager, getNotificationManager } = require('./notifications');
+const {
+  RPC_ERRORS,
+  RpcError,
+  isPlainObject,
+  isValidId,
+  errorResponse,
+  validateArguments,
+  createLineDecoder,
+  createSerialQueue
+} = require('./jsonrpc');
+const { version: SERVER_VERSION } = require('../package.json');
+
+/** Protocol revisions this server can speak, newest first. */
+const SUPPORTED_PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 
 /**
- * Notification manager for MCP server-to-client notifications
- */
-class NotificationManager extends EventEmitter {
-  constructor() {
-    super();
-    this.notificationCallbacks = new Map(); // sessionId -> callback
-  }
-
-  /**
-   * Register a notification callback for a session
-   */
-  registerSessionCallback(sessionId, callback) {
-    this.notificationCallbacks.set(sessionId, callback);
-  }
-
-  /**
-   * Unregister notification callback
-   */
-  unregisterSessionCallback(sessionId) {
-    this.notificationCallbacks.delete(sessionId);
-  }
-
-  /**
-   * Send notification to client for a specific session
-   */
-  sendNotification(sessionId, method, params) {
-    const callback = this.notificationCallbacks.get(sessionId);
-    if (callback) {
-      try {
-        callback({ method, params });
-      } catch (e) {
-        console.error('[NotificationManager] Callback error:', e.message);
-      }
-    }
-    // Also emit for any global listeners
-    this.emit('notification', { sessionId, method, params });
-  }
-
-  /**
-   * Broadcast notification to all sessions
-   */
-  broadcastNotification(method, params) {
-    for (const [sessionId, callback] of this.notificationCallbacks) {
-      try {
-        callback({ method, params });
-      } catch (e) {
-        console.error('[NotificationManager] Broadcast callback error:', e.message);
-      }
-    }
-  }
-}
-
-// Global notification manager
-const notificationManager = new NotificationManager();
-
-/**
- * Set the notification callback for stdio transport
- * This is called when the server starts
+ * Subscribe a callback to every server-to-client notification.
  */
 function setNotificationCallback(callback) {
-  // Global callback for all sessions (stdio mode)
   notificationManager.on('notification', callback);
-}
-
-function getNotificationManager() {
-  return notificationManager;
 }
 
 const sessionTools = require('./tools/session');
@@ -104,6 +63,7 @@ const TOOLS = {
   session_snapshot: sessionTools.sessionSnapshot,
   session_restore: sessionTools.sessionRestore,
   session_cleanup: sessionTools.sessionCleanup,
+  session_close: sessionTools.sessionClose,
 
   navigate: navigationTools.navigate,
   go_back: navigationTools.goBack,
@@ -154,6 +114,21 @@ const TOOLS = {
   persona_create: personaTools.personaCreate
 };
 
+/**
+ * Tools that operate on a live page. Calling one for a session whose browser
+ * is not running launches it first. Session lifecycle, capture bookkeeping and
+ * persona tools never launch Chromium.
+ */
+const BROWSER_TOOLS = new Set([
+  'navigate', 'go_back', 'go_forward', 'reload', 'get_current_url',
+  'tab_new', 'tab_switch', 'tab_close', 'tab_list', 'tab_get',
+  'click', 'type', 'hover', 'scroll', 'drag_drop', 'key_press',
+  'cdp_send', 'cdp_evaluate', 'cdp_subscribe', 'cdp_unsubscribe',
+  'cdp_network_capture', 'cdp_console_capture', 'cdp_metrics',
+  'extract', 'get_attributes', 'get_page_content',
+  'screenshot', 'pdf', 'dom_snapshot', 'get_html', 'get_text'
+]);
+
 const TOOL_SCHEMAS = {
   "session_create": {
     "name": "session_create",
@@ -171,15 +146,13 @@ const TOOL_SCHEMAS = {
         },
         "browser": {
           "type": "string",
+          "description": "Recorded as session metadata only; the Playwright-bundled Chromium is launched",
           "enum": [
             "chrome",
             "edge",
             "chromium"
           ],
           "default": "chrome"
-        },
-        "profileDir": {
-          "type": "string"
         },
         "viewport": {
           "type": "object",
@@ -251,9 +224,24 @@ const TOOL_SCHEMAS = {
       ]
     }
   },
+  "session_close": {
+    "name": "session_close",
+    "description": "Close the session's browser (profile and metadata are kept)",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sessionId"
+      ]
+    }
+  },
   "session_delete": {
     "name": "session_delete",
-    "description": "Delete session and its profile",
+    "description": "Delete session and its profile; an open browser for the session is closed first",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -261,7 +249,8 @@ const TOOL_SCHEMAS = {
           "type": "string"
         },
         "force": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Also delete a session that is still marked active by another process"
         }
       },
       "required": [
@@ -347,7 +336,12 @@ const TOOL_SCHEMAS = {
           "type": "string"
         },
         "headers": {
-          "type": "object"
+          "type": "object",
+          "description": "Extra HTTP headers; they stay set for later requests of this tab"
+        },
+        "timeout": {
+          "type": "number",
+          "description": "Milliseconds to wait for waitUntil (default 30000)"
         }
       },
       "required": [
@@ -466,7 +460,7 @@ const TOOL_SCHEMAS = {
   },
   "tab_close": {
     "name": "tab_close",
-    "description": "Close tab",
+    "description": "Close tab (by tabIndex or tabId)",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -475,11 +469,13 @@ const TOOL_SCHEMAS = {
         },
         "tabIndex": {
           "type": "number"
+        },
+        "tabId": {
+          "type": "string"
         }
       },
       "required": [
-        "sessionId",
-        "tabIndex"
+        "sessionId"
       ]
     }
   },
@@ -792,11 +788,10 @@ const TOOL_SCHEMAS = {
         },
         "target": {
           "type": "string",
+          "description": "'frame' targets the tab whose main frame is frameId",
           "enum": [
             "page",
-            "frame",
-            "worker",
-            "iframe"
+            "frame"
           ],
           "default": "page"
         },
@@ -833,10 +828,10 @@ const TOOL_SCHEMAS = {
         },
         "target": {
           "type": "string",
+          "description": "'frame' targets the tab whose main frame is frameId",
           "enum": [
             "page",
-            "frame",
-            "worker"
+            "frame"
           ],
           "default": "page"
         },
@@ -1266,7 +1261,7 @@ const TOOL_SCHEMAS = {
   },
   "persona_set": {
     "name": "persona_set",
-    "description": "Configure human behavior persona",
+    "description": "Build a human behavior persona; it is returned, not stored, so pass it as the persona argument of interaction tools",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1295,7 +1290,7 @@ const TOOL_SCHEMAS = {
   },
   "persona_get": {
     "name": "persona_get",
-    "description": "Get current persona configuration",
+    "description": "Get the default persona configuration (personas are not stored per session)",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1374,90 +1369,361 @@ const TOOL_SCHEMAS = {
   }
 };
 
+/** True when a handler's return value describes a failure. */
+function isToolFailure(result) {
+  return isPlainObject(result) && (result.success === false || isPlainObject(result.error));
+}
+
+async function callTool(params) {
+  if (!isPlainObject(params)) {
+    throw new RpcError(RPC_ERRORS.INVALID_PARAMS, 'tools/call requires a params object');
+  }
+  const { name } = params;
+  if (typeof name !== 'string' || !Object.prototype.hasOwnProperty.call(TOOLS, name)) {
+    throw new RpcError(RPC_ERRORS.INVALID_PARAMS, `Unknown tool: ${name}`);
+  }
+  const args = params.arguments === undefined || params.arguments === null ? {} : params.arguments;
+  const problem = validateArguments(TOOL_SCHEMAS[name].inputSchema, args);
+  if (problem) {
+    throw new RpcError(RPC_ERRORS.INVALID_PARAMS, `Invalid arguments for ${name}: ${problem}`);
+  }
+
+  let result;
+  try {
+    if (BROWSER_TOOLS.has(name) && !activeBrowsers.has(args.sessionId)) {
+      await initializeBrowser(args.sessionId);
+    }
+    result = await TOOLS[name](args, {});
+  } catch (error) {
+    // MCP: failures inside a tool are results flagged isError, so the model sees them.
+    console.error(`[agent_browser] Tool ${name} failed:`, error && error.message);
+    return {
+      content: [{ type: 'text', text: (error && error.message) || String(error) }],
+      isError: true
+    };
+  }
+  const text = JSON.stringify(result === undefined ? null : result, null, 2);
+  const response = { content: [{ type: 'text', text }] };
+  if (isToolFailure(result)) response.isError = true;
+  return response;
+}
+
+/**
+ * Dispatch one request. Returns `{ result }` on success or `{ error }` with a
+ * JSON-RPC error object; never throws.
+ */
 async function handleRequest(request) {
-  const { method, params } = request;
+  const { method, params } = request || {};
   try {
     switch (method) {
       case 'initialize': {
-        return { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'agent_browser', version: '1.0.0' } };
+        const requested = isPlainObject(params) ? params.protocolVersion : undefined;
+        const protocolVersion = SUPPORTED_PROTOCOL_VERSIONS.includes(requested)
+          ? requested
+          : SUPPORTED_PROTOCOL_VERSIONS[0];
+        return {
+          result: {
+            protocolVersion,
+            capabilities: { tools: { listChanged: false } },
+            serverInfo: { name: 'agent_browser', version: SERVER_VERSION }
+          }
+        };
       }
-      case 'tools/list': {
-        return { tools: Object.values(TOOL_SCHEMAS) };
-      }
-      case 'tools/call': {
-        const { name, arguments: args } = params;
-        const handler = TOOLS[name];
-        if (!handler) throw new Error('Unknown tool: ' + name);
-        if (args.sessionId && !activeBrowsers.has(args.sessionId)) {
-          await initializeBrowser(args.sessionId);
-        }
-        const result = await handler(args, {});
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-      }
-      case 'ping': { return { pong: true }; }
-      default: throw new Error('Unknown method: ' + method);
+      case 'ping':
+        return { result: {} };
+      case 'tools/list':
+        return { result: { tools: Object.values(TOOL_SCHEMAS) } };
+      case 'tools/call':
+        return { result: await callTool(params) };
+      default:
+        throw new RpcError(RPC_ERRORS.METHOD_NOT_FOUND, `Method not found: ${method}`);
     }
   } catch (error) {
-    console.error('[MCP] Request error:', error.message);
-    return { error: { code: -32603, message: error.message } };
+    if (error instanceof RpcError) return { error: error.toJSON() };
+    console.error('[MCP] Request error:', error && error.stack);
+    return { error: { code: RPC_ERRORS.INTERNAL_ERROR, message: (error && error.message) || 'Internal error' } };
   }
+}
+
+/**
+ * Handle one decoded JSON-RPC message (object or batch array).
+ * Returns the response to send, or null when nothing must be sent
+ * (notifications, client responses, all-notification batches).
+ */
+async function processMessage(message) {
+  if (Array.isArray(message)) {
+    if (message.length === 0) {
+      return errorResponse(null, RPC_ERRORS.INVALID_REQUEST, 'Invalid Request: empty batch');
+    }
+    const responses = [];
+    for (const item of message) {
+      const response = await processMessage(item);
+      if (response) responses.push(response);
+    }
+    return responses.length ? responses : null;
+  }
+  if (!isPlainObject(message)) {
+    return errorResponse(null, RPC_ERRORS.INVALID_REQUEST, 'Invalid Request');
+  }
+  const hasId = Object.prototype.hasOwnProperty.call(message, 'id') && message.id !== undefined;
+  if (typeof message.method !== 'string') {
+    // A response to a server-initiated request: nothing to answer.
+    if (hasId && ('result' in message || 'error' in message)) return null;
+    return errorResponse(hasId && isValidId(message.id) ? message.id : null,
+      RPC_ERRORS.INVALID_REQUEST, 'Invalid Request: method must be a string');
+  }
+  if (!hasId) {
+    // Notification: never answered. notifications/* need no action here.
+    if (!message.method.startsWith('notifications/')) await handleRequest(message);
+    return null;
+  }
+  if (!isValidId(message.id)) {
+    return errorResponse(null, RPC_ERRORS.INVALID_REQUEST, 'Invalid Request: id must be a string or number');
+  }
+  if (message.jsonrpc !== '2.0') {
+    return errorResponse(message.id, RPC_ERRORS.INVALID_REQUEST, 'Invalid Request: jsonrpc must be "2.0"');
+  }
+  const outcome = await handleRequest(message);
+  return { jsonrpc: '2.0', id: message.id, ...outcome };
+}
+
+// Browser state is shared by every transport, so requests run one at a time.
+const enqueue = createSerialQueue();
+
+async function closeAllBrowsers() {
+  for (const sessionId of [...activeBrowsers.keys()]) {
+    try {
+      await closeBrowser(sessionId);
+    } catch (e) {
+      console.error(`[agent_browser] Failed to close ${sessionId}:`, e.message);
+    }
+  }
+}
+
+function writeFrame(message) {
+  process.stdout.write(JSON.stringify(message) + '\n');
 }
 
 function startStdioServer() {
   console.error('[agent_browser] Starting MCP server on stdio...');
 
-  // Set up notification callback for stdio transport
   notificationManager.on('notification', ({ sessionId, method, params }) => {
-    // Send notification as JSON-RPC notification (no id)
-    process.stdout.write(JSON.stringify({
+    writeFrame({
       jsonrpc: '2.0',
       method: method || 'notifications/cdp_event',
       params: { sessionId, ...params }
-    }) + '\n');
+    });
   });
 
-  process.stdin.on('data', async (data) => {
+  const decoder = createLineDecoder((line) => {
+    if (!line.trim()) return;
+    let message;
     try {
-      const lines = data.toString().trim().split('\n');
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        const request = JSON.parse(line);
-        const response = await handleRequest(request);
-        process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id: request.id, ...response }) + '\n');
-      }
-    } catch (e) { console.error('[agent_browser] Stdin error:', e.message); }
+      message = JSON.parse(line);
+    } catch (e) {
+      writeFrame(errorResponse(null, RPC_ERRORS.PARSE_ERROR, 'Parse error'));
+      return;
+    }
+    enqueue(async () => {
+      const response = await processMessage(message);
+      if (response) writeFrame(response);
+    }).catch((e) => console.error('[agent_browser] Request failed:', e && e.stack));
+  }, {
+    maxBytes: Number(process.env.AGENT_BROWSER_MAX_MESSAGE_BYTES) || 64 * 1024 * 1024,
+    onOverflow: () => writeFrame(errorResponse(null, RPC_ERRORS.INVALID_REQUEST, 'Message too large'))
   });
-  process.on('SIGINT', async () => { console.error('[agent_browser] Shutting down...'); for (const [sessionId] of activeBrowsers) { await closeBrowser(sessionId); } process.exit(0); });
-  process.on('SIGTERM', async () => { console.error('[agent_browser] Shutting down...'); for (const [sessionId] of activeBrowsers) { await closeBrowser(sessionId); } process.exit(0); });
+
+  let shuttingDown = false;
+  async function shutdown(code) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.error('[agent_browser] Shutting down...');
+    await closeAllBrowsers();
+    process.exit(code);
+  }
+
+  process.stdin.on('data', (chunk) => decoder.push(chunk));
+  process.stdin.on('end', () => {
+    decoder.end();
+    // Answer everything already received, then release the browsers.
+    enqueue(() => shutdown(0));
+  });
+  process.on('SIGINT', () => shutdown(0));
+  process.on('SIGTERM', () => shutdown(0));
 }
 
-function startHttpServer(port = 3456) {
-  const server = http.createServer(async (req, res) => {
-    if (req.method === 'POST' && req.url === '/mcp') {
-      let body = '';
-      req.on('data', chunk => body += chunk);
-      req.on('end', async () => {
-        try {
-          const request = JSON.parse(body);
-          const response = await handleRequest(request);
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ jsonrpc: '2.0', id: request.id, ...response }));
-        } catch (e) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ jsonrpc: '2.0', error: { code: -32700, message: 'Parse error' } }));
-        }
-      });
-    } else if (req.url === '/health') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', server: 'agent_browser', version: '1.0.0' }));
-    } else { res.writeHead(404); res.end('Not found'); }
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', '::1', 'localhost']);
+
+function isLoopbackHost(host) {
+  return LOOPBACK_HOSTS.has(String(host).replace(/^\[|\]$/g, '').toLowerCase());
+}
+
+/** Host header without the port, lower-cased ("[::1]:80" -> "::1"). */
+function hostnameOf(hostHeader) {
+  const value = String(hostHeader || '').trim().toLowerCase();
+  if (value.startsWith('[')) return value.slice(1, value.indexOf(']'));
+  return value.replace(/:\d+$/, '');
+}
+
+function isAllowedOrigin(origin, allowedOrigins) {
+  if (allowedOrigins.includes(origin)) return true;
+  try {
+    const url = new URL(origin);
+    return (url.protocol === 'http:' || url.protocol === 'https:') && isLoopbackHost(url.hostname);
+  } catch (e) {
+    return false;
+  }
+}
+
+function tokensMatch(presented, expected) {
+  // Hash both sides so timingSafeEqual always compares equal-length buffers.
+  const a = crypto.createHash('sha256').update(String(presented)).digest();
+  const b = crypto.createHash('sha256').update(String(expected)).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+
+/**
+ * Start the HTTP transport. Options (environment fallbacks in brackets):
+ *   port           [MCP_HTTP_PORT]                       default 3456
+ *   host           [MCP_HTTP_HOST]                       default 127.0.0.1
+ *   token          [AGENT_BROWSER_HTTP_TOKEN]            optional on loopback, required otherwise
+ *   maxBodyBytes   [AGENT_BROWSER_HTTP_MAX_BODY_BYTES]   default 1 MiB
+ *   allowedOrigins [AGENT_BROWSER_HTTP_ALLOWED_ORIGINS]  comma list, in addition to loopback origins
+ * Resolves with the listening http.Server.
+ */
+function startHttpServer(options = {}) {
+  if (typeof options === 'number') options = { port: options };
+  const env = process.env;
+  const port = options.port !== undefined ? options.port : Number(env.MCP_HTTP_PORT || 3456);
+  const host = options.host || env.MCP_HTTP_HOST || '127.0.0.1';
+  const token = options.token !== undefined ? options.token : (env.AGENT_BROWSER_HTTP_TOKEN || '');
+  const maxBodyBytes = options.maxBodyBytes || Number(env.AGENT_BROWSER_HTTP_MAX_BODY_BYTES) || 1024 * 1024;
+  const allowedOrigins = options.allowedOrigins ||
+    String(env.AGENT_BROWSER_HTTP_ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const loopback = isLoopbackHost(host);
+
+  if (!loopback && !token) {
+    return Promise.reject(new Error(
+      `Refusing to bind the HTTP transport to non-loopback host ${host} without AGENT_BROWSER_HTTP_TOKEN`));
+  }
+
+  function send(res, status, body, headers = {}) {
+    const payload = body === undefined ? '' : JSON.stringify(body);
+    res.writeHead(status, {
+      ...(payload ? { 'Content-Type': 'application/json' } : {}),
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      ...headers
+    });
+    res.end(payload);
+  }
+
+  const server = http.createServer((req, res) => {
+    // DNS rebinding: a loopback-bound server only answers loopback Host names.
+    if (loopback && !isLoopbackHost(hostnameOf(req.headers.host))) {
+      return send(res, 403, { error: 'Forbidden host' });
+    }
+    if (req.headers.origin !== undefined && !isAllowedOrigin(req.headers.origin, allowedOrigins)) {
+      return send(res, 403, { error: 'Forbidden origin' });
+    }
+
+    const url = (req.url || '').split('?')[0];
+    if (url === '/health') {
+      if (req.method !== 'GET') return send(res, 405, { error: 'Method not allowed' }, { Allow: 'GET' });
+      return send(res, 200, { status: 'ok', server: 'agent_browser', version: SERVER_VERSION });
+    }
+    if (url !== '/mcp') return send(res, 404, { error: 'Not found' });
+    if (req.method !== 'POST') return send(res, 405, { error: 'Method not allowed' }, { Allow: 'POST' });
+
+    if (token) {
+      const match = /^Bearer\s+(.+)$/i.exec(req.headers.authorization || '');
+      if (!match || !tokensMatch(match[1].trim(), token)) {
+        return send(res, 401, { error: 'Unauthorized' }, { 'WWW-Authenticate': 'Bearer' });
+      }
+    }
+    const contentType = String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+    if (contentType !== 'application/json') {
+      return send(res, 415, { error: 'Content-Type must be application/json' });
+    }
+    const declared = Number(req.headers['content-length']);
+    if (Number.isFinite(declared) && declared > maxBodyBytes) {
+      return send(res, 413, { error: 'Payload too large' }, { Connection: 'close' });
+    }
+
+    const chunks = [];
+    let size = 0;
+    let rejected = false;
+    req.on('data', (chunk) => {
+      if (rejected) return;
+      size += chunk.length;
+      if (size > maxBodyBytes) {
+        rejected = true;
+        res.on('finish', () => req.destroy());
+        send(res, 413, { error: 'Payload too large' }, { Connection: 'close' });
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', async () => {
+      if (rejected) return;
+      let message;
+      try {
+        message = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      } catch (e) {
+        return send(res, 400, errorResponse(null, RPC_ERRORS.PARSE_ERROR, 'Parse error'));
+      }
+      try {
+        const response = await enqueue(() => processMessage(message));
+        if (!response) return send(res, 202);
+        return send(res, 200, response);
+      } catch (e) {
+        console.error('[agent_browser] HTTP request failed:', e && e.stack);
+        return send(res, 500, errorResponse(null, RPC_ERRORS.INTERNAL_ERROR, 'Internal error'));
+      }
+    });
   });
-  server.listen(port, () => console.error('[agent_browser] HTTP server listening on port ' + port));
+
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, host, () => {
+      server.removeListener('error', reject);
+      const address = server.address();
+      console.error(`[agent_browser] HTTP server listening on ${address.address}:${address.port}` +
+        (token ? ' (bearer token required)' : ''));
+      resolve(server);
+    });
+  });
 }
 
 if (require.main === module) {
-  if (process.env.MCP_HTTP_PORT) startHttpServer(parseInt(process.env.MCP_HTTP_PORT));
-  else startStdioServer();
+  if (process.env.MCP_HTTP_PORT) {
+    startHttpServer().then((server) => {
+      const stop = async () => {
+        server.close();
+        await closeAllBrowsers();
+        process.exit(0);
+      };
+      process.on('SIGINT', stop);
+      process.on('SIGTERM', stop);
+    }, (error) => {
+      console.error('[agent_browser]', error.message);
+      process.exit(1);
+    });
+  } else {
+    startStdioServer();
+  }
 }
 
-module.exports = { handleRequest, TOOLS, TOOL_SCHEMAS, startStdioServer, startHttpServer, notificationManager, getNotificationManager };
+module.exports = {
+  handleRequest,
+  processMessage,
+  TOOLS,
+  TOOL_SCHEMAS,
+  BROWSER_TOOLS,
+  SUPPORTED_PROTOCOL_VERSIONS,
+  startStdioServer,
+  startHttpServer,
+  setNotificationCallback,
+  notificationManager,
+  getNotificationManager
+};

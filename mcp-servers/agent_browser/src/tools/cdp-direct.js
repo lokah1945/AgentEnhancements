@@ -3,7 +3,7 @@
  */
 
 const { getCDPRouter } = require('../cdp-router-wrapper');
-const { notificationManager } = require('../index');
+const { notificationManager } = require('../notifications');
 
 /**
  * Send raw CDP command
@@ -12,7 +12,7 @@ async function cdpSend(args, context) {
   const { sessionId, domain, method, params, target, frameId } = args;
 
   const router = getCDPRouter();
-  const result = await router.sendCDP(sessionId, domain, method, params, { target, frameId });
+  const result = await router.sendCDP(sessionId, domain, method, params, target === 'frame' ? { frameId } : {});
 
   return {
     success: true,
@@ -54,7 +54,7 @@ async function cdpSubscribe(args, context) {
 
   const handler = (...eventArgs) => {
     // Send notification via MCP
-    notificationManager.sendNotification(sessionId, 'cdp/event', {
+    notificationManager.sendNotification(sessionId, 'notifications/cdp_event', {
       subscriptionId,
       domain,
       event,
@@ -249,6 +249,34 @@ async function cdpConsoleCapture(args, context) {
   };
 }
 
+/** Remove a capture's CDP listeners. */
+function detachCapture(capture) {
+  try {
+    if (capture.type === 'network') {
+      capture.cdp.off('Network.requestWillBeSent', capture.handlers.requestHandler);
+      capture.cdp.off('Network.responseReceived', capture.handlers.responseHandler);
+    } else if (capture.type === 'console') {
+      capture.cdp.off('Console.messageAdded', capture.handlers.handler);
+    }
+  } catch (e) {}
+}
+
+/**
+ * Stop and forget every capture that belongs to a session (called when the
+ * session's browser closes). Returns the number of captures stopped.
+ */
+function stopCapturesForSession(sessionId) {
+  let stopped = 0;
+  for (const [captureId, capture] of captureRegistry) {
+    if (capture.sessionId === sessionId) {
+      detachCapture(capture);
+      captureRegistry.delete(captureId);
+      stopped += 1;
+    }
+  }
+  return stopped;
+}
+
 /**
  * Stop a capture and get entries
  */
@@ -260,15 +288,7 @@ async function cdpCaptureStop(args, context) {
     return { success: false, error: 'Capture not found' };
   }
 
-  // Remove event handlers
-  if (capture.type === 'network') {
-    capture.cdp.off('Network.requestWillBeSent', capture.handlers.requestHandler);
-    capture.cdp.off('Network.responseReceived', capture.handlers.responseHandler);
-  } else if (capture.type === 'console') {
-    capture.cdp.off('Console.messageAdded', capture.handlers.handler);
-  }
-
-  // Get entries and remove from registry
+  detachCapture(capture);
   const resultEntries = [...capture.entries];
   captureRegistry.delete(captureId);
 
@@ -333,7 +353,8 @@ async function cdpMetrics(args, context) {
   const router = getCDPRouter();
   const cdp = await router.getPageCDP(sessionId, 'default');
 
-  // Get performance metrics
+  // Get performance metrics (the domain must be enabled first)
+  await cdp.send('Performance.enable');
   const metrics = await cdp.send('Performance.getMetrics');
 
   // Get memory info
@@ -373,7 +394,12 @@ module.exports = {
   cdpSend,
   cdpEvaluate,
   cdpSubscribe,
+  cdpUnsubscribe,
   cdpNetworkCapture,
   cdpConsoleCapture,
-  cdpMetrics
+  cdpCaptureStop,
+  cdpCaptureGet,
+  cdpCaptureList,
+  cdpMetrics,
+  stopCapturesForSession
 };

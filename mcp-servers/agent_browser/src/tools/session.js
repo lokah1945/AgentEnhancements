@@ -2,31 +2,30 @@
  * session.js - Session management MCP tools
  */
 
-const { SessionManager } = require('../session-manager');
-const { getCDPRouter } = require('../cdp-router-wrapper');
-const { sessionNotFound, withErrorHandling } = require('../errors');
+const {
+  getCDPRouter,
+  getSessionManagerInstance,
+  closeBrowser,
+  activeBrowsers
+} = require('../cdp-router-wrapper');
+const { sessionNotFound } = require('../errors');
 
-let sessionManager = null;
-
+/** The single SessionManager shared with the browser launcher. */
 function getSessionManager() {
-  if (!sessionManager) {
-    sessionManager = new SessionManager();
-  }
-  return sessionManager;
+  return getSessionManagerInstance();
 }
 
 /**
  * Create a new browser session
  */
 async function sessionCreate(args, context) {
-  const { sessionId, persistent, browser, profileDir, viewport, locale, timezone, proxy } = args;
+  const { sessionId, persistent, browser, viewport, locale, timezone, proxy } = args;
 
   const mgr = getSessionManager();
   const result = await mgr.createSession({
     sessionId,
     persistent: persistent !== false,
     browser: browser || 'chrome',
-    profileDir,
     viewport: viewport || { width: 1920, height: 1080, deviceScaleFactor: 1, isMobile: false, hasTouch: false },
     locale: locale || 'en-US',
     timezone: timezone || 'America/New_York',
@@ -81,6 +80,10 @@ async function sessionDelete(args, context) {
 
   const mgr = getSessionManager();
   try {
+    await mgr.getSession(sessionId);
+    if (activeBrowsers.has(sessionId)) {
+      await closeBrowser(sessionId);
+    }
     await mgr.deleteSession(sessionId, { force });
     return { success: true, sessionId };
   } catch (error) {
@@ -98,7 +101,9 @@ async function sessionSnapshot(args, context) {
   const { sessionId, includeCookies, includeStorage, includeHistory } = args;
 
   const mgr = getSessionManager();
-  const router = getCDPRouter();
+  // Live cookies/storage come from CDP only when the browser is running;
+  // snapshotting never launches one.
+  const router = activeBrowsers.has(sessionId) ? getCDPRouter() : null;
   try {
     const snapshot = await mgr.snapshotSession(sessionId, {
       includeCookies: includeCookies !== false,
@@ -138,6 +143,25 @@ async function sessionRestore(args, context) {
 }
 
 /**
+ * Close the session's browser; the profile and metadata are kept.
+ */
+async function sessionClose(args, context) {
+  const { sessionId } = args;
+
+  const mgr = getSessionManager();
+  try {
+    await mgr.getSession(sessionId);
+  } catch (error) {
+    if (error.message.includes('not found')) {
+      return sessionNotFound(sessionId);
+    }
+    throw error;
+  }
+  const wasActive = await closeBrowser(sessionId);
+  return { success: true, sessionId, wasActive };
+}
+
+/**
  * Cleanup orphaned profiles
  */
 async function sessionCleanup(args, context) {
@@ -158,5 +182,6 @@ module.exports = {
   sessionSnapshot,
   sessionRestore,
   sessionCleanup,
+  sessionClose,
   getSessionManager
 };

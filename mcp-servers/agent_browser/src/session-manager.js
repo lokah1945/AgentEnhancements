@@ -29,14 +29,32 @@ class SessionManager {
   }
 
   loadSessionsIndex() {
+    return this.readSessionsIndex() || {};
+  }
+
+  /** Parsed sessions.json, or null when it is missing or unreadable. */
+  readSessionsIndex() {
     try {
       if (fs.existsSync(this.sessionsIndex) && !fs.lstatSync(this.sessionsIndex).isSymbolicLink()) {
-        return JSON.parse(fs.readFileSync(this.sessionsIndex, 'utf8'));
+        const parsed = JSON.parse(fs.readFileSync(this.sessionsIndex, 'utf8'));
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+        console.warn('[SessionManager] Ignoring malformed sessions index');
       }
     } catch (e) {
       console.warn('[SessionManager] Failed to load sessions index:', e.message);
     }
-    return {};
+    return null;
+  }
+
+  /**
+   * Re-read sessions.json so this instance sees sessions written by other
+   * SessionManager instances or processes before it reads or rewrites the
+   * index. The in-memory copy is kept when the file is missing or unreadable.
+   */
+  refresh() {
+    const onDisk = this.readSessionsIndex();
+    if (onDisk) this.sessions = onDisk;
+    return this.sessions;
   }
 
   saveSessionsIndex() {
@@ -66,6 +84,7 @@ class SessionManager {
   }
 
   getSessionMetadata(sessionId) {
+    this.refresh();
     return this.sessions[sessionId] || null;
   }
 
@@ -74,6 +93,10 @@ class SessionManager {
     const persistent = config.persistent !== false;
 
     const profilePath = this.getProfilePath(sessionId);
+    this.refresh();
+    if (this.sessions[sessionId]) {
+      throw new Error(`Session already exists: ${sessionId}`);
+    }
 
     // Create profile directory if persistent
     if (persistent) {
@@ -100,11 +123,12 @@ class SessionManager {
     this.sessions[sessionId] = metadata;
     this.saveSessionsIndex();
 
-    console.log(`[SessionManager] Created session: ${sessionId} (persistent: ${persistent})`);
+    console.error(`[SessionManager] Created session: ${sessionId} (persistent: ${persistent})`);
     return { sessionId, metadata, profilePath };
   }
 
   async updateSession(sessionId, updates) {
+    this.refresh();
     if (!this.sessions[sessionId]) {
       throw new Error(`Session not found: ${sessionId}`);
     }
@@ -119,17 +143,19 @@ class SessionManager {
   }
 
   async deleteSession(sessionId, options = {}) {
+    this.refresh();
     const session = this.sessions[sessionId];
     if (!session) {
       throw new Error(`Session not found: ${sessionId}`);
     }
 
-    // Delete profile directory if persistent
+    // Delete profile directory if persistent. A session still marked active
+    // may be in use by another process, so that needs force.
     if (session.persistent && session.profilePath && fs.existsSync(session.profilePath)) {
-      if (options.force || session.status === 'closed') {
+      if (options.force || session.status !== 'active') {
         try {
           fs.rmSync(session.profilePath, { recursive: true, force: true });
-          console.log(`[SessionManager] Deleted profile: ${session.profilePath}`);
+          console.error(`[SessionManager] Deleted profile: ${session.profilePath}`);
         } catch (e) {
           console.warn('[SessionManager] Failed to delete profile:', e.message);
         }
@@ -141,11 +167,12 @@ class SessionManager {
     delete this.sessions[sessionId];
     this.saveSessionsIndex();
 
-    console.log(`[SessionManager] Deleted session: ${sessionId}`);
+    console.error(`[SessionManager] Deleted session: ${sessionId}`);
     return { success: true, sessionId };
   }
 
   async listSessions() {
+    this.refresh();
     return Object.values(this.sessions).map(s => ({
       sessionId: s.sessionId,
       createdAt: s.createdAt,
@@ -159,6 +186,7 @@ class SessionManager {
   }
 
   async getSession(sessionId) {
+    this.refresh();
     const session = this.sessions[sessionId];
     if (!session) {
       throw new Error(`Session not found: ${sessionId}`);
@@ -301,6 +329,10 @@ class SessionManager {
   async restoreSession(snapshot, newSessionId = null) {
     const sessionId = newSessionId || this.generateSessionId();
     const profilePath = this.getProfilePath(sessionId);
+    this.refresh();
+    if (this.sessions[sessionId]) {
+      throw new Error(`Session already exists: ${sessionId}`);
+    }
 
     fs.mkdirSync(profilePath, { recursive: true });
 
@@ -323,11 +355,12 @@ class SessionManager {
     this.sessions[sessionId] = metadata;
     this.saveSessionsIndex();
 
-    console.log(`[SessionManager] Restored session: ${sessionId} from ${snapshot.sessionId}`);
+    console.error(`[SessionManager] Restored session: ${sessionId} from ${snapshot.sessionId}`);
     return { sessionId, metadata, profilePath };
   }
 
   markSessionActive(sessionId) {
+    this.refresh();
     if (this.sessions[sessionId]) {
       this.sessions[sessionId].status = 'active';
       this.sessions[sessionId].lastUsedAt = new Date().toISOString();
@@ -336,6 +369,7 @@ class SessionManager {
   }
 
   markSessionClosed(sessionId) {
+    this.refresh();
     if (this.sessions[sessionId]) {
       this.sessions[sessionId].status = 'closed';
       this.sessions[sessionId].lastUsedAt = new Date().toISOString();
@@ -344,6 +378,7 @@ class SessionManager {
   }
 
   updateTabCount(sessionId, count) {
+    this.refresh();
     if (this.sessions[sessionId]) {
       this.sessions[sessionId].tabCount = count;
       this.saveSessionsIndex();
@@ -351,6 +386,7 @@ class SessionManager {
   }
 
   cleanupOrphanedProfiles() {
+    this.refresh();
     try {
       const dirs = fs.readdirSync(this.profileRoot);
       let cleaned = 0;
@@ -362,7 +398,7 @@ class SessionManager {
           try {
             fs.rmSync(fullPath, { recursive: true, force: true });
             cleaned++;
-            console.log(`[SessionManager] Cleaned orphaned profile: ${dir}`);
+            console.error(`[SessionManager] Cleaned orphaned profile: ${dir}`);
           } catch (e) {
             console.warn(`[SessionManager] Failed to clean ${dir}:`, e.message);
           }

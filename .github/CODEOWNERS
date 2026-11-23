@@ -1,0 +1,9 @@
+# Default owner for the whole repository.
+*                       @lokah1945
+
+# Security-sensitive paths: credentials, gateway, installer and CI.
+/unified-integration/scripts/api_config.py   @lokah1945
+/unified-integration/mcp-servers/gateway.py  @lokah1945
+/unified-integration/setup.sh                @lokah1945
+/.github/                                    @lokah1945
+/CONTRACT.md                                 @lokah1945

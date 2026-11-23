@@ -70,7 +70,9 @@ class ClaimTests(unittest.TestCase):
         saved = re.search(r'save \\\s*\n\s*"(\w+)" "[^"]*" "(\w+)"', text)
         self.assertIsNotNone(saved)
         key, mem_type = saved.groups()
-        self.assertIn(f'load "{key}" "{mem_type}"', text)
+        # Shell line continuations are layout only (markdownlint MD013).
+        joined = re.sub(r"\s*\\\s*\n\s*", " ", text)
+        self.assertIn(f'load "{key}" "{mem_type}"', joined)
 
     def test_system_launcher_opt_in_is_documented(self):
         self.assertEqual(setup_default("INSTALL_SYSTEM_LAUNCHER"), "0")

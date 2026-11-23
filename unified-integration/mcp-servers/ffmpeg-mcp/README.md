@@ -20,9 +20,13 @@ entry: `plugin-catalog/mcp-servers.json` → `ffmpeg-mcp` (P1, media).
 Inputs/outputs must resolve inside an **allowed root**: the process cwd and
 `/tmp` by default. Extend with `AE_FFMPEG_ALLOWED_ROOTS="/data/videos:/mnt"`.
 All writes use `ffmpeg -y` → re-running the same call is idempotent.
-A stale output is removed before each run, and a call reports an error
-(not `ok`) when ffmpeg writes no output, e.g. `cut`/`thumbnail` past the
-end of the media. `out` must differ from the input file(s).
+ffmpeg writes into a private staging directory next to `out`; only a
+fresh, non-empty result replaces `out` (atomic `os.replace`). A failed run
+(bad codec, no audio stream, timeout, or no output at all, e.g.
+`cut`/`thumbnail` past the end of the media) reports an error, not `ok`,
+and leaves any existing file at `out` untouched, so a stale file is never
+mistaken for the new result. `out` must differ from the input file(s) and
+must not be a directory.
 
 ## Env vars
 

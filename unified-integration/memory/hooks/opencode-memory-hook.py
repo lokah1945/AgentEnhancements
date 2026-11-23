@@ -18,6 +18,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from project_paths import memory_root
 MEMORY_ROOT = str(memory_root())
 DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
+# Same CLI bounds as scripts/memory.py, which writes the same table: a TTL is
+# a positive number of days and a list limit a positive row count.
+TTL_DAYS_MAX = 36500
+LIST_LIMIT_MAX = 10000
 
 def init_db():
     if os.path.islink(DB_PATH):
@@ -57,13 +61,19 @@ def save_memory(key, value, memory_type="session_context", project=None, metadat
     if project is None:
         project = os.path.realpath(os.getcwd())
 
+    # ttl_days None never expires; a non-positive value stores an already
+    # expired row (the same meaning as AgentMemory.save in memory.py).
     expires_at = None
-    if ttl_days:
+    if ttl_days is not None:
         from datetime import timedelta
+        try:
+            expiry = datetime.now(timezone.utc) + timedelta(days=ttl_days)
+        except OverflowError as error:
+            raise ValueError(f"ttl_days out of range: {ttl_days}") from error
         # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
         # against datetime('now') work: the ISO "T" separator sorts
         # after a space and broke timely expiry cleanup.
-        expires_at = (datetime.now(timezone.utc) + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
+        expires_at = expiry.strftime("%Y-%m-%d %H:%M:%S")
 
     meta_json = json.dumps(metadata) if metadata else None
 
@@ -140,6 +150,17 @@ def cleanup_expired():
         """)
         return cursor.rowcount
 
+def _int_arg(raw, usage, lo, hi):
+    """Parse an integer CLI argument within [lo, hi], else print usage and exit 1."""
+    try:
+        value = int(raw)
+    except (ValueError, OverflowError):
+        value = None
+    if value is None or value < lo or value > hi:
+        print(usage)
+        sys.exit(1)
+    return value
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: memory-hook.py <command> [args...]")
@@ -162,7 +183,12 @@ def main():
         value = sys.argv[3]
         mem_type = sys.argv[4] if len(sys.argv) > 4 else "session_context"
         project = sys.argv[5] if len(sys.argv) > 5 else None
-        ttl = int(sys.argv[6]) if len(sys.argv) > 6 else None
+        ttl = _int_arg(
+            sys.argv[6],
+            "Usage: memory-hook.py save <key> <value> [type] [project] [ttl_days]\n"
+            f"ttl_days must be an integer from 1 to {TTL_DAYS_MAX}",
+            1, TTL_DAYS_MAX,
+        ) if len(sys.argv) > 6 else None
         save_memory(key, value, mem_type, project, ttl_days=ttl)
         print(f"Saved: {key} ({mem_type})")
 
@@ -183,7 +209,12 @@ def main():
     elif command == "list":
         mem_type = sys.argv[2] if len(sys.argv) > 2 else None
         project = sys.argv[3] if len(sys.argv) > 3 else None
-        limit = int(sys.argv[4]) if len(sys.argv) > 4 else 20
+        limit = _int_arg(
+            sys.argv[4],
+            "Usage: memory-hook.py list [type] [project] [limit]\n"
+            f"limit must be an integer from 1 to {LIST_LIMIT_MAX}",
+            1, LIST_LIMIT_MAX,
+        ) if len(sys.argv) > 4 else 20
         memories = list_memories(mem_type, project, limit)
         for m in memories:
             print(f"[{m['type']}] {m['key']}: {m['value']} (updated: {m['updated']})")

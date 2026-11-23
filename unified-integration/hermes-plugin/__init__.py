@@ -49,11 +49,21 @@ def register(ctx) -> None:
     scopes: dict[str, str] = {}
 
     def scoped(session_id: str, platform: str = "") -> str:
-        # post_llm_call carries no sender_id: reuse the turn's pre_llm_call scope.
-        return scopes.get(session_id) or memory_scope(ctx, session_id, platform)
+        """Reuse the turn's pre_llm_call scope (post hooks carry no sender_id).
+
+        An unknown session with no platform returns "": the profile-wide
+        fallback would publish a messaging sender's records to every user
+        of the profile, so the caller skips the event instead."""
+        scope = scopes.get(session_id)
+        if scope:
+            return scope
+        return memory_scope(ctx, session_id, platform) if platform else ""
 
     def before(session_id: str, user_message: str, is_first_turn: bool = False,
                platform: str = "", sender_id: str = "", **_):
+        # Re-insert so dict order is recency order: eviction then drops the
+        # least recently used session, never an active one.
+        scopes.pop(session_id, None)
         scope = scopes[session_id] = memory_scope(ctx, session_id, platform, sender_id)
         if len(scopes) > 1000:
             scopes.pop(next(iter(scopes)))
@@ -63,13 +73,15 @@ def register(ctx) -> None:
         return {"context": text} if text else None
 
     def after(session_id: str, assistant_response: str, platform: str = "", **_) -> None:
-        runtime("Stop", session_id, last_assistant_message=assistant_response,
-                memory_scope=scoped(session_id, platform))
+        scope = scoped(session_id, platform)
+        if scope:
+            runtime("Stop", session_id, last_assistant_message=assistant_response,
+                    memory_scope=scope)
 
     def tool(tool_name: str, session_id: str | None = None, **_) -> None:
-        if session_id:
-            runtime("PostToolUse", session_id, tool_name=tool_name,
-                    memory_scope=scoped(session_id))
+        scope = scoped(session_id) if session_id else ""
+        if scope:
+            runtime("PostToolUse", session_id, tool_name=tool_name, memory_scope=scope)
 
     ctx.register_hook("pre_llm_call", before)
     ctx.register_hook("post_llm_call", after)

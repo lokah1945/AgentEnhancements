@@ -57,6 +57,12 @@ for mod in [
     "test_ops_regressions",
     "test_docs_regressions",
     "test_maintenance_scripts_regressions",
+    "test_memory_coverage",
+    "test_load_skills_coverage",
+    "test_runtime_coverage",
+    "test_gateway_regressions",
+    "test_plugin_cache_regressions",
+    "test_ops_scripts_regressions",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))
 

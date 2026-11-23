@@ -193,7 +193,55 @@ class DependencyAuditTests(unittest.TestCase):
 
     def test_tool_versions_are_pinned(self):
         self.assertRegex(self.commands, r"pip-audit==\d+\.\d+\.\d+")
-        self.assertRegex(self.commands, r"cargo install cargo-audit --locked --version \d+\.\d+\.\d+")
+        self.assertRegex(self.commands, r"uv==\d+\.\d+\.\d+")
+        match = re.search(
+            r"cargo install cargo-audit --locked --version (\d+)\.(\d+)\.(\d+)",
+            self.commands)
+        self.assertIsNotNone(match)
+        # cargo-audit < 0.22 cannot parse the CVSS 4.0 vectors in the current
+        # RustSec database and fails before scanning anything.
+        self.assertGreaterEqual(tuple(map(int, match.groups()[:2])), (0, 22))
+        self.assertIn("cargo audit update-db", self.commands)
+
+    def test_cargo_scans_do_not_ignore_advisories(self):
+        # Patchable advisories are fixed in the lock, not ignored.
+        self.assertNotIn("--ignore", self.commands)
+
+    def test_lock_drift_check_matches_documented_compile_command(self):
+        updating = " ".join((REPO_DIR / "docs/UPDATING.md").read_text().split())
+        documented = re.search(r"uv pip compile (.*?) --output-file", updating)
+        self.assertIsNotNone(documented)
+        flags = [f for f in documented.group(1).split() if f != "\\"]
+        drift = " ".join(self.commands.replace("\\\n", " ").split())
+        self.assertIn("uv pip compile", drift)
+        for flag in flags:
+            with self.subTest(flag=flag):
+                self.assertIn(flag, drift)
+        # Hashes must be recomputed, not reused from the committed lock.
+        self.assertIn("/--hash=/d", drift)
+        self.assertIn("diff -u", drift)
+
+
+class CargoLockAdvisoryTests(unittest.TestCase):
+    """Scanned Cargo locks stay at or above the patched advisory releases."""
+
+    PATCHED = {
+        "url": (2, 5, 9),       # RUSTSEC-2026-0592
+        "cookie": (0, 18, 3),   # RUSTSEC-2026-0594
+    }
+
+    def test_locks_carry_patched_versions(self):
+        import tomllib
+        for lock in ("headroom/Cargo.lock", "ECC/ecc2/Cargo.lock"):
+            packages = tomllib.loads((REPO_DIR / lock).read_text())["package"]
+            for pkg in packages:
+                floor = self.PATCHED.get(pkg["name"])
+                if floor is None:
+                    continue
+                version = tuple(int(part) for part in
+                                pkg["version"].split("-")[0].split(".")[:3])
+                with self.subTest(lock=lock, crate=pkg["name"]):
+                    self.assertGreaterEqual(version, floor)
 
 
 class DependabotTests(unittest.TestCase):
@@ -208,6 +256,14 @@ class DependabotTests(unittest.TestCase):
         })
         for _, directory in updates:
             self.assertFalse(re.match(r"^/(headroom|ECC)(/|$)", directory))
+
+    def test_pip_lock_gets_security_updates_only(self):
+        # Dependabot's pip-compile cannot reproduce the uv-compiled universal
+        # hashed lock, so version updates for it are disabled.
+        config = yaml.safe_load((REPO_DIR / ".github/dependabot.yml").read_text())
+        pip = [u for u in config["updates"] if u["package-ecosystem"] == "pip"]
+        self.assertEqual(len(pip), 1)
+        self.assertEqual(pip[0].get("open-pull-requests-limit"), 0)
 
 
 class ContractClaimTests(unittest.TestCase):

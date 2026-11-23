@@ -6,6 +6,7 @@ Loads and matches skills from all sources based on task context
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -23,6 +24,13 @@ AGENT_ALIASES = {"claude": "claude-code", "claude-code": "claude-code",
                  "gemini-cli": "gemini-cli", "opencode": "opencode",
                  "cursor": "cursor", "windsurf": "windsurf", "copilot": "copilot", "kiro": "kiro",
                  "hermes": "hermes"}
+
+# Frontmatter: a bare "---" opening line, then everything up to the first
+# line that is itself a bare "---" fence. A "---" inside a value or an
+# indented block is content, not a fence.
+FRONTMATTER_RE = re.compile(
+    r"\A---[ \t]*\r?\n(.*?)^---[ \t]*\r?$(.*)\Z", re.DOTALL | re.MULTILINE
+)
 
 class SkillsLoader:
     def __init__(self, agent: str = "claude-code"):
@@ -83,20 +91,19 @@ class SkillsLoader:
         """Parse SKILL.md file"""
         content = skill_file.read_text()
         # Parse frontmatter
-        if content.startswith("---"):
-            parts = content.split("---", 2)
-            if len(parts) >= 3:
-                try:
-                    import yaml
-                    frontmatter = yaml.safe_load(parts[1])
-                except ImportError:
-                    print(
-                        "Warning: PyYAML is not installed; returning raw skill content",
-                        file=sys.stderr,
-                    )
-                    return {"raw": content, "file": str(skill_file)}
-                body = parts[2].strip()
-                return {"frontmatter": frontmatter, "body": body, "file": str(skill_file)}
+        match = FRONTMATTER_RE.match(content)
+        if match:
+            try:
+                import yaml
+                frontmatter = yaml.safe_load(match.group(1))
+            except ImportError:
+                print(
+                    "Warning: PyYAML is not installed; returning raw skill content",
+                    file=sys.stderr,
+                )
+                return {"raw": content, "file": str(skill_file)}
+            body = match.group(2).strip()
+            return {"frontmatter": frontmatter, "body": body, "file": str(skill_file)}
         return {"raw": content, "file": str(skill_file)}
 
 

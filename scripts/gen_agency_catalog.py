@@ -328,6 +328,31 @@ def skill_md_for(slug: str, name: str, keywords: list) -> str:
     return "\n".join(lines)
 
 
+def upsert_agency_entries(catalog: dict, index_entries: list) -> None:
+    """Merge generated agency entries into ``catalog["skills"]`` in place.
+
+    Existing entries keep their position and any extra hand-maintained keys,
+    but every generated field (name, trigger_keywords, sub_skills_count, ...)
+    is refreshed. New ids are appended. Agency entries this generator no
+    longer produces (a division removed upstream) are dropped, so the index
+    never points at a stale pack.
+    """
+    generated = {e["id"]: e for e in index_entries}
+    skills = []
+    seen = set()
+    for existing in catalog["skills"]:
+        entry_id = existing.get("id")
+        if entry_id in generated:
+            skills.append({**existing, **generated[entry_id]})
+            seen.add(entry_id)
+        elif existing.get("category") == "agency" and str(entry_id).startswith("agency-"):
+            print(f"  dropped stale catalog entry {entry_id}")
+        else:
+            skills.append(existing)
+    skills.extend(e for e in index_entries if e["id"] not in seen)
+    catalog["skills"] = skills
+
+
 def main() -> int:
     if not VENDOR.is_dir():
         print(f"ERROR: {VENDOR} not found", file=sys.stderr)
@@ -362,14 +387,12 @@ def main() -> int:
         })
         print(f"  wrote plugin-catalog/agency/{slug}.json + {slug}/SKILL.md")
 
-    # Register in catalog.json (append the new category + entries).
+    # Register in catalog.json: upsert the agency entries in place so a
+    # re-vendor that changes persona counts or keywords refreshes them.
     catalog = json.loads(CATALOG_INDEX.read_text(encoding="utf-8"))
     if "agency" not in catalog["categories"]:
         catalog["categories"] = catalog["categories"] + ["agency"]
-    existing_ids = {e["id"] for e in catalog["skills"]}
-    for entry in index_entries:
-        if entry["id"] not in existing_ids:
-            catalog["skills"].append(entry)
+    upsert_agency_entries(catalog, index_entries)
     catalog["total_plugins"] = len(catalog["skills"])
     CATALOG_INDEX.write_text(
         json.dumps(catalog, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

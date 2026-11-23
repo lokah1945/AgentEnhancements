@@ -332,12 +332,30 @@ def main() -> None:
         # CLI skips its version guard and leaves config for a host nobody
         # chose. A saved selection keeps its explicit meaning.
         commands = {"claude-code": "claude", "codex": "codex", "opencode": "opencode"}
-        if selected is not None:
-            agents = [agent for agent in commands if agent in selected]
-        else:
-            agents = [agent for agent, command in commands.items() if shutil.which(command)]
-        agents += [agent for agent, command in EXTRA_COMMANDS.items()
-                   if shutil.which(command) and (selected is None or agent in selected)]
+        agents = []
+        for agent, command in commands.items():
+            if selected is not None:
+                if agent in selected:
+                    agents.append(agent)
+            elif shutil.which(command):
+                agents.append(agent)
+            else:
+                print(f"[native] {agent}: '{command}' not found on PATH, skipped "
+                      f"(use --agent {agent} or --select-agents)", file=sys.stderr)
+        for agent, command in EXTRA_COMMANDS.items():
+            if selected is not None and agent not in selected:
+                continue
+            if shutil.which(command):
+                agents.append(agent)
+            elif selected is not None:
+                # Optional extra hosts stay silent unless explicitly chosen.
+                print(f"[native] {agent}: '{command}' not found on PATH, skipped",
+                      file=sys.stderr)
+        if not agents:
+            # A run that configured nothing must not look like a success
+            # (setup-mcp.sh install execs this command).
+            sys.exit("[native] no host CLI found on PATH and no saved selection "
+                     "applies; nothing configured (use --agent <host> or --select-agents)")
     else:
         agents = [args.agent]
     failures = []

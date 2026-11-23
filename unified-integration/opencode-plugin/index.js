@@ -226,8 +226,13 @@ export default {
       }), true)
       // A new prompt ends the previous turn: its final answer is flushed once,
       // on the first model request of this turn, unless idle already did.
+      // Delete before re-inserting so Map order is recency order and the
+      // eviction below drops the least recently used session, not an
+      // active one (whose loss would repeat SessionStart and drop its flush).
+      const old = notes.get(id)
+      notes.delete(id)
       notes.set(id, { previous, skills: prepared.context, fallback: prepared.fallback, inventory, stamp,
-        flushed: notes.get(id)?.flushed, pendingFlush: notes.has(id) })
+        flushed: old?.flushed, pendingFlush: old !== undefined })
       if (notes.size > 100) notes.delete(notes.keys().next().value)
     }))
     registrations.push(await ctx.session.hook("context", async (input) => {

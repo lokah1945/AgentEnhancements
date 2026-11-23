@@ -547,13 +547,29 @@ class PackageResolutionTests(PreflightTestCase):
         self.assertEqual(package, [])
 
     def test_tool_server_must_be_an_exact_mcp_id(self):
-        # find_entry("mcp:pdf") falls through the name surface to skill:pdf
-        # and "mcp:memory" to capability:memory; neither is an MCP server.
+        # End-to-end regression: find_entry's typed "mcp:" prefix must keep
+        # tool:pdf/... and tool:memory/... from binding to the same-named
+        # skill:pdf or capability:memory. The inline id guard in
+        # _resolve_tool_id is exercised directly by the patched tests below.
         for selected in ("tool:pdf/pdf_extract", "tool:memory/memory_save"):
             resolved = self.module._resolve_tool_id(
                 self.module.SelectionItem(id=selected, required=True), [])
             self.assertEqual(resolved.delivery, "unavailable", selected)
             self.assertEqual(resolved.note, "unknown MCP server", selected)
+
+    def test_tool_resolution_rejects_an_mcp_entry_with_a_different_id(self):
+        # The id guard must be exact: an mcp-typed entry reached through a
+        # name or slug match ("pdf" -> mcp:pdf-tools) is a different server.
+        registry = self.module._registry()
+        with patch.object(registry, "find_entry",
+                          return_value={"id": "mcp:pdf-tools", "type": "mcp",
+                                        "description": "pdf tools"}):
+            resolved = self.module._resolve_tool_id(
+                self.module.SelectionItem(id="tool:pdf/pdf_extract",
+                                          required=True),
+                [{"name": "pdf_extract", "server": "pdf"}])
+        self.assertEqual(resolved.delivery, "unavailable")
+        self.assertEqual(resolved.note, "unknown MCP server")
 
     def test_tool_resolution_rejects_a_cross_type_registry_match(self):
         # Defense in depth: even if the registry name surface returns a

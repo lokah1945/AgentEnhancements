@@ -125,14 +125,20 @@ class MemoryCliTests(IsolatedTest):
         self.assertEqual(self.cli("claude-code", "delete", "k")[:2], (0, "Deleted: k\n"))
         self.assertEqual(self.cli("claude-code", "delete", "k")[:2], (0, "Not found: k\n"))
 
-    def test_zero_and_negative_ttl_expire(self):
-        self.cli("claude-code", "save", "zero", "v", "session_context", "0")
-        self.assertEqual(self.cli("claude-code", "load", "zero")[0], 1)
-        self.cli("claude-code", "save", "past", "v", "session_context", "-1")
+    def test_non_positive_ttl_is_rejected_and_keeps_existing_record(self):
+        """ttl 0 used to overwrite a live row with an expired one while
+        reporting success; the hooks treated 0 as "never expire"."""
+        self.cli("claude-code", "save", "k", "live")
+        for ttl in ("0", "-1"):
+            with self.subTest(ttl=ttl):
+                rc, out, err = self.cli("claude-code", "save", "k", "gone",
+                                        "session_context", ttl)
+                self.assertEqual(rc, 1)
+                self.assertNotIn("Saved", out)
+                self.assertNotIn("Traceback", err)
+        self.assertEqual(self.cli("claude-code", "load", "k")[:2], (0, "live\n"))
         rc, out, _ = self.cli("claude-code", "cleanup")
-        self.assertEqual(rc, 0)
-        self.assertIn("Cleaned up", out)
-        self.assertEqual(self.cli("claude-code", "load", "past")[0], 1)
+        self.assertEqual((rc, out), (0, "Cleaned up 0 expired memories\n"))
 
     def test_invalid_arguments_exit_without_traceback(self):
         cases = [
@@ -141,6 +147,10 @@ class MemoryCliTests(IsolatedTest):
             ("claude-code", "save", "k"),
             ("claude-code", "save", "k", "v", "session_context", "soon"),
             ("claude-code", "list", "session_context", "many"),
+            ("claude-code", "save", "k", "v", "session_context", "3000000"),
+            ("claude-code", "save", "k", "v", "session_context", "99999999999"),
+            ("claude-code", "list", "session_context", "-1"),
+            ("claude-code", "list", "session_context", "0"),
         ]
         for args in cases:
             with self.subTest(args=args):
@@ -161,6 +171,114 @@ class MemoryDatabaseGuardTests(IsolatedTest):
             with self.assertRaisesRegex(OSError, "regular file"):
                 memory.AgentMemory("codex", project="fixture")
         self.assertTrue(stat.S_ISFIFO((directory / "memory.db").lstat().st_mode))
+
+
+class MemoryHookCliTests(IsolatedTest):
+    """The per-agent hooks write the same table as memory.py and must agree
+    with it on what a TTL means and which arguments are valid."""
+
+    def hook(self, *args):
+        script = UI_DIR / "memory" / "hooks" / "codex-memory-hook.py"
+        proc = self.run_cmd([sys.executable, str(script), *args])
+        return proc.returncode, proc.stdout.decode(), proc.stderr.decode()
+
+    def memory_cli(self, *args):
+        proc = self.run_cmd([sys.executable, str(SCRIPTS / "memory.py"), *args])
+        return proc.returncode, proc.stdout.decode(), proc.stderr.decode()
+
+    def test_invalid_ttl_and_limit_exit_without_traceback(self):
+        project = str(self.root.resolve())
+        self.assertEqual(self.hook("save", "k", "live", "session_context", project)[0], 0)
+        cases = [
+            ("save", "k", "gone", "session_context", project, "0"),
+            ("save", "k", "gone", "session_context", project, "-1"),
+            ("save", "k", "gone", "session_context", project, "soon"),
+            ("save", "k", "gone", "session_context", project, "3000000"),
+            ("save", "k", "gone", "session_context", project, "99999999999"),
+            ("list", "session_context", project, "-1"),
+            ("list", "session_context", project, "0"),
+            ("list", "session_context", project, "many"),
+        ]
+        for args in cases:
+            with self.subTest(args=args):
+                rc, out, err = self.hook(*args)
+                self.assertEqual(rc, 1)
+                self.assertNotIn("Traceback", err)
+                self.assertNotIn("Saved", out)
+                self.assertTrue(out.strip())
+        self.assertEqual(self.hook("load", "k", "session_context", project)[:2],
+                         (0, "live\n"))
+
+    def test_hook_and_memory_cli_agree_on_ttl(self):
+        project = str(self.root.resolve())
+        for ttl in ("0", "-1", "36501"):
+            with self.subTest(ttl=ttl):
+                hook_rc = self.hook("save", "h", "v", "session_context", project, ttl)[0]
+                cli_rc = self.memory_cli("codex", "save", "m", "v", "session_context", ttl)[0]
+                self.assertEqual((hook_rc, cli_rc), (1, 1))
+        self.assertEqual(self.hook("save", "h", "v", "session_context", project, "2")[0], 0)
+        self.assertEqual(self.memory_cli("codex", "save", "m", "v", "session_context", "2")[0], 0)
+        self.assertEqual(self.hook("load", "m", "session_context", project)[:2], (0, "v\n"))
+        self.assertEqual(self.memory_cli("codex", "load", "h")[:2], (0, "v\n"))
+
+    def test_hook_save_function_rejects_overflowing_ttl(self):
+        with mock.patch.dict(os.environ, self.env):
+            hook = load_module("setup_family_hook_ttl",
+                               UI_DIR / "memory" / "hooks" / "codex-memory-hook.py")
+            hook.init_db()
+            with self.assertRaises(ValueError):
+                hook.save_memory("k", "v", project="p", ttl_days=99_999_999_999)
+            hook.save_memory("expired", "v", project="p", ttl_days=0)
+            self.assertIsNone(hook.load_memory("expired", project="p"))
+
+
+class LauncherStateEnvironmentTests(IsolatedTest):
+    """launch-agent.sh must not exec the agent when the AE state
+    environment cannot be prepared: eval "$(failing)" returns 0."""
+
+    def setUp(self):
+        super().setUp()
+        self.unified = self.root / "ae" / "unified-integration"
+        (self.unified / "scripts").mkdir(parents=True)
+        (self.unified / "config").mkdir()
+        shutil.copy2(UI_DIR / "launch-agent.sh", self.unified / "launch-agent.sh")
+        shutil.copy2(SCRIPTS / "project_paths.py", self.unified / "scripts" / "project_paths.py")
+        (self.unified / "config" / "detected-agents.sh").write_text("AGENTS=(claude-code)\n")
+        self.bin = self.root / "bin"
+        self.bin.mkdir()
+        self.marker = self.root / "agent-ran"
+        stub = self.bin / "claude"
+        stub.write_text(f"#!/bin/sh\ntouch {str(self.marker)!r}\n")
+        stub.chmod(0o755)
+        self.env.pop("AGENT_ENHANCEMENTS_UNIFIED_DIR", None)
+        self.env.pop("AGENT_ENHANCEMENTS_BASE_DIR", None)
+        self.env["PATH"] = str(self.bin) + os.pathsep + self.env.get("PATH", "")
+
+    def launch(self, state_dir):
+        self.env["AGENT_ENHANCEMENTS_STATE_DIR"] = state_dir
+        proc = self.run_cmd([BASH, str(self.unified / "launch-agent.sh"), "claude-code"])
+        return proc.returncode, proc.stderr.decode()
+
+    def test_relative_state_dir_refuses_to_launch(self):
+        rc, err = self.launch("relative/x")
+        self.assertNotEqual(rc, 0)
+        self.assertIn("AE state environment unavailable", err)
+        self.assertFalse(self.marker.exists())
+
+    def test_symlinked_state_dir_refuses_to_launch(self):
+        real = self.root / "real-state"
+        real.mkdir()
+        link = self.root / "linked-state"
+        link.symlink_to(real, target_is_directory=True)
+        rc, err = self.launch(str(link))
+        self.assertNotEqual(rc, 0)
+        self.assertIn("AE state environment unavailable", err)
+        self.assertFalse(self.marker.exists())
+
+    def test_valid_state_dir_still_launches(self):
+        rc, err = self.launch(str(self.root / "state"))
+        self.assertEqual(rc, 0, err)
+        self.assertTrue(self.marker.exists())
 
 
 class CompressByteSafetyTests(IsolatedTest):

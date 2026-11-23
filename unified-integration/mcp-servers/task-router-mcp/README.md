@@ -46,5 +46,6 @@ python3 unified-integration/mcp-servers/task-router-mcp/server.py   # stdio
 Covered by `unified-integration/tests/test_mcp_servers.py`
 (dispatch → done with stdout; python kind; denylist refusal;
 unknown-id tracking; timeout path) and
-`unified-integration/tests/test_mcp_a_regressions.py` (background-child
-cleanup, workspace removal, registry cap).
+`unified-integration/tests/test_mcp_network_regressions.py`
+(`TestTaskRouterLifecycle`: background-child cleanup, timeout cleanup,
+workspace removal, registry cap).

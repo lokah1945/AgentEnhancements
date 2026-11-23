@@ -19,6 +19,11 @@ from project_paths import memory_root
 MEMORY_ROOT = memory_root()
 DB_PATH = MEMORY_ROOT / "memory.db"
 LIST_VALUE_LIMIT = 200
+# CLI bounds. A TTL must be a positive number of days: 0 or less would
+# overwrite a live row with an already-expired one (the memory hooks used to
+# read 0 as "never expire"), and very large values overflow datetime.
+TTL_DAYS_MAX = 36500
+LIST_LIMIT_MAX = 10000
 
 
 def _redactor() -> Callable[[str], str]:
@@ -79,14 +84,22 @@ class AgentMemory:
 
     def save(self, key: str, value: str, memory_type: str = "session_context",
              metadata: Optional[Dict] = None, ttl_days: Optional[int] = None) -> None:
-        """Save a memory"""
+        """Save a memory.
+
+        ttl_days None never expires; a non-positive value stores an already
+        expired row. Raises ValueError when the expiry is not representable.
+        """
         expires_at = None
         if ttl_days is not None:
             from datetime import timedelta
+            try:
+                expiry = datetime.now(timezone.utc) + timedelta(days=ttl_days)
+            except OverflowError as error:
+                raise ValueError(f"ttl_days out of range: {ttl_days}") from error
             # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
             # against datetime('now') work: the ISO "T" separator sorts
             # after a space and broke timely expiry cleanup.
-            expires_at = (datetime.now(timezone.utc) + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
+            expires_at = expiry.strftime("%Y-%m-%d %H:%M:%S")
 
         meta_json = json.dumps(metadata) if metadata else None
 
@@ -167,13 +180,20 @@ class AgentMemory:
             return cursor.rowcount
 
 
-def _int_arg(raw: str, usage: str) -> int:
-    """Parse an integer CLI argument, exiting with usage text on bad input."""
+def _int_arg(raw: str, usage: str, lo: Optional[int] = None,
+             hi: Optional[int] = None) -> int:
+    """Parse an integer CLI argument within [lo, hi].
+
+    Prints the usage text and exits 1 on a non-integer or out-of-range value.
+    """
     try:
-        return int(raw)
-    except ValueError:
+        value = int(raw)
+    except (ValueError, OverflowError):
+        value = None
+    if value is None or (lo is not None and value < lo) or (hi is not None and value > hi):
         print(usage)
         sys.exit(1)
+    return value
 
 
 def main():
@@ -198,7 +218,12 @@ def main():
         key = sys.argv[3]
         value = sys.argv[4]
         mem_type = sys.argv[5] if len(sys.argv) > 5 else "session_context"
-        ttl = _int_arg(sys.argv[6], "Usage: memory.py <agent> save <key> <value> [type] [ttl_days]") if len(sys.argv) > 6 else None
+        ttl = _int_arg(
+            sys.argv[6],
+            "Usage: memory.py <agent> save <key> <value> [type] [ttl_days]\n"
+            f"ttl_days must be an integer from 1 to {TTL_DAYS_MAX}",
+            lo=1, hi=TTL_DAYS_MAX,
+        ) if len(sys.argv) > 6 else None
         memory.save(key, value, mem_type, ttl_days=ttl)
         print(f"Saved: {key} ({mem_type})")
 
@@ -217,7 +242,12 @@ def main():
 
     elif command == "list":
         mem_type = sys.argv[3] if len(sys.argv) > 3 else None
-        limit = _int_arg(sys.argv[4], "Usage: memory.py <agent> list [type] [limit]") if len(sys.argv) > 4 else 20
+        limit = _int_arg(
+            sys.argv[4],
+            "Usage: memory.py <agent> list [type] [limit]\n"
+            f"limit must be an integer from 1 to {LIST_LIMIT_MAX}",
+            lo=1, hi=LIST_LIMIT_MAX,
+        ) if len(sys.argv) > 4 else 20
         memories = memory.list(mem_type, limit)
         for m in memories:
             print(f"[{m['type']}] {m['key']}: {m['value']} (updated: {m['updated']})")

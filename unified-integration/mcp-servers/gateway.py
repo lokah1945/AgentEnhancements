@@ -18,9 +18,12 @@ import os
 from pathlib import Path
 import re
 import sys
+import threading
 import time
 from typing import Any
 
+import anyio
+import httpx
 import jsonschema
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.shared.exceptions import McpError
@@ -49,6 +52,10 @@ from api_config import (
 
 # search-mcp provider names, aligned with api_config.BUILTIN_ANY_OF order.
 SEARCH_PROVIDERS = ("you", "tavily", "exa", "firecrawl", "newsapi", "serper")
+
+# Deadline for every ae_health probe (they run concurrently), so one slow or
+# busy backend reports "timeout" instead of blocking the whole health call.
+HEALTH_PROBE_TIMEOUT = 10.0
 
 
 def external_fingerprint(settings: dict, config: dict) -> str:
@@ -202,12 +209,24 @@ class External:
                                 continue
                             try:
                                 response = await session.call_tool(tool, arguments)
-                            except McpError:
+                            except McpError as exc:
                                 # A JSON-RPC error response (unknown tool,
                                 # invalid params) leaves the connection usable.
+                                # The SDK also reports its own read timeout as
+                                # an McpError; a slow valid call is not a bad
+                                # request, so do not tell the agent it is one.
+                                if getattr(exc.error, "code", None) == httpx.codes.REQUEST_TIMEOUT:
+                                    message = (
+                                        "External MCP request timed out; the backend "
+                                        "may still be processing it."
+                                    )
+                                else:
+                                    message = (
+                                        "External MCP rejected the request "
+                                        "(unknown tool or invalid arguments)."
+                                    )
                                 if not result.done():
-                                    result.set_result(failed(
-                                        "External MCP rejected the request (unknown tool or invalid arguments)."))
+                                    result.set_result(failed(message))
                                 continue
                             except Exception:
                                 response = failed(
@@ -267,6 +286,12 @@ class Gateway:
         self.fingerprints: dict[str, str] = {}
         self.sessions: set = set()
         self.module_locks = {name: asyncio.Lock() for name in BUILTINS}
+        # Bundled modules are not thread-safe. The asyncio lock above keeps
+        # the event loop from queueing parallel calls; this one serializes
+        # the worker threads themselves, whatever happens on the asyncio side.
+        self.thread_locks = {name: threading.Lock() for name in BUILTINS}
+        self.health_timeout = HEALTH_PROBE_TIMEOUT
+        self.background: set[asyncio.Future] = set()
         self.signature = ""
         self.lock = asyncio.Lock()
         self.server = Server(
@@ -425,107 +450,147 @@ class Gateway:
 
     def _call_bundled(self, server: str, original: str, arguments: dict) -> tuple[Any, dict] | None:
         """Recheck readiness inside the executor, immediately before invocation."""
-        config, _ = read_config()
-        if original == "health":
-            if not server_state(server, config)["visible"]:
-                return None
-        else:
-            name = public_name(server, original)
-            live = self.tools(config, include_external=False).get(name)
-            if live is None:
-                return None
-            jsonschema.validate(arguments, live[2].inputSchema)
-        result = asyncio.run(self.modules[server].mcp.call_tool(original, arguments))
-        return result, config
+        with self.thread_locks[server]:
+            config, _ = read_config()
+            if original == "health":
+                if not server_state(server, config)["visible"]:
+                    return None
+            else:
+                name = public_name(server, original)
+                live = self.tools(config, include_external=False).get(name)
+                if live is None:
+                    return None
+                jsonschema.validate(arguments, live[2].inputSchema)
+            result = asyncio.run(self.modules[server].mcp.call_tool(original, arguments))
+            return result, config
 
-    async def _run_health(self) -> types.CallToolResult:
-        """Fan out to every visible backend's health entry point.
+    async def _run_bundled_locked(
+        self, server: str, original: str, arguments: dict,
+    ) -> tuple[Any, dict] | None:
+        """Run a bundled call in a worker thread, holding the module lock until it ends.
+
+        A worker thread cannot be interrupted. If the request is cancelled
+        (notifications/cancelled, an ae_health deadline), the lock stays held
+        until the thread has really finished, so the next call to the same
+        module never runs beside it. The drain is shielded from anyio cancel
+        scopes, which would otherwise cancel it again at once.
+        """
+        async with self.module_locks[server]:
+            work = asyncio.ensure_future(
+                asyncio.to_thread(self._call_bundled, server, original, arguments)
+            )
+            try:
+                return await asyncio.shield(work)
+            except asyncio.CancelledError:
+                with anyio.CancelScope(shield=True):
+                    await asyncio.gather(work, return_exceptions=True)
+                raise
+
+    async def _probe_health(self, server: str) -> dict | None:
+        """One backend's health entry; None when a bundled backend went hidden.
 
         Bundled backends keep the proven call_tool execution path (module
         lock + worker thread with its own loop) so blocking IO stays off
         the gateway loop; the FastMCP result (a list of content parts, or
         (parts, structured)) is parsed into the per-backend report.
         """
+        try:
+            if server in self.modules:
+                outcome = await self._run_bundled_locked(server, "health", {})
+                if outcome is None:
+                    return None
+                result, _ = outcome
+                if isinstance(result, tuple):
+                    parts, data = list(result[0]), result[1]
+                elif isinstance(result, dict):
+                    parts = [types.TextContent(
+                        type="text", text=json.dumps(result))]
+                    data = result
+                else:
+                    parts, data = list(result), None
+                if not isinstance(data, dict):
+                    data = {}
+                    if len(parts) == 1 and parts[0].type == "text":
+                        try:
+                            parsed = json.loads(parts[0].text)
+                            if isinstance(parsed, dict):
+                                data = parsed
+                        except ValueError:
+                            pass
+                extras = {
+                    k: v
+                    for k, v in data.items()
+                    if k in ("server", "version", "degraded", "reason")
+                }
+                # Backends that report a provider-availability map
+                # (embeddings: {"openai": bool, "local": bool}) keep it
+                # in the consolidated report: smoke tests assert
+                # credential rotation through it. Booleans only.
+                inner = data.get("backends")
+                if isinstance(inner, dict) and all(
+                    isinstance(v, bool) for v in inner.values()
+                ):
+                    extras["backends"] = inner
+                return {"status": data.get("status", "unknown"), **extras}
+            config, _ = read_config()
+            worker = self.current_external(server, config)
+            if worker is None:
+                return {"status": "unavailable"}
+            response = await worker.call("health", {})
+            text = "\n".join(
+                c.text for c in response.content if c.type == "text"
+            )
+            try:
+                payload = json.loads(text)
+            except ValueError:
+                payload = {}
+            if not isinstance(payload, dict):
+                payload = {}
+            payload = _redact_payload(payload, config)
+            # Same redaction the call_tool path applies: external
+            # MCPs may echo environment values in error text. Only
+            # provenance fields survive, string-clamped.
+            return {
+                "status": payload.get("status", "unknown"),
+                **{
+                    k: (v[:200] if isinstance(v, str) else v)
+                    for k, v in payload.items()
+                    if k in ("server", "version", "degraded", "reason")
+                },
+            }
+        except Exception:  # noqa: BLE001 - one backend must not kill the rest
+            return {"status": "error"}
+
+    async def _run_health(self) -> types.CallToolResult:
+        """Probe every visible backend concurrently under one deadline.
+
+        A backend still running when the deadline passes is reported as
+        "timeout" and its probe is cancelled in the background (a bundled
+        probe keeps its module lock until its worker thread ends).
+        """
         config, _ = read_config()
-        report: dict[str, Any] = {}
         visible = dict.fromkeys(server for server, _, _ in self.tools(config).values()
                                 if server != "__gateway__")
-        for server in visible:
-            try:
-                if server in self.modules:
-                    async with self.module_locks[server]:
-                        outcome = await asyncio.to_thread(self._call_bundled, server, "health", {})
-                    if outcome is None:
-                        continue
-                    result, _ = outcome
-                    if isinstance(result, tuple):
-                        parts, data = list(result[0]), result[1]
-                    elif isinstance(result, dict):
-                        parts = [types.TextContent(
-                            type="text", text=json.dumps(result))]
-                        data = result
-                    else:
-                        parts, data = list(result), None
-                    if not isinstance(data, dict):
-                        data = {}
-                        if len(parts) == 1 and parts[0].type == "text":
-                            try:
-                                parsed = json.loads(parts[0].text)
-                                if isinstance(parsed, dict):
-                                    data = parsed
-                            except ValueError:
-                                pass
-                    extras = {
-                        k: v
-                        for k, v in data.items()
-                        if k in ("server", "version", "degraded", "reason")
-                    }
-                    # Backends that report a provider-availability map
-                    # (embeddings: {"openai": bool, "local": bool}) keep it
-                    # in the consolidated report: smoke tests assert
-                    # credential rotation through it. Booleans only.
-                    inner = data.get("backends")
-                    if isinstance(inner, dict) and all(
-                        isinstance(v, bool) for v in inner.values()
-                    ):
-                        extras["backends"] = inner
-                    report[server] = {
-                        "status": data.get("status", "unknown"),
-                        **extras,
-                    }
-                else:
-                    config, _ = read_config()
-                    worker = self.current_external(server, config)
-                    if worker is None:
-                        report[server] = {"status": "unavailable"}
-                        continue
-                    response = await worker.call("health", {})
-                    text = "\n".join(
-                        c.text for c in response.content if c.type == "text"
-                    )
-                    try:
-                        payload = json.loads(text)
-                    except ValueError:
-                        payload = {}
-                    if not isinstance(payload, dict):
-                        payload = {}
-                    payload = _redact_payload(payload, config)
-                    # Same redaction the call_tool path applies: external
-                    # MCPs may echo environment values in error text. Only
-                    # provenance fields survive, string-clamped.
-                    report[server] = {
-                        "status": payload.get("status", "unknown"),
-                        **{
-                            k: (
-                                v[:200]
-                                if isinstance(v, str) else v
-                            )
-                            for k, v in payload.items()
-                            if k in ("server", "version", "degraded", "reason")
-                        },
-                    }
-            except Exception:  # noqa: BLE001 - one backend must not kill the rest
+        probes = {server: asyncio.ensure_future(self._probe_health(server))
+                  for server in visible}
+        try:
+            if probes:
+                await asyncio.wait(probes.values(), timeout=self.health_timeout)
+        finally:
+            for probe in probes.values():
+                if not probe.done():
+                    probe.cancel()
+                    # Keep a reference while a cancelled probe drains.
+                    self.background.add(probe)
+                    probe.add_done_callback(self.background.discard)
+        report: dict[str, Any] = {}
+        for server, probe in probes.items():
+            if not probe.done() or probe.cancelled():
+                report[server] = {"status": "timeout"}
+            elif probe.exception() is not None:
                 report[server] = {"status": "error"}
+            elif (entry := probe.result()) is not None:
+                report[server] = entry
         overall = (
             "ok"
             if all(v.get("status") == "ok" for v in report.values()) or not report
@@ -565,8 +630,7 @@ class Gateway:
             if server in self.modules:
                 # Bundled sync tools include blocking IO. Keep the MCP event
                 # loop available for cancellation, list changes and other calls.
-                async with self.module_locks[server]:
-                    outcome = await asyncio.to_thread(self._call_bundled, server, original, arguments)
+                outcome = await self._run_bundled_locked(server, original, arguments)
                 if outcome is None:
                     return failed("Tool is unavailable in the current ui.api.json configuration.")
                 result, config = outcome

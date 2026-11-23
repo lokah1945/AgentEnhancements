@@ -320,8 +320,9 @@ class FfmpegSecurityTests(IsolatedSecurityTest):
         output = self.root / "output.mp4"
 
         def execute(command):
-            # Stand in for ffmpeg: concat verifies the output was produced.
-            output.write_bytes(b"fixture video")
+            # Stand in for ffmpeg: write the path ffmpeg was given (a private
+            # staging file that concat then moves to the output).
+            Path(command[-1]).write_bytes(b"fixture video")
             return {"ok": True}
 
         with patch.object(self.ffmpeg, "_run", side_effect=execute):
@@ -329,6 +330,7 @@ class FfmpegSecurityTests(IsolatedSecurityTest):
         self.assertTrue(result.get("ok"), result)
         self.assertEqual(protected.read_text(), "protected fixture")
         self.assertTrue(scratch.is_symlink())
+        self.assertEqual(output.read_bytes(), b"fixture video")
 
 
 class CredentialRedirectTests(IsolatedSecurityTest):

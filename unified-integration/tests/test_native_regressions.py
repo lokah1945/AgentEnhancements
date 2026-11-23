@@ -115,11 +115,37 @@ class NativeRegressionTests(unittest.TestCase):
         empty.mkdir()
         self.env["PATH"] = str(empty)
         result = self.run_native("--agent", "all", "--mcp-only")
-        self.assertEqual(result.returncode, 0, result.stderr)
+        # Configuring nothing must not look like success, and every skipped
+        # core host must be named so the user knows how to fix it.
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        for agent, command in (("claude-code", "claude"), ("codex", "codex"),
+                               ("opencode", "opencode")):
+            self.assertIn(f"[native] {agent}: '{command}' not found on PATH, skipped",
+                          result.stderr)
+        self.assertIn("nothing configured", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
         self.assertFalse((self.home / ".claude.json").exists())
         self.assertFalse((self.home / ".codex" / "config.toml").exists())
         self.assertFalse((self.home / ".config" / "opencode").exists())
         self.assertFalse((self.home / ".hermes" / "config.yaml").exists())
+
+    def test_agent_all_names_skipped_hosts_when_some_are_configured(self):
+        bin_dir = self.home / "bin"
+        bin_dir.mkdir()
+        exe = bin_dir / "codex"
+        exe.write_text("#!/bin/sh\nexit 0\n")
+        exe.chmod(0o755)
+        self.env["PATH"] = str(bin_dir)
+        result = self.run_native("--agent", "all", "--mcp-only")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("[native] codex: configured MCP", result.stdout)
+        self.assertIn("[native] claude-code: 'claude' not found on PATH, skipped",
+                      result.stderr)
+        self.assertIn("[native] opencode: 'opencode' not found on PATH, skipped",
+                      result.stderr)
+        self.assertNotIn("codex: 'codex' not found", result.stderr)
+        self.assertNotIn("hermes", result.stderr)
+        self.assertFalse((self.home / ".claude.json").exists())
 
     def test_agent_all_continues_after_one_host_fails(self):
         bin_dir = self.home / "bin"

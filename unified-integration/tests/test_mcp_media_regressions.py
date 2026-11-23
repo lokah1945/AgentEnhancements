@@ -5,6 +5,9 @@
 - video timeline rejects NaN/Infinity/negative/bool times and stores floats.
 - ffmpeg cut/thumbnail past the end of the media report an error, a stale
   output is never mistaken for a new result, and in-place edits are refused.
+- a failed or timed-out ffmpeg run leaves an existing ``out`` untouched (the
+  result is staged and moved into place only on success), and a directory
+  or unwritable ``out`` returns a structured error instead of raising.
 - the built-in /tmp media root is resolved like candidates are (macOS
   /tmp -> /private/tmp).
 - smoke_test.py leaves the caller's state, memory and temp dir untouched.
@@ -204,7 +207,9 @@ class TestFfmpegOutputChecks(unittest.TestCase):
         with patch.object(self.mod, "_media_duration", return_value=None):
             result = self.mod.TOOLS["thumbnail"](str(self.clip), 50.0, str(out))
         self.assertIn("error", result)
-        self.assertFalse(out.exists())
+        # The earlier file is kept (never deleted on failure) but is not
+        # reported as the new result.
+        self.assertEqual(out.read_bytes(), b"stale thumbnail from an earlier run")
 
     def test_in_place_output_is_refused_and_input_kept(self):
         size = self.clip.stat().st_size
@@ -218,6 +223,97 @@ class TestFfmpegOutputChecks(unittest.TestCase):
         result = self.mod.TOOLS["thumbnail"](str(self.clip), 0.5, str(out))
         self.assertTrue(result.get("ok"), result)
         self.assertGreater(out.stat().st_size, 0)
+
+    def _staging_leftovers(self, directory: Path) -> list[Path]:
+        return [item for item in directory.iterdir()
+                if item.name.startswith(".ffmpeg-")]
+
+    def test_failed_run_keeps_existing_output(self):
+        # extract_audio on a video-only clip makes ffmpeg exit non-zero; the
+        # earlier good file at out must survive, and no staging dir remains.
+        work = Path(tempfile.mkdtemp(dir=self.tmp))
+        out = work / "keep.m4a"
+        out.write_bytes(b"earlier good render")
+        result = self.mod.TOOLS["extract_audio"](str(self.clip), str(out))
+        self.assertIn("error", result)
+        self.assertEqual(out.read_bytes(), b"earlier good render")
+        self.assertEqual(self._staging_leftovers(work), [])
+
+    def test_bad_codec_keeps_existing_output(self):
+        work = Path(tempfile.mkdtemp(dir=self.tmp))
+        out = work / "keep.mp4"
+        out.write_bytes(b"earlier good render")
+        result = self.mod.TOOLS["transcode"](str(self.clip), "nosuchcodec",
+                                             str(out))
+        self.assertIn("error", result)
+        self.assertEqual(out.read_bytes(), b"earlier good render")
+        self.assertEqual(self._staging_leftovers(work), [])
+
+    def test_timeout_keeps_existing_output_and_cleans_staging(self):
+        work = Path(tempfile.mkdtemp(dir=self.tmp))
+        out = work / "keep.jpg"
+        out.write_bytes(b"earlier good render")
+
+        def timed_out(cmd, **_kwargs):
+            # ffmpeg had started writing the staged file when it was killed.
+            Path(cmd[-1]).write_bytes(b"partial")
+            raise subprocess.TimeoutExpired(cmd, 300)
+
+        with patch.object(self.mod.subprocess, "run", side_effect=timed_out), \
+                patch.object(self.mod, "_media_duration", return_value=None):
+            result = self.mod.TOOLS["thumbnail"](str(self.clip), 0.5, str(out))
+        self.assertIn("error", result)
+        self.assertEqual(out.read_bytes(), b"earlier good render")
+        self.assertEqual(self._staging_leftovers(work), [])
+
+    def test_success_replaces_existing_output(self):
+        work = Path(tempfile.mkdtemp(dir=self.tmp))
+        out = work / "frame.jpg"
+        out.write_bytes(b"old")
+        result = self.mod.TOOLS["thumbnail"](str(self.clip), 0.5, str(out))
+        self.assertTrue(result.get("ok"), result)
+        self.assertNotEqual(out.read_bytes(), b"old")
+        self.assertGreater(out.stat().st_size, 0)
+        self.assertEqual(self._staging_leftovers(work), [])
+
+    def test_concat_still_works_and_cleans_staging(self):
+        work = Path(tempfile.mkdtemp(dir=self.tmp))
+        out = work / "joined.mp4"
+        result = self.mod.TOOLS["concat"]([str(self.clip), str(self.clip)],
+                                          str(out))
+        self.assertTrue(result.get("ok"), result)
+        self.assertGreater(out.stat().st_size, 0)
+        self.assertEqual(sorted(item.name for item in work.iterdir()),
+                         ["joined.mp4"])
+
+    def test_directory_out_is_structured_error(self):
+        target = Path(tempfile.mkdtemp(dir=self.tmp))
+        calls = {
+            "cut": lambda: self.mod.TOOLS["cut"](str(self.clip), 0.0, 1.0, str(target)),
+            "concat": lambda: self.mod.TOOLS["concat"](
+                [str(self.clip), str(self.clip)], str(target)),
+            "transcode": lambda: self.mod.TOOLS["transcode"](
+                str(self.clip), "libx264", str(target)),
+            "extract_audio": lambda: self.mod.TOOLS["extract_audio"](
+                str(self.clip), str(target)),
+            "thumbnail": lambda: self.mod.TOOLS["thumbnail"](
+                str(self.clip), 0.5, str(target)),
+        }
+        for name, call in calls.items():
+            with self.subTest(tool=name):
+                result = call()
+                self.assertIsInstance(result, dict)
+                self.assertIn("error", result)
+                self.assertIn("not a directory", result["error"])
+                self.assertTrue(target.is_dir())
+
+    def test_unwritable_parent_is_structured_error(self):
+        blocker = self.tmp / "blocker-file"
+        blocker.write_bytes(b"x")
+        result = self.mod.TOOLS["thumbnail"](
+            str(self.clip), 0.5, str(blocker / "sub" / "frame.jpg"))
+        self.assertIsInstance(result, dict)
+        self.assertIn("cannot prepare output", result.get("error", ""))
 
 
 @unittest.skipUnless(has_ffmpeg(), "ffmpeg/ffprobe binaries not installed")

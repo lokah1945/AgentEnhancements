@@ -92,16 +92,22 @@ def _media_duration(path: Path) -> float | None:
 
 
 def _prepare_output(output: Path, *inputs: Path) -> str | None:
-    """Refuse in-place edits and drop a stale output before ffmpeg runs.
+    """Validate the output target before any ffmpeg work starts.
 
-    ffmpeg can exit 0 without writing anything (for example when seeking
-    past the end), so a leftover file from an earlier run must not be
-    mistaken for the new result.
+    Refuses in-place edits, a target that exists but is not a regular file
+    (a directory, for example) and a parent directory that cannot be
+    created. Nothing at ``output`` is changed here: ffmpeg writes into a
+    private staging directory and ``_render`` only moves a fresh, non-empty
+    result onto ``output``, so a failed run never destroys an earlier file.
     """
     if output in inputs:
         return "out must differ from the input file(s)"
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.unlink(missing_ok=True)
+    if output.exists() and not output.is_file():
+        return "out must be a file path, not a directory"
+    try:
+        output.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return f"cannot prepare output {output}: {exc.strerror or exc}"
     return None
 
 
@@ -110,10 +116,41 @@ def _check_output(output: Path, result: dict) -> dict:
     if "error" in result:
         return result
     if not output.is_file() or output.stat().st_size == 0:
-        output.unlink(missing_ok=True)
         return {"error": "ffmpeg produced no output",
                 "hint": result.get("stderr_tail", "")}
     return result
+
+
+def _render(output: Path, inputs: tuple[Path, ...],
+            run: Callable[[Path, Path], dict]) -> dict:
+    """Run ``run(staged_output, staging_dir)`` and publish its result atomically.
+
+    ffmpeg writes to a file with the same extension (so the same muxer)
+    inside a private ``mkdtemp`` directory next to ``output``. Only a
+    successful run that produced a non-empty file is moved onto ``output``
+    with ``os.replace``; on any failure, including a timeout, the staging
+    directory is removed and an existing ``output`` is left untouched. A
+    stale ``output`` is therefore never reported as the new result.
+    """
+    problem = _prepare_output(output, *inputs)
+    if problem:
+        return {"error": problem}
+    try:
+        staging = Path(tempfile.mkdtemp(prefix=".ffmpeg-", dir=output.parent))
+    except OSError as exc:
+        return {"error": f"cannot prepare output {output}: {exc.strerror or exc}"}
+    try:
+        staged = staging / f"output{output.suffix}"
+        result = _check_output(staged, run(staged, staging))
+        if "error" in result:
+            return result
+        try:
+            os.replace(staged, output)
+        except OSError as exc:
+            return {"error": f"cannot write output {output}: {exc.strerror or exc}"}
+        return result
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
 
 
 def _duration_seconds(raw: str | int | float) -> float | None:
@@ -194,12 +231,9 @@ def cut(path: str, start: float, end: float, out: str) -> dict:
             return {"error": f"start={start_s}s is at or beyond the media "
                              f"duration ({duration:.3f}s)"}
         end_s = min(end_s, duration)
-    problem = _prepare_output(output, target)
-    if problem:
-        return {"error": problem}
-    result = _check_output(output, _run([
+    result = _render(output, (target,), lambda staged, _dir: _run([
         FFMPEG, "-y", "-ss", str(start_s), "-to", str(end_s),
-        "-i", str(target), "-c", "copy", str(output)]))
+        "-i", str(target), "-c", "copy", str(staged)]))
     if "error" in result:
         return result
     return {"ok": True, "out": str(output),
@@ -222,24 +256,21 @@ def concat(paths: list[str], out: str) -> dict:
     output, err = _validate_path(out, must_exist=False)
     if err:
         return {"error": err}
-    problem = _prepare_output(output, *resolved)
-    if problem:
-        return {"error": problem}
-    # A predictable sibling filename can be a symlink to unrelated user data.
-    # mkstemp atomically claims a private file; quote paths for ffconcat's
-    # parser, whose single-quoted tokens otherwise allow directive injection.
-    descriptor, scratch = tempfile.mkstemp(prefix=".ae-concat-", suffix=".txt", dir=output.parent)
-    list_file = Path(scratch)
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+
+    def run(staged: Path, staging: Path) -> dict:
+        # The list file lives in the private staging directory (mkdtemp, 0700),
+        # so no predictable sibling path can be a symlink to user data. Quote
+        # paths for ffconcat's parser, whose single-quoted tokens otherwise
+        # allow directive injection.
+        list_file = staging / "concat-list.txt"
+        with open(list_file, "x", encoding="utf-8") as stream:
             for path in resolved:
                 escaped = str(path).replace("'", "'\\''")
                 stream.write(f"file '{escaped}'\n")
-        result = _run([FFMPEG, "-y", "-f", "concat", "-safe", "0",
-                       "-i", str(list_file), "-c", "copy", str(output)])
-    finally:
-        list_file.unlink(missing_ok=True)
-    result = _check_output(output, result)
+        return _run([FFMPEG, "-y", "-f", "concat", "-safe", "0",
+                     "-i", str(list_file), "-c", "copy", str(staged)])
+
+    result = _render(output, tuple(resolved), run)
     if "error" in result:
         return result
     return {"ok": True, "out": str(output), "clips": len(resolved)}
@@ -257,12 +288,9 @@ def transcode(path: str, codec: str = "libx264", out: str | None = None) -> dict
                                  must_exist=False)
     if err:
         return {"error": err}
-    problem = _prepare_output(output, target)
-    if problem:
-        return {"error": problem}
-    result = _check_output(output, _run([
+    result = _render(output, (target,), lambda staged, _dir: _run([
         FFMPEG, "-y", "-i", str(target),
-        "-c:v", codec, "-c:a", "copy", str(output)]))
+        "-c:v", codec, "-c:a", "copy", str(staged)]))
     if "error" in result:
         return result
     return {"ok": True, "out": str(output), "codec": codec}
@@ -277,12 +305,9 @@ def extract_audio(path: str, out: str) -> dict:
     output, err = _validate_path(out, must_exist=False)
     if err:
         return {"error": err}
-    problem = _prepare_output(output, target)
-    if problem:
-        return {"error": problem}
-    result = _check_output(output, _run([
+    result = _render(output, (target,), lambda staged, _dir: _run([
         FFMPEG, "-y", "-i", str(target), "-vn",
-        "-c:a", "aac", str(output)]))
+        "-c:a", "aac", str(staged)]))
     if "error" in result:
         return result
     return {"ok": True, "out": str(output)}
@@ -305,12 +330,9 @@ def thumbnail(path: str, t: float = 0.0, out: str | None = None) -> dict:
                                  must_exist=False)
     if err:
         return {"error": err}
-    problem = _prepare_output(output, target)
-    if problem:
-        return {"error": problem}
-    result = _check_output(output, _run([
+    result = _render(output, (target,), lambda staged, _dir: _run([
         FFMPEG, "-y", "-ss", str(at), "-i", str(target),
-        "-frames:v", "1", "-q:v", "2", str(output)]))
+        "-frames:v", "1", "-q:v", "2", str(staged)]))
     if "error" in result:
         return result
     return {"ok": True, "out": str(output), "at_s": at}

@@ -1157,6 +1157,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from project_paths import memory_root
 MEMORY_ROOT = str(memory_root())
 DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
+# Same CLI bounds as scripts/memory.py, which writes the same table: a TTL is
+# a positive number of days and a list limit a positive row count.
+TTL_DAYS_MAX = 36500
+LIST_LIMIT_MAX = 10000
 
 def init_db():
     if os.path.islink(DB_PATH):
@@ -1196,13 +1200,19 @@ def save_memory(key, value, memory_type="session_context", project=None, metadat
     if project is None:
         project = os.path.realpath(os.getcwd())
 
+    # ttl_days None never expires; a non-positive value stores an already
+    # expired row (the same meaning as AgentMemory.save in memory.py).
     expires_at = None
-    if ttl_days:
+    if ttl_days is not None:
         from datetime import timedelta
+        try:
+            expiry = datetime.now(timezone.utc) + timedelta(days=ttl_days)
+        except OverflowError as error:
+            raise ValueError(f"ttl_days out of range: {ttl_days}") from error
         # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
         # against datetime('now') work: the ISO "T" separator sorts
         # after a space and broke timely expiry cleanup.
-        expires_at = (datetime.now(timezone.utc) + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
+        expires_at = expiry.strftime("%Y-%m-%d %H:%M:%S")
 
     meta_json = json.dumps(metadata) if metadata else None
 
@@ -1279,6 +1289,17 @@ def cleanup_expired():
         """)
         return cursor.rowcount
 
+def _int_arg(raw, usage, lo, hi):
+    """Parse an integer CLI argument within [lo, hi], else print usage and exit 1."""
+    try:
+        value = int(raw)
+    except (ValueError, OverflowError):
+        value = None
+    if value is None or value < lo or value > hi:
+        print(usage)
+        sys.exit(1)
+    return value
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: memory-hook.py <command> [args...]")
@@ -1301,7 +1322,12 @@ def main():
         value = sys.argv[3]
         mem_type = sys.argv[4] if len(sys.argv) > 4 else "session_context"
         project = sys.argv[5] if len(sys.argv) > 5 else None
-        ttl = int(sys.argv[6]) if len(sys.argv) > 6 else None
+        ttl = _int_arg(
+            sys.argv[6],
+            "Usage: memory-hook.py save <key> <value> [type] [project] [ttl_days]\n"
+            f"ttl_days must be an integer from 1 to {TTL_DAYS_MAX}",
+            1, TTL_DAYS_MAX,
+        ) if len(sys.argv) > 6 else None
         save_memory(key, value, mem_type, project, ttl_days=ttl)
         print(f"Saved: {key} ({mem_type})")
 
@@ -1322,7 +1348,12 @@ def main():
     elif command == "list":
         mem_type = sys.argv[2] if len(sys.argv) > 2 else None
         project = sys.argv[3] if len(sys.argv) > 3 else None
-        limit = int(sys.argv[4]) if len(sys.argv) > 4 else 20
+        limit = _int_arg(
+            sys.argv[4],
+            "Usage: memory-hook.py list [type] [project] [limit]\n"
+            f"limit must be an integer from 1 to {LIST_LIMIT_MAX}",
+            1, LIST_LIMIT_MAX,
+        ) if len(sys.argv) > 4 else 20
         memories = list_memories(mem_type, project, limit)
         for m in memories:
             print(f"[{m['type']}] {m['key']}: {m['value']} (updated: {m['updated']})")
@@ -1973,7 +2004,13 @@ fi
 # variables take precedence.
 UNIFIED_DIR="${AGENT_ENHANCEMENTS_UNIFIED_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 BASE_DIR="${AGENT_ENHANCEMENTS_BASE_DIR:-$(dirname "$UNIFIED_DIR")}"
-eval "$(python3 "$UNIFIED_DIR/scripts/project_paths.py" shell)"
+# Assign first: under set -e, eval "$(failing command)" still returns 0 and
+# would launch the agent without the isolated AE state environment.
+state_env="$(python3 "$UNIFIED_DIR/scripts/project_paths.py" shell)" || {
+    echo "AE state environment unavailable; refusing to launch" >&2
+    exit 1
+}
+eval "$state_env"
 
 # Detected agents (written by setup.sh); pre-declared so the script also
 # works when the file is missing.
@@ -2052,6 +2089,7 @@ Loads and matches skills from all sources based on task context
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -2069,6 +2107,13 @@ AGENT_ALIASES = {"claude": "claude-code", "claude-code": "claude-code",
                  "gemini-cli": "gemini-cli", "opencode": "opencode",
                  "cursor": "cursor", "windsurf": "windsurf", "copilot": "copilot", "kiro": "kiro",
                  "hermes": "hermes"}
+
+# Frontmatter: a bare "---" opening line, then everything up to the first
+# line that is itself a bare "---" fence. A "---" inside a value or an
+# indented block is content, not a fence.
+FRONTMATTER_RE = re.compile(
+    r"\A---[ \t]*\r?\n(.*?)^---[ \t]*\r?$(.*)\Z", re.DOTALL | re.MULTILINE
+)
 
 class SkillsLoader:
     def __init__(self, agent: str = "claude-code"):
@@ -2129,20 +2174,19 @@ class SkillsLoader:
         """Parse SKILL.md file"""
         content = skill_file.read_text()
         # Parse frontmatter
-        if content.startswith("---"):
-            parts = content.split("---", 2)
-            if len(parts) >= 3:
-                try:
-                    import yaml
-                    frontmatter = yaml.safe_load(parts[1])
-                except ImportError:
-                    print(
-                        "Warning: PyYAML is not installed; returning raw skill content",
-                        file=sys.stderr,
-                    )
-                    return {"raw": content, "file": str(skill_file)}
-                body = parts[2].strip()
-                return {"frontmatter": frontmatter, "body": body, "file": str(skill_file)}
+        match = FRONTMATTER_RE.match(content)
+        if match:
+            try:
+                import yaml
+                frontmatter = yaml.safe_load(match.group(1))
+            except ImportError:
+                print(
+                    "Warning: PyYAML is not installed; returning raw skill content",
+                    file=sys.stderr,
+                )
+                return {"raw": content, "file": str(skill_file)}
+            body = match.group(2).strip()
+            return {"frontmatter": frontmatter, "body": body, "file": str(skill_file)}
         return {"raw": content, "file": str(skill_file)}
 
 
@@ -2197,6 +2241,11 @@ from project_paths import memory_root
 MEMORY_ROOT = memory_root()
 DB_PATH = MEMORY_ROOT / "memory.db"
 LIST_VALUE_LIMIT = 200
+# CLI bounds. A TTL must be a positive number of days: 0 or less would
+# overwrite a live row with an already-expired one (the memory hooks used to
+# read 0 as "never expire"), and very large values overflow datetime.
+TTL_DAYS_MAX = 36500
+LIST_LIMIT_MAX = 10000
 
 
 def _redactor() -> Callable[[str], str]:
@@ -2257,14 +2306,22 @@ class AgentMemory:
 
     def save(self, key: str, value: str, memory_type: str = "session_context",
              metadata: Optional[Dict] = None, ttl_days: Optional[int] = None) -> None:
-        """Save a memory"""
+        """Save a memory.
+
+        ttl_days None never expires; a non-positive value stores an already
+        expired row. Raises ValueError when the expiry is not representable.
+        """
         expires_at = None
         if ttl_days is not None:
             from datetime import timedelta
+            try:
+                expiry = datetime.now(timezone.utc) + timedelta(days=ttl_days)
+            except OverflowError as error:
+                raise ValueError(f"ttl_days out of range: {ttl_days}") from error
             # SQLite format ("YYYY-MM-DD HH:MM:SS") so that comparisons
             # against datetime('now') work: the ISO "T" separator sorts
             # after a space and broke timely expiry cleanup.
-            expires_at = (datetime.now(timezone.utc) + timedelta(days=ttl_days)).strftime("%Y-%m-%d %H:%M:%S")
+            expires_at = expiry.strftime("%Y-%m-%d %H:%M:%S")
 
         meta_json = json.dumps(metadata) if metadata else None
 
@@ -2345,13 +2402,20 @@ class AgentMemory:
             return cursor.rowcount
 
 
-def _int_arg(raw: str, usage: str) -> int:
-    """Parse an integer CLI argument, exiting with usage text on bad input."""
+def _int_arg(raw: str, usage: str, lo: Optional[int] = None,
+             hi: Optional[int] = None) -> int:
+    """Parse an integer CLI argument within [lo, hi].
+
+    Prints the usage text and exits 1 on a non-integer or out-of-range value.
+    """
     try:
-        return int(raw)
-    except ValueError:
+        value = int(raw)
+    except (ValueError, OverflowError):
+        value = None
+    if value is None or (lo is not None and value < lo) or (hi is not None and value > hi):
         print(usage)
         sys.exit(1)
+    return value
 
 
 def main():
@@ -2376,7 +2440,12 @@ def main():
         key = sys.argv[3]
         value = sys.argv[4]
         mem_type = sys.argv[5] if len(sys.argv) > 5 else "session_context"
-        ttl = _int_arg(sys.argv[6], "Usage: memory.py <agent> save <key> <value> [type] [ttl_days]") if len(sys.argv) > 6 else None
+        ttl = _int_arg(
+            sys.argv[6],
+            "Usage: memory.py <agent> save <key> <value> [type] [ttl_days]\n"
+            f"ttl_days must be an integer from 1 to {TTL_DAYS_MAX}",
+            lo=1, hi=TTL_DAYS_MAX,
+        ) if len(sys.argv) > 6 else None
         memory.save(key, value, mem_type, ttl_days=ttl)
         print(f"Saved: {key} ({mem_type})")
 
@@ -2395,7 +2464,12 @@ def main():
 
     elif command == "list":
         mem_type = sys.argv[3] if len(sys.argv) > 3 else None
-        limit = _int_arg(sys.argv[4], "Usage: memory.py <agent> list [type] [limit]") if len(sys.argv) > 4 else 20
+        limit = _int_arg(
+            sys.argv[4],
+            "Usage: memory.py <agent> list [type] [limit]\n"
+            f"limit must be an integer from 1 to {LIST_LIMIT_MAX}",
+            lo=1, hi=LIST_LIMIT_MAX,
+        ) if len(sys.argv) > 4 else 20
         memories = memory.list(mem_type, limit)
         for m in memories:
             print(f"[{m['type']}] {m['key']}: {m['value']} (updated: {m['updated']})")

@@ -81,23 +81,36 @@ opencode = Path(os.environ.get('XDG_CONFIG_HOME', home / '.config')) / 'opencode
 claude_mcp = claude / '.claude.json' if os.environ.get('CLAUDE_CONFIG_DIR') else home / '.claude.json'
 configs = [claude_mcp, Path(sys.argv[2]) / '.mcp.json',
            codex / 'config.toml', opencode / 'opencode.json', opencode / 'opencode.jsonc']
+
+
+def enabled(entry):
+    # A server entry counts only when it is a table/object that is not
+    # switched off; any other shape (list, string, null) is malformed.
+    return (isinstance(entry, dict) and entry.get('enabled', True)
+            and not entry.get('disabled', False))
+
+
+# One malformed or unexpectedly shaped host config must not hide a valid
+# entry in a later file: wrong shapes are skipped, never raised.
 for path in configs:
     if not path.is_file():
         continue
     try:
         doc = tomllib.loads(path.read_text()) if path.suffix == '.toml' else json5.loads(path.read_text())
-        for key in ['mcpServers', 'mcp_servers', 'mcp']:
-            servers = doc.get(key, {})
-            if key == 'mcp':
-                servers = servers.get('servers', servers)
-            if 'agent-enhancements' in servers and server_state(name)['visible']:
-                gateway = servers['agent-enhancements']
-                if gateway.get('enabled', True) and not gateway.get('disabled', False):
-                    raise SystemExit(0)
-            if name in servers and servers[name].get('enabled', True) and not servers[name].get('disabled', False):
-                raise SystemExit(0)
     except (ValueError, OSError):
         continue
+    if not isinstance(doc, dict):
+        continue
+    for key in ['mcpServers', 'mcp_servers', 'mcp']:
+        servers = doc.get(key)
+        if key == 'mcp' and isinstance(servers, dict) and isinstance(servers.get('servers'), dict):
+            servers = servers['servers']
+        if not isinstance(servers, dict):
+            continue
+        if enabled(servers.get('agent-enhancements')) and server_state(name)['visible']:
+            raise SystemExit(0)
+        if enabled(servers.get(name)):
+            raise SystemExit(0)
 raise SystemExit(1)
 PYCONFIG
 }

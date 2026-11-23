@@ -168,7 +168,7 @@ in `unified-integration/scripts/`.
 
 - **Python >= 3.11** (enforced by `unified-integration/scripts/runtime_dependencies.py`;
   setup refuses older interpreters)
-- Node.js >= 18 only for the optional `mcp-servers/agent_browser` server
+- Node.js >= 20 only for the optional `mcp-servers/agent_browser` server
 
 ### Install from a checkout (recommended)
 
@@ -473,8 +473,10 @@ Persistent, cross-session memory backed by SQLite with parameterized queries:
 # Save / load / list (any agent)
 python3 unified-integration/scripts/memory.py claude-code save \
   "prefers_typescript_strict" "yes" "user_preferences"
-# `load` and `delete` default to the `session_context` type, so pass the type used with `save`
-python3 unified-integration/scripts/memory.py claude-code load "prefers_typescript_strict" "user_preferences"
+# `load` and `delete` default to the `session_context` type,
+# so pass the type used with `save`
+python3 unified-integration/scripts/memory.py claude-code load \
+  "prefers_typescript_strict" "user_preferences"
 python3 unified-integration/scripts/memory.py claude-code list
 
 # All agents with native hooks (Claude Code, Codex, OpenCode): automatic

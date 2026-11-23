@@ -52,6 +52,35 @@ fixed; each code fix carries a regression test (486 → 613 tests).
   readiness now point to the current release record
   ([audit index](audit/README.md)).
 
+A final assurance pass (diff review of the above plus a second audit of
+untouched areas, 35 findings confirmed by a 3-vote adversarial panel) added:
+
+- agent_browser: the in-house browser MCP server is repaired — valid
+  JSON-RPC 2.0 framing over buffered stdio, logs on stderr, every advertised
+  tool wired, one session manager, no navigation/router leaks; secure
+  defaults (web security, site isolation and TLS checks stay on unless
+  `AGENT_BROWSER_INSECURE` is set; HTTP binds 127.0.0.1 with Origin check,
+  body limit and optional bearer token); Node >= 20; 63 offline tests.
+- Gateway: a cancelled bundled call keeps its module lock until the worker
+  ends; external timeouts are reported as timeouts; `ae_health` probes run
+  concurrently under one deadline.
+- Memory and hooks share one TTL rule (CLI accepts 1-36500 days, bounded
+  list limit, no tracebacks); skill frontmatter closes only on a bare `---`
+  line; `launch-agent.sh` refuses to start without the isolated state.
+- ffmpeg-mcp renders into private staging so a failed run never deletes an
+  existing output, and a directory `out` is a structured error;
+  `native-integration.py --agent all` explains skipped hosts; Hermes and
+  OpenCode session caches evict least-recently-used entries; dispatch.sh
+  matches whole words; mcp-test.sh survives a malformed host config;
+  gen_agency_catalog.py refreshes existing entries.
+- Supply chain: cargo-audit 0.23.0 reads the current RustSec database;
+  semver-compatible lock updates (url 2.5.9, form_urlencoded 1.2.3,
+  cookie 0.18.3) clear RUSTSEC-2026-0592 and RUSTSEC-2026-0594.
+- Governance: SECURITY.md, CODEOWNERS, pull request and issue templates,
+  `.editorconfig`.
+- Coverage now meets CONTRACT §6.2: runtime lifecycle, skills loader and
+  memory 100%, compression 87.5% (777 tests).
+
 ## 2026-11-22 — Final production readiness audit remediation
 
 Branch `fix/final-audit-remediation`. Every fix carries a regression test

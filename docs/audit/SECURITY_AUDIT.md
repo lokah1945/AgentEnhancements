@@ -217,13 +217,9 @@ def mcp_block() -> dict:
 - ⚠️ `main.rs` 459KB monolith — hard to audit
 
 ### Python Dependencies (`unified-integration/requirements.txt`)
-```
-tiktoken
-pyyaml
-json5
-keyring
-```
-- ⚠️ No version pinning in requirements.txt
+`unified-integration/requirements.in` lists the direct dependencies and their
+compatibility ranges; `requirements.txt` is the lock compiled from it.
+- ✅ Fully pinned, hash-verified lock (`==` + `--hash`, wheels only, compiled from `requirements.in` with `uv pip compile`; see docs/UPDATING.md). `dependency-audit.yml` fails when the committed lock differs from a fresh compile
 - ✅ `pip-audit` gates the hashed lock in `.github/workflows/dependency-audit.yml` (C-03 resolved)
 - ⚠️ `keyring` optional but used for Mode 2 keys
 
@@ -304,12 +300,12 @@ DB_PATH.chmod(0o600)
 **Risk:** Violates least privilege; compromised agent = full tool access  
 **Fix:** Audit each agent, declare explicit tool lists
 
-### C-03: No SBOM / Dependency Scanning — RESOLVED (dependency scanning)
+### C-03: No SBOM / Dependency Scanning — RESOLVED in config (dependency scanning; green CI run not yet recorded)
 **Severity:** MEDIUM  
-**Status:** Resolved for vulnerability scanning; SBOM generation remains open (P1 item 4)  
+**Status:** Scanning is configured; SBOM generation remains open (P1 item 4). The original Rust job could never pass: cargo-audit 0.21.2 cannot parse the CVSS 4.0 entries in the current RustSec database, and both Cargo locks carried RUSTSEC-2026-0592 (`url` 2.5.8) and RUSTSEC-2026-0594 (`cookie` 0.18.1). The tool is now pinned to 0.23.0 and both locks take the patch releases (`url` 2.5.9, `cookie` 0.18.3) with no `--ignore`. On 2026-11-23, local runs of pip-audit, npm audit and cargo-audit 0.23.0 exited 0 against every scanned lock. Record the first green `dependency-audit.yml` run here before this item is closed.  
 **Issue:** No automated supply chain monitoring for Python/Node/Rust deps  
 **Risk:** Vulnerable transitive dependencies undetected  
-**Resolution:** `.github/workflows/dependency-audit.yml` runs a gating scan (no `|| true`) weekly, on demand, and whenever a scanned lock file changes: `pip-audit --require-hashes` on `unified-integration/requirements.txt`, `npm audit --audit-level=high` on `mcp-servers/agent_browser` and `ECC`, and `cargo audit` on `headroom/Cargo.lock` and `ECC/ecc2/Cargo.lock`. `.github/dependabot.yml` proposes weekly updates for GitHub Actions, the pip lock in `unified-integration/` and npm in `mcp-servers/agent_browser` (vendored upstream trees are scanned but excluded from Dependabot).
+**Resolution:** `.github/workflows/dependency-audit.yml` runs a gating scan (no `|| true`) weekly, on demand, and whenever a scanned lock file changes: `pip-audit --require-hashes` on `unified-integration/requirements.txt`, `npm audit --audit-level=high` on `mcp-servers/agent_browser` and `ECC`, and `cargo audit` on `headroom/Cargo.lock` and `ECC/ecc2/Cargo.lock`. `.github/dependabot.yml` proposes weekly updates for GitHub Actions, the pip lock in `unified-integration/` and npm in `mcp-servers/agent_browser` (vendored upstream trees are scanned but excluded from Dependabot). The pip entry is limited to security-update PRs, because Dependabot's pip-compile cannot reproduce the uv-compiled lock. The audit workflow checks that the committed lock matches the documented compile command.
 
 ### C-04: Model.json Key Resolver — Keyring Optional
 **Severity:** LOW  
@@ -329,11 +325,11 @@ DB_PATH.chmod(0o600)
 ### P1 — Hardening
 4. **SBOM generation** — CycloneDX/SPDX for all components
 5. **Vendored SHA256 manifests** — Extend `VENDORED.json` pattern to all vendored plugins
-6. **Pin Python dependencies** — Exact versions in requirements.txt + hash verification
+6. ~~**Pin Python dependencies**~~ — done: hash-pinned, wheels-only lock compiled from `requirements.in` (docs/UPDATING.md §3.4), drift-checked in `.github/workflows/dependency-audit.yml`
 
 ### P2 — Monitoring
 7. **Secret scanning in CI** — `gitleaks`/`trufflehog` on every push
-8. **Dependency update bot** — Dependabot covers GitHub Actions, pip and agent_browser npm (`.github/dependabot.yml`); vendored trees are intentionally excluded
+8. **Dependency update bot** — Dependabot covers GitHub Actions, pip (security updates only) and agent_browser npm (`.github/dependabot.yml`); vendored trees are intentionally excluded
 9. **Audit log for config changes** — Track ui.api.json, model.json modifications
 
 ### P3 — Architecture

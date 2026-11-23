@@ -89,10 +89,14 @@ kanonis. Cakupan hook host legacy dan kode vendored berada di luar tabel.
 
 | Modul | Baris | Coverage | Target kontrak |
 | --- | ---: | ---: | ---: |
-| Runtime lifecycle | 101/120 | 84,2% | 100% |
-| Skills loader | 54/72 | 75,0% | 90% |
-| Memory | 60/114 | 52,6% | 95% |
-| Compression | 57/71 | 80,3% | 80% |
+| Runtime lifecycle | 130/130 | 100% | 100% |
+| Skills loader | 73/73 | 100% | 90% |
+| Memory | 145/145 | 100% | 95% |
+| Compression | 63/72 | 87,5% | 80% |
+
+Tabel di atas adalah pengukuran ulang setelah konsolidasi 2026-11-23
+(coverage.py 7.17 dengan instrumentasi subproses). Nilai awal kandidat
+adalah 84,2%, 75,0%, 52,6% dan 80,3%.
 
 ### Prosedur validasi dan rollback
 
@@ -136,6 +140,6 @@ generasi paket. [Panduan upgrade dan rollback](../UPDATING.md#updating-core-depe
   token skema pada baseline. Gate 1.800 token di laporan ini mengukur
   profil default. Perluasan provisioning dan perubahan exposure lintas
   host mengikuti [ADR-009](../ADR.md#adr-009--penyajian-tool-dan-provisioning-lintas-host).
-- Coverage runtime, loader dan memory masih di bawah target. Bukti platform
-  lain, lisensi vendored yang masih terbuka dan persetujuan maintainer juga
+- Coverage runtime, loader dan memory sudah memenuhi target kontrak sejak
+  konsolidasi 2026-11-23 (lihat tabel Coverage). Bukti platform lain, lisensi vendored yang masih terbuka dan persetujuan maintainer juga
   diperlukan untuk rilis produksi. [Audit sebelumnya](FINAL_PRODUCTION_READINESS_2026-11-22.md)

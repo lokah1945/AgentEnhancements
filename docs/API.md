@@ -179,7 +179,10 @@ CLI: `load-skills.py <agent> <task_description>`.
   - **Description:** Deletes rows whose `expires_at < datetime('now')`.
 
 CLI: `memory.py <agent> save|load|list|delete|cleanup ...` - `load` of a
-missing key exits `1`.
+missing key exits `1`. The CLI accepts `ttl_days` from 1 to 36500 and a
+`list` limit from 1 to 10000; other values print the usage text and exit `1`
+without changing stored rows. The Python API `save(ttl_days <= 0)` stores an
+already-expired row.
 
 #### Memory hooks - `unified-integration/memory/hooks/`
 
@@ -216,7 +219,10 @@ after seven days. Invalid input/storage failures are advisory and never block
 the CLI. Memory lookup still enforces agent/project isolation and expiry.
 
 `native-integration.py --agent <agent|all> [--mcp-only]` installs native
-configuration. Run it using the interpreter returned by
+configuration. `all` configures the saved selection (`--select-agents`) or,
+when none is saved, only the hosts whose CLI is on `PATH`; each skipped core
+host is named on stderr, and the run exits non-zero when nothing was
+configured. Run it using the interpreter returned by
 `bash scripts/setup-mcp.sh --prepare`. `setup.sh` invokes it automatically.
 `setup-mcp.sh --check` tests the actual stdio protocol of all ten built
 servers.

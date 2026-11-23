@@ -135,7 +135,9 @@ node tests/run-all.js
 `requirements.in` lists direct dependencies and compatibility ranges.
 `requirements.txt` pins the resolved versions and allowed wheel hashes.
 Refresh the lock in a reviewed change and verify setup on the intended OS,
-architecture and Python version.
+architecture and Python version. Dependabot opens only security-update pull
+requests for this lock; regenerate it on that branch with the command below
+before merging, because a plain version bump would not refresh the hashes.
 
 ```bash
 uv pip compile --universal --python-version 3.11 --generate-hashes \

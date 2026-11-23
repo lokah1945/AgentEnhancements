@@ -75,11 +75,13 @@ read/use from the suggestions.
 
 #### Claude Code 2.1.202 (verified)
 
-Setup preserves user hooks while installing `SessionStart`, `UserPromptSubmit`,
-`PreToolUse`, `PostToolUse` and `Stop` handlers in `~/.claude/settings.json`. Events are read
-from JSON on stdin, not fictional `TOOL_NAME` environment variables. Relevant
-skill paths and prior session notes are supplied automatically. User-scope MCP
-servers belong in `~/.claude.json`; the gateway loads the ten bundled backends (task-router stays hidden until opted in).
+Setup preserves user hooks while installing `SessionStart`,
+`UserPromptSubmit`, `PreToolUse`, `PostToolUse` and `Stop` handlers in
+`~/.claude/settings.json`. Events are read from JSON on stdin, not fictional
+`TOOL_NAME` environment variables. Relevant skill paths and prior session
+notes are supplied automatically. User-scope MCP servers belong in
+`~/.claude.json`; the gateway loads the ten bundled backends (task-router
+stays hidden until opted in).
 `CLAUDE.md` is marker-merged, preserving personal instructions.
 Custom gateway authentication remains entirely in Claude's native settings.
 AgentEnhancements does not import its tokens, endpoints or helper into the

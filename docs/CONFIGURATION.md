@@ -208,8 +208,10 @@ protocols, deadlines and verification.
   - **Purpose:** OpenCode configuration parent
   - **Default:** `~/.config`
 
-The Python runtime always lives at
-`<checkout>/.agentenhancements/runtime/venv`; XDG data settings do not move it.
+The Python runtime lives at `<state dir>/runtime/venv`: by default
+`<checkout>/.agentenhancements/runtime/venv`, or under
+`AGENT_ENHANCEMENTS_STATE_DIR` when it is set (normal setup requires that
+directory to be inside the checkout). XDG data settings do not move it.
 
 - **Variable:** `HERMES_HOME`
   - **Purpose:** Hermes data root; selected profiles live below `profiles/`
@@ -419,8 +421,9 @@ plugins, credentials and approvals are preserved.
 `AGENT_ENHANCEMENTS_STATE_DIR` is an optional absolute override for isolated
 fixtures. Existing explicit memory/API overrides remain supported
 (`AGENT_ENHANCEMENTS_MODEL_FILE` is retired, CONTRACT §8.2). The normal setup
-command rejects state, memory, API or headroom overrides outside the checkout. Isolated low-level fixture utilities keep
-their explicit override support.
+command rejects state, memory, API or headroom overrides outside the
+checkout. Isolated low-level fixture utilities keep their explicit override
+support.
 No global AE memory or model file is imported implicitly. Back up and
 review old state before a deliberate migration; setup does not move or
 remove user data. System Python, Node, Rust and agent CLIs are prerequisites,

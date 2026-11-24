@@ -120,6 +120,20 @@ def prompt_context(agent: str, prompt: str, event: dict) -> str:
     ).context
 
 
+def observer_is_natively_linked(index: dict) -> bool:
+    """True when the task-observer skill is already a native host skill.
+
+    The raw skills index has no ``natively_linked_by_default`` field - that
+    flag is computed on loader candidates only - so detection must use the
+    stable ``source`` of the default-linked observer skill.
+    """
+    return any(
+        skill.get("name") == "task-observer"
+        and skill.get("source") == "task-observer"
+        for skill in index.get("skills", [])
+    )
+
+
 def observer_context(agent: str) -> str:
     """Bootstrap the Task Observer workspace and return bounded context.
 
@@ -142,11 +156,7 @@ def observer_context(agent: str) -> str:
         load_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(load_module)
         loader = load_module.SkillsLoader(agent)
-        # Check if task-observer is in natively linked skills
-        natively_linked = any(
-            s.get("name") == "task-observer" and s.get("natively_linked_by_default", False)
-            for s in loader.index.get("skills", [])
-        )
+        natively_linked = observer_is_natively_linked(loader.index)
     except Exception:
         # If we can't determine native link status, assume not natively linked
         # to avoid breaking the observer bootstrap

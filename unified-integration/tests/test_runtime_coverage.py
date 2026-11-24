@@ -324,6 +324,15 @@ class PromptContextTests(_RuntimeCase):
 
 
 class ObserverContextTests(_RuntimeCase):
+    def test_native_link_detection_uses_source_not_derived_field(self):
+        linked = {"name": "task-observer", "source": "task-observer"}
+        self.assertTrue(self.rt.observer_is_natively_linked(
+            {"skills": [linked]}))
+        # The raw index never carries the loader-derived flag; source does.
+        self.assertFalse("natively_linked_by_default" in linked)
+        self.assertFalse(self.rt.observer_is_natively_linked(
+            {"skills": [{"name": "other", "source": "community"}]}))
+
     def test_bootstrap_receives_workspace_root_and_agent(self):
         self.fake_observer("Task Observer ready at /ws")
         self.assertEqual(self.rt.observer_context("opencode"),

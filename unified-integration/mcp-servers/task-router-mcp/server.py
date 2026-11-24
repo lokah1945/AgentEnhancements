@@ -83,15 +83,36 @@ def _refused(command: str, python: bool = False) -> str | None:
     return None
 
 
-def _terminate(proc: subprocess.Popen) -> None:
-    """Stop the task's process group, including ordinary child processes."""
+def _terminate(proc: subprocess.Popen, session_id: int | None = None) -> None:
+    """Stop the task's session, including all child processes and background jobs.
+
+    Uses start_new_session=True so the shell is the session leader. Killing by
+    session ID terminates the entire session on Linux.
+    """
     try:
         if os.name == "posix":
-            os.killpg(proc.pid, signal.SIGKILL)
+            # Use provided session_id or try to get it from the process.
+            # The session ID equals the PID of the session leader (the shell).
+            sid = session_id
+            if sid is None:
+                try:
+                    sid = os.getsid(proc.pid)
+                except (ProcessLookupError, AttributeError):
+                    sid = proc.pid
+            # Kill all processes in the session using negative session ID.
+            try:
+                os.kill(-sid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            # Fallback: also kill the process group in case session kill missed something.
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
         else:
             proc.kill()
-    except (ProcessLookupError, PermissionError):
-        # The group is already gone (or its id now belongs to someone else).
+    except PermissionError:
+        # The group/session is already gone or belongs to someone else.
         pass
 
 
@@ -118,10 +139,14 @@ def _run_task(task_id: str, spec: dict) -> None:
             if entry["status"] == "cancelled":
                 return
             entry.update(status="running", started_at=time.time())
-            argv = (["bash", "-lc", spec["command"]] if spec["kind"] == "bash"
+            # Use +m to disable job control (monitor mode) so background processes
+            # stay in the same process group as the shell and are killed by _terminate.
+            argv = (["bash", "+m", "-c", spec["command"]] if spec["kind"] == "bash"
                     else [sys.executable, "-c", spec["code"]])
             proc = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     cwd=_WORKSPACES[task_id], start_new_session=(os.name == "posix"))
+            # Capture session ID immediately (equals shell PID when start_new_session=True)
+            session_id = proc.pid if os.name == "posix" else None
             _PROCESSES[task_id] = proc
         for stream, key in [(proc.stdout, "stdout"), (proc.stderr, "stderr")]:
             reader = threading.Thread(target=drain, args=(stream, key), daemon=True)
@@ -132,13 +157,13 @@ def _run_task(task_id: str, spec: dict) -> None:
             proc.wait(timeout=spec["timeout"])
         except subprocess.TimeoutExpired:
             timed_out = True
-            _terminate(proc)
+            _terminate(proc, session_id)
             proc.wait()
         if os.name == "posix":
             # The task owns its session (start_new_session): kill background
             # children it left behind so they neither outlive the task nor
             # hold the output pipes open and delay completion.
-            _terminate(proc)
+            _terminate(proc, session_id)
         for reader in readers:
             reader.join(timeout=2)
         with _LOCK:

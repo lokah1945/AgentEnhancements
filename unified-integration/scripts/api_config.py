@@ -78,6 +78,15 @@ PACKAGE_LAUNCHERS = frozenset({
     "bun", "bunx", "corepack", "npm", "npm-cli.js", "npx", "npx-cli.js",
     "pip", "pip3", "pipx", "pnpm", "pnpx", "uv", "uvx", "yarn",
 })
+# A shell is a general-purpose code executor: launching one from a config
+# file would run arbitrary payloads with every mapped credential in its env.
+SHELL_LAUNCHERS = frozenset({
+    "ash", "bash", "cmd", "csh", "dash", "fish", "ksh", "pwsh",
+    "powershell", "sh", "tcsh", "zsh",
+})
+INLINE_SCRIPT_FLAGS = frozenset({
+    "-c", "-e", "-C", "-E", "--command", "--eval", "--exec", "-Command",
+})
 SECRET_PATTERN = re.compile(
     r"(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+|(?<![A-Za-z0-9])sk-(?:ant-)?[A-Za-z0-9_-]{16,}"
     r"|\bAKIA[A-Z0-9]{16}\b"
@@ -192,6 +201,11 @@ def validate_document(doc: Any) -> dict:
             not isinstance(v, str) for v in env.values()
         ):
             raise ValueError("MCP environment must contain reference names")
+        declared = set()
+        for field in ("required", "optional", "any_of"):
+            declared.update(server.get(field, []))
+        if any(ref not in declared for ref in env.values()):
+            raise ValueError("MCP environment references an undeclared credential")
     preflight = doc.get("preflight", {})
     if not isinstance(preflight, dict):
         raise ValueError("preflight must be an object")
@@ -206,9 +220,12 @@ def validate_document(doc: Any) -> dict:
 
 
 def _read_raw_bytes(path: Path) -> bytes:
-    """Read a bounded regular file through one descriptor."""
+    """Read a bounded regular file through one descriptor, never a symlink."""
     limit = 1024 * 1024
-    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
+    if path.is_symlink():
+        raise ValueError("configuration may not be a symlink")
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(path, flags)
     with os.fdopen(descriptor, "rb") as stream:
         info = os.fstat(stream.fileno())
         if not stat.S_ISREG(info.st_mode) or info.st_size > limit:
@@ -377,15 +394,25 @@ def external_launch_blocker(command: list[str]) -> str:
     if not command[0] or any("\0" in arg for arg in command):
         return "invalid_launch_command"
     executable = Path(command[0]).name.removesuffix(".cmd").removesuffix(".exe")
+    if executable in SHELL_LAUNCHERS:
+        return "shell_interpreter_launch_refused"
     if executable in PACKAGE_LAUNCHERS:
         return "package_launcher_requires_provisioning"
     found = shutil.which(command[0])
     if not found:
         return "executable_not_installed"
-    if Path(os.path.realpath(found)).name in PACKAGE_LAUNCHERS:
+    resolved = Path(os.path.realpath(found)).name.removesuffix(".cmd").removesuffix(".exe")
+    if resolved in SHELL_LAUNCHERS:
+        return "shell_interpreter_launch_refused"
+    if resolved in PACKAGE_LAUNCHERS:
         return "package_launcher_requires_provisioning"
     args = command[1:]
     python = re.fullmatch(r"python(?:\d+(?:\.\d+)?)?", executable)
+    interpreter = bool(python) or executable in {"node", "nodejs"}
+    if interpreter and args and (
+            args[0] in INLINE_SCRIPT_FLAGS
+            or any(args[0].startswith(flag + "=") for flag in INLINE_SCRIPT_FLAGS)):
+        return "inline_script_refused"
     if python and len(args) >= 2 and args[0] == "-m" and args[1].split(".")[0] in PACKAGE_LAUNCHERS:
         return "package_launcher_requires_provisioning"
     if args and not args[0].startswith("-") and (

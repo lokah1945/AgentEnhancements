@@ -158,6 +158,50 @@ class ConfigurationTests(unittest.TestCase):
             self.assertEqual(registry.entry_readiness(entry),
                              {'ready': 'unknown', 'blocker': 'host_handshake_required'})
 
+    def test_external_launch_blocker_refuses_shells_and_inline_interpreter_code(self):
+        with configuration() as path:
+            for command in (
+                ["/bin/bash", "-c", "echo fixture"],
+                ["/bin/sh", "-c", "id"],
+                ["{python}", "-c", "print(1)"],
+                ["node", "-e", "console.log(1)"],
+            ):
+                with self.subTest(command=command):
+                    edit(path, lambda doc, c=command: doc["mcp"].update(
+                        {"tavily-mcp": {"command": c}}))
+                    state = api.server_state("tavily-mcp")
+                    self.assertFalse(state["visible"], state)
+                    self.assertIn(state["reason"], (
+                        "shell_interpreter_launch_refused", "inline_script_refused"))
+
+    def test_runtime_config_symlink_is_refused(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "real.json"
+            target.write_text(json.dumps({
+                "version": 2, "api_keys": {}, "connections": {},
+                "mcp": {}, "preflight": {},
+            }))
+            link = Path(directory) / "link.json"
+            link.symlink_to(target)
+            with patch.dict(os.environ, {"AGENT_ENHANCEMENTS_API_FILE": str(link)}):
+                self.assertEqual(api.read_config()[1], "config_unavailable_or_invalid")
+
+    def test_environment_mapping_cannot_reference_undeclared_secret(self):
+        with configuration() as path:
+            edit(path, lambda doc: doc["mcp"].update({
+                "tavily-mcp": {
+                    "required": ["TAVILY_API_KEY"],
+                    "env": {"LEAK": "PREFLIGHT_API_KEY"},
+                }
+            }))
+            self.assertEqual(api.read_config()[1], "config_unavailable_or_invalid")
+            self.assertFalse(api.server_state("tavily-mcp")["visible"])
+            edit(path, lambda doc: doc["mcp"]["tavily-mcp"].update({
+                "env": {"TAVILY_API_KEY": "TAVILY_API_KEY"},
+                "optional": [], "any_of": [],
+            }))
+            self.assertIsNone(api.read_config()[1])
+
     def test_media_prerequisites_filter_tools_without_hiding_local_subsets(self):
         module = load_module('gateway_media_readiness', UI_DIR / 'mcp-servers/gateway.py')
         with configuration(), patch.object(api.shutil, 'which', lambda name: None):

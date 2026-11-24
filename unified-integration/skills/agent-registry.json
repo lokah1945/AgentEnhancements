@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-21T07:01:09.767911+00:00",
+  "generated_at": "2026-11-24T16:12:12.008129+00:00",
   "stats": {
     "total": 3467,
     "by_type": {
@@ -54071,7 +54071,21 @@
         "lighthouse-mcp",
         "pa11y-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "addyosmani",
+        "license": "Apache-2.0 (verify on upstream)",
+        "upstream_url": "https://github.com/addyosmani/agent-skills",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:karpathy-skills",
@@ -54097,7 +54111,21 @@
         "jupyter-mcp",
         "python-repl-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "multica-ai",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/multica-ai/andrej-karpathy-skills",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:mattpocock-skills",
@@ -54123,7 +54151,21 @@
         "typescript-language-server-mcp",
         "eslint-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "mattpocock",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/mattpocock/skills",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:replica-skill",
@@ -54151,7 +54193,21 @@
         "browser-tools-mcp",
         "vision-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "Jakeschincariol",
+        "license": "MIT",
+        "upstream_url": "https://github.com/Jakeschincariol/replica-skill",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:agent-reach",
@@ -54177,7 +54233,21 @@
         "exa-mcp",
         "firecrawl-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "Panniantong",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/Panniantong/Agent-Reach",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:graphify",
@@ -54204,7 +54274,21 @@
         "graphrag-mcp",
         "embeddings-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "Graphify-Labs",
+        "license": "Apache-2.0 (verify on upstream)",
+        "upstream_url": "https://github.com/Graphify-Labs/graphify",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:last-30-days",
@@ -54235,7 +54319,21 @@
         "newsapi-mcp",
         "google-news-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "mvanhorn",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/mvanhorn/last30days-skill",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:rea",
@@ -54267,7 +54365,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "morluto",
+        "license": "MIT",
+        "upstream_url": "https://github.com/morluto/rea",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:understand-anything",
@@ -54294,7 +54406,21 @@
         "arxiv-mcp",
         "embeddings-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "Egonex-AI",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/Egonex-AI/Understand-Anything",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:bmad-method",
@@ -54321,7 +54447,21 @@
         "github-issues-mcp",
         "memory-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "bmad-code-org",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/bmad-code-org/BMAD-METHOD",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:caveman",
@@ -54342,11 +54482,22 @@
       "path": "plugin-catalog/tokens-optimization/caveman/SKILL.md",
       "source_url": "https://github.com/JuliusBrussee/Caveman",
       "vendored": false,
-      "mcp_servers": [
-        "filesystem-mcp",
-        "style-mcp"
+      "mcp_servers": [],
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "JuliusBrussee",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/JuliusBrussee/Caveman",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:gsd",
@@ -54372,7 +54523,21 @@
         "task-router-mcp",
         "memory-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "gsd-build",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/gsd-build/get-shit-done",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:gstack",
@@ -54397,7 +54562,21 @@
       "mcp_servers": [
         "filesystem-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "garrytan",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/garrytan/gstack",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:diagram-design",
@@ -54423,7 +54602,21 @@
         "mermaid-mcp",
         "excalidraw-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "cathrynlavery",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/cathrynlavery/diagram-design",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:impeccable",
@@ -54449,7 +54642,21 @@
         "browser-tools-mcp",
         "figma-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "pbakaus",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/pbakaus/impeccable",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:ppt-master",
@@ -54476,7 +54683,21 @@
         "office-mcp",
         "image-search-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "hugohe3",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/hugohe3/ppt-master",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:ui-ux-pro-max",
@@ -54503,7 +54724,21 @@
         "browser-tools-mcp",
         "storybook-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "nextlevelbuilder",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:anthropic-skills",
@@ -54538,7 +54773,18 @@
         "pdf-mcp",
         "vision-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "anthropics",
+        "license": "Apache-2.0 (per-skill LICENSE.txt)",
+        "upstream_url": "https://github.com/anthropics/skills",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:humanizer",
@@ -54564,7 +54810,21 @@
         "style-mcp",
         "grammar-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "blader",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/blader/humanizer",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:hyperframes",
@@ -54589,7 +54849,21 @@
         "heygen-mcp",
         "elevenlabs-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "heygen-com",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/heygen-com/hyperframes",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:openmontage",
@@ -54615,7 +54889,21 @@
         "ffmpeg-mcp",
         "video-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "calesthio",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/calesthio/OpenMontage",
+        "vendored": false
+      }
     },
     {
       "id": "plugin:academic",
@@ -54642,7 +54930,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:design",
@@ -54669,7 +54971,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:engineering",
@@ -54697,7 +55013,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:finance",
@@ -54724,7 +55054,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:game-development",
@@ -54752,7 +55096,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:gis",
@@ -54780,7 +55138,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:healthcare",
@@ -54805,7 +55177,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:marketing",
@@ -54833,7 +55219,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:paid-media",
@@ -54860,7 +55260,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:product",
@@ -54887,7 +55301,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:project-management",
@@ -54914,7 +55342,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:research",
@@ -54940,7 +55382,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:sales",
@@ -54967,7 +55423,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:security",
@@ -54994,7 +55464,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:spatial-computing",
@@ -55022,7 +55506,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:specialized",
@@ -55050,7 +55548,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:support",
@@ -55077,7 +55589,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:testing",
@@ -55104,7 +55630,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "plugin:nexus",
@@ -55131,7 +55671,21 @@
         "memory-mcp",
         "task-router-mcp"
       ],
-      "activation": "load the SKILL.md integration guide on demand"
+      "activation": "load the SKILL.md integration guide on demand",
+      "is_guide_only": true,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "mcp:you-mcp",
@@ -55976,7 +56530,14 @@
         "note"
       ],
       "usage": "python3 unified-integration/scripts/memory.py <agent> save|load|list [\"key\" [\"value\"]]",
-      "automatic": "Claude Code and Codex lifecycle hooks; OpenCode 2 server plugin"
+      "automatic": "Claude Code and Codex lifecycle hooks; OpenCode 2 server plugin",
+      "provenance": {
+        "type": "ae-builtin",
+        "vendor": "AgentEnhancements",
+        "license": "Apache-2.0",
+        "upstream_url": "https://github.com/lokah1945/AgentEnhancements",
+        "vendored": false
+      }
     },
     {
       "id": "capability:compression",
@@ -56001,7 +56562,14 @@
         "besar"
       ],
       "usage": "unified-integration/compression/compress.sh <file> <auto|code|logs|json|markdown|generic>",
-      "automatic": "none (invoke explicitly)"
+      "automatic": "none (invoke explicitly)",
+      "provenance": {
+        "type": "ae-builtin",
+        "vendor": "AgentEnhancements",
+        "license": "Apache-2.0",
+        "upstream_url": "https://github.com/lokah1945/AgentEnhancements",
+        "vendored": false
+      }
     },
     {
       "id": "capability:skills-loader",
@@ -56017,7 +56585,14 @@
         "match"
       ],
       "usage": "python3 unified-integration/scripts/load-skills.py <agent> \"<task description>\"",
-      "automatic": "referenced from every agent instruction file"
+      "automatic": "referenced from every agent instruction file",
+      "provenance": {
+        "type": "ae-builtin",
+        "vendor": "AgentEnhancements",
+        "license": "Apache-2.0",
+        "upstream_url": "https://github.com/lokah1945/AgentEnhancements",
+        "vendored": false
+      }
     },
     {
       "id": "capability:dispatcher",
@@ -56032,7 +56607,14 @@
         "plan"
       ],
       "usage": "bash unified-integration/scripts/dispatch.sh --dry-run \"<task>\"",
-      "automatic": "none (invoke explicitly)"
+      "automatic": "none (invoke explicitly)",
+      "provenance": {
+        "type": "ae-builtin",
+        "vendor": "AgentEnhancements",
+        "license": "Apache-2.0",
+        "upstream_url": "https://github.com/lokah1945/AgentEnhancements",
+        "vendored": false
+      }
     },
     {
       "id": "capability:native-linking",
@@ -56049,7 +56631,14 @@
         "install"
       ],
       "usage": "bash unified-integration/scripts/link-skills.sh [--set <source>|all|<name>] [--status] [--unlink]",
-      "automatic": "default curated set linked by setup.sh"
+      "automatic": "default curated set linked by setup.sh",
+      "provenance": {
+        "type": "ae-builtin",
+        "vendor": "AgentEnhancements",
+        "license": "Apache-2.0",
+        "upstream_url": "https://github.com/lokah1945/AgentEnhancements",
+        "vendored": false
+      }
     },
     {
       "id": "capability:launcher",
@@ -56064,7 +56653,14 @@
         "cli"
       ],
       "usage": "unified-integration/launch-agent.sh <agent> [args...]",
-      "automatic": "agent-enhanced <agent> when /usr/local/bin is writable"
+      "automatic": "agent-enhanced <agent> when /usr/local/bin is writable",
+      "provenance": {
+        "type": "ae-builtin",
+        "vendor": "AgentEnhancements",
+        "license": "Apache-2.0",
+        "upstream_url": "https://github.com/lokah1945/AgentEnhancements",
+        "vendored": false
+      }
     },
     {
       "id": "capability:registry",
@@ -56081,7 +56677,14 @@
         "which"
       ],
       "usage": "python3 unified-integration/scripts/registry.py map \"<task description>\"",
-      "automatic": "referenced from every agent instruction file"
+      "automatic": "referenced from every agent instruction file",
+      "provenance": {
+        "type": "ae-builtin",
+        "vendor": "AgentEnhancements",
+        "license": "Apache-2.0",
+        "upstream_url": "https://github.com/lokah1945/AgentEnhancements",
+        "vendored": false
+      }
     },
     {
       "id": "capability:task-observer",
@@ -56104,7 +56707,14 @@
         "perbaiki"
       ],
       "usage": "python3 unified-integration/scripts/task-observer.py status|log|lookup|review|stage|promote|rollback|disable|enable",
-      "automatic": "SessionStart bootstrap via the shared lifecycle runtime; bundle natively linked by default"
+      "automatic": "SessionStart bootstrap via the shared lifecycle runtime; bundle natively linked by default",
+      "provenance": {
+        "type": "ae-builtin",
+        "vendor": "AgentEnhancements",
+        "license": "Apache-2.0",
+        "upstream_url": "https://github.com/lokah1945/AgentEnhancements",
+        "vendored": false
+      }
     }
   ]
 }

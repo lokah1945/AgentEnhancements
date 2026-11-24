@@ -424,10 +424,7 @@
         "shorthand",
         "compression"
       ],
-      "mcp_servers": [
-        "filesystem-mcp",
-        "style-mcp"
-      ],
+      "mcp_servers": [],
       "source_url": "https://github.com/JuliusBrussee/Caveman",
       "source_license": "MIT (verify on upstream)",
       "vendored": false,

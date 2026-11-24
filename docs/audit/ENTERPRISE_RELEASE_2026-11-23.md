@@ -83,20 +83,22 @@ selector live, penggunaan token provider dan biaya inferensi masih terbuka.
 
 #### Coverage
 
-Suite integrasi diulang dengan coverage.py 7.13.5 dan instrumentasi
-subproses Python. Tabel ini melaporkan baris yang tercakup pada entry point
-kanonis. Cakupan hook host legacy dan kode vendored berada di luar tabel.
+Satu-satunya hasil coverage yang memiliki artefak tercatat di repository
+adalah `docs/benchmark/enterprise-release-evidence.json` (field `coverage.files`,
+coverage.py 7.13.5 dengan instrumentasi subproses Python). Itulah angka yang
+dapat diverifikasi ulang. Tabel 100% / 100% / 100% / 87,5% pada revisi
+sebelumnya tidak disertai output pengukuran, karena itu berstatus **NOT VERIFIED**
+dan tidak dipakai sebagai bukti.
 
-| Modul | Baris | Coverage | Target kontrak |
-| --- | ---: | ---: | ---: |
-| Runtime lifecycle | 130/130 | 100% | 100% |
-| Skills loader | 73/73 | 100% | 90% |
-| Memory | 145/145 | 100% | 95% |
-| Compression | 63/72 | 87,5% | 80% |
+| Modul | Baris | Coverage | Target kontrak | Status |
+| --- | --- | ---: | ---: | --- |
+| Runtime lifecycle | 101/120 | 84,2% | 100% | PARTIAL |
+| Skills loader | 54/72 | 75,0% | 90% | PARTIAL |
+| Memory | 60/114 | 52,6% | 95% | PARTIAL |
+| Compression | 57/71 | 80,3% | 80% | PASS |
 
-Tabel di atas adalah pengukuran ulang setelah konsolidasi 2026-11-23
-(coverage.py 7.17 dengan instrumentasi subproses). Nilai awal kandidat
-adalah 84,2%, 75,0%, 52,6% dan 80,3%.
+Cakupan hook host legacy dan kode vendored berada di luar tabel. Target
+runtime dan memory **belum** tercapai menurut artefak yang tersedia.
 
 ### Prosedur validasi dan rollback
 
@@ -140,6 +142,56 @@ generasi paket. [Panduan upgrade dan rollback](../UPDATING.md#updating-core-depe
   token skema pada baseline. Gate 1.800 token di laporan ini mengukur
   profil default. Perluasan provisioning dan perubahan exposure lintas
   host mengikuti [ADR-009](../ADR.md#adr-009--penyajian-tool-dan-provisioning-lintas-host).
-- Coverage runtime, loader dan memory sudah memenuhi target kontrak sejak
-  konsolidasi 2026-11-23 (lihat tabel Coverage). Bukti platform lain, lisensi vendored yang masih terbuka dan persetujuan maintainer juga
+- Coverage runtime, loader dan memory **belum** memenuhi target kontrak
+  menurut artefak yang tersedia (lihat tabel Coverage). Bukti platform lain,
+  lisensi vendored yang masih terbuka dan persetujuan maintainer juga
   diperlukan untuk rilis produksi. [Audit sebelumnya](FINAL_PRODUCTION_READINESS_2026-11-22.md)
+
+### Verifikasi ulang 2026-11-25 (baseline `d775d553`)
+
+Bukti remote: GitHub API melaporkan 11/11 check runs `success` untuk
+`d775d553cd949fc9593bf5810e1e96cff57bf984` pada `master` (static checks,
+unified-integration, ECC, headroom, MCP, markdownlint, CodeQL dan analisis
+dependensi). Remote dan SHA lokal cocok; tidak ada branch sertifikasi yang
+masih tertinggal (`merge-base master fix/production-certification` =
+`ace90de9`, `git log master..fix/production-certification` kosong — pekerjaan
+sudah masuk melalui `179ebcba`).
+
+Lingkungan lokal: Debian 12, Python 3.11.2, ffmpeg 5.1.9. Baseline **sebelum**
+perubahan di sesi ini menjalankan 777 test dengan 5 kegagalan yang sama
+(sebagian hanya saat suite penuh; kelima test tersebut lulus bila dijalankan
+sendiri). Jalankan ulang sesudah perubahan menghasilkan 5 kegagalan yang
+identik, jadi bukan regresi dari perubahan di bawah. Karena lingkungan lokal
+berbeda dari runner CI, kelima kasus itu ditandai **NOT VERIFIED secara lokal**;
+keputusan CI tetap mengacu pada 11/11 check runs di remote.
+
+Perubahan yang diverifikasi dengan test (TDD: test gagal lebih dulu):
+
+- `api_config.external_launch_blocker` menolak shell dan interpreter inline.
+  Sebelum perbaikan, `["/bin/bash","-c", ...]` dan `["python3","-c", ...]`
+  dinyatakan `visible: true` dan dapat diluncurkan gateway dengan credential
+  yang dipetakan. Sekarang keduanya menghasilkan alasan penolakan tertentu.
+- `validate_document` menolak pemetaan `env` MCP yang mereferensikan credential
+  di luar `required`/`optional`/`any_of` server tersebut.
+- `_read_raw_bytes` menolak symlink saat membaca `ui.api.json` saat runtime,
+  menyamakan perilaku dengan jalur migrasi.
+- `runtime.observer_is_natively_linked` mendeteksi observer native memakai
+  `source`, bukan field turunan yang tidak pernah ada di index mentah
+  (0/3378 entri). Guard anti-duplikasi kini benar-benar dapat berjalan.
+- Karpathy (§7): keempat prinsip upstream hadir di SKILL.md yang dirutekan, di
+  prompt konsolidasi, dan di `.cursorrules`; prasyarat MCP/numerik dibuang;
+  `catalog.json`, manifest, indeks, dan artefak generated disinkronkan.
+  `registry map` berbasis nama prinsip kini menemukan `plugin:karpathy-skills`.
+
+Gate yang masih terbuka (tidak diubah, jangan diklaim lulus): Mode 1 masih
+belum memiliki adapter host yang memasok `ae_native_selection` (efektif Mode 0),
+model live dan bukti host lain belum tersedia, agregat cold-start 4000 token
+belum diukur di jalur hook, SBOM/attestation belum dihasilkan, lisensi vendored
+dan persetujuan maintainer belum lengkap.
+
+**Verdict:** **CONDITIONALLY PRODUCTION READY** untuk scope integrasi inti
+(discovery, readiness fail-closed, workflow hook, dan CI otomatis) dengan
+kondisi di atas. Klaim enterprise production readiness untuk seluruh ekosistem
+tetap **NOT VERIFIED** sampai gate terbuka dipenuhi dan bukti platform/live
+tersedia. Ringkasan di `IMPLEMENTATION_SUMMARY.md` bersifat self-reported
+historis dan tidak menggantikan verdict ini.

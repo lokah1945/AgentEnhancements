@@ -42,11 +42,10 @@ to make a build pass.
 These are existing test tools, not new product dependencies. Codex is maintained
 by OpenAI; OpenClaw and its transitive dependencies retain their upstream
 maintainers. Their install surface includes registry downloads, native optional
-packages and lifecycle scripts, as before. OpenClaw 2026.10.6 and its fixed
-Undici override follow the upstream #4453 security repair.
+packages and lifecycle scripts, as before.
 
-The raw audit still reports npm 12.2.1's bundled ip-address and Undici copies.
-`npm-audit-exceptions.json` records the upstream-approved E2E-only risk
-acceptance, restricted to exact advisory/path/version combinations and expiring
-on 2026-11-15. Security CI rejects other findings and expired or stale entries;
-these exceptions are not a claim that the contained packages are patched.
+OpenClaw is pinned to 2026.9.6 so that npm 12.2.1 (which bundles vulnerable
+copies of Undici, ip-address, glob and minimatch that npm overrides cannot
+replace) is no longer pulled in. The Undici 8.12.3 override and the minimatch /
+glob overrides keep the remaining tree patched. `npm audit --audit-level=low`
+must pass with no exceptions; do not reintroduce an exceptions file.

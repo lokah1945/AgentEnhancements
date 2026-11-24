@@ -339,5 +339,148 @@ class CliSubprocessTests(_Base):
         self.assertIn("Usage:", proc.stdout)
 
 
+class LoadSkillsExtraTests(_Base):
+    """Additional tests to cover missing branches in load-skills.py."""
+
+    def test_missing_index_file_returns_empty_skills(self):
+        # Remove the index file to test missing index handling
+        (self.root / "all-skills.json").unlink()
+        loader = self.loader()
+        self.assertEqual(loader.skills_index, {"skills": []})
+        self.assertEqual(loader.find_skills("anything"), [])
+
+    def test_prerequisite_only_tools_do_not_exclude(self):
+        # Skills with only prerequisite tools (python, git) should be compatible with all agents
+        index = {"skills": [{"name": "test-skill", "tools": ["python", "git"],
+                            "when_to_use": "test", "description": "test",
+                            "tags": ["test"]}]}
+        _write(self.root / "all-skills.json", json.dumps(index))
+        loader = self.loader("unknown-host")
+        results = loader.find_skills("test")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["name"], "test-skill")
+
+    def test_missing_tools_treated_as_universal(self):
+        index = {"skills": [{"name": "test-skill", "when_to_use": "test",
+                            "description": "test", "tags": ["test"]}]}
+        _write(self.root / "all-skills.json", json.dumps(index))
+        loader = self.loader("unknown-host")
+        results = loader.find_skills("test")
+        self.assertEqual(len(results), 1)
+
+    def test_null_tools_treated_as_universal(self):
+        index = {"skills": [{"name": "test-skill", "tools": None,
+                            "when_to_use": "test", "description": "test",
+                            "tags": ["test"]}]}
+        _write(self.root / "all-skills.json", json.dumps(index))
+        loader = self.loader("unknown-host")
+        results = loader.find_skills("test")
+        self.assertEqual(len(results), 1)
+
+    def test_skill_path_rejects_invalid_names(self):
+        loader = self.loader()
+        for bad in ("", ".", "..", "a/b", "../x", "/etc/passwd"):
+            with self.subTest(name=bad):
+                self.assertIsNone(loader.skill_path(bad))
+                self.assertEqual(loader.load_skill(bad), {})
+
+    def test_skill_path_directory_traversal_prevented(self):
+        loader = self.loader()
+        # Create a skill outside the skills dir
+        outside = self.base / "outside"
+        outside.mkdir()
+        (outside / "evil.md").write_text("---\nname: evil\n---\nsecret\n")
+        # Try to access via path traversal
+        self.assertIsNone(loader.skill_path("../outside/evil"))
+        self.assertEqual(loader.load_skill("../outside/evil"), {})
+
+    def test_parse_skill_no_frontmatter_returns_raw(self):
+        loader = self.loader()
+        _write(self.root / "by-category" / "c" / "plain.md", "plain text")
+        result = loader.load_skill("plain")
+        self.assertEqual(result, {"raw": "plain text", "file": str(self.root / "by-category" / "c" / "plain.md")})
+
+    def test_parse_skill_unterminated_frontmatter_returns_raw(self):
+        loader = self.loader()
+        text = "---\nname: s\nno closing fence\n"
+        _write(self.root / "by-category" / "c" / "s" / "SKILL.md", text)
+        result = loader.load_skill("s")
+        self.assertEqual(result, {"raw": text, "file": str(self.root / "by-category" / "c" / "s" / "SKILL.md")})
+
+    def test_parse_skill_empty_frontmatter_returns_none(self):
+        loader = self.loader()
+        text = "---\n---\nbody\n"
+        _write(self.root / "by-category" / "c" / "s" / "SKILL.md", text)
+        result = loader.load_skill("s")
+        self.assertIsNone(result["frontmatter"])
+        self.assertEqual(result["body"], "body")
+
+    def test_parse_skill_missing_pyyaml_falls_back_to_raw(self):
+        loader = self.loader()
+        text = "---\nname: s\n---\nbody\n"
+        _write(self.root / "by-category" / "c" / "s" / "SKILL.md", text)
+        err = io.StringIO()
+        with mock.patch.dict(sys.modules, {"yaml": None}), contextlib.redirect_stderr(err):
+            result = loader.load_skill("s")
+        self.assertEqual(result["raw"], text)
+        self.assertNotIn("frontmatter", result)
+        self.assertIn("PyYAML is not installed", err.getvalue())
+
+    def test_parse_skill_frontmatter_with_triple_dash_in_value(self):
+        loader = self.loader()
+        text = "---\nname: s\ndescription: before---after\n---\nBody\n"
+        _write(self.root / "by-category" / "c" / "s" / "SKILL.md", text)
+        result = loader.load_skill("s")
+        self.assertEqual(result["frontmatter"], {"name": "s", "description": "before---after"})
+        self.assertEqual(result["body"], "Body")
+
+    def test_parse_skill_closing_fence_with_whitespace_and_crlf(self):
+        loader = self.loader()
+        text = "---\r\nname: s\r\n---  \r\nBody\r\n"
+        _write(self.root / "by-category" / "c" / "s" / "SKILL.md", text)
+        result = loader.load_skill("s")
+        self.assertEqual(result["frontmatter"], {"name": "s"})
+        self.assertEqual(result["body"], "Body")
+
+    def test_parse_skill_indented_dashes_not_closing_fence(self):
+        loader = self.loader()
+        text = "---\nname: s\nnote: |\n  ---\n  kept\n---\nBody\n"
+        _write(self.root / "by-category" / "c" / "s" / "SKILL.md", text)
+        result = loader.load_skill("s")
+        self.assertEqual(result["frontmatter"], {"name": "s", "note": "---\nkept\n"})
+        self.assertEqual(result["body"], "Body")
+
+    def test_parse_skill_opening_line_must_be_bare_fence(self):
+        loader = self.loader()
+        text = "----\nname: s\n---\nBody\n"
+        _write(self.root / "by-category" / "c" / "s" / "SKILL.md", text)
+        result = loader.load_skill("s")
+        self.assertEqual(result, {"raw": text, "file": str(self.root / "by-category" / "c" / "s" / "SKILL.md")})
+
+    def test_find_skills_empty_query_returns_empty(self):
+        loader = self.loader()
+        self.assertEqual(loader.find_skills(""), [])
+
+    def test_find_skills_max_results_zero_returns_empty(self):
+        loader = self.loader()
+        self.assertEqual(loader.find_skills("test", max_results=0), [])
+
+    def test_find_skills_does_not_mutate_index(self):
+        loader = self.loader()
+        before = json.loads(json.dumps(loader.skills_index))
+        loader.find_skills("audit a web application pentest")
+        self.assertEqual(loader.skills_index, before)
+
+    def test_results_are_original_records_without_ranking_metadata(self):
+        loader = self.loader()
+        hits = loader.find_skills("audit a web application pentest")
+        self.assertTrue(hits)
+        originals = loader.skills_index["skills"]
+        for hit in hits:
+            self.assertIn(hit, originals)
+            for internal in ("_skill", "type", "natively_linked_by_default"):
+                self.assertNotIn(internal, hit)
+
+
 if __name__ == "__main__":
     unittest.main()

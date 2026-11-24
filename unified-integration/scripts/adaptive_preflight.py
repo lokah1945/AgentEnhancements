@@ -71,9 +71,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent.parent
 
 MODE_DISABLED = 0
-MODE_NATIVE = 1
-MODE_CUSTOM = 2
-VALID_MODES = (MODE_DISABLED, MODE_NATIVE, MODE_CUSTOM)
+MODE_CUSTOM = 1
+VALID_MODES = (MODE_DISABLED, MODE_CUSTOM)
 VALID_SDKS = ("openai", "anthropic")
 
 #: Pilot deadline for the whole preflight phase (review 12): the host
@@ -265,23 +264,21 @@ def load_model_config(config: Optional[Dict[str, Any]] = None) -> ModelConfig:
     mode = doc.get("mode", MODE_DISABLED)
     # bool is an int subclass; the contract requires an exact integer.
     if type(mode) is not int or mode not in VALID_MODES:
-        return ModelConfig(diagnosis="preflight_invalid:mode_not_0_1_or_2")
+        return ModelConfig(diagnosis="preflight_invalid:mode_not_0_or_1")
 
     endpoint = doc.get("endpoint", "")
     sdk = doc.get("sdk", "")
     model = doc.get("model", "")
     key_ref = doc.get("api_key_ref", DEFAULT_KEY_REF)
     if mode == MODE_CUSTOM:
-        # Only Mode 2 reads the custom settings; on Mode 0/1 they are
-        # stored but ignored (review 9, "Field tersebut diabaikan").
         if not isinstance(endpoint, str) or not _valid_endpoint(endpoint):
-            return ModelConfig(diagnosis="mode2_settings_invalid:endpoint")
+            return ModelConfig(diagnosis="mode1_settings_invalid:endpoint")
         if sdk not in VALID_SDKS:
-            return ModelConfig(diagnosis="mode2_settings_invalid:sdk")
+            return ModelConfig(diagnosis="mode1_settings_invalid:sdk")
         if not isinstance(model, str) or not model.strip():
-            return ModelConfig(diagnosis="mode2_settings_invalid:model")
+            return ModelConfig(diagnosis="mode1_settings_invalid:model")
         if not isinstance(key_ref, str) or not _api_config().REFERENCE_PATTERN.match(key_ref):
-            return ModelConfig(diagnosis="mode2_settings_invalid:api_key_ref")
+            return ModelConfig(diagnosis="mode1_settings_invalid:api_key_ref")
     return ModelConfig(
         mode=mode,
         endpoint=endpoint if isinstance(endpoint, str) else "",
@@ -1140,24 +1137,14 @@ def preflight_context(
     deadline = Deadline(deadline_seconds())
     try:
         revision = registry_revision()
-        if config.mode == MODE_NATIVE:
-            if agent not in ("claude-code", "codex"):
-                raise PreflightError("mode1_host_unsupported")
-            # The adapter supplies the native selection through the
-            # event (its own sanctioned inference surface). The
-            # runtime itself never calls the host model.
-            native = event.get("ae_native_selection")
-            if not isinstance(native, dict):
-                raise PreflightError("mode1_native_selection_unavailable")
-            selection = parse_selection(native)
-            if selection.decision == "lookup":
-                raise PreflightError("mode1_selection_not_final")
-        else:
-            api_key = resolve_api_key(config, snapshot)
-            if not api_key:
-                raise PreflightError("api_key_unavailable")
-            selection = run_custom_selection(prompt, config, deadline, api_key,
-                                             snapshot=snapshot)
+        # Only MODE_CUSTOM (1) is supported; MODE_NATIVE was removed
+        if config.mode != MODE_CUSTOM:
+            raise PreflightError("invalid_mode")
+        api_key = resolve_api_key(config, snapshot)
+        if not api_key:
+            raise PreflightError("api_key_unavailable")
+        selection = run_custom_selection(prompt, config, deadline, api_key,
+                                         snapshot=snapshot)
 
         if selection.decision == "abstain":
             return PreflightResult(
@@ -1224,11 +1211,6 @@ def status_report() -> Dict[str, Any]:
         "effective_mode": config.mode if not config.diagnosis else MODE_DISABLED,
         "diagnosis": config.diagnosis,
     }
-    if config.mode == MODE_NATIVE and not config.diagnosis:
-        # No shipped adapter supplies ae_native_selection (no host offers a
-        # pre-inference selection surface), so every prompt runs Mode 0.
-        report["effective_mode"] = MODE_DISABLED
-        report["diagnosis"] = "mode1_native_selection_unavailable"
     if config.mode == MODE_CUSTOM and not config.diagnosis:
         report["endpoint"] = config.endpoint
         report["sdk"] = config.sdk

@@ -254,33 +254,33 @@ class ModelConfigTests(PreflightTestCase):
 
     def test_valid_modes(self):
         self._check('{"mode": 0}', 0)
-        self._check('{"mode": 1}', 1)
-        self._check('{"mode": 2, "endpoint": '
+        # Mode 1 is now MODE_CUSTOM (was MODE_NATIVE)
+        self._check('{"mode": 1, "endpoint": '
                     '"https://openrouter.ai/api/v1", "sdk": "openai", '
-                    '"model": "provider/model"}', 2)
+                    '"model": "provider/model"}', 1)
 
     def test_mode_must_be_exact_integer(self):
         for bad in ("true", '"0"', '"2"', "2.0", "3", "-1", "null"):
             self._check(f'{{"mode": {bad}}}', 0,
-                        "mode_not_0_1_or_2")
+                        "mode_not_0_or_1")
 
     def test_mode2_field_validation(self):
         cases = [
-            '{"mode": 2}',
-            '{"mode": 2, "sdk": "openai", "model": "x"}',
-            '{"mode": 2, "endpoint": "http://h.example", '
+            '{"mode": 1}',
+            '{"mode": 1, "sdk": "openai", "model": "x"}',
+            '{"mode": 1, "endpoint": "http://h.example", '
             '"sdk": "openai", "model": "x"}',
-            '{"mode": 2, "endpoint": "ftp://h.example", '
+            '{"mode": 1, "endpoint": "ftp://h.example", '
             '"sdk": "openai", "model": "x"}',
-            '{"mode": 2, "endpoint": '
+            '{"mode": 1, "endpoint": '
             '"https://user:pw@h.example", "sdk": "openai", "model": "x"}',
         ]
         for content in cases:
             self._check(content, 0, "endpoint")
-        self._check('{"mode": 2, "endpoint": '
+        self._check('{"mode": 1, "endpoint": '
                     '"https://h.example", "sdk": "cohere", "model": "x"}',
                     0, "sdk")
-        self._check('{"mode": 2, "endpoint": '
+        self._check('{"mode": 1, "endpoint": '
                     '"https://h.example", "sdk": "anthropic"}', 0, "model")
 
     def test_duplicate_fields_rejected(self):
@@ -298,21 +298,24 @@ class ModelConfigTests(PreflightTestCase):
         config = self.module.load_model_config()
         self.assertEqual((config.mode, config.diagnosis), (0, ""))
 
-    def test_mode2_key_reference_validation(self):
-        base = ('{"mode": 2, "endpoint": "https://h.example", "sdk": "openai", '
+    def test_mode1_key_reference_validation(self):
+        base = ('{"mode": 1, "endpoint": "https://h.example", "sdk": "openai", '
                 '"model": "x", "api_key_ref": %s}')
         for bad in ('"lower_case"', '""', "7", '"WITH SPACE"'):
             self._check(base % bad, 0, "api_key_ref")
-        self._check(base % '"CUSTOM_SELECTOR_KEY"', 2)
+        self._check(base % '"CUSTOM_SELECTOR_KEY"', 1)
 
-    def test_mode_0_and_1_ignore_custom_fields(self):
-        self._check('{"mode": 1, "endpoint": '
-                    '"http://ignored.example", "sdk": "bogus", "model": ""}', 1)
+    def test_mode_0_ignores_custom_fields(self):
+        # Mode 0 ignores custom fields
         self._check('{"mode": 0, "endpoint": "nope"}', 0)
+        # Mode 1 (MODE_CUSTOM) validates custom fields
+        self._check('{"mode": 1, "endpoint": '
+                    '"https://valid.example", "sdk": "openai", "model": "x"}', 1)
 
     def test_config_is_reread_per_call(self):
         self._check('{"mode": 0}', 0)
-        self._check('{"mode": 1}', 1)
+        self._check('{"mode": 1, "endpoint": '
+                    '"https://valid.example", "sdk": "openai", "model": "x"}', 1)
         self.api_file.unlink()
         self.assertEqual(self.module.load_model_config().mode, 0)
 
@@ -748,8 +751,8 @@ class Mode0ParityTests(PreflightTestCase):
         self.assertEqual(self.context_of(out), self.legacy_render())
         self.assertIn("preflight config rejected", err)
 
-    def test_mode2_invalid_settings_never_touch_the_network(self):
-        self.write_model({"mode": 2,
+    def test_mode1_invalid_settings_never_touch_the_network(self):
+        self.write_model({"mode": 1,
                           "endpoint": "http://insecure.example",
                           "sdk": "openai", "model": "x"})
         with patch.object(socket, "socket") as blocked:
@@ -792,147 +795,6 @@ class Mode0ParityTests(PreflightTestCase):
 
 
 # ---------------------------------------------------------------------------
-# Mode 1: adapter-supplied native selection (review 5 / 10)
-# ---------------------------------------------------------------------------
-
-
-class Mode1Tests(PreflightTestCase):
-    def setUp(self):
-        super().setUp()
-        self.write_model({"mode": 1})
-        self.event = {
-            "hook_event_name": "UserPromptSubmit",
-            "session_id": "mode1-session",
-            "cwd": str(REPO_DIR),
-            "prompt": PROMPT,
-        }
-        self.runtime = load_module("runtime_mode1_test", RUNTIME)
-        self.legacy = self.runtime.skill_context("codex", PROMPT)
-
-    def test_missing_native_selection_falls_back_without_network(self):
-        with patch.object(socket, "socket") as blocked:
-            blocked.side_effect = AssertionError("mode 1 must not egress")
-            result = self.module.preflight_context(
-                "codex", PROMPT, {}, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.context, self.legacy)
-        self.assertEqual(result.effective_mode, 0)
-        self.assertIn("mode1_native_selection_unavailable",
-                      result.fallback_reason)
-
-    def test_valid_native_selection_renders_package(self):
-        event = dict(self.event, ae_native_selection={
-            "decision": "selected",
-            "items": [{"id": "skill:postgresql-optimization",
-                       "reason": "planner analysis"}],
-        })
-        with patch.object(socket, "socket") as blocked:
-            blocked.side_effect = AssertionError("mode 1 must not egress")
-            result = self.module.preflight_context(
-                "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.effective_mode, 1)
-        self.assertIn("skill:postgresql-optimization", result.context)
-        self.assertNotIn("skill candidates", result.context)
-
-    def test_invalid_native_selection_falls_back(self):
-        event = dict(self.event, ae_native_selection={"decision": "bogus"})
-        result = self.module.preflight_context(
-            "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.context, self.legacy)
-        self.assertEqual(result.effective_mode, 0)
-
-    def test_auto_on_opencode_is_unsupported_even_with_a_fixture_payload(self):
-        event = dict(self.event, ae_native_selection={"decision": "abstain"})
-        result = self.module.preflight_context(
-            "opencode", PROMPT, event, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.context, self.legacy)
-        self.assertEqual(result.fallback_reason, "mode1_host_unsupported")
-
-    def test_native_handoff_must_be_a_final_selection(self):
-        event = dict(self.event, ae_native_selection={
-            "decision": "lookup", "queries": ["PostgreSQL"],
-        })
-        result = self.module.preflight_context(
-            "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.context, self.legacy)
-        self.assertEqual(result.fallback_reason, "mode1_selection_not_final")
-
-    def test_registry_change_during_selection_discards_the_package(self):
-        event = dict(self.event, ae_native_selection={
-            "decision": "selected", "items": [{"id": "skill:postgresql-optimization"}],
-        })
-        with patch.object(self.module, "registry_revision", side_effect=["before", "after"]):
-            result = self.module.preflight_context(
-                "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.context, self.legacy)
-        self.assertEqual(result.fallback_reason, "registry_changed")
-
-    def test_registry_change_during_render_also_discards_the_package(self):
-        event = dict(self.event, ae_native_selection={
-            "decision": "selected", "items": [{"id": "skill:postgresql-optimization"}],
-        })
-        with patch.object(self.module, "registry_revision", side_effect=["same", "same", "changed"]):
-            result = self.module.preflight_context(
-                "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.context, self.legacy)
-        self.assertEqual(result.fallback_reason, "registry_changed")
-
-    def test_required_package_overflow_returns_the_complete_legacy_fallback(self):
-        item = self.module.ResolvedItem(
-            id="skill:fixture", type="skill", ref="/long/" * 400 + "SKILL.md",
-            delivery="direct_read", purpose="Inspect", required=True,
-        )
-        event = dict(self.event, ae_native_selection={
-            "decision": "selected", "items": [{"id": "skill:fixture"}],
-        })
-        with patch.object(self.module, "build_package", return_value=([item], [])):
-            result = self.module.preflight_context(
-                "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.context, self.legacy)
-        self.assertEqual(result.effective_mode, 0)
-        self.assertEqual(result.fallback_reason, "package_budget_exceeded")
-
-    def test_result_expiring_during_render_is_discarded(self):
-        event = dict(self.event, ae_native_selection={
-            "decision": "selected", "items": [{"id": "skill:postgresql-optimization"}],
-        })
-        render = self.module.render_package
-
-        def slow_render(*args, **kwargs):
-            time.sleep(0.12)
-            return render(*args, **kwargs)
-
-        with patch.dict(os.environ, {"AE_PREFLIGHT_DEADLINE_MS": "100"}), \
-                patch.object(self.module, "render_package", side_effect=slow_render):
-            result = self.module.preflight_context(
-                "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.context, self.legacy)
-        self.assertEqual(result.fallback_reason, "timeout")
-
-    def test_mode1_never_switches_to_mode2(self):
-        # Even with a fully configured custom endpoint stored alongside,
-        # a failing Mode 1 stays on Mode 0 for the turn (review 14).
-        self.write_model({"mode": 1,
-                          "endpoint": "https://openrouter.ai/api/v1",
-                          "sdk": "openai", "model": "provider/free"})
-        with patch.object(socket, "socket") as blocked:
-            blocked.side_effect = AssertionError("no auto mode switch")
-            result = self.module.preflight_context(
-                "codex", PROMPT, {}, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.effective_mode, 0)
-
-    def test_native_selection_required_item_unavailable_falls_back(self):
-        event = dict(self.event, ae_native_selection={
-            "decision": "selected",
-            "items": [{"id": "mcp:serper-mcp"}],
-        })
-        result = self.module.preflight_context(
-            "codex", PROMPT, event, fallback=lambda a, p: self.legacy)
-        self.assertEqual(result.context, self.legacy)
-        self.assertIn("required_capability_unavailable",
-                      result.fallback_reason)
-
-
-# ---------------------------------------------------------------------------
 # Mode 2: custom model through the runtime (review 9 / 12 / 13)
 # ---------------------------------------------------------------------------
 
@@ -957,7 +819,7 @@ class Mode2EndToEndTests(PreflightTestCase):
 
     def start(self, responses, delay=0.0):
         self.fixture = SelectorFixture(responses, delay=delay)
-        self.write_model({"mode": 2,
+        self.write_model({"mode": 1,
                           "endpoint": self.fixture.endpoint,
                           "sdk": "openai",
                           "model": "fixture/selector"})
@@ -1179,7 +1041,7 @@ class AnthropicProtocolTests(PreflightTestCase):
             "stop_reason": "end_turn",
         }])
         self.addCleanup(fixture.stop)
-        self.write_model({"mode": 2,
+        self.write_model({"mode": 1,
                           "endpoint": fixture.endpoint_base,
                           "sdk": "anthropic",
                           "model": "fixture/claude"})
@@ -1212,7 +1074,7 @@ class AnthropicProtocolTests(PreflightTestCase):
         self.addCleanup(fixture.stop)
         # A 302 makes urllib's no-redirect handler raise HTTPError 302.
         fixture.responses.append((302, {}))
-        self.write_model({"mode": 2,
+        self.write_model({"mode": 1,
                           "endpoint": fixture.endpoint,
                           "sdk": "openai", "model": "fixture"})
         event = {
@@ -1236,14 +1098,14 @@ class AnthropicProtocolTests(PreflightTestCase):
 
 
 class CredentialResolverTests(PreflightTestCase):
-    def mode2(self, reference="PREFLIGHT_API_KEY"):
-        self.write_model({"mode": 2, "endpoint": "https://openrouter.example/api/v1",
+    def mode1(self, reference="PREFLIGHT_API_KEY"):
+        self.write_model({"mode": 1, "endpoint": "https://openrouter.example/api/v1",
                           "sdk": "openai", "model": "provider/free",
                           "api_key_ref": reference})
         return self.module.load_model_config()
 
     def test_key_comes_only_from_the_ui_api_reference(self):
-        config = self.mode2("CUSTOM_SELECTOR_KEY")
+        config = self.mode1("CUSTOM_SELECTOR_KEY")
         self.assertEqual(config.api_key_ref, "CUSTOM_SELECTOR_KEY")
         os.environ["AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY"] = "from-env"
         self.addCleanup(os.environ.pop, "AGENT_ENHANCEMENTS_PREFLIGHT_API_KEY", None)
@@ -1255,7 +1117,7 @@ class CredentialResolverTests(PreflightTestCase):
         self.assertNotEqual(picked[0], picked[1], "one key per prompt, round-robin")
 
     def test_legacy_key_file_is_not_a_runtime_source(self):
-        config = self.mode2()
+        config = self.mode1()
         self.set_keys("PREFLIGHT_API_KEY", [])
         directory = self.module.config_dir()
         directory.mkdir(parents=True, exist_ok=True)
@@ -1265,7 +1127,7 @@ class CredentialResolverTests(PreflightTestCase):
         self.assertEqual(self.module.resolve_api_key(config), "")
 
     def test_connection_value_cannot_supply_a_selector_key(self):
-        self.mode2()
+        self.mode1()
         document = json.loads(self.api_file.read_text())
         document["api_keys"].pop("PREFLIGHT_API_KEY", None)
         document["connections"] = {"PREFLIGHT_API_KEY": "fixture-connection"}
@@ -1283,7 +1145,7 @@ class CredentialResolverTests(PreflightTestCase):
 
     def test_selector_uses_endpoint_key_and_redaction_from_one_snapshot(self):
         api = self.module._api_config()
-        section = {"mode": 2, "endpoint": "https://old.example/v1",
+        section = {"mode": 1, "endpoint": "https://old.example/v1",
                    "sdk": "openai", "model": "fixture"}
         original = {"preflight": section, "api_keys": {
             "PREFLIGHT_API_KEY": ["first-fixture-key"], "ANOTHER_KEY": ["secret-to-mask"],
@@ -1297,24 +1159,26 @@ class CredentialResolverTests(PreflightTestCase):
                 "codex", f"{PROMPT} secret-to-mask", {}, lambda *_: "legacy",
             )
 
-        self.assertEqual(result.effective_mode, 2)
+        self.assertEqual(result.effective_mode, 1)
         config, _, user_text, _, api_key = model.call_args.args
         self.assertEqual(config.endpoint, section["endpoint"])
         self.assertEqual(api_key, "first-fixture-key")
         self.assertNotIn("secret-to-mask", user_text)
 
-    def test_status_never_reports_mode1_as_effective_without_an_adapter(self):
-        # Final audit 2026-11-20 (P2): doctor printed "mode 1" although no
-        # installed adapter supplies ae_native_selection, so every prompt
-        # actually ran Mode 0.
-        self.write_model({"mode": 1})
+    def test_status_reports_mode1_custom_requires_key(self):
+        # Mode 1 is now MODE_CUSTOM (was MODE_NATIVE).
+        # Without an API key, it falls back to Mode 0.
+        self.write_model({"mode": 1, "endpoint": "https://h.example",
+                          "sdk": "openai", "model": "x"})
+        # Remove the default API key to test missing key scenario
+        self.set_keys("PREFLIGHT_API_KEY", [])
         report = self.module.status_report()
         self.assertEqual(report["requested_mode"], 1)
         self.assertEqual(report["effective_mode"], 0)
-        self.assertIn("mode1_native_selection_unavailable", report["diagnosis"])
+        self.assertIn("api_key_unavailable", report["diagnosis"])
 
     def test_no_secret_leaks_into_status_report(self):
-        self.mode2()
+        self.mode1()
         self.set_keys("PREFLIGHT_API_KEY", ["super-secret"])
         report = json.dumps(self.module.status_report())
         self.assertIn("api_key_present", report)

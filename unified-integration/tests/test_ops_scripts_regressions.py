@@ -38,7 +38,7 @@ def dispatch_match(prompt):
 class DispatchWordBoundaryTests(unittest.TestCase):
     ABSTAIN = [
         "register a new user endpoint",   # "gis" inside "register"
-        "fix the logistics module",       # "gis" inside "logistics"
+        # "fix the logistics module" now correctly matches karpathy-skills (word boundary "fix")
         "improve community docs",         # "unity" inside "community"
         "add an opportunity model",       # "unity" inside "opportunity"
         "nerd font install",              # "erd" inside "nerd"

@@ -1,0 +1,360 @@
+{
+  "audit_date": "2026-11-25",
+  "auditor": "Claude Code",
+  "session_id": "999e17e6-1be1-4b6e-b2dc-9d427b9ccb3e",
+  "findings": [
+    {
+      "finding_id": "AE-001",
+      "project": "andrej-karpathy-skills",
+      "severity": "CRITICAL",
+      "requirement": "Upstream Karpathy principles apply to ANY coding task (writing, fixing, refactoring, reviewing, debugging). ML/numerical work is optional, not prerequisite.",
+      "expected_behavior": "Dispatch routes general coding tasks (bug fix, refactor, review, debug) to karpathy-skills",
+      "actual_behavior": "Dispatch only routes on keywords: prototype|sketch|numpy|torch|first principle",
+      "root_cause": "dispatch.sh line 47 heuristic too narrow; upstream intent not fully understood during integration",
+      "evidence": [
+        "plugin-catalog/code/karpathy-skills/SKILL.md lines 21-24: 'Behavioral guidance for any coding task... ML/numerical work is one optional application'",
+        "unified-integration/scripts/dispatch.sh line 47: 'if echo \"$lc\" | grep -qE \"(prototype|sketch|numpy|torch|first principle)\"; then echo \"karpathy-skills\"; return; fi'",
+        "unified-integration/prompts/consolidated-system-prompt.txt lines 20-30: Principles included but not auto-activated for general coding"
+      ],
+      "reproduction_steps": [
+        "Run: bash unified-integration/scripts/dispatch.sh \"fix a bug in authentication\"",
+        "Observe: Returns 'none' (no skill matched)",
+        "Run: bash unified-integration/scripts/dispatch.sh \"prototype a neural network\"",
+        "Observe: Returns 'karpathy-skills'"
+      ],
+      "production_impact": "General coding tasks miss Karpathy's 4 principles (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution), reducing code quality and increasing over-engineering risk",
+      "relevant_industry_reference": "Upstream multica-ai/andrej-karpathy-skills README: 'These principles apply to all coding tasks'",
+      "recommended_remediation": "Expand dispatch.sh keywords to include general coding: fix|bug|refactor|review|debug|write code|implement|simplif|clean code|over-engineer",
+      "acceptance_criteria": [
+        "bash dispatch.sh \"fix a bug\" → karpathy-skills",
+        "bash dispatch.sh \"refactor this function\" → karpathy-skills",
+        "bash dispatch.sh \"review this code\" → karpathy-skills",
+        "bash dispatch.sh \"debug this issue\" → karpathy-skills",
+        "bash dispatch.sh \"simplify this code\" → karpathy-skills",
+        "bash dispatch.sh \"prototype ML model\" → karpathy-skills (existing)"
+      ],
+      "verification_method": "Run dispatch.sh with test prompts; verify karpathy-skills selected for general coding tasks",
+      "files_affected": ["unified-integration/scripts/dispatch.sh"],
+      "dependency_order": 1,
+      "phase": "Phase 1 - Release Blocker"
+    },
+    {
+      "finding_id": "AE-002",
+      "project": "runtime-dependencies",
+      "severity": "CRITICAL",
+      "requirement": "filelock >= 4.2.1 for published security fixes (test_runtime_dependencies.py line 55)",
+      "expected_behavior": "Test passes with filelock >= 4.2.1",
+      "actual_behavior": "Test fails: AssertionError: (3, 32, 0) not greater than or equal to (4, 2, 1)",
+      "root_cause": "Runtime dependency filelock version pinned at 3.32.0, security fixes in 4.2.1+ not included",
+      "evidence": [
+        "unified-integration/tests/test_runtime_dependencies.py line 55: self.assertGreaterEqual(installed, (4, 2, 1))",
+        "Test output: FAIL: test_filelock_runtime_includes_published_security_fixes"
+      ],
+      "reproduction_steps": [
+        "Run: python3 -m pytest unified-integration/tests/test_runtime_dependencies.py::RuntimeDependencyRefreshTests::test_filelock_runtime_includes_published_security_fixes -v",
+        "Observe: FAILED with version (3, 32, 0)"
+      ],
+      "production_impact": "Known security vulnerabilities in filelock 3.32.0 not patched; fails CI quality gate",
+      "relevant_industry_reference": "filelock changelog 4.2.1: security fixes for lock contention",
+      "recommended_remediation": "Update minimum filelock version to 4.2.1 in runtime dependencies; update vendored copy if applicable",
+      "acceptance_criteria": [
+        "python3 -c \"import filelock; print(filelock.__version__)\" >= 4.2.1",
+        "Test test_filelock_runtime_includes_published_security_fixes passes"
+      ],
+      "verification_method": "Run the specific test; verify version check passes",
+      "files_affected": ["unified-integration/tests/test_runtime_dependencies.py", "runtime dependency manifests"],
+      "dependency_order": 2,
+      "phase": "Phase 1 - Release Blocker"
+    },
+    {
+      "finding_id": "AE-003",
+      "project": "adaptive-preflight",
+      "severity": "CRITICAL",
+      "requirement": "Preflight Mode 1 (host-native selector) should work for claude-code and codex hosts",
+      "expected_behavior": "Host adapter supplies ae_native_selection event payload; runtime validates and uses it",
+      "actual_behavior": "No shipped adapter supplies ae_native_selection; every Mode 1 prompt falls back to Mode 0 with diagnosis 'mode1_native_selection_unavailable'",
+      "root_cause": "Mode 1 specified in CONTRACT 8.5 but no host adapter implementation exists",
+      "evidence": [
+        "unified-integration/scripts/adaptive_preflight.py lines 1143-1154: Mode 1 checks for ae_native_selection, raises PreflightError if missing",
+        "adaptive_preflight.py line 1228-1231: status_report() shows effective_mode=0, diagnosis='mode1_native_selection_unavailable'",
+        "No host adapter code found implementing pre-inference selection surface"
+      ],
+      "reproduction_steps": [
+        "Configure ui.api.json with preflight.mode=1",
+        "Run any prompt through runtime.py",
+        "Observe stderr: '[AgentEnhancements] preflight: mode 1 -> 0 fallback (mode1_native_selection_unavailable)'"
+      ],
+      "production_impact": "Mode 1 adds configuration complexity without function; users cannot benefit from host-native selection",
+      "relevant_industry_reference": "CONTRACT.md §8.5 Adaptive preflight contract",
+      "recommended_remediation": "Either implement ae_native_selection in Claude Code/Codex adapters, or remove Mode 1 from config schema and documentation",
+      "acceptance_criteria": [
+        "Option A: Mode 1 works with claude-code and codex (ae_native_selection supplied)",
+        "Option B: Mode 1 removed from VALID_MODES, config schema, docs"
+      ],
+      "verification_method": "Configure mode=1; verify selection works or mode removed",
+      "files_affected": ["unified-integration/scripts/adaptive_preflight.py", "host adapters (if Option A)"],
+      "dependency_order": 3,
+      "phase": "Phase 1 - Release Blocker"
+    },
+    {
+      "finding_id": "AE-004",
+      "project": "skills-reference-files",
+      "severity": "HIGH",
+      "requirement": "All JSON files in owned layer must be valid JSON (CI check)",
+      "expected_behavior": "python3 -m json.tool passes on all .json files",
+      "actual_behavior": "typescript-expert/references/tsconfig-strict.json contains comments (JSONC), fails json.tool",
+      "root_cause": "Reference file uses JSONC format (comments allowed) but CI validates as strict JSON",
+      "evidence": [
+        "skills/by-category/general/typescript-expert/references/tsconfig-strict.json lines 5-15: // comments",
+        "CI json validity check fails on this file"
+      ],
+      "reproduction_steps": [
+        "Run: python3 -m json.tool unified-integration/skills/by-category/general/typescript-expert/references/tsconfig-strict.json",
+        "Observe: 'Expecting property name enclosed in double quotes: line 5 column 9'"
+      ],
+      "production_impact": "CI noise; file not parseable by standard JSON tools",
+      "relevant_industry_reference": "CONTRACT.md §9.1: JSON validity of the skills index and friends",
+      "recommended_remediation": "Remove comments from file or rename to .jsonc and add CI exception",
+      "acceptance_criteria": [
+        "python3 -m json.tool passes on all owned .json files",
+        "File retains its reference value"
+      ],
+      "verification_method": "Run CI JSON check; verify no failures",
+      "files_affected": ["unified-integration/skills/by-category/general/typescript-expert/references/tsconfig-strict.json"],
+      "dependency_order": 4,
+      "phase": "Phase 2 - CI Blocker"
+    },
+    {
+      "finding_id": "AE-005",
+      "project": "skills-reference-files",
+      "severity": "HIGH",
+      "requirement": "All Python files in owned layer must compile (CI check: python3 -m py_compile)",
+      "expected_behavior": "python3 -m py_compile passes on all .py files",
+      "actual_behavior": "fastapi-router-py/assets/template.py contains Jinja2 template syntax ({{resource_name}}), fails py_compile",
+      "root_cause": "Template file named .py but contains Jinja2 syntax",
+      "evidence": [
+        "unified-integration/skills/by-category/general/fastapi-router-py/assets/template.py line 17: from app.models.{{resource_name}} import (",
+        "CI py_compile fails: SyntaxError: invalid syntax"
+      ],
+      "reproduction_steps": [
+        "Run: python3 -m py_compile unified-integration/skills/by-category/general/fastapi-router-py/assets/template.py",
+        "Observe: SyntaxError at {{resource_name}}"
+      ],
+      "production_impact": "CI noise; template not executable Python",
+      "relevant_industry_reference": "CONTRACT.md §9.1: py_compile on all integration Python scripts",
+      "recommended_remediation": "Rename to .j2 or .template extension; exclude from py_compile check",
+      "acceptance_criteria": [
+        "python3 -m py_compile passes on all owned .py files",
+        "Template file retains its purpose"
+      ],
+      "verification_method": "Run CI py_compile check; verify no failures",
+      "files_affected": ["unified-integration/skills/by-category/general/fastapi-router-py/assets/template.py"],
+      "dependency_order": 5,
+      "phase": "Phase 2 - CI Blocker"
+    },
+    {
+      "finding_id": "AE-006",
+      "project": "karpathy-skills / superpowers",
+      "severity": "HIGH",
+      "requirement": "Priority rules for overlapping clean-code principles must be enforced",
+      "expected_behavior": "Only one clean-code voice active per task (Karpathy, Superpowers, ECC, Ponytail)",
+      "actual_behavior": "Priority rules documented in SKILL.md line 88-89 but not enforced in dispatch/runtime",
+      "root_cause": "Rules documented but no runtime enforcement mechanism",
+      "evidence": [
+        "plugin-catalog/code/karpathy-skills/SKILL.md lines 88-89: 'Ponytail, Superpowers, and ECC clean-code membahas domain yang beririsan. Ikuti aturan prioritas proyek; gunakan satu suara'",
+        "dispatch.sh routes independently; no deduplication of overlapping principles"
+      ],
+      "reproduction_steps": [
+        "Run dispatch on task that could match multiple clean-code skills",
+        "Observe: Multiple skills may be recommended without priority resolution"
+      ],
+      "production_impact": "Duplicate/conflicting instructions in context; token waste; inconsistent behavior",
+      "relevant_industry_reference": "Karpathy SKILL.md integration notes",
+      "recommended_remediation": "Add priority logic in dispatch.sh or runtime skill selection; define clear precedence: Karpathy (general) > Superpowers (workflow) > ECC (config) > Ponytail (linting)",
+      "acceptance_criteria": [
+        "General coding task → Karpathy selected, others suppressed",
+        "Workflow task → Superpowers selected",
+        "Config generation → ECC selected",
+        "Linting task → Ponytail selected"
+      ],
+      "verification_method": "Test dispatch on overlapping scenarios; verify single clean-code voice",
+      "files_affected": ["unified-integration/scripts/dispatch.sh", "unified-integration/scripts/runtime.py"],
+      "dependency_order": 6,
+      "phase": "Phase 2 - High Priority"
+    },
+    {
+      "finding_id": "AE-007",
+      "project": "adaptive-preflight",
+      "severity": "HIGH",
+      "requirement": "Preflight Mode 2 should be configurable and testable",
+      "expected_behavior": "Mode 2 works with valid endpoint, sdk, model, api_key_ref",
+      "actual_behavior": "Mode 2 requires external API key not configured by default; untested in CI",
+      "root_cause": "Mode 2 designed for custom endpoints but no default configuration provided",
+      "evidence": [
+        "adaptive_preflight.py lines 274-291: Mode 2 validation requires endpoint, sdk, model, api_key_ref",
+        "adaptive_preflight.py line 1156-1160: api_key resolution from ui.api.json api_keys",
+        "No default ui.api.json with Mode 2 config committed"
+      ],
+      "reproduction_steps": [
+        "Configure ui.api.json with mode=2, valid endpoint, sdk, model, api_key_ref",
+        "Add api_keys.PREFLIGHT_API_KEY",
+        "Run prompt through runtime.py",
+        "Observe: Mode 2 selection or fallback"
+      ],
+      "production_impact": "Mode 2 unusable without manual configuration; not validated in CI",
+      "relevant_industry_reference": "CONTRACT.md §8.5 Mode 2 configuration",
+      "recommended_remediation": "Document Mode 2 setup procedure; add example ui.api.json; consider test with mock endpoint",
+      "acceptance_criteria": [
+        "Mode 2 documented with working example",
+        "Testable with mock endpoint in CI"
+      ],
+      "verification_method": "Follow documentation; verify Mode 2 selection works",
+      "files_affected": ["docs/CONFIGURATION.md", "unified-integration/config/ui.api.example.json"],
+      "dependency_order": 7,
+      "phase": "Phase 2 - High Priority"
+    },
+    {
+      "finding_id": "AE-008",
+      "project": "documentation",
+      "severity": "MEDIUM",
+      "requirement": "Reference files in skills/ should use standard formats or be documented",
+      "expected_behavior": "All reference files parseable by standard tools",
+      "actual_behavior": "Multiple reference files use JSONC (comments) or Jinja2 in .py files",
+      "root_cause": "Reference files copied from upstream without format normalization",
+      "evidence": [
+        "AE-004: tsconfig-strict.json (JSONC)",
+        "AE-005: template.py (Jinja2)",
+        "Likely more in skills/by-category/*/references/"
+      ],
+      "reproduction_steps": [
+        "Scan skills/by-category/*/references/ for non-standard formats",
+        "Run json.tool and py_compile on all"
+      ],
+      "production_impact": "CI noise; tooling incompatibility",
+      "relevant_industry_reference": "CONTRACT.md §9.1 automated checks",
+      "recommended_remediation": "Audit all reference files; normalize formats or add CI exceptions with documentation",
+      "acceptance_criteria": [
+        "All reference files documented with format",
+        "CI passes with configured exceptions"
+      ],
+      "verification_method": "Full scan of skills/ references; CI green",
+      "files_affected": ["Multiple files in unified-integration/skills/by-category/*/references/"],
+      "dependency_order": 8,
+      "phase": "Phase 3 - Medium Priority"
+    },
+    {
+      "finding_id": "AE-009",
+      "project": "discovery",
+      "severity": "MEDIUM",
+      "requirement": "Natural prompts should discover relevant capabilities without explicit names",
+      "expected_behavior": "General coding prompts discover Karpathy skills",
+      "actual_behavior": "Karpathy not discoverable for general coding (false negatives)",
+      "root_cause": "Same as AE-001 - dispatch heuristic too narrow",
+      "evidence": [
+        "registry.py search works for Karpathy but dispatch doesn't route",
+        "Test corpus: 10% false negative rate overall, Karpathy major contributor"
+      ],
+      "reproduction_steps": [
+        "python3 registry.py map \"fix a bug in user authentication\"",
+        "Observe: karpathy-skills not in top results"
+      ],
+      "production_impact": "Users must know skill names; defeats automatic discovery goal",
+      "relevant_industry_reference": "AE Fundamental Objective #3: Automatic capability discovery",
+      "recommended_remediation": "Same as AE-001 fix; also verify registry.py search ranking for general coding terms",
+      "acceptance_criteria": [
+        "registry.py map \"fix a bug\" includes karpathy-skills in top 5",
+        "registry.py map \"refactor code\" includes karpathy-skills in top 5"
+      ],
+      "verification_method": "Run registry.py map with general coding prompts",
+      "files_affected": ["unified-integration/scripts/dispatch.sh", "unified-integration/scripts/registry.py (scoring)"],
+      "dependency_order": 9,
+      "phase": "Phase 3 - Medium Priority"
+    },
+    {
+      "finding_id": "AE-010",
+      "project": "activation",
+      "severity": "MEDIUM",
+      "requirement": "Default native link set should enable core workflow",
+      "expected_behavior": "Core capabilities natively discoverable without --set",
+      "actual_behavior": "Default only links task-observer and Superpowers (2 skills); Karpathy not included",
+      "root_cause": "Context-frugal default (CONTRACT §8.4) limits default to 2 sources",
+      "evidence": [
+        "link-skills.sh line 43: DEFAULT_SOURCES=\"task-observer Superpowers\"",
+        "link-skills.sh line 49: CURATED_SOURCES=\"anthropic-skills replica-skill task-observer\""
+      ],
+      "reproduction_steps": [
+        "Run link-skills.sh (default)",
+        "Observe: Only task-observer and Superpowers linked",
+        "Run link-skills.sh --set curated",
+        "Observe: anthropic-skills, replica-skill, task-observer linked"
+      ],
+      "production_impact": "Karpathy principles not natively available; must use on-demand discovery",
+      "relevant_industry_reference": "CONTRACT.md §8.4 Context budget contract",
+      "recommended_remediation": "Consider adding karpathy-skills to CURATED_SOURCES for --set curated",
+      "acceptance_criteria": [
+        "link-skills.sh --set curated includes karpathy-skills",
+        "Context budget still within limits (~3.5k tokens)"
+      ],
+      "verification_method": "Run link-skills.sh --set curated; verify karpathy linked; check token budget",
+      "files_affected": ["unified-integration/scripts/link-skills.sh"],
+      "dependency_order": 10,
+      "phase": "Phase 3 - Medium Priority"
+    },
+    {
+      "finding_id": "AE-011",
+      "project": "ECC-tests",
+      "severity": "LOW",
+      "requirement": "CI timeout should exceed test duration with margin",
+      "expected_behavior": "ECC tests complete within CI timeout",
+      "actual_behavior": "ECC test suite ~45min, CI timeout 45min (risk of flaky timeout)",
+      "root_cause": "Timeout set equal to typical duration, no margin",
+      "evidence": [
+        ".github/workflows/ci.yml line 187: timeout-minutes: 45",
+        "ECC tests observed ~45min duration"
+      ],
+      "reproduction_steps": [
+        "Run ECC tests locally multiple times",
+        "Observe duration variance"
+      ],
+      "production_impact": "Risk of CI false failures due to timeout",
+      "relevant_industry_reference": "CI best practices: timeout > 2x typical duration",
+      "recommended_remediation": "Increase timeout to 60min or parallelize more aggressively",
+      "acceptance_criteria": [
+        "CI timeout-minutes >= 60 for ecc-tests job",
+        "Or ECC tests parallelized to <30min"
+      ],
+      "verification_method": "Check CI config; run ECC tests",
+      "files_affected": [".github/workflows/ci.yml"],
+      "dependency_order": 11,
+      "phase": "Phase 4 - Optional"
+    },
+    {
+      "finding_id": "AE-012",
+      "project": "markdownlint",
+      "severity": "LOW",
+      "requirement": "markdownlint should run in CI",
+      "expected_behavior": "npx markdownlint-cli runs on owned docs",
+      "actual_behavior": "npm registry blocked in sandbox; cannot install markdownlint-cli",
+      "root_cause": "Sandbox network policy blocks registry.npmjs.org",
+      "evidence": [
+        "CI workflow step: npx -y markdownlint-cli@0.49.1 ...",
+        "Sandbox violation: deny network-outbound registry.npmjs.org:443"
+      ],
+      "reproduction_steps": [
+        "Run npx markdownlint-cli in sandbox",
+        "Observe: network denied"
+      ],
+      "production_impact": "Markdown linting not verified in CI",
+      "relevant_industry_reference": "CONTRACT.md §9.1: markdownlint on all .md files",
+      "recommended_remediation": "Use cached npx or pre-install markdownlint in CI image",
+      "acceptance_criteria": [
+        "markdownlint runs in CI without network access",
+        "All owned .md files pass lint"
+      ],
+      "verification_method": "Run CI workflow; verify markdownlint step passes",
+      "files_affected": [".github/workflows/ci.yml"],
+      "dependency_order": 12,
+      "phase": "Phase 4 - Optional"
+    }
+  ]
+}

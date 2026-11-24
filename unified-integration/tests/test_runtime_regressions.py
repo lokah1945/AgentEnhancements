@@ -130,7 +130,7 @@ class BridgeFallbackTests(preflight_tests.PreflightTestCase):
         self.fixture = preflight_tests.SelectorFixture([
             preflight_tests.SelectorFixture.selection("selected", items=[
                 {"id": "skill:postgresql-optimization", "reason": "planner"}])])
-        self.write_model({"mode": 2,
+        self.write_model({"mode": 1,
                           "endpoint": self.fixture.endpoint,
                           "sdk": "openai",
                           "model": "fixture/selector"})

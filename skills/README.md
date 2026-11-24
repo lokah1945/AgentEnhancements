@@ -152,8 +152,7 @@ Plugins (4):
 
 - **BMAD Method** (`bmad-method`) — integrated-ready; external source — MCP:
   linear-mcp, github-issues-mcp, memory-mcp
-- **Caveman** (`caveman`) — integrated-ready; external source — MCP:
-  filesystem-mcp, style-mcp
+- **Caveman** (`caveman`) — integrated-ready; external source — MCP: (none)
 - **Get Shit Done (GSD)** (`gsd`) — integrated-ready; external source — MCP:
   task-router-mcp, memory-mcp
 - **GStack** (`gstack`) — integrated-ready; external source — MCP:

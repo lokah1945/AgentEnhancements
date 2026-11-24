@@ -14,7 +14,7 @@ Plugins: **4**
 - **Slug:** [`caveman`](./caveman/)
   - **Name:** Caveman
   - **Status:** integrated-ready
-  - **MCP servers:** filesystem-mcp, style-mcp
+  - **MCP servers:** —
   - **Source:** `JuliusBrussee/Caveman`
 
 - **Slug:** [`gsd`](./gsd/)

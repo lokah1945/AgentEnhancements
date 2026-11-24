@@ -280,10 +280,7 @@
       "path": "skills/tokens-optimization/caveman",
       "skill_md": "skills/tokens-optimization/caveman/SKILL.md",
       "manifest": "skills/tokens-optimization/caveman/manifest.json",
-      "mcp_servers": [
-        "filesystem-mcp",
-        "style-mcp"
-      ],
+      "mcp_servers": [],
       "trigger_keywords": [
         "caveman",
         "minimize",

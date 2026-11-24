@@ -179,6 +179,25 @@ LEXICAL_ALIASES = {
 # with DEFAULT_SOURCES in link-skills.sh.
 DEFAULT_NATIVE_SOURCES = ("Superpowers", "task-observer")
 
+# Host eligibility constants - host identifiers from native-integration.py
+SUPPORTED_HOSTS = ("claude-code", "codex", "opencode", "hermes")
+
+# Current host detection (set by runtime or CLI)
+_CURRENT_HOST: Optional[str] = None
+
+
+def set_current_host(host: Optional[str]) -> None:
+    """Set the current host for host-scoped filtering."""
+    global _CURRENT_HOST
+    if host is not None and host not in SUPPORTED_HOSTS:
+        raise ValueError(f"Unsupported host: {host}. Supported: {SUPPORTED_HOSTS}")
+    _CURRENT_HOST = host
+
+
+def get_current_host() -> Optional[str]:
+    """Get the current host for host-scoped filtering."""
+    return _CURRENT_HOST
+
 BUILT_IN_CAPABILITIES = [
     {
         "id": "capability:memory",
@@ -332,14 +351,34 @@ def load_skill_entries() -> List[Dict[str, Any]]:
     return entries
 
 
-def load_plugin_entries() -> List[Dict[str, Any]]:
-    """Plugin entries derived from the curated plugin catalog."""
+def load_plugin_entries(host: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Plugin entries derived from the curated plugin catalog.
+
+    If host is provided, filters plugins by host_eligibility.
+    """
     catalog = _read_json(CATALOG_JSON, {})
     entries: List[Dict[str, Any]] = []
+    current_host = host or get_current_host()
+
     for plugin in catalog.get("skills", []):
         name = plugin.get("name") or plugin.get("slug") or ""
         if not name:
             continue
+
+        # Host eligibility filtering
+        host_eligibility = plugin.get("host_eligibility", SUPPORTED_HOSTS)
+        if current_host and current_host not in host_eligibility:
+            continue
+
+        # Provenance object
+        provenance = plugin.get("provenance", {
+            "type": "external-plugin",
+            "vendor": plugin.get("source_url", "").split("/")[-2] if plugin.get("source_url") else "unknown",
+            "license": plugin.get("source_license", ""),
+            "upstream_url": plugin.get("source_url", ""),
+            "vendored": plugin.get("vendored", False)
+        })
+
         entries.append({
             "id": f"plugin:{plugin.get('slug', name)}",
             "type": "plugin",
@@ -356,6 +395,9 @@ def load_plugin_entries() -> List[Dict[str, Any]]:
             "vendored": plugin.get("vendored", False),
             "mcp_servers": plugin.get("mcp_servers", []),
             "activation": "load the SKILL.md integration guide on demand",
+            "is_guide_only": plugin.get("is_guide_only", True),
+            "host_eligibility": host_eligibility,
+            "provenance": provenance,
         })
     return entries
 
@@ -392,7 +434,7 @@ def load_mcp_entries() -> List[Dict[str, Any]]:
     return entries
 
 
-def usable_entries(entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def usable_entries(entries: List[Dict[str, Any]], host: Optional[str] = None) -> List[Dict[str, Any]]:
     """Hide unconfigured MCPs from agent-facing search/map/list results."""
     import importlib.util
     spec = importlib.util.spec_from_file_location("ae_registry_api", UNIFIED_DIR / "scripts/api_config.py")
@@ -409,18 +451,58 @@ def load_capability_entries() -> List[Dict[str, Any]]:
     for cap in BUILT_IN_CAPABILITIES:
         entry = dict(cap)
         entry["usage"] = entry["usage"].format(unified=str(UNIFIED_DIR))
+        # Add provenance to built-in capabilities
+        entry["provenance"] = {
+            "type": "ae-builtin",
+            "vendor": "AgentEnhancements",
+            "license": "Apache-2.0",
+            "upstream_url": "https://github.com/lokah1945/AgentEnhancements",
+            "vendored": False
+        }
         entries.append(entry)
     return entries
 
 
-def load_all_entries() -> List[Dict[str, Any]]:
-    """Every registry entry, skills first (primary surface)."""
-    return (
+def _deduplicate_entries(entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Deduplicate entries by semantic equivalence WITHIN the same type only.
+
+    Cross-type deduplication (e.g., skill vs capability with same name) is NOT done
+    because they serve different purposes (e.g., capability:dispatcher is a built-in
+    AE capability, skill:dispatch is a methodology skill).
+    """
+    # Priority within each type: keep the first occurrence (stable)
+    seen: Dict[str, Dict[str, Any]] = {}
+
+    for entry in entries:
+        name = entry.get("name", "").lower().strip()
+        entry_type = entry.get("type", "")
+        if not name:
+            continue
+
+        # Deduplicate within type only
+        semantic_key = f"{entry_type}:{name}"
+
+        if semantic_key not in seen:
+            seen[semantic_key] = entry
+
+    # Return deduplicated entries, preserving original order within type
+    result = list(seen.values())
+    return result
+
+
+def load_all_entries(host: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Every registry entry, skills first (primary surface).
+
+    If host is provided, filters plugins by host_eligibility.
+    Deduplicates semantically equivalent entries across types.
+    """
+    all_entries = (
         load_skill_entries()
-        + load_plugin_entries()
+        + load_plugin_entries(host)
         + load_mcp_entries()
         + load_capability_entries()
     )
+    return _deduplicate_entries(all_entries)
 
 
 # ---------------------------------------------------------------------------
@@ -804,6 +886,12 @@ def _card(entry: Dict[str, Any], score: Optional[int] = None) -> Dict[str, Any]:
         card["blocker"] = ready["blocker"][:80]
     if score is not None:
         card["why"] = f"relevance score {score}"
+    # Include guide-only flag for plugins
+    if entry.get("is_guide_only") is not None:
+        card["is_guide_only"] = entry["is_guide_only"]
+    # Include provenance for audit trail
+    if entry.get("provenance"):
+        card["provenance"] = entry["provenance"]
     return card
 
 
@@ -1045,6 +1133,12 @@ def _lookup_card(entry: Dict[str, Any]) -> Dict[str, Any]:
     }
     if ready.get("ready") != "yes" and ready.get("blocker"):
         card["blocker"] = ready["blocker"][:80]
+    # Include guide-only flag for plugins
+    if entry.get("is_guide_only") is not None:
+        card["is_guide_only"] = entry["is_guide_only"]
+    # Include provenance for audit trail
+    if entry.get("provenance"):
+        card["provenance"] = entry["provenance"]
     return card
 
 

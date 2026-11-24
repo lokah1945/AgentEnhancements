@@ -34,7 +34,21 @@
       ],
       "source_url": "https://github.com/addyosmani/agent-skills",
       "source_license": "Apache-2.0 (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "addyosmani",
+        "license": "Apache-2.0 (verify on upstream)",
+        "upstream_url": "https://github.com/addyosmani/agent-skills",
+        "vendored": false
+      }
     },
     {
       "id": "code-karpathy-skills",
@@ -58,7 +72,21 @@
       ],
       "source_url": "https://github.com/multica-ai/andrej-karpathy-skills",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "multica-ai",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/multica-ai/andrej-karpathy-skills",
+        "vendored": false
+      }
     },
     {
       "id": "code-mattpocock-skills",
@@ -82,7 +110,21 @@
       ],
       "source_url": "https://github.com/mattpocock/skills",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "mattpocock",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/mattpocock/skills",
+        "vendored": false
+      }
     },
     {
       "id": "code-replica-skill",
@@ -109,7 +151,21 @@
       "source_url": "https://github.com/Jakeschincariol/replica-skill",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 11
+      "sub_skills_count": 11,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "Jakeschincariol",
+        "license": "MIT",
+        "upstream_url": "https://github.com/Jakeschincariol/replica-skill",
+        "vendored": true
+      }
     },
     {
       "id": "research-agent-reach",
@@ -133,7 +189,21 @@
       ],
       "source_url": "https://github.com/Panniantong/Agent-Reach",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "Panniantong",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/Panniantong/Agent-Reach",
+        "vendored": false
+      }
     },
     {
       "id": "research-graphify",
@@ -158,7 +228,21 @@
       ],
       "source_url": "https://github.com/Graphify-Labs/graphify",
       "source_license": "Apache-2.0 (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "Graphify-Labs",
+        "license": "Apache-2.0 (verify on upstream)",
+        "upstream_url": "https://github.com/Graphify-Labs/graphify",
+        "vendored": false
+      }
     },
     {
       "id": "research-last-30-days",
@@ -187,7 +271,21 @@
       ],
       "source_url": "https://github.com/mvanhorn/last30days-skill",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "mvanhorn",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/mvanhorn/last30days-skill",
+        "vendored": false
+      }
     },
     {
       "id": "research-rea",
@@ -217,7 +315,21 @@
       ],
       "source_url": "https://github.com/morluto/rea",
       "source_license": "MIT",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "morluto",
+        "license": "MIT",
+        "upstream_url": "https://github.com/morluto/rea",
+        "vendored": false
+      }
     },
     {
       "id": "research-understand-anything",
@@ -242,7 +354,21 @@
       ],
       "source_url": "https://github.com/Egonex-AI/Understand-Anything",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "Egonex-AI",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/Egonex-AI/Understand-Anything",
+        "vendored": false
+      }
     },
     {
       "id": "tokens-bmad-method",
@@ -267,7 +393,21 @@
       ],
       "source_url": "https://github.com/bmad-code-org/BMAD-METHOD",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "bmad-code-org",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/bmad-code-org/BMAD-METHOD",
+        "vendored": false
+      }
     },
     {
       "id": "tokens-caveman",
@@ -290,7 +430,21 @@
       ],
       "source_url": "https://github.com/JuliusBrussee/Caveman",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "JuliusBrussee",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/JuliusBrussee/Caveman",
+        "vendored": false
+      }
     },
     {
       "id": "tokens-gsd",
@@ -314,7 +468,21 @@
       ],
       "source_url": "https://github.com/gsd-build/get-shit-done",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "gsd-build",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/gsd-build/get-shit-done",
+        "vendored": false
+      }
     },
     {
       "id": "tokens-gstack",
@@ -337,7 +505,21 @@
       ],
       "source_url": "https://github.com/garrytan/gstack",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "garrytan",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/garrytan/gstack",
+        "vendored": false
+      }
     },
     {
       "id": "design-diagram-design",
@@ -361,7 +543,21 @@
       ],
       "source_url": "https://github.com/cathrynlavery/diagram-design",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "cathrynlavery",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/cathrynlavery/diagram-design",
+        "vendored": false
+      }
     },
     {
       "id": "design-impeccable",
@@ -385,7 +581,21 @@
       ],
       "source_url": "https://github.com/pbakaus/impeccable",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "pbakaus",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/pbakaus/impeccable",
+        "vendored": false
+      }
     },
     {
       "id": "design-ppt-master",
@@ -410,7 +620,21 @@
       ],
       "source_url": "https://github.com/hugohe3/ppt-master",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "hugohe3",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/hugohe3/ppt-master",
+        "vendored": false
+      }
     },
     {
       "id": "design-ui-ux-pro-max",
@@ -435,7 +659,21 @@
       ],
       "source_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "nextlevelbuilder",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+        "vendored": false
+      }
     },
     {
       "id": "multimedia-anthropic-skills",
@@ -470,7 +708,18 @@
       "source_license": "Apache-2.0 (per-skill LICENSE.txt)",
       "vendored": true,
       "vendored_path": "anthropic-skills/",
-      "skill_count": 19
+      "skill_count": 19,
+      "host_eligibility": [
+        "claude-code"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "anthropics",
+        "license": "Apache-2.0 (per-skill LICENSE.txt)",
+        "upstream_url": "https://github.com/anthropics/skills",
+        "vendored": true
+      }
     },
     {
       "id": "multimedia-humanizer",
@@ -494,7 +743,21 @@
       ],
       "source_url": "https://github.com/blader/humanizer",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "blader",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/blader/humanizer",
+        "vendored": false
+      }
     },
     {
       "id": "multimedia-hyperframes",
@@ -517,7 +780,21 @@
       ],
       "source_url": "https://github.com/heygen-com/hyperframes",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "heygen-com",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/heygen-com/hyperframes",
+        "vendored": false
+      }
     },
     {
       "id": "multimedia-openmontage",
@@ -541,12 +818,26 @@
       ],
       "source_url": "https://github.com/calesthio/OpenMontage",
       "source_license": "MIT (verify on upstream)",
-      "vendored": false
+      "vendored": false,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "calesthio",
+        "license": "MIT (verify on upstream)",
+        "upstream_url": "https://github.com/calesthio/OpenMontage",
+        "vendored": false
+      }
     },
     {
       "id": "agency-academic",
       "slug": "academic",
-      "name": "The Agency — Academic Division (6 personas)",
+      "name": "The Agency \u2014 Academic Division (6 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -567,12 +858,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 6
+      "sub_skills_count": 6,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-design",
       "slug": "design",
-      "name": "The Agency — Design Division (10 personas)",
+      "name": "The Agency \u2014 Design Division (10 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -593,12 +898,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 10
+      "sub_skills_count": 10,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-engineering",
       "slug": "engineering",
-      "name": "The Agency — Engineering Division (66 personas)",
+      "name": "The Agency \u2014 Engineering Division (66 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -620,12 +939,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 66
+      "sub_skills_count": 66,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-finance",
       "slug": "finance",
-      "name": "The Agency — Finance Division (5 personas)",
+      "name": "The Agency \u2014 Finance Division (5 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -646,12 +979,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 5
+      "sub_skills_count": 5,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-game-development",
       "slug": "game-development",
-      "name": "The Agency — Game Development Division (21 personas)",
+      "name": "The Agency \u2014 Game Development Division (21 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -673,12 +1020,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 21
+      "sub_skills_count": 21,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-gis",
       "slug": "gis",
-      "name": "The Agency — GIS Division (13 personas)",
+      "name": "The Agency \u2014 GIS Division (13 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -700,12 +1061,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 13
+      "sub_skills_count": 13,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-healthcare",
       "slug": "healthcare",
-      "name": "The Agency — Healthcare Division (3 personas)",
+      "name": "The Agency \u2014 Healthcare Division (3 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -724,12 +1099,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 3
+      "sub_skills_count": 3,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-marketing",
       "slug": "marketing",
-      "name": "The Agency — Marketing Division (37 personas)",
+      "name": "The Agency \u2014 Marketing Division (37 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -751,12 +1140,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 37
+      "sub_skills_count": 37,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-paid-media",
       "slug": "paid-media",
-      "name": "The Agency — Paid Media Division (7 personas)",
+      "name": "The Agency \u2014 Paid Media Division (7 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -777,12 +1180,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 7
+      "sub_skills_count": 7,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-product",
       "slug": "product",
-      "name": "The Agency — Product Division (6 personas)",
+      "name": "The Agency \u2014 Product Division (6 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -803,12 +1220,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 6
+      "sub_skills_count": 6,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-project-management",
       "slug": "project-management",
-      "name": "The Agency — Project Management Division (7 personas)",
+      "name": "The Agency \u2014 Project Management Division (7 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -829,12 +1260,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 7
+      "sub_skills_count": 7,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-research",
       "slug": "research",
-      "name": "The Agency — Research Division (1 personas)",
+      "name": "The Agency \u2014 Research Division (1 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -854,12 +1299,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 1
+      "sub_skills_count": 1,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-sales",
       "slug": "sales",
-      "name": "The Agency — Sales Division (9 personas)",
+      "name": "The Agency \u2014 Sales Division (9 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -880,12 +1339,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 9
+      "sub_skills_count": 9,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-security",
       "slug": "security",
-      "name": "The Agency — Security Division (12 personas)",
+      "name": "The Agency \u2014 Security Division (12 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -906,12 +1379,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 12
+      "sub_skills_count": 12,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-spatial-computing",
       "slug": "spatial-computing",
-      "name": "The Agency — Spatial Computing Division (6 personas)",
+      "name": "The Agency \u2014 Spatial Computing Division (6 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -933,12 +1420,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 6
+      "sub_skills_count": 6,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-specialized",
       "slug": "specialized",
-      "name": "The Agency — Specialized Division (59 personas)",
+      "name": "The Agency \u2014 Specialized Division (59 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -960,12 +1461,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 59
+      "sub_skills_count": 59,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-support",
       "slug": "support",
-      "name": "The Agency — Support Division (6 personas)",
+      "name": "The Agency \u2014 Support Division (6 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -986,12 +1501,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 6
+      "sub_skills_count": 6,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-testing",
       "slug": "testing",
-      "name": "The Agency — Testing Division (9 personas)",
+      "name": "The Agency \u2014 Testing Division (9 personas)",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -1012,12 +1541,26 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 9
+      "sub_skills_count": 9,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     },
     {
       "id": "agency-nexus",
       "slug": "nexus",
-      "name": "The Agency — NEXUS Orchestration Playbooks",
+      "name": "The Agency \u2014 NEXUS Orchestration Playbooks",
       "category": "agency",
       "version": "1.0.0",
       "status": "integrated-ready",
@@ -1038,7 +1581,21 @@
       "source_url": "https://github.com/msitarzewski/agency-agents",
       "source_license": "MIT",
       "vendored": true,
-      "sub_skills_count": 12
+      "sub_skills_count": 12,
+      "host_eligibility": [
+        "claude-code",
+        "codex",
+        "opencode",
+        "hermes"
+      ],
+      "is_guide_only": true,
+      "provenance": {
+        "type": "external-plugin",
+        "vendor": "msitarzewski",
+        "license": "MIT",
+        "upstream_url": "https://github.com/msitarzewski/agency-agents",
+        "vendored": true
+      }
     }
   ],
   "orchestrators": [

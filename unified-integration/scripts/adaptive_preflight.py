@@ -1121,6 +1121,11 @@ def preflight_context(
     legacy ``skill_context``) with a diagnosis. Memory effects stay in
     runtime.py and run exactly once regardless of the mode.
     """
+    # Set current host for registry host-scoped filtering
+    registry = _registry()
+    if hasattr(registry, 'set_current_host'):
+        registry.set_current_host(agent)
+
     config, snapshot = _read_model_snapshot()
     if config.diagnosis:
         _diagnose(f"preflight config rejected ({config.diagnosis}); running Mode 0")

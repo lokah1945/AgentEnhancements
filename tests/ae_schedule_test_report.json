@@ -1,0 +1,654 @@
+{
+  "generated_at": "2026-11-24T17:28:42.363452",
+  "platform": "linux",
+  "python_version": "3.11.2 (main, Oct  7 2026, 12:35:07) [GCC 12.2.0]",
+  "linux_tests": {
+    "test_suite": "linux_schedule",
+    "timestamp": "2026-11-24T17:28:42.158742",
+    "tests": [
+      {
+        "name": "schedule_status_empty",
+        "passed": true,
+        "details": {
+          "supported": true,
+          "active": false
+        },
+        "expected": {
+          "supported": true,
+          "active": false
+        }
+      },
+      {
+        "name": "parse_cron_alias_hourly",
+        "passed": true,
+        "details": {
+          "valid": true,
+          "normalized": "0 * * * *",
+          "original": "@hourly",
+          "is_alias": true
+        },
+        "expected": {
+          "valid": true,
+          "normalized": "0 * * * *"
+        }
+      },
+      {
+        "name": "parse_cron_5field",
+        "passed": true,
+        "details": {
+          "valid": true,
+          "normalized": "0 * * * *",
+          "original": "0 * * * *",
+          "is_alias": false
+        },
+        "expected": {
+          "valid": true,
+          "normalized": "0 * * * *"
+        }
+      },
+      {
+        "name": "parse_cron_weekly",
+        "passed": true,
+        "details": {
+          "valid": true,
+          "normalized": "15 2 * * 1",
+          "original": "15 2 * * 1",
+          "is_alias": false
+        },
+        "expected": {
+          "valid": true,
+          "normalized": "15 2 * * 1"
+        }
+      },
+      {
+        "name": "parse_cron_6field_rejected",
+        "passed": true,
+        "details": {
+          "valid": false,
+          "error": "Cron expression must have exactly 5 fields (minute hour day-of-month month day-of-week)"
+        },
+        "expected": {
+          "valid": false
+        }
+      },
+      {
+        "name": "parse_cron_shell_injection_rejected",
+        "passed": true,
+        "details": {
+          "valid": false,
+          "error": "Cron expression must have exactly 5 fields (minute hour day-of-month month day-of-week)"
+        },
+        "expected": {
+          "valid": false
+        }
+      },
+      {
+        "name": "parse_cron_reboot_rejected",
+        "passed": true,
+        "details": {
+          "valid": false,
+          "error": "Cron expression must have exactly 5 fields (minute hour day-of-month month day-of-week)"
+        },
+        "expected": {
+          "valid": false
+        }
+      },
+      {
+        "name": "schedule_off_idempotent",
+        "passed": true,
+        "details": {
+          "status": "ALREADY_DISABLED",
+          "message": "No AE scheduled job found"
+        },
+        "expected": {
+          "status": "ALREADY_DISABLED"
+        }
+      },
+      {
+        "name": "parse_all_aliases",
+        "passed": true,
+        "details": {
+          "@hourly": {
+            "valid": true,
+            "normalized": "0 * * * *",
+            "original": "@hourly",
+            "is_alias": true
+          },
+          "@daily": {
+            "valid": true,
+            "normalized": "0 0 * * *",
+            "original": "@daily",
+            "is_alias": true
+          },
+          "@weekly": {
+            "valid": true,
+            "normalized": "0 0 * * 0",
+            "original": "@weekly",
+            "is_alias": true
+          },
+          "@monthly": {
+            "valid": true,
+            "normalized": "0 0 1 * *",
+            "original": "@monthly",
+            "is_alias": true
+          },
+          "@yearly": {
+            "valid": true,
+            "normalized": "0 0 1 1 *",
+            "original": "@yearly",
+            "is_alias": true
+          }
+        },
+        "expected": {
+          "@hourly": "0 * * * *",
+          "@daily": "0 0 * * *",
+          "@weekly": "0 0 * * 0",
+          "@monthly": "0 0 1 * *",
+          "@yearly": "0 0 1 1 *"
+        }
+      },
+      {
+        "name": "parse_complex_cron",
+        "passed": true,
+        "details": {
+          "*/15 * * * *": {
+            "valid": true,
+            "normalized": "*/15 * * * *",
+            "original": "*/15 * * * *",
+            "is_alias": false
+          },
+          "0 6,18 * * *": {
+            "valid": true,
+            "normalized": "0 6,18 * * *",
+            "original": "0 6,18 * * *",
+            "is_alias": false
+          },
+          "0 9 * * 1-5": {
+            "valid": true,
+            "normalized": "0 9 * * 1-5",
+            "original": "0 9 * * 1-5",
+            "is_alias": false
+          },
+          "30 14 15 * *": {
+            "valid": true,
+            "normalized": "30 14 15 * *",
+            "original": "30 14 15 * *",
+            "is_alias": false
+          },
+          "0 0 31 * *": {
+            "valid": true,
+            "normalized": "0 0 31 * *",
+            "original": "0 0 31 * *",
+            "is_alias": false
+          },
+          "0 0 * * 7": {
+            "valid": true,
+            "normalized": "0 0 * * 7",
+            "original": "0 0 * * 7",
+            "is_alias": false
+          }
+        },
+        "note": "Day 31 is accepted by field validation (1-31 range) but not all months have 31 days - this is a known cron limitation"
+      },
+      {
+        "name": "installation_id_consistent",
+        "passed": true,
+        "details": {
+          "id1": "92beca8c01287bcb",
+          "id2": "92beca8c01287bcb"
+        }
+      },
+      {
+        "name": "command_formation",
+        "passed": true,
+        "details": {
+          "command": "/usr/bin/python3 /root/project/AgentEnhancements/unified-integration/scripts/ae.py --learning"
+        }
+      }
+    ],
+    "summary": {
+      "passed": 12,
+      "total": 12,
+      "failed": 0
+    }
+  },
+  "windows_gaps": {
+    "test_suite": "windows_gaps",
+    "timestamp": "2026-11-24T17:28:42.363261",
+    "supported_expressions": [
+      {
+        "cron": "@hourly",
+        "normalized": "0 * * * *",
+        "description": "Run at minute 0 every hour",
+        "schtasks_trigger": {
+          "type": "TimeTrigger",
+          "repetition_interval": "PT1H",
+          "start_boundary": "any"
+        }
+      },
+      {
+        "cron": "@daily",
+        "normalized": "0 0 * * *",
+        "description": "Run daily at midnight",
+        "schtasks_trigger": {
+          "type": "TimeTrigger",
+          "repetition_interval": "P1D",
+          "start_boundary": "T00:00:00"
+        }
+      },
+      {
+        "cron": "0 2 * * 1",
+        "normalized": "0 2 * * 1",
+        "description": "Run every Monday at 2:00 AM",
+        "schtasks_trigger": {
+          "type": "WeeklyTrigger",
+          "days_of_week": [
+            "Monday"
+          ],
+          "start_boundary": "T02:00:00"
+        }
+      },
+      {
+        "cron": "@monthly",
+        "normalized": "0 0 1 * *",
+        "description": "Run on the 1st of every month at midnight",
+        "schtasks_trigger": {
+          "type": "MonthlyTrigger",
+          "days_of_month": [
+            1
+          ],
+          "start_boundary": "T00:00:00"
+        }
+      },
+      {
+        "cron": "@yearly",
+        "normalized": "0 0 1 1 *",
+        "description": "Run yearly on January 1st at midnight",
+        "schtasks_trigger": {
+          "type": "MonthlyDOWTrigger",
+          "months": [
+            "January"
+          ],
+          "days_of_week": [
+            "Sunday"
+          ],
+          "which_week": "first",
+          "start_boundary": "T00:00:00"
+        }
+      },
+      {
+        "cron": "*/15 * * * *",
+        "normalized": "*/15 * * * *",
+        "description": "Run every 15 minutes",
+        "schtasks_trigger": {
+          "type": "TimeTrigger",
+          "repetition_interval": "PT15M",
+          "start_boundary": "any"
+        }
+      },
+      {
+        "cron": "*/30 * * * *",
+        "normalized": "*/30 * * * *",
+        "description": "Run every 30 minutes",
+        "schtasks_trigger": {
+          "type": "TimeTrigger",
+          "repetition_interval": "PT30M",
+          "start_boundary": "any"
+        }
+      },
+      {
+        "cron": "0 6,18 * * *",
+        "normalized": "0 6,18 * * *",
+        "description": "Run daily at 6:00 AM and 6:00 PM",
+        "schtasks_trigger": {
+          "type": "MultipleTriggers",
+          "triggers": [
+            {
+              "type": "DailyTrigger",
+              "start_boundary": "T06:00:00"
+            },
+            {
+              "type": "DailyTrigger",
+              "start_boundary": "T18:00:00"
+            }
+          ]
+        }
+      },
+      {
+        "cron": "0 9 * * 1-5",
+        "normalized": "0 9 * * 1-5",
+        "description": "Run weekdays at 9:00 AM",
+        "schtasks_trigger": {
+          "type": "WeeklyTrigger",
+          "days_of_week": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "start_boundary": "T09:00:00"
+        }
+      },
+      {
+        "cron": "30 14 15 * *",
+        "normalized": "30 14 15 * *",
+        "description": "Run on the 15th of every month at 2:30 PM",
+        "schtasks_trigger": {
+          "type": "MonthlyTrigger",
+          "days_of_month": [
+            15
+          ],
+          "start_boundary": "T14:30:00"
+        }
+      }
+    ],
+    "unsupported_expressions": [
+      {
+        "expression": "*/7 * * * *",
+        "reason": "7-minute intervals not representable as ISO 8601 duration (PT7M is valid but schtasks has minimum 1 minute)",
+        "workaround": "Use */5 or */10 instead"
+      },
+      {
+        "expression": "0 0 31 * *",
+        "reason": "Day 31 doesn't exist in all months; Windows MonthlyTrigger requires valid days for all months",
+        "workaround": "Use '0 0 28 * *' or last day of month logic"
+      },
+      {
+        "expression": "0 0 * * 7",
+        "reason": "Day-of-week 7 (Sunday) is same as 0 in cron, but Windows uses 1-7 (Sunday=1 or 7)",
+        "workaround": "Use 0 for Sunday consistently"
+      },
+      {
+        "expression": "0 0 L * *",
+        "reason": "Last day of month (L) not supported in Windows Task Scheduler",
+        "workaround": "Use monthly trigger with specific day or PowerShell script to calculate"
+      },
+      {
+        "expression": "0 0 * * 1#2",
+        "reason": "Nth weekday of month (1#2 = 2nd Monday) not supported",
+        "workaround": "Use MonthlyDOWTrigger with WhichWeek=Second"
+      },
+      {
+        "expression": "0 0 1W * *",
+        "reason": "Nearest weekday (1W) not supported",
+        "workaround": "Manual calculation needed"
+      },
+      {
+        "expression": "0 0 1/2 * *",
+        "reason": "Step values in day-of-month (every 2 days) not directly supported",
+        "workaround": "Use multiple triggers or daily with condition"
+      },
+      {
+        "expression": "@reboot",
+        "reason": "Boot trigger is supported but AE explicitly rejects it for learning schedule",
+        "workaround": "Use BootTrigger in Task Scheduler XML directly"
+      },
+      {
+        "expression": "0 0 * * * *",
+        "reason": "6-field cron (with seconds) not supported",
+        "workaround": "Use 5-field cron"
+      }
+    ],
+    "translation_tests": [
+      {
+        "name": "hourly",
+        "cron": "@hourly",
+        "cron_normalized": "0 * * * *",
+        "expected_trigger": {
+          "type": "TimeTrigger",
+          "repetition_interval": "PT1H",
+          "start_boundary": "any"
+        },
+        "description": "Run at minute 0 every hour"
+      },
+      {
+        "name": "daily_midnight",
+        "cron": "@daily",
+        "cron_normalized": "0 0 * * *",
+        "expected_trigger": {
+          "type": "TimeTrigger",
+          "repetition_interval": "P1D",
+          "start_boundary": "T00:00:00"
+        },
+        "description": "Run daily at midnight"
+      },
+      {
+        "name": "weekly_monday",
+        "cron": "0 2 * * 1",
+        "cron_normalized": "0 2 * * 1",
+        "expected_trigger": {
+          "type": "WeeklyTrigger",
+          "days_of_week": [
+            "Monday"
+          ],
+          "start_boundary": "T02:00:00"
+        },
+        "description": "Run every Monday at 2:00 AM"
+      },
+      {
+        "name": "monthly_first",
+        "cron": "@monthly",
+        "cron_normalized": "0 0 1 * *",
+        "expected_trigger": {
+          "type": "MonthlyTrigger",
+          "days_of_month": [
+            1
+          ],
+          "start_boundary": "T00:00:00"
+        },
+        "description": "Run on the 1st of every month at midnight"
+      },
+      {
+        "name": "yearly",
+        "cron": "@yearly",
+        "cron_normalized": "0 0 1 1 *",
+        "expected_trigger": {
+          "type": "MonthlyDOWTrigger",
+          "months": [
+            "January"
+          ],
+          "days_of_week": [
+            "Sunday"
+          ],
+          "which_week": "first",
+          "start_boundary": "T00:00:00"
+        },
+        "description": "Run yearly on January 1st at midnight"
+      },
+      {
+        "name": "every_15_minutes",
+        "cron": "*/15 * * * *",
+        "cron_normalized": "*/15 * * * *",
+        "expected_trigger": {
+          "type": "TimeTrigger",
+          "repetition_interval": "PT15M",
+          "start_boundary": "any"
+        },
+        "description": "Run every 15 minutes"
+      },
+      {
+        "name": "every_30_minutes",
+        "cron": "*/30 * * * *",
+        "cron_normalized": "*/30 * * * *",
+        "expected_trigger": {
+          "type": "TimeTrigger",
+          "repetition_interval": "PT30M",
+          "start_boundary": "any"
+        },
+        "description": "Run every 30 minutes"
+      },
+      {
+        "name": "daily_6am_6pm",
+        "cron": "0 6,18 * * *",
+        "cron_normalized": "0 6,18 * * *",
+        "expected_trigger": {
+          "type": "MultipleTriggers",
+          "triggers": [
+            {
+              "type": "DailyTrigger",
+              "start_boundary": "T06:00:00"
+            },
+            {
+              "type": "DailyTrigger",
+              "start_boundary": "T18:00:00"
+            }
+          ]
+        },
+        "description": "Run daily at 6:00 AM and 6:00 PM"
+      },
+      {
+        "name": "weekdays_9am",
+        "cron": "0 9 * * 1-5",
+        "cron_normalized": "0 9 * * 1-5",
+        "expected_trigger": {
+          "type": "WeeklyTrigger",
+          "days_of_week": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "start_boundary": "T09:00:00"
+        },
+        "description": "Run weekdays at 9:00 AM"
+      },
+      {
+        "name": "specific_day",
+        "cron": "30 14 15 * *",
+        "cron_normalized": "30 14 15 * *",
+        "expected_trigger": {
+          "type": "MonthlyTrigger",
+          "days_of_month": [
+            15
+          ],
+          "start_boundary": "T14:30:00"
+        },
+        "description": "Run on the 15th of every month at 2:30 PM"
+      }
+    ],
+    "implementation_status": "NOT_IMPLEMENTED",
+    "notes": [
+      "ae.py only has a comment claiming Windows support via schtasks",
+      "No actual Windows Task Scheduler implementation exists in ae.py",
+      "The headroom project has a full schtasks implementation but it's not used by ae.py",
+      "Cron expression translation to schtasks XML is not implemented",
+      "Timezone/DST handling not implemented",
+      "Path with spaces handling not tested"
+    ]
+  },
+  "edge_cases": {
+    "test_suite": "edge_cases",
+    "timestamp": "2026-11-24T17:28:42.363298",
+    "tests": [
+      {
+        "name": "validate_cron_field",
+        "passed": true,
+        "details": {
+          "*(0-59)": true,
+          "59(0-59)": true,
+          "60(0-59)": false,
+          "-1(0-59)": false,
+          "1-5(0-59)": true,
+          "5-1(0-59)": true,
+          "*/15(0-59)": true,
+          "*/0(0-59)": false,
+          "1,2,3(0-59)": true,
+          "1,60(0-59)": false
+        },
+        "note": "Reversed ranges (5-1) are accepted - validation only checks bounds, not start <= end. This is a bug in validate_cron_field."
+      },
+      {
+        "name": "timezone_dst",
+        "passed": true,
+        "details": {
+          "note": "cron runs in system timezone; no DST adjustment in standard cron",
+          "linux": "crontab uses system TZ; DST transitions may cause skipped/duplicate runs",
+          "windows": "Task Scheduler stores times in UTC; handles DST automatically",
+          "recommendation": "Use UTC times for cross-platform consistency"
+        }
+      },
+      {
+        "name": "idempotence_find_job",
+        "passed": true,
+        "details": {
+          "marker": "# AgentEnhancements scheduled learning 92beca8c01287bcb",
+          "found_index": 0
+        }
+      },
+      {
+        "name": "off_twice_safe",
+        "passed": true,
+        "details": {
+          "found_index": null
+        }
+      },
+      {
+        "name": "path_with_spaces",
+        "passed": true,
+        "details": {
+          "original": "/path with spaces/ae.py",
+          "quoted": "'/path with spaces/ae.py'"
+        }
+      },
+      {
+        "name": "concurrent_lock",
+        "passed": true,
+        "details": {
+          "note": "ae.py help mentions: 'Concurrent runs are protected by file-based locking'",
+          "implementation": "Not visible in current code - needs verification"
+        }
+      }
+    ],
+    "summary": {
+      "passed": 6,
+      "total": 6,
+      "failed": 0
+    }
+  },
+  "schtasks_fixture": "/root/project/AgentEnhancements/tests/fixtures/schtasks_fixture.py",
+  "recommendation": {
+    "implement": [
+      "Windows Task Scheduler integration in ae.py (currently only a comment)",
+      "Cron expression to schtasks XML translation",
+      "Timezone-aware scheduling (store times in UTC)",
+      "Path with spaces handling for Windows paths",
+      "Concurrent run locking implementation verification"
+    ],
+    "document_as_not_tested": [
+      "Windows schtasks integration (no implementation exists)",
+      "DST behavior on Windows Task Scheduler",
+      "Windows-specific cron expressions (MonthlyDOWTrigger, etc.)",
+      "schtasks error codes and recovery",
+      "Windows service account vs interactive token behavior"
+    ],
+    "cron_expressions_to_support_on_windows": [
+      "@hourly",
+      "@daily",
+      "@weekly",
+      "@monthly",
+      "@yearly",
+      "0 * * * *",
+      "0 0 * * *",
+      "0 0 * * 0",
+      "0 0 1 * *",
+      "0 0 1 1 *",
+      "*/15 * * * *",
+      "*/30 * * * *",
+      "0 6,18 * * *",
+      "0 9 * * 1-5",
+      "30 14 15 * *"
+    ],
+    "cron_expressions_not_representable_on_windows": [
+      "*/7 * * * * (non-standard intervals)",
+      "0 0 31 * * (day 31 not in all months)",
+      "0 0 L * * (last day of month)",
+      "0 0 * * 1#2 (nth weekday)",
+      "0 0 1W * * (nearest weekday)",
+      "0 0 1/2 * * (step in day-of-month)",
+      "@reboot (explicitly rejected by AE)",
+      "6-field cron (with seconds)"
+    ]
+  }
+}

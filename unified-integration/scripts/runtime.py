@@ -128,7 +128,34 @@ def observer_context(agent: str) -> str:
     to MAX_OBSERVER_AMBIENT tokens (context contract §8.4): paths, the log
     command shape, and open-entry count - never observation bodies.
     Failures are advisory - a broken observer must never block the session.
+
+    NOTE: Only bootstraps if task-observer is NOT natively linked by default,
+    to avoid double context injection (native skill + lifecycle hook).
     """
+    # Check if task-observer is natively linked
+    # This check is best-effort; if it fails, we fall back to bootstrapping
+    natively_linked = False
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "ae_load_skills", Path(__file__).with_name("load-skills.py")
+        )
+        load_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(load_module)
+        loader = load_module.SkillsLoader(agent)
+        # Check if task-observer is in natively linked skills
+        natively_linked = any(
+            s.get("name") == "task-observer" and s.get("natively_linked_by_default", False)
+            for s in loader.index.get("skills", [])
+        )
+    except Exception:
+        # If we can't determine native link status, assume not natively linked
+        # to avoid breaking the observer bootstrap
+        pass
+
+    if natively_linked:
+        # Native skill provides the context; skip runtime bootstrap to avoid duplication
+        return ""
+
     try:
         spec = importlib.util.spec_from_file_location(
             "ae_task_observer", Path(__file__).with_name("task-observer.py")

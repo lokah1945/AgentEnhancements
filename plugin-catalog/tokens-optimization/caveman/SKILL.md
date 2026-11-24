@@ -2,114 +2,65 @@
 slug: caveman
 category: tokens-optimization
 version: 1.0.0
-status: integrated-ready
-mcp_servers: [tokenizer-mcp]
-trigger_keywords: [caveman, minimize, shorthand, compression]
+status: manifest-only
+mcp_servers: []
+trigger_keywords: [caveman, cavecrew, subagent compression]
 ---
 
-# Caveman
+# Caveman (Upstream: JuliusBrussee/caveman v4.2.0)
 
-Radical prompt compression: ringkas instruksi sampai ke core action verbs. Mengubah 'Please kindly write a function that...' menjadi 'fn(input)->output; test it;'. Buat hemat token hingga 70%.
+**THIS IS A MANIFEST-ONLY ENTRY DOCUMENTING UPSTREAM CAPABILITY. NO AE RUNTIME INTEGRATION EXISTS.**
 
-## Kapan dipakai
+## Upstream Reality (v4.2.0, 2026-11-22)
 
-- Edge deployment dengan budget sangat ketat
-- Prompt berulang di pipeline batch (jutaan call)
-- User eksplisit minta mode ultra-minimal
-- Debugging: prompt pendek lebih mudah trace
+Caveman provides TWO distinct capabilities:
 
-## Prasyarat
+### 1. Cavecrew Subagent Presets (Primary)
+Three subagent presets that answer in "ultracave voice" (compressed output):
+- **cavecrew-investigator**: Locate code (`path:line — symbol — note`)
+- **cavecrew-builder**: Surgical edits ≤2 files (`path:line-range — change. verified: …`)
+- **cavecrew-reviewer**: Diff review (`path:line: 🔴 severity: problem. fix.`)
 
-- MCP: `tokenizer-mcp`
-- Tools: `bash`, `read_file`, `write_file`
-- Opsional: env `CAVEMAN_MODE=true`
+**Token savings**: Subagent tool results returned compressed (~1/3 tokens vs vanilla Explore/edit/review). This is the REAL win — main context shrinks per delegation.
 
-## Capabilities
+### 2. Caveman System Prompt (Secondary)
+A system prompt for LLM-based prompt compression (requires LLM call):
+- Strips greetings, polite markers, hedges, narrative
+- Converts to `<verb> <object> <constraint>` structure
+- Uses syntax-heavy shorthand (symbols, `;` separators)
 
-1. Extreme prompt minimization — hapus semua filler, polite form, hedges.
-2. Intent-preserving rewrite — jaga semantic tetap sama.
-3. Syntax-heavy shorthand — pakai simbol operator ketika memperjelas.
+**NOT a standalone CLI tool or binary.** No `caveman` command exists upstream.
 
-## Workflow
+## What AE Manifest Claims Were INCORRECT
 
-1. Baca prompt input.
-2. Hapus: greeting, polite markers ("tolong", "mohon", "silakan"), hedges ("mungkin", "agaknya"), narasi pembuka.
-3. Konversi ke struktur: `<verb> <object> <constraint>`.
-4. Bila ada contoh, ringkas jadi `input -> output`.
-5. Tambah `;` antar-instruksi.
-6. Verifikasi semantic preservation dengan `tokenizer-mcp` (similarity ≥ 0.92).
-7. Tampilkan before/after dengan token delta.
+| Claim in Old Manifest | Upstream Reality |
+|----------------------|------------------|
+| "Radical prompt compression... hemat token hingga 70%" | Marketing claim, not measured |
+| "integrated-ready" | NO runtime integration in AE |
+| "MCP: tokenizer-mcp" | Does NOT exist |
+| "CAVEMAN_MODE=true env toggle" | Does NOT exist |
+| "similarity ≥ 0.92 threshold" | Invented |
+| "prompt rewriting via skill" | Requires LLM call, not deterministic tool |
 
-## Inputs
+## AE's Actual Compression Engine: Headroom
 
-- Prompt teks (Indonesia / English)
-- Opsional: target compression (default 70%)
-- Opsional: keep sample (default 1)
+AE uses **Headroom** (Rust binary at `headroom/target/release/headroom`) for deterministic compression:
+- Modes: auto, code, logs, json, markdown, generic
+- No LLM required
+- Preserves semantic meaning (line numbers, errors, checksums, provenance)
+- Fallback Python compressor when binary unavailable
 
-## Outputs
+## When to Use What
 
-- Prompt compressed (replace original)
-- `caveman-log.json` opsional: {original_tokens, compressed_tokens, similarity}
+| Need | Use |
+|------|-----|
+| Deterministic compression of logs/JSON/diffs/code | Headroom (`compress.py`) |
+| Subagent delegation with compressed output | Cavecrew presets (via upstream skill) |
+| LLM-based prompt rewriting (opt-in) | Caveman system prompt (manual) |
 
-## Contoh
+## Integration Notes
 
-### Contoh 1 — Function writing
-
-Prompt original (75 token):
-```
-Halo AI, tolong saya butuh bantuan untuk menulis sebuah function di 
-Python yang bisa menerima list angka dan mengembalikan rata-rata. 
-Tolong berikan juga contoh penggunaannya dan pastikan codenya 
-rapi serta mudah dibaca ya. Terima kasih banyak sebelumnya!
-```
-
-Caveman (18 token):
-```
-fn avg(list<num>)->num; ex: avg([1,2,3])=2; clean.
-```
-
-Compression: 76%.
-
-### Contoh 2 — Refactor request
-
-Prompt original (52 token):
-```
-Tolong refactor function ini supaya lebih efisien dan mudah dibaca, 
-pertimbangkan untuk memisahkan logic ke beberapa helper function 
-kalau perlu ya.
-```
-
-Caveman (14 token):
-```
-refactor fn: efficient; split helper if needed.
-```
-
-### Contoh 3 — Research brief
-
-Prompt original (110 token):
-```
-Halo, saya sedang melakukan riset tentang perkembangan teknologi 
-AI agent di Indonesia dan butuh bantuan untuk mencari informasi 
-terkait siapa saja startup yang bermain di ruang ini, berapa 
-pendanaan yang sudah mereka dapat, dan apa produk unggulan mereka. 
-Tolong berikan dalam format tabel ya.
-```
-
-Caveman (24 token):
-```
-riset: AI agent startup ID; cols: nama,funding,produk; tabular.
-```
-
-## Batasan & Keamanan
-
-- **Hanya untuk prompt internal agent**, bukan untuk komunikasi ke user (kecuali user minta).
-- Tidak kompres bila prompt mengandung safety instruction kritikal (consent gate, disclaimer).
-- Semantic similarity wajib di-check; bila < 0.92, rollback ke prompt asli.
-- Tidak dipakai untuk email / laporan eksternal — akan terlihat kasar.
-
-## Catatan integrasi
-
-- Pasang sebagai post-processor opsional di pipeline prompt.
-- Mode toggle: env `CAVEMAN_MODE=true` aktifkan global; `CAVEMAN_MODE=false` kembali ke normal.
-- Bekerja baik setelah `gstack` summary; `gstack` kompres konteks, `caveman` kompres instruksi.
-- Untuk komunikasi final ke user, gunakan `humanizer` setelah dapat output dari LLM.
+- This manifest documents upstream capability for discovery
+- NO auto-activation, NO pipeline integration, NO runtime hooks
+- If user wants cavecrew: they invoke upstream skill manually
+- Headroom remains AE's default compression for all runtime use cases

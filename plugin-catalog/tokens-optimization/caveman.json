@@ -5,38 +5,33 @@
   "slug": "caveman",
   "category": "tokens-optimization",
   "version": "1.0.0",
-  "status": "integrated-ready",
+  "status": "manifest-only",
   "source": {
     "type": "github",
     "url": "https://github.com/JuliusBrussee/Caveman",
-    "license": "MIT (verify on upstream)"
+    "license": "MIT"
   },
-  "description": "Radical prompt compression: ringkas instruksi sampai ke core action verbs. Mengubah 'Please kindly write a function that...' menjadi 'fn(input)->output; test it;'. Buat hemat token hingga 70%.",
+  "description": "Upstream Caveman (JuliusBrussee/caveman v4.2.0) provides: (1) 'cavecrew' subagent presets (investigator/builder/reviewer) that return compressed output to save main-context tokens, (2) 'caveman' prompt compression technique via system prompt for LLM-based rewriting. NOT a standalone CLI tool or binary. AE manifest documents upstream capability; NO runtime integration exists in AE.",
   "capabilities": [
-    "extreme prompt minimization",
-    "intent-preserving rewrite",
-    "syntax-heavy shorthand"
+    "cavecrew subagent presets (investigator/builder/reviewer) with compressed output",
+    "caveman system prompt for LLM-based prompt compression (requires LLM call)"
   ],
   "tools_required": [
     "bash",
     "read_file",
     "write_file"
   ],
-  "mcp_servers_suggested": [
-    "filesystem-mcp",
-    "style-mcp"
-  ],
+  "mcp_servers_suggested": [],
   "trigger_keywords": [
     "caveman",
-    "minimize",
-    "shorthand",
-    "compression"
+    "cavecrew",
+    "subagent compression"
   ],
   "best_for": [
-    "ultra-low budget agents",
-    "edge deployments"
+    "subagent delegation with token savings",
+    "context-constrained workflows"
   ],
-  "integration_notes": "Berikan flag opsional di .cursorrules: 'caveman_mode: true' untuk konteks produksi sempit.",
+  "integration_notes": "UPSTREAM REALITY CHECK (v4.2.0 2026-11-22): Caveman is NOT a standalone compression binary. It provides: (1) cavecrew skill with 3 subagent presets that compress their own output, (2) caveman system prompt for LLM-based rewriting. No tokenizer-mcp MCP server exists. No CAVEMAN_MODE env toggle. No 70% measured compression (marketing claim). No similarity ≥ 0.92 threshold (invented). AE has NO runtime integration - this manifest documents upstream capability only. Headroom (Rust binary) is AE's actual compression engine.",
   "skill_files": [
     {
       "path": "plugin-catalog/tokens-optimization/caveman/SKILL.md",

@@ -20,7 +20,7 @@ import subprocess
 import tempfile
 import re
 import xml.etree.ElementTree as ElementTree
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -158,80 +158,229 @@ def cmd_status(args: argparse.Namespace) -> None:
     }
     emit(status)
 
+def _acquire_learning_lock() -> Optional[Path]:
+    """Acquire a file-based lock for learning execution.
+
+    Returns the lock file path if acquired, None if another process holds the lock.
+    """
+    lock_path = SCHEDULE_STATE_DIR / "learning.lock"
+    try:
+        # Use O_CREAT | O_EXCL for atomic lock creation
+        fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        with os.fdopen(fd, "w") as f:
+            f.write(f"{os.getpid()}\n{datetime.now(timezone.utc).isoformat()}\n")
+        return lock_path
+    except FileExistsError:
+        # Lock exists - check if stale (older than 1 hour)
+        try:
+            content = lock_path.read_text().strip().split("\n")
+            if len(content) >= 2:
+                lock_time = datetime.fromisoformat(content[1].replace("Z", "+00:00"))
+                if datetime.now(timezone.utc) - lock_time > timedelta(hours=1):
+                    # Stale lock - remove and retry once
+                    lock_path.unlink(missing_ok=True)
+                    return _acquire_learning_lock()
+        except Exception:
+            pass
+        return None
+    except Exception:
+        return None
+
+
+def _release_learning_lock(lock_path: Optional[Path]) -> None:
+    """Release the learning lock."""
+    if lock_path and lock_path.exists():
+        try:
+            lock_path.unlink()
+        except Exception:
+            pass
+
+
 def cmd_learning(args: argparse.Namespace) -> None:
     """Run one-shot evidence review and learning."""
     task_observer = _load_task_observer()
 
-    # Preflight checks
-    observer = check_observer_enabled()
-    if not observer["enabled"]:
+    # Acquire learning lock to prevent concurrent runs (MASTER_PROMPT §8.3)
+    lock_path = _acquire_learning_lock()
+    if lock_path is None:
         emit({
             "status": "BLOCKED",
-            "reason": "Task Observer is disabled",
+            "reason": "Another learning process is running (lock held)",
             "evidence_reviewed": 0,
             "proposals": [],
+            "staged": 0,
         })
         return
 
-    # Evidence inventory - read from Task Observer
-    ws = get_observer_workspace()
-    log_dir = ws / "skill-observations" / "observation-log"
-    updates_dir = ws / "skill-updates"
+    try:
+        # Preflight checks
+        observer = check_observer_enabled()
+        if not observer["enabled"]:
+            emit({
+                "status": "BLOCKED",
+                "reason": "Task Observer is disabled",
+                "evidence_reviewed": 0,
+                "proposals": [],
+                "staged": 0,
+            })
+            return
 
-    evidence_items = []
-    if log_dir.exists():
-        for obs_file in sorted(log_dir.glob("*.md")):
+        # Evidence inventory - read from Task Observer
+        ws = get_observer_workspace()
+        log_dir = ws / "skill-observations" / "observation-log"
+        updates_dir = ws / "skill-updates"
+
+        evidence_items = []
+        if log_dir.exists():
+            for obs_file in sorted(log_dir.glob("*.md")):
+                try:
+                    content = obs_file.read_text(encoding="utf-8", errors="replace")
+                    if content.startswith("---"):
+                        parts = content.split("---", 2)
+                        if len(parts) >= 3:
+                            frontmatter = parts[1]
+                            body = parts[2]
+                            evidence_items.append({
+                                "file": obs_file.name,
+                                "frontmatter": frontmatter.strip(),
+                                "body_preview": body.strip()[:200],
+                            })
+                except Exception:
+                    pass
+
+        if not evidence_items:
+            emit({
+                "status": "NO_NEW_EVIDENCE",
+                "message": "No new evidence found in Task Observer",
+                "evidence_reviewed": 0,
+                "proposals": [],
+                "staged": 0,
+            })
+            return
+
+        # Validate evidence and group by skill
+        validated = []
+        skill_groups: Dict[str, List[Dict[str, Any]]] = {}
+        for item in evidence_items:
+            if "title" in item["frontmatter"] and "status" in item["frontmatter"]:
+                validated.append(item)
+                # Extract skills from frontmatter
+                fm = item["frontmatter"]
+                skills = []
+                for line in fm.split("\n"):
+                    if line.strip().startswith("skill:"):
+                        # Parse skill: [skill1, skill2]
+                        skills_str = line.split(":", 1)[1].strip()
+                        skills_str = skills_str.strip("[]")
+                        for s in skills_str.split(","):
+                            s = s.strip().strip('"\'')
+                            if s:
+                                skills.append(s)
+                for skill in skills:
+                    skill_groups.setdefault(skill, []).append(item)
+
+        # Generate proposals per skill (first pass - no staging yet)
+        proposals = []
+
+        def extract_title(fm: str) -> str:
+            for line in fm.split("\n"):
+                if line.strip().startswith("title:"):
+                    return line.split("title:", 1)[1].strip().strip('"\'')
+            return ""
+
+        for skill, items in skill_groups.items():
+            if not skill or skill == "-":
+                continue
+            evidence_refs = [item["file"] for item in items]
+            # Build a summary of the issues for this skill
+            issues = "; ".join([extract_title(item["frontmatter"]) for item in items[:3]])
+            if len(items) > 3:
+                issues += f" (+{len(items) - 3} more)"
+
+            proposal = {
+                "evidence_refs": evidence_refs,
+                "target": skill,
+                "reason": f"Multiple observations for skill '{skill}': {issues}",
+                "confidence": 0.7,
+                "risk": "low",
+                "expected_change": f"Update skill '{skill}' based on observed patterns",
+                "test_design": f"Verify skill '{skill}' behavior with test tasks",
+            }
+            proposals.append(proposal)
+
+        # Also include any observations that couldn't be grouped by skill
+        ungrouped = [item for item in validated if not any(
+            item["file"] in refs for refs in [p["evidence_refs"] for p in proposals]
+        )]
+        for item in ungrouped:
+            proposals.append({
+                "evidence_refs": [item["file"]],
+                "target": "ungrouped",
+                "reason": f"Observation without clear skill target: {extract_title(item['frontmatter'])[:80]}",
+                "confidence": 0.5,
+                "risk": "low",
+                "expected_change": "Review manually",
+                "test_design": "Manual review required",
+            })
+
+        # Second pass: stage candidates for valid skill targets
+        # Skip generic/invalid targets like "capability_mapping" or "ungrouped"
+        INVALID_TARGETS = {"capability_mapping", "ungrouped", "-", ""}
+        staged = []
+
+        for proposal in proposals:
+            skill = proposal["target"]
+            if skill in INVALID_TARGETS:
+                continue
+
+            evidence_refs = proposal["evidence_refs"]
+            # Find the items for this skill to build changes description
+            items = []
+            for item in validated:
+                if item["file"] in evidence_refs:
+                    items.append(item)
+
             try:
-                content = obs_file.read_text(encoding="utf-8", errors="replace")
-                if content.startswith("---"):
-                    parts = content.split("---", 2)
-                    if len(parts) >= 3:
-                        frontmatter = parts[1]
-                        body = parts[2]
-                        evidence_items.append({
-                            "file": obs_file.name,
-                            "frontmatter": frontmatter.strip(),
-                            "body_preview": body.strip()[:200],
-                        })
-            except Exception:
-                pass
+                changes_lines = [f"Proposed updates based on {len(items)} observation(s):"]
+                for item in items:
+                    changes_lines.append(f"- {extract_title(item['frontmatter'])}")
+                changes = "\n".join(changes_lines)
+                stage_result = task_observer.stage_candidate(
+                    root=ws,
+                    skill_name=skill,
+                    changes=changes,
+                    source_observations=evidence_refs,
+                )
+                if stage_result.startswith("staged:"):
+                    stage_path = stage_result.split("staged: ")[1].split(" (diff:")[0]
+                    diff_path = stage_result.split("diff: ")[1].split(")")[0] if "diff:" in stage_result else ""
+                    staged.append({
+                        "skill": skill,
+                        "stage_path": stage_path,
+                        "diff_path": diff_path,
+                        "observations": evidence_refs,
+                    })
+                    proposal["staged"] = True
+                    proposal["stage_path"] = stage_path
+                else:
+                    # Staging refused or degraded - include in proposal as blocker
+                    proposal["stage_blocker"] = stage_result
+                    proposal["staged"] = False
+            except Exception as e:
+                proposal["stage_blocker"] = f"staging error: {type(e).__name__}: {e}"
+                proposal["staged"] = False
 
-    if not evidence_items:
         emit({
-            "status": "NO_NEW_EVIDENCE",
-            "message": "No new evidence found in Task Observer",
-            "evidence_reviewed": 0,
-            "proposals": [],
+            "status": "COMPLETED",
+            "evidence_reviewed": len(evidence_items),
+            "validated": len(validated),
+            "proposals": proposals,
+            "staged": len(staged),
+            "staged_candidates": staged,
+            "message": "Learning review completed. Staged candidates require explicit approval (promote) before promotion.",
         })
-        return
-
-    # Validate evidence
-    validated = []
-    for item in evidence_items:
-        if "title" in item["frontmatter"] and "status" in item["frontmatter"]:
-            validated.append(item)
-
-    # Classify owner (simplified)
-    proposals = []
-    for item in validated:
-        proposals.append({
-            "evidence_ref": item["file"],
-            "target": "capability_mapping",
-            "reason": "Pattern detected in observations",
-            "confidence": 0.7,
-            "risk": "low",
-            "expected_change": "Update capability routing",
-            "test_design": "Verify routing with test tasks",
-        })
-
-    emit({
-        "status": "COMPLETED",
-        "evidence_reviewed": len(evidence_items),
-        "validated": len(validated),
-        "proposals": proposals,
-        "staged": 0,
-        "message": "Learning review completed. Proposals require explicit approval before promotion.",
-    })
+    finally:
+        _release_learning_lock(lock_path)
 
 def parse_cron_expression(expr: str) -> Dict[str, Any]:
     """Parse and validate a cron expression."""

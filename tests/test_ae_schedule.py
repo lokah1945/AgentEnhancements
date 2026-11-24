@@ -312,7 +312,7 @@ def test_edge_cases() -> Dict[str, Any]:
         ("60", 0, 59, False, "overflow minute"),
         ("-1", 0, 59, False, "negative minute"),
         ("1-5", 0, 59, True, "valid range minute"),
-        ("5-1", 0, 59, True, "reversed range accepted (BUG: start > end not checked)"),
+        ("5-1", 0, 59, False, "reversed range correctly rejected (start > end)"),
         ("*/15", 0, 59, True, "step minute"),
         ("*/0", 0, 59, False, "zero step"),
         ("1,2,3", 0, 59, True, "list minute"),
@@ -329,7 +329,7 @@ def test_edge_cases() -> Dict[str, Any]:
         "name": "validate_cron_field",
         "passed": all_passed,
         "details": {f"{field}({min_v}-{max_v})": validate_cron_field(field, min_v, max_v) for field, min_v, max_v, _, _ in field_tests},
-        "note": "Reversed ranges (5-1) are accepted - validation only checks bounds, not start <= end. This is a bug in validate_cron_field.",
+        "note": "Reversed ranges (5-1) are correctly rejected - validation checks both bounds and start <= end.",
     })
     print(f"  {'PASS' if all_passed else 'FAIL'}: validate_cron_field")
 

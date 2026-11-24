@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-11-24T17:28:42.363452",
+  "generated_at": "2026-11-24T19:16:08.121054",
   "platform": "linux",
   "python_version": "3.11.2 (main, Oct  7 2026, 12:35:07) [GCC 12.2.0]",
   "linux_tests": {
     "test_suite": "linux_schedule",
-    "timestamp": "2026-11-24T17:28:42.158742",
+    "timestamp": "2026-11-24T19:16:07.895952",
     "tests": [
       {
         "name": "schedule_status_empty",
@@ -214,7 +214,7 @@
   },
   "windows_gaps": {
     "test_suite": "windows_gaps",
-    "timestamp": "2026-11-24T17:28:42.363261",
+    "timestamp": "2026-11-24T19:16:08.120872",
     "supported_expressions": [
       {
         "cron": "@hourly",
@@ -540,7 +540,7 @@
   },
   "edge_cases": {
     "test_suite": "edge_cases",
-    "timestamp": "2026-11-24T17:28:42.363298",
+    "timestamp": "2026-11-24T19:16:08.120912",
     "tests": [
       {
         "name": "validate_cron_field",
@@ -551,13 +551,13 @@
           "60(0-59)": false,
           "-1(0-59)": false,
           "1-5(0-59)": true,
-          "5-1(0-59)": true,
+          "5-1(0-59)": false,
           "*/15(0-59)": true,
           "*/0(0-59)": false,
           "1,2,3(0-59)": true,
           "1,60(0-59)": false
         },
-        "note": "Reversed ranges (5-1) are accepted - validation only checks bounds, not start <= end. This is a bug in validate_cron_field."
+        "note": "Reversed ranges (5-1) are correctly rejected - validation checks both bounds and start <= end."
       },
       {
         "name": "timezone_dst",

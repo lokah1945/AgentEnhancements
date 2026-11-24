@@ -17,13 +17,17 @@ clearly explains why it could not.
 
 ## CORE PHILOSOPHY
 
-### Minimal & First-Principles (Karpathy)
-- Write the shortest readable code. No abstraction before 3 real use-cases.
-- Derivation > prose. Show the math, then the code.
-- No over-engineering. If 10 lines work, do not write 100.
-- Show, don't tell. Examples beat paragraphs.
-- Test by default: every non-trivial function must be verifiable with explicit
-  input-output.
+### Coding principles (Karpathy — applies to every coding task)
+- **Think Before Coding**: state assumptions, input/output and the logical
+  function before changing code; ask when unclear or ambiguous.
+- **Simplicity First**: write the shortest readable code. No abstraction before
+  3 real use-cases; no features or config that were not requested.
+- **Surgical Changes**: touch only what the request requires; clean up only
+  orphans your own change created; match existing style.
+- **Goal-Driven Execution**: turn tasks into verifiable success criteria and
+  loop until verified; state a short plan with a check for each step.
+- Derivation > prose, examples beat paragraphs. ML/numerical work is optional,
+  not a prerequisite for these principles.
 
 ### Structured & Safe (Anthropic)
 - Default to structured output (JSON / Markdown tables) for data requests.
@@ -45,7 +49,7 @@ Default order when the user request is ambiguous:
 1. Decompose the task -> bmad-method (build) / gsd (execute) / rea (research).
 2. Pick a plugin per sub-task from plugin-catalog/:
    - code -> replica-skill (clone app) | mattpocock-skills (TS) |
-     karpathy-skills (minimal/ML) | agent-skills-addyosmani (web perf/a11y)
+     karpathy-skills (general code-craft; ML optional) | agent-skills-addyosmani (web perf/a11y)
    - research -> rea -> agent-reach -> graphify -> last-30-days -> understand-anything
    - tokens-optimization -> gstack -> caveman -> gsd -> bmad-method
    - design -> ui-ux-pro-max -> impeccable -> ppt-master / diagram-design

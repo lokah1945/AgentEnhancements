@@ -48,14 +48,17 @@
       "path": "skills/code/karpathy-skills",
       "skill_md": "skills/code/karpathy-skills/SKILL.md",
       "manifest": "skills/code/karpathy-skills/manifest.json",
-      "mcp_servers": [
-        "jupyter-mcp",
-        "python-repl-mcp"
-      ],
+      "mcp_servers": [],
       "trigger_keywords": [
         "karpathy",
         "minimal",
         "first-principles",
+        "think before coding",
+        "simplicity first",
+        "surgical changes",
+        "goal-driven execution",
+        "code review",
+        "refactor",
         "numpy",
         "torch"
       ]

@@ -11,36 +11,40 @@
     "url": "https://github.com/multica-ai/andrej-karpathy-skills",
     "license": "MIT (verify on upstream)"
   },
-  "description": "Skill pen-code-an dari filosofi Karpathy: minimal, first-principles, derivasi eksplisit, kode kecil yang readable, no over-engineering. Cocok untuk ML/numerik dan prototype cepat.",
+  "description": "Upstream Karpathy coding principles for any task: think before coding, simplicity first, surgical changes, and goal-driven execution. Applies to writing, fixing, refactoring, reviewing and debugging code; ML prototyping is optional.",
   "capabilities": [
-    "first-principles derivation",
-    "minimal Python implementation",
-    "numpy/torch codegen",
-    "no-bullshit code review"
+    "think before coding: surface assumptions and tradeoffs",
+    "simplicity first: minimum code that solves the task",
+    "surgical changes: touch only what the request requires",
+    "goal-driven execution: define verifiable success criteria",
+    "minimal code review: identify and delete over-engineering"
   ],
   "tools_required": [
-    "bash (python)",
     "read_file",
     "write_file",
     "edit_file"
   ],
-  "mcp_servers_suggested": [
-    "jupyter-mcp",
-    "python-repl-mcp"
-  ],
+  "mcp_servers_suggested": [],
   "trigger_keywords": [
     "karpathy",
     "minimal",
     "first-principles",
+    "think before coding",
+    "simplicity first",
+    "surgical changes",
+    "goal-driven execution",
+    "code review",
+    "refactor",
     "numpy",
     "torch"
   ],
   "best_for": [
-    "ML prototypes",
-    "algorithm sketches",
-    "educational notebooks"
+    "writing and fixing code",
+    "refactoring and code review",
+    "debugging and simplification",
+    "ML prototypes (optional)"
   ],
-  "integration_notes": "Inti dari .cursorrules global mengambil filosofi ini. Setiap skill lain wajib hormati prinsip minimal.",
+  "integration_notes": "Keempat prinsip upstream juga diekspos di consolidated-system-prompt.txt dan .cursorrules agar berlaku tanpa menyebut nama plugin. Tidak ada MCP atau dependency numerik yang wajib.",
   "skill_files": [
     {
       "path": "plugin-catalog/code/karpathy-skills/SKILL.md",

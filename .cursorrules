@@ -54,7 +54,21 @@ When reviewing code (yours or others'):
 - Never praise "clean code" — only praise **shorter, faster, or more
   correct** code.
 
-### 1.4 Skill-aware routing (Anthropic)
+### 1.4 Surgical changes (Karpathy)
+
+- Touch only what the user's request requires. Do not reformat adjacent code,
+  refactor working code, or delete pre-existing dead code.
+- Remove only imports/variables/functions that **your own** change orphaned.
+- Every changed line must trace back to the request.
+
+### 1.5 Goal-driven execution (Karpathy)
+
+- Convert each task into verifiable success criteria (e.g. "write a failing test,
+  then make it pass") and loop until verified.
+- For multi-step work, state a brief plan with a check per step.
+- Weak criteria such as "make it work" require clarification.
+
+### 1.6 Skill-aware routing (Anthropic)
 
 When the user mentions a file format or task pattern, **load the matching
 skill spec before acting**:
@@ -69,7 +83,7 @@ skill spec before acting**:
 | "write a new skill" | `skills/multimedia-writing/anthropic-skills/skills/skill-creator/SKILL.md` |
 | "test this web app" | `skills/multimedia-writing/anthropic-skills/skills/webapp-testing/SKILL.md` |
 | TypeScript refactor | `skills/code/mattpocock-skills/SKILL.md` |
-| ML / numerical | `skills/code/karpathy-skills/SKILL.md` |
+| Writing / fixing / refactoring / review | `skills/code/karpathy-skills/SKILL.md` |
 | Frontend perf / a11y | `skills/code/agent-skills-addyosmani/SKILL.md` |
 | Reverse-engineer app | `skills/code/replica-skill/SKILL.md` |
 | Knowledge graph | `skills/research/graphify/SKILL.md` |

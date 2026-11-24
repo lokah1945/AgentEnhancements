@@ -119,7 +119,7 @@ Plugins (4):
 - **Agent Skills (Addy Osmani)** (`agent-skills-addyosmani`) — integrated-ready;
   external source — MCP: browser-tools-mcp, lighthouse-mcp, pa11y-mcp
 - **Andrej Karpathy Skills** (`karpathy-skills`) — integrated-ready; external
-  source — MCP: jupyter-mcp, python-repl-mcp
+  source — MCP: (none)
 - **Matt Pocock Skills** (`mattpocock-skills`) — integrated-ready; external
   source — MCP: typescript-language-server-mcp, eslint-mcp
 - **Replica Skill (11 sub-skills)** (`replica-skill`) — integrated-ready;

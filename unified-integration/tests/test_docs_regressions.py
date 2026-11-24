@@ -2,6 +2,7 @@
 """Regression checks that keep user-facing docs consistent with the code."""
 
 import ast
+import json
 import re
 import unittest
 from pathlib import Path
@@ -231,6 +232,39 @@ class ReleaseDocClaimTests(unittest.TestCase):
         self.assertIn("Python >= %d.%d" % tuple(minimum), text)
         tree = text.split("## Architecture", 1)[1].split("\n---", 1)[0]
         self.assertRegex(tree, r"├── mcp-servers/\n│   └── agent_browser/")
+
+
+class KarpathyFidelityTests(unittest.TestCase):
+    """MASTER_PROMPT §7: upstream principles must survive in routed surfaces."""
+
+    PRINCIPLES = (
+        "Think Before Coding", "Simplicity First",
+        "Surgical Changes", "Goal-Driven Execution",
+    )
+
+    def test_routed_skill_keeps_all_four_upstream_principles(self):
+        text = read("plugin-catalog/code/karpathy-skills/SKILL.md")
+        for principle in self.PRINCIPLES:
+            self.assertIn(principle, text)
+
+    def test_shared_prompt_exposes_all_four_principles(self):
+        text = read("unified-integration/prompts/consolidated-system-prompt.txt")
+        for principle in self.PRINCIPLES:
+            self.assertIn(principle, text)
+
+    def test_manifest_describes_general_coding_and_principle_names(self):
+        doc = json.loads(read("plugin-catalog/code/karpathy-skills.json"))
+        keywords = [k.lower() for k in doc["trigger_keywords"]]
+        for principle in self.PRINCIPLES:
+            self.assertIn(principle.lower(), keywords)
+        joined = " ".join(
+            [doc["description"]] + doc["capabilities"]
+            + doc["trigger_keywords"] + doc["best_for"]
+        ).lower()
+        for term in ("review", "refactor"):
+            self.assertIn(term, joined)
+        self.assertNotIn("numpy/torch codegen", doc["capabilities"])
+        self.assertEqual(doc["mcp_servers_suggested"], [])
 
 
 if __name__ == "__main__":

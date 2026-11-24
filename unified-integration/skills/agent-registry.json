@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Unified capability registry: skills, plugins, MCP servers and built-in capabilities in one index.",
-  "generated_at": "2026-11-24T16:12:12.008129+00:00",
+  "generated_at": "2026-11-24T17:11:59.761996+00:00",
   "stats": {
     "total": 3467,
     "by_type": {
@@ -54095,11 +54095,17 @@
       "source": "plugin-catalog",
       "category": "code",
       "status": "integrated-ready",
-      "description": "karpathy, minimal, first-principles, numpy, torch",
+      "description": "karpathy, minimal, first-principles, think before coding, simplicity first, surgical changes, goal-driven execution, code review, refactor, numpy, torch",
       "trigger_keywords": [
         "karpathy",
         "minimal",
         "first-principles",
+        "think before coding",
+        "simplicity first",
+        "surgical changes",
+        "goal-driven execution",
+        "code review",
+        "refactor",
         "numpy",
         "torch"
       ],
@@ -54107,10 +54113,7 @@
       "path": "plugin-catalog/code/karpathy-skills/SKILL.md",
       "source_url": "https://github.com/multica-ai/andrej-karpathy-skills",
       "vendored": false,
-      "mcp_servers": [
-        "jupyter-mcp",
-        "python-repl-mcp"
-      ],
+      "mcp_servers": [],
       "activation": "load the SKILL.md integration guide on demand",
       "is_guide_only": true,
       "host_eligibility": [

@@ -14,7 +14,7 @@ Plugins: **4**
 - **Slug:** [`karpathy-skills`](./karpathy-skills/)
   - **Name:** Andrej Karpathy Skills
   - **Status:** integrated-ready
-  - **MCP servers:** jupyter-mcp, python-repl-mcp
+  - **MCP servers:** —
   - **Source:** `multica-ai/andrej-karpathy-skills`
 
 - **Slug:** [`mattpocock-skills`](./mattpocock-skills/)

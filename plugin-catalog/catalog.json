@@ -63,13 +63,16 @@
         "karpathy",
         "minimal",
         "first-principles",
+        "think before coding",
+        "simplicity first",
+        "surgical changes",
+        "goal-driven execution",
+        "code review",
+        "refactor",
         "numpy",
         "torch"
       ],
-      "mcp_servers": [
-        "jupyter-mcp",
-        "python-repl-mcp"
-      ],
+      "mcp_servers": [],
       "source_url": "https://github.com/multica-ai/andrej-karpathy-skills",
       "source_license": "MIT (verify on upstream)",
       "vendored": false,

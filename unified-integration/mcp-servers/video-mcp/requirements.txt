@@ -1,2 +1,2 @@
-mcp>=1.0
-filelock>=3.16,<4
+mcp>=1.30.0
+filelock>=4.2.1,<5

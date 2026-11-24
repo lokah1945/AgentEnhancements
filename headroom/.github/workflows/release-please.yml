@@ -54,12 +54,12 @@ jobs:
         id: app-token
         if: ${{ vars.RELEASE_APP_ID != '' }}
         continue-on-error: true
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
         with:
           app-id: ${{ vars.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
-      - uses: googleapis/release-please-action@v5
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         with:
           # Neither an app token nor a PAT is GITHUB_TOKEN, and that matters: a
           # release/tag created by GITHUB_TOKEN does NOT emit events that trigger

@@ -46,15 +46,15 @@ classifiers = [
 dependencies = [
     # Core: lightweight compression (SmartCrusher, ContentRouter, CCR, TOIN)
     "tiktoken>=0.5.0",            # Tokenizer for all compressors
-    "pydantic>=2.0.0",            # Config and data models
+    "pydantic>=2.4.0",            # Config and data models
     # Model registry, pricing and non-core providers; all lazily imported and
     # ImportError-guarded. 1.96.2 is the first litellm with prebuilt wheels for
     # Python 3.11-3.14 on Linux, macOS and Windows: older releases either reject
     # Python 3.14 (GH #956) or fall back to a Rust source build.
-    "litellm>=1.96.2,<2.0",
+    "litellm>=1.104.0,<2.0",
     "click>=8.3.3",               # CLI framework; PYSEC-2026-2132 fix (command injection in click.edit())
     "rich>=13.0.0",               # Rich terminal output
-    "opentelemetry-api>=1.45.1",  # CVE-2026-114603: bounded, linear-time tracestate parsing
+    "opentelemetry-api>=1.45.2",  # CVE-2026-114603: bounded, linear-time tracestate parsing
     # AST-aware code slicing (CodeCompressor); binary wheel. 0.44.1 is excluded:
     # that PyPI release was a compromised supply-chain build shipping an
     # info-stealer `sg.exe` (Trojan:Win64/Lazy!MTB) alongside the real binary
@@ -87,11 +87,11 @@ dependencies = [
 [project.optional-dependencies]
 # Proxy server (most common install: pip install headroom-ai[proxy])
 proxy = [
-    "fastapi>=0.100.0",
+    "fastapi>=0.109.1",
     "uvicorn>=0.23.0,<1.0",
     # LiteLLM provider backends (e.g. openrouter) expect orjson at runtime but
     # litellm only declares it under its own [proxy] extra (GH #2056).
-    "orjson>=3.9.14; platform_python_implementation != 'PyPy'",
+    "orjson>=3.11.6; platform_python_implementation != 'PyPy'",
     "httpx[http2]>=0.24.0",
     "openai>=2.14.0",             # OpenAI API format support
     # The server still uses the v1 low-level Server decorator API. Keep this
@@ -108,7 +108,7 @@ proxy = [
     # falls back to heuristics there. Transitive ORT backends use the same gate.
     "onnxruntime>=1.24.0; python_version>='3.11' and (sys_platform != 'darwin' or platform_machine != 'x86_64')",
     "onnxruntime>=1.16.0,<1.24.0; python_version<'3.11' or (python_version<'3.14' and sys_platform == 'darwin' and platform_machine == 'x86_64')",
-    "transformers>=5.5.0,<6.0",   # Tokenizer only (for Kompress)
+    "transformers>=5.10.0,<6.0",   # Tokenizer only (for Kompress)
     # File watcher for live code graph reindexing (--code-graph). watchdog 6.0.0
     # publishes no macOS wheel for Python 3.14, so installing it there needs a C
     # compiler. The watcher is optional and skips itself when watchdog is absent.
@@ -121,7 +121,7 @@ proxy = [
 #   pip install headroom-ai[proxy,proxy-prod]
 proxy-prod = [
     "headroom-ai[proxy]",
-    "gunicorn>=21.0.0; sys_platform != 'win32'",
+    "gunicorn>=22.0.0; sys_platform != 'win32'",
 ]
 # AST-based code compression (tree-sitter)
 # tree-sitter-language-pack >=1.0 removed the bundled tree-sitter package and
@@ -139,8 +139,8 @@ code = [
 ml = [
     # PyTorch does not publish wheels for macOS 15 x86_64 at this floor, which
     # makes `headroom-ai[all]` unsatisfiable on Intel Macs (#1931).
-    "torch>=2.12.1; sys_platform != 'darwin' or platform_machine != 'x86_64'",
-    "transformers>=5.5.0,<6.0",
+    "torch>=2.13.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "transformers>=5.10.0,<6.0",
     # transformers >= 5.x requires huggingface-hub >= 1.5.0,< 3.0; pinning
     # the floor here prevents Kompress from silently falling back to
     # "unavailable" when a sibling install (e.g. `pip install
@@ -154,7 +154,7 @@ ml = [
 # [memory]) fail on any machine without a compiler — see #1368.
 memory = [
     "sqlite-vec>=0.1.6",
-    "sentence-transformers>=2.2.0,<7.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "sentence-transformers>=5.6.0,<7.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
 ]
 # Optional HNSW vector backend. Needs a C++ toolchain to build hnswlib, so it is
 # kept out of [memory] and [all]; opt in with `pip install headroom-ai[vector]`
@@ -165,15 +165,15 @@ vector = [
 ]
 # Qdrant + Neo4j memory backend helpers
 memory-stack = [
-    "mem0ai>=2.0.0,<3.0",
+    "mem0ai>=2.0.18,<3.0",
     "qdrant-client>=1.9.0,<2.0",
     "neo4j>=5.20.0,<7.0",
 ]
 # Apple-Silicon GPU (MPS) offload for the memory embedder. Opt in at runtime with
 # HEADROOM_EMBEDDER_RUNTIME=pytorch_mps. macOS-only; intentionally excluded from [all].
 pytorch-mps = [
-    "torch>=2.12.1; sys_platform == 'darwin'",
-    "sentence-transformers>=2.2.0; sys_platform == 'darwin'",
+    "torch>=2.13.0; sys_platform == 'darwin'",
+    "sentence-transformers>=5.6.0; sys_platform == 'darwin'",
 ]
 # Semantic relevance scoring with embeddings.
 # Uses `fastembed` (BAAI/bge-small-en-v1.5 by default — 33M params,
@@ -200,8 +200,8 @@ relevance = [
 # `headroom/image/compressor.py` adapts both API shapes at runtime via
 # a try/except cascade. See issue #372 for context.
 image = [
-    "pillow>=12.3.0",         # PYSEC-2026-2253..2257; uv.lock takes 13.0.0 (see override-dependencies)
-    "sentencepiece>=0.1.99",  # Required by SigLIP tokenizer (SiglipTokenizer)
+    "pillow>=13.0.0",         # PYSEC-2026-2253..2257; uv.lock takes 13.0.0 (see override-dependencies)
+    "sentencepiece>=0.2.1",  # Required by SigLIP tokenizer (SiglipTokenizer)
     # Python 3.6–3.12: keep the proven ORT-bundled package directly.
     # ~15 MB ONNX models auto-downloaded on first use.
     "rapidocr-onnxruntime>=1.4.0,<2; python_version<'3.13'",
@@ -214,7 +214,7 @@ image = [
 ]
 # Report generation
 reports = [
-    "jinja2>=3.0.0",
+    "jinja2>=3.1.6",
 ]
 # Binary spreadsheet ingestion (.xlsx / .xls -> tabular text)
 spreadsheet = [
@@ -241,7 +241,7 @@ langchain = [
 langgraph = [
     "langchain-core>=1.3.3,<4.0",
     "langchain-openai>=1.1.14,<2.0",
-    "langgraph>=1.0,<2.0",
+    "langgraph>=1.0.10,<2.0",
 ]
 # Agno agent framework integration
 agno = [
@@ -249,7 +249,7 @@ agno = [
 ]
 # AWS Strands Agents SDK integration
 strands = [
-    "strands-agents>=0.1.0",
+    "strands-agents>=1.48.0",
 ]
 # CrewAI: no extra on purpose. The integration only wraps CrewAI tools, so it
 # uses whatever CrewAI the user already has (`pip install headroom-ai crewai`).
@@ -263,15 +263,15 @@ autogen = [
 mcp = [
     "mcp>=1.30.0,<2.0.0",
     "httpx>=0.24.0",
-    "starlette>=0.27.0",
+    "starlette>=1.3.1",
     "uvicorn>=0.23.0,<1.0",
 ]
 # Voice filler detection
 voice = [
     "onnxruntime>=1.24.0; python_version>='3.11' and (sys_platform != 'darwin' or platform_machine != 'x86_64')",
     "onnxruntime>=1.16.0,<1.24.0; python_version<'3.11' or (python_version<'3.14' and sys_platform == 'darwin' and platform_machine == 'x86_64')",
-    "transformers>=5.5.0,<6.0",
-    "torch>=2.12.1; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "transformers>=5.10.0,<6.0",
+    "torch>=2.13.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
 ]
 # Voice training (includes voice deps + training extras)
 voice-train = [
@@ -282,9 +282,9 @@ voice-train = [
 # Evaluation framework
 evals = [
     "datasets>=5.0.1",
-    "sentence-transformers>=2.2.0,<7.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "sentence-transformers>=5.6.0,<7.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
     "numpy>=1.24.0",
-    "scikit-learn>=1.3.0",
+    "scikit-learn>=1.5.0",
     "anthropic>=0.18.0",
     "openai>=1.0.0",
 ]
@@ -309,7 +309,7 @@ html = [
 ]
 # Development dependencies
 dev = [
-    "pytest>=7.0.0",
+    "pytest>=9.0.3",
     "pytest-cov>=4.0.0",
     "pytest-asyncio>=0.21.0",
     "ruff==0.17.0",
@@ -317,8 +317,8 @@ dev = [
     "pre-commit>=3.0.0",
     "openai>=1.0.0",
     "anthropic>=0.18.0",
-    "litellm>=1.96.2,<2.0",       # see core deps note
-    "fastapi>=0.100.0",
+    "litellm>=1.104.0,<2.0",       # see core deps note
+    "fastapi>=0.109.1",
     "uvicorn>=0.23.0,<1.0",
     # socks: test_upstream_guard proves a guarded upstream is refused on EVERY
     # supported proxy transport. Without the extra, httpcore substitutes a stub
@@ -332,7 +332,7 @@ dev = [
     "langchain-ollama>=0.2.0",
     "hnswlib>=0.8.0",
     "sqlite-vec>=0.1.6",
-    "sentence-transformers>=2.2.0,<7.0",
+    "sentence-transformers>=5.6.0,<7.0",
     "numpy>=1.24.0",
     "openpyxl>=3.1.0",  # exercises spreadsheet_ingest (.xlsx) in the test suite
     "fakeredis[lua]>=2.20.0",  # Redis-backed shared state, without a Redis server
@@ -422,15 +422,18 @@ constraint-dependencies = [
     "pydantic-settings>=2.14.2",
     # GHSA-hmq2-w58f-27jc, GHSA-jm78-9fvv-mhgr, GHSA-wvpp-8hx9-p66j (High),
     # GHSA-hh9p-6wh2-4mfc (Medium) + earlier ones — transitive via agno.
-    # 3.1.58 clears every GitPython advisory published to date; the previous
-    # 3.1.50 floor resolved to 3.1.54, which nine open advisories still cover.
-    "gitpython>=3.1.58",
+    # A version floor is only a minimum, not a claim that all advisories are
+    # cleared: newer GitPython advisories were fixed in 3.1.59+, 3.1.60+,
+    # 3.1.62 and 3.2.x, so the old 3.1.58 floor is raised here to 3.2.1.
+    # Resolution still selects the newest compatible release, so the floor
+    # never pins the environment to the vulnerable minimum itself.
+    "gitpython>=3.2.1",
     # GHSA-f4xh-w4cj-qxq8 (High) — transitive via langchain-core; fix at 0.8.18
     "langsmith>=0.9.0",
     # CVE-2026-49825 (High, XSS) — transitive via lxml[html-clean]; fix at 0.4.5
     "lxml-html-clean>=0.4.5",
     # CVE-2026-5241 (High) — direct optional dep for proxy/ml/voice; fix at 5.5.0
-    "transformers>=5.5.0",
+    "transformers>=5.10.0",
     # GHSA-xmj3-9gf7-h52w — Windows wheel namespace path traversal.
     "setuptools>=84.1.0",
     # CVE-2026-112940/112913/112907. The patched series requires Python 3.11;

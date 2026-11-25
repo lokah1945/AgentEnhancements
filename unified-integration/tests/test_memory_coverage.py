@@ -101,6 +101,42 @@ class ModuleConfigurationTests(_MemoryCase):
         self.assertEqual(mem.project, str(work.resolve()))
 
 
+class HookRedactionTests(_MemoryCase):
+    """Manual per-agent hooks must redact like scripts/memory.py."""
+
+    def setUp(self):
+        super().setUp()
+        self.secret = "sk-test-" + "A" * 24
+        self.api_file.write_text(json.dumps({
+            "version": 1,
+            "api_keys": {"TEST_KEY": [self.secret]},
+            "connections": {},
+            "mcp": {},
+        }))
+        self.hook_name = "codex_hook_%d" % id(self)
+        self.hook = load_module(
+            self.hook_name, UI_DIR / "memory/hooks/codex-memory-hook.py")
+        self.addCleanup(sys.modules.pop, self.hook_name, None)
+
+    def test_hook_list_redacts_before_truncation(self):
+        self.hook.init_db()
+        self.hook.save_memory(
+            "k", "before " + self.secret + " after " + "z" * 300,
+            project="proj-a")
+        rows = self.hook.list_memories(project="proj-a")
+        text = json.dumps(rows)
+        self.assertNotIn(self.secret, text)
+        self.assertIn("[redacted]", text)
+
+    def test_hook_list_redacts_keys_and_metadata(self):
+        self.hook.init_db()
+        self.hook.save_memory(
+            "key-" + self.secret, "value", project="proj-a",
+            metadata={"note": "secret=" + self.secret})
+        text = json.dumps(self.hook.list_memories(project="proj-a"))
+        self.assertNotIn(self.secret, text)
+
+
 class SaveLoadSemanticsTests(_MemoryCase):
     def test_save_same_key_replaces_value_without_duplicates(self):
         mem = self.store()

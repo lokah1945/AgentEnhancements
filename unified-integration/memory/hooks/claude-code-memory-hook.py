@@ -23,6 +23,30 @@ DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
 TTL_DAYS_MAX = 36500
 LIST_LIMIT_MAX = 10000
 
+def _redact(value: str) -> str:
+    """Redact configured and recognizable secrets before display."""
+    try:
+        from api_config import read_config, redact
+        config, _ = read_config()
+        return redact(value, config)
+    except Exception:
+        return value
+
+
+def _display(value: str) -> str:
+    text = _redact(value)
+    return text[:200] + "..." if len(text) > 200 else text
+
+
+def _metadata(value: str) -> dict:
+    """Parse metadata after redaction; never leak raw secret text."""
+    if not value:
+        return {}
+    try:
+        return json.loads(_redact(value))
+    except (TypeError, ValueError):
+        return {"redacted": True}
+
 def init_db():
     if os.path.islink(DB_PATH):
         raise OSError("Refusing symlinked memory database")
@@ -123,9 +147,9 @@ def list_memories(memory_type=None, project=None, limit=20):
         return [
             {
                 "type": row[0],
-                "key": row[1],
-                "value": row[2][:200] + "..." if len(row[2]) > 200 else row[2],
-                "metadata": json.loads(row[3]) if row[3] else {},
+                "key": _redact(row[1]),
+                "value": _display(row[2]),
+                "metadata": _metadata(row[3]),
                 "updated": row[4]
             }
             for row in cursor.fetchall()

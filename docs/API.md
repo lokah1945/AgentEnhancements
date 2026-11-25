@@ -1,7 +1,7 @@
 ---
 title: Internal APIs
-version: 1.6
-last_updated: 2026-11-16
+version: 1.7
+last_updated: 2026-11-25
 audience: maintainers, contributors
 ---
 
@@ -188,14 +188,28 @@ already-expired row.
 
 `<agent>-memory-hook.py` exposes the same commands as `memory.py` scoped to
 one agent. `<agent>-memory-hook.sh` is a thin bash wrapper that `exec`s the
-Python hook; **no SQL is executed from bash** (CONTRACT R101).
+Python hook; **no SQL is executed from bash** (CONTRACT R101). Hook listings
+redact configured and recognizable secrets in keys, values and metadata
+**before** truncation, matching `memory.py`. Stored rows are unchanged.
+
+Schema compatibility: `init-memory.sh` and the per-agent hooks declare a
+legacy nullable `embedding BLOB` column that no AE code reads or writes;
+`scripts/memory.py` omits it. All DDL is `CREATE TABLE IF NOT EXISTS`, so the
+physical column set depends on which writer creates `memory.db` first. CRUD
+uses only the shared columns and both variants are runtime-compatible; the
+column is not semantic search (see the no-embeddings ADR). Do not add or remove
+it without the human approval required by CONTRACT §4.2/§9.2. The TTL values in
+`memory/config.yaml` are documentation of intended retention, not runtime
+configuration: the actual 7-day lifecycle TTL is set by `runtime.py`, and the
+utilities default to never expiring unless a caller passes `ttl_days`.
 
 #### Automatic lifecycle runtime - `scripts/runtime.py`
 
 `runtime.py <claude-code|codex|opencode|hermes> [--text]` reads one native
 JSON event from stdin. Default Mode 0 performs no model/network inference;
-optional preflight Mode 2 sends a bounded, redacted prompt to the explicitly
-configured endpoint. See [adaptive preflight](ADAPTIVE_PREFLIGHT.md).
+optional preflight Mode 1 sends a bounded, redacted prompt to the explicitly
+configured endpoint (historically labelled Mode 2). See
+[adaptive preflight](ADAPTIVE_PREFLIGHT.md).
 
 - **Event:** `SessionStart`
   - **Action:** Restore recent unexpired notes for this agent and canonical

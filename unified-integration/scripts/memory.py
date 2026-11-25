@@ -152,11 +152,17 @@ class AgentMemory:
             value = redact(row[2])
             if len(value) > LIST_VALUE_LIMIT:
                 value = value[:LIST_VALUE_LIMIT] + "..."
+            metadata = {}
+            if row[3]:
+                try:
+                    metadata = json.loads(redact(row[3]))
+                except (TypeError, ValueError):
+                    metadata = {"redacted": True}
             memories.append({
                 "type": row[0],
-                "key": row[1],
+                "key": redact(row[1]),
                 "value": value,
-                "metadata": json.loads(row[3]) if row[3] else {},
+                "metadata": metadata,
                 "updated": row[4]
             })
         return memories

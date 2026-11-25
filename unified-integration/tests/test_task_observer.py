@@ -165,6 +165,16 @@ class NativeLinkingTests(TaskObserverTestCase):
 class BootstrapTests(TaskObserverTestCase):
     """Activation without naming the skill; bounded context."""
 
+    def setUp(self):
+        super().setUp()
+        # Isolate both native-link detection paths so bootstrap is exercised
+        # regardless of whether the developer's host has task-observer linked.
+        empty = self.root / "empty-skills"
+        empty.mkdir()
+        (empty / "all-skills.json").write_text(json.dumps({"skills": []}))
+        self.env["AGENT_SKILLS_DIR"] = str(empty)
+        self.env["AGENT_SKILLS_NATIVE_TARGETS"] = str(self.root / "native-targets")
+
     def event(self, name, agent="claude-code", **data):
         payload = {
             "hook_event_name": name,
@@ -568,6 +578,27 @@ class SecurityHardeningTests(TaskObserverTestCase):
         self.assertIn("disabled", out + err)
         rc, out, err = self.cli("promote", "replica-diff")
         self.assertIn("disabled", out + err)
+        rc, out, err = self.cli("rollback", "replica-diff")
+        self.assertIn("disabled", out + err)
+
+    def test_stage_candidate_ledger_dedupe(self):
+        for _ in range(3):
+            rc, out, err = self.cli(
+                "stage", "task-observer", "add a note", "--observation", "0001")
+            self.assertEqual(rc, 0, out + err)
+            self.assertIn("staged:", out)
+        ledger = self.memory / "task-observer" / "skill-updates" / "PENDING.md"
+        lines = [line for line in ledger.read_text().splitlines()
+                 if "staged task-observer" in line]
+        self.assertEqual(len(lines), 1)
+
+    def test_ledger_keeps_distinct_records(self):
+        self.cli("stage", "task-observer", "first", "--observation", "0001")
+        self.cli("stage", "replica-diff", "second", "--observation", "0002")
+        ledger = self.memory / "task-observer" / "skill-updates" / "PENDING.md"
+        staged = [line for line in ledger.read_text().splitlines()
+                  if " staged " in line]
+        self.assertEqual(len(staged), 2)
 
     def test_title_newline_cannot_inject_header(self):
         rc, out, err = self.log(

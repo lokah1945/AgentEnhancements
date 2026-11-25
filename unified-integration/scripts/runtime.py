@@ -120,12 +120,67 @@ def prompt_context(agent: str, prompt: str, event: dict) -> str:
     ).context
 
 
+def native_skill_targets() -> list[Path]:
+    """Directories that Agent Skills harnesses auto-discover.
+
+    Mirrors ``link-skills.sh``: AGENT_SKILLS_NATIVE_TARGETS overrides the four
+    default host directories. Host-specific env overrides (CLAUDE_CONFIG_DIR,
+    CODEX_HOME, XDG_CONFIG_HOME) are handled by the host adapters that set the
+    override variable; this function never guesses them.
+    """
+    raw = os.environ.get("AGENT_SKILLS_NATIVE_TARGETS")
+    if raw:
+        return [Path(p).expanduser() for p in raw.split(":") if p.strip()]
+    home = Path(os.environ.get("HOME") or Path.home()).expanduser()
+    return [
+        home / ".claude" / "skills",
+        home / ".agents" / "skills",
+        home / ".codex" / "skills",
+        home / ".config" / "opencode" / "skills",
+    ]
+
+
+def observer_linked_in_host() -> bool | None:
+    """True when a registry-owned task-observer symlink exists in a host.
+
+    Returns None when no native target directory is present, so the caller can
+    fall back to the legacy catalog-source check. An unlinked install must
+    bootstrap even while the catalog still records task-observer as a default
+    source (``link-skills.sh --unlink`` does not edit the index).
+    """
+    targets = native_skill_targets()
+    if not targets:
+        return None
+    skills_dir = Path(
+        os.environ.get("AGENT_SKILLS_DIR")
+        or Path(__file__).resolve().parents[1] / "skills"
+    ).expanduser().resolve()
+    managed = str(skills_dir)
+    saw_target = False
+    for target in targets:
+        if not target.is_dir():
+            continue
+        saw_target = True
+        link = target / "task-observer"
+        if not link.is_symlink():
+            continue
+        try:
+            current = os.readlink(link)
+        except OSError:
+            continue
+        if (current.startswith(managed)
+                or "/unified-integration/skills/by-category/" in current):
+            return True
+    return False if saw_target else None
+
+
 def observer_is_natively_linked(index: dict) -> bool:
-    """True when the task-observer skill is already a native host skill.
+    """Legacy fallback: default-linked observer recorded in the skills index.
 
     The raw skills index has no ``natively_linked_by_default`` field - that
-    flag is computed on loader candidates only - so detection must use the
-    stable ``source`` of the default-linked observer skill.
+    flag is computed on loader candidates only - so detection uses the stable
+    ``source`` of the default-linked observer skill. Prefer
+    :func:`observer_linked_in_host`, which checks the actual host symlink.
     """
     return any(
         skill.get("name") == "task-observer"
@@ -143,28 +198,27 @@ def observer_context(agent: str) -> str:
     command shape, and open-entry count - never observation bodies.
     Failures are advisory - a broken observer must never block the session.
 
-    NOTE: Only bootstraps if task-observer is NOT natively linked by default,
-    to avoid double context injection (native skill + lifecycle hook).
+    NOTE: Bootstrap always runs (Stop's backstop needs the workspace), but the
+    context card is suppressed when task-observer is natively linked, to avoid
+    double context injection. Detection checks the real host symlink first;
+    the catalog source is a legacy fallback for hosts exposing no target dir.
     """
-    # Check if task-observer is natively linked
-    # This check is best-effort; if it fails, we fall back to bootstrapping
-    natively_linked = False
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "ae_load_skills", Path(__file__).with_name("load-skills.py")
-        )
-        load_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(load_module)
-        loader = load_module.SkillsLoader(agent)
-        natively_linked = observer_is_natively_linked(loader.index)
-    except Exception:
-        # If we can't determine native link status, assume not natively linked
-        # to avoid breaking the observer bootstrap
-        pass
-
-    if natively_linked:
-        # Native skill provides the context; skip runtime bootstrap to avoid duplication
-        return ""
+    natively_linked = observer_linked_in_host()
+    if natively_linked is None:
+        # No native target to inspect: fall back to the catalog source. The
+        # loader exposes ``skills_index`` (never ``index``); a failed probe is
+        # advisory and conservatively bootstraps.
+        natively_linked = False
+        try:
+            spec = importlib.util.spec_from_file_location(
+                "ae_load_skills", Path(__file__).with_name("load-skills.py")
+            )
+            load_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(load_module)
+            loader = load_module.SkillsLoader(agent)
+            natively_linked = observer_is_natively_linked(loader.skills_index)
+        except (AttributeError, ImportError, KeyError, OSError, TypeError, ValueError):
+            pass
 
     try:
         spec = importlib.util.spec_from_file_location(
@@ -173,9 +227,13 @@ def observer_context(agent: str) -> str:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         root = module.workspace_root()
+        # Bootstrap is required even when the native skill supplies context:
+        # the Stop backstop writes its checkpoint into this workspace.
+        context = module.bootstrap_context(root, agent)
+        if natively_linked:
+            return ""
         return clamp_to_budget(
-            module.bootstrap_context(root, agent), MAX_OBSERVER_AMBIENT,
-            label="task-observer",
+            context, MAX_OBSERVER_AMBIENT, label="task-observer",
         )
     except Exception as exc:  # noqa: BLE001 - advisory by contract
         print(

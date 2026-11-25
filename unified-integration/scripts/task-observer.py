@@ -703,11 +703,17 @@ def stage_candidate(
         ) or "(diff unavailable; compare manually)"
     diff_file.write_text(diff_text if diff_text else "(no content diff)\n")
     ledger = updates_dir(root) / "PENDING.md"
+    entry = (f"- {_now_date()} staged {stage.name} from {source} "
+             f"(observations: {', '.join(source_observations) or 'none'})\n")
+    # Date-independent key: repeated `ae --learning` runs must refresh the
+    # candidate tree without multiplying ledger records.
+    key = entry.split(" ", 2)[2].strip()
+    existing = ledger.read_text(encoding="utf-8").splitlines() if ledger.is_file() else []
+    if any(key in line for line in existing):
+        return (f"staged: {stage} (diff: {diff_file}); nothing installed; "
+                "ledger unchanged (duplicate)")
     with open(ledger, "a", encoding="utf-8") as fh:
-        fh.write(
-            f"- {_now_date()} staged {stage.name} from {source} "
-            f"(observations: {', '.join(source_observations) or 'none'})\n"
-        )
+        fh.write(entry)
     return f"staged: {stage} (diff: {diff_file}); nothing installed"
 
 
@@ -913,8 +919,10 @@ def rollback(root: Path, staged_name: str) -> str:
     and verified BESIDE the live source first; the live tree is only
     renamed away once the verified replacement exists, and any failure
     restores it. The source is never deleted before its replacement is
-    in place.
+    in place. Disabled observers cannot mutate installed skills here either.
     """
+    if is_disabled(root):
+        return "observer disabled; rollback is available again after 'enable'"
     if not _valid_skill_name(staged_name):
         return "refused: invalid staged name (single path component, no '..')"
     rollback_dir = updates_dir(root) / "rollback"

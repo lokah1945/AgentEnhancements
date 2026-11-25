@@ -128,6 +128,12 @@ class _RuntimeCase(unittest.TestCase):
         for key in ("AE_MAX_SKILL_CARDS", "FAKE_SKILLS", "FAKE_OBSERVER_TEXT",
                     "FAKE_OBSERVER_FAIL"):
             os.environ.pop(key, None)
+        # Isolate the observer's legacy catalog-source fallback: the real
+        # index marks task-observer as default-linked and would skip bootstrap.
+        skills = self.root / "skills"
+        skills.mkdir()
+        (skills / "all-skills.json").write_text(json.dumps({"skills": []}))
+        os.environ["AGENT_SKILLS_DIR"] = str(skills)
 
         modules_patch = mock.patch.dict(sys.modules)
         modules_patch.start()
@@ -363,6 +369,44 @@ class ObserverContextTests(_RuntimeCase):
         out = self.rt.observer_context(self.agent)
         self.assertIsInstance(out, str)
         self.assertLessEqual(self.approx(out), self.rt.MAX_OBSERVER_AMBIENT)
+
+    def test_native_link_skips_context_but_keeps_bootstrap(self):
+        skills = self.root / "skills"
+        src = skills / "by-category" / "general" / "task-observer"
+        src.mkdir(parents=True)
+        (src / "SKILL.md").write_text("---\nname: task-observer\n---\n")
+        target = self.root / "home" / ".claude" / "skills"
+        target.mkdir(parents=True)
+        (target / "task-observer").symlink_to(src)
+        os.environ["AGENT_SKILLS_NATIVE_TARGETS"] = str(target)
+        os.environ["AGENT_SKILLS_DIR"] = str(skills)
+        self.fake_observer("SHOULD_NOT_APPEAR")
+        self.assertEqual(self.rt.observer_context(self.agent), "")
+        # Workspace bootstrap still happens for the Stop backstop.
+        self.assertEqual(len(self.calls(self.observer_log)), 1)
+
+    def test_unlinked_native_skill_bootstraps(self):
+        skills = self.root / "skills"
+        (skills / "by-category" / "general" / "task-observer").mkdir(parents=True)
+        target = self.root / "home" / ".claude" / "skills"
+        target.mkdir(parents=True)
+        os.environ["AGENT_SKILLS_NATIVE_TARGETS"] = str(target)
+        os.environ["AGENT_SKILLS_DIR"] = str(skills)
+        self.fake_observer("OBSERVER CARD")
+        self.assertEqual(self.rt.observer_context(self.agent), "OBSERVER CARD")
+
+    def test_real_loader_exposes_skills_index(self):
+        skills = self.root / "skills"
+        (skills / "by-category" / "general" / "task-observer").mkdir(parents=True)
+        (skills / "all-skills.json").write_text(json.dumps({"skills": [
+            {"name": "task-observer", "source": "task-observer"}]}))
+        os.environ["AGENT_SKILLS_DIR"] = str(skills)
+        spec = importlib.util.spec_from_file_location(
+            "real_loader_probe", SCRIPTS / "load-skills.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        loader = module.SkillsLoader(self.agent)
+        self.assertTrue(self.rt.observer_is_natively_linked(loader.skills_index))
 
 
 class HandleSessionStartTests(_RuntimeCase):

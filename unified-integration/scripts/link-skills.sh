@@ -46,7 +46,7 @@ DEFAULT_SOURCES="task-observer Superpowers"
 # well-scoped sources with bounded per-session metadata cost (~3.5k
 # tokens of native descriptions). The full catalog stays reachable on
 # demand; "--set all" is audited, never default.
-CURATED_SOURCES="anthropic-skills replica-skill task-observer"
+CURATED_SOURCES="anthropic-skills replica-skill task-observer karpathy-skills"
 
 QUIET=0
 

@@ -47,6 +47,14 @@
     "model": "",
     "api_key_ref": "PREFLIGHT_API_KEY"
   },
+  "_preflight_mode2_example": {
+    "mode": 2,
+    "sdk": "openai",
+    "endpoint": "https://openrouter.ai/api/v1",
+    "model": "openai/gpt-4o-mini",
+    "api_key_ref": "PREFLIGHT_API_KEY"
+  },
+  "_preflight_mode1_note": "Mode 1 (host-native selection) is not available - no shipped adapter supplies ae_native_selection. Configure mode 0 or 2.",
   "mcp": {
     "serper-mcp": {
       "enabled": true,

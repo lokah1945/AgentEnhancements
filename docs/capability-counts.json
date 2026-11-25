@@ -24,6 +24,7 @@
     "curated_skills": 31,
     "curated_sources": [
       "anthropic-skills",
+      "karpathy-skills",
       "replica-skill",
       "task-observer"
     ],

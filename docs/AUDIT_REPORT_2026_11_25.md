@@ -2,20 +2,24 @@
 
 **Date:** 2026-11-25
 **Auditor:** Claude Code (session 999e17e6-1be1-4b6e-b2dc-9d427b9ccb3e)
-**Repository:** https://github.com/lokah1945/AgentEnhancements
+**Repository:** <https://github.com/lokah1945/AgentEnhancements>
 **Branch:** master
-**Commit:** sha-41d7eabb (test(load-skills): add comprehensive coverage for missing branches)
+**Commit:** sha-41d7eabb (test(load-skills): add comprehensive coverage for
+missing branches)
 
 ---
 
 ## Executive Summary
 
-**FINAL VERDICT: CONDITIONALLY PRODUCTION READY**
+### FINAL VERDICT: CONDITIONALLY PRODUCTION READY
 
-AgentEnhancements demonstrates a sophisticated, well-architected capability integration system with strong engineering practices. However, several critical gaps prevent unconditional production readiness:
+AgentEnhancements demonstrates a sophisticated, well-architected capability
+integration system with strong engineering practices. However, several critical
+gaps prevent unconditional production readiness:
 
+<!-- markdownlint-disable MD013 -->
 | Gate | Status | Notes |
-|------|--------|-------|
+| ------ | -------- | ------- |
 | Fundamental Concept | ⚠️ CONDITIONAL | Core objectives work but Karpathy integration fails general coding tasks |
 | Upstream Fidelity | ⚠️ CONDITIONAL | Karpathy semantic drift (ML-only routing); others largely faithful |
 | Project Inclusion | ✅ PASS | All mandatory projects present via vendoring |
@@ -36,9 +40,12 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | Supply Chain | ✅ PASS | Vendored deps pinned, CodeQL, dependabot, SBOM-ready |
 | Documentation | ⚠️ CONDITIONAL | Accurate but some reference files use non-standard JSONC |
 | Release | ✅ PASS | CI/CD green, quality gates, provenance |
+<!-- markdownlint-enable MD013 -->
 
 **Release Blockers:**
-1. Karpathy Skills semantic drift — routes only ML/prototype tasks, not general coding
+
+1. Karpathy Skills semantic drift — routes only ML/prototype tasks, not general
+   coding
 2. Filelock runtime dependency version (3.32.0 < 4.2.1 required)
 3. Preflight Mode 1 non-functional (no adapter supplies `ae_native_selection`)
 4. One Python template file uses Jinja2 syntax (fails `py_compile`)
@@ -49,8 +56,8 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 ## 1. Repository Baseline
 
 | Property | Value |
-|----------|-------|
-| Repository | https://github.com/lokah1945/AgentEnhancements |
+| ---------- | ------- |
+| Repository | <https://github.com/lokah1945/AgentEnhancements> |
 | Branch | master |
 | Commit SHA | sha-41d7eabb |
 | Working Tree | Clean |
@@ -64,8 +71,9 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 
 ### AE Objectives Assessment
 
+<!-- markdownlint-disable MD013 -->
 | Objective | Status | Evidence |
-|-----------|--------|----------|
+| ----------- | -------- | ---------- |
 | One installation | ✅ | `setup.sh` single entry point |
 | Unified capability library | ✅ | 3467 entries in `agent-registry.json` |
 | Automatic capability discovery | ⚠️ | Works via `registry.py search/map` but Karpathy not discoverable for general coding |
@@ -79,23 +87,31 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | Minimal user config | ✅ | Single `ui.api.json` |
 | Cross-platform/host | ✅ | Linux primary; Windows claimed; 8 hosts supported |
 | Secure/reliable/maintainable | ✅ | CONTRACT.md enforcement, CI gates |
+<!-- markdownlint-enable MD013 -->
 
-**Critical Gap:** The Karpathy Skills integration (mandatory case study) fails to activate for general coding tasks. The dispatch heuristic only triggers on `prototype|sketch|numpy|torch|first principle` — missing the upstream's core purpose: **general coding agent behavior principles** (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution).
+**Critical Gap:** The Karpathy Skills integration (mandatory case study) fails
+to activate for general coding tasks. The dispatch heuristic only triggers on
+`prototype|sketch|numpy|torch|first principle` — missing the upstream's core
+purpose: **general coding agent behavior principles** (Think Before Coding,
+Simplicity First, Surgical Changes, Goal-Driven Execution).
 
 ---
 
 ## 3. Complete Ecosystem Inventory
 
 **Total Capabilities:** 3,467 indexed entries
+
 - Skills (aggregated): 3,378 across 8 families
 - Plugins (curated catalog): 21 sources across 6 categories
 - MCP Servers: 11 built + roadmap
-- Built-in Capabilities: 7 (memory, compression, skills-loader, dispatch, native-linking, launcher, registry, task-observer)
+- Built-in Capabilities: 7 (memory, compression, skills-loader, dispatch,
+  native-linking, launcher, registry, task-observer)
 
 ### Upstream Projects Status Matrix
 
+<!-- markdownlint-disable MD013 -->
 | Project | Upstream | Integration Type | Status | Runtime Ready | Notes |
-|---------|----------|------------------|--------|---------------|-------|
+| --------- | ---------- | ------------------ | -------- | --------------- | ------- |
 | agentic-awesome-skills | GitHub | Vendored | integrated | ✅ | |
 | anthropic-skills | GitHub | Vendored + natively linked | integrated | ✅ | Document skills (docx, pdf, pptx, xlsx) |
 | claude-mem | GitHub | Vendored | integrated | ✅ | |
@@ -126,6 +142,7 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | OpenMontage | GitHub | Plugin catalog | integrated-ready | ✅ | |
 | Hyperframes | GitHub | Plugin catalog | integrated-ready | ✅ | |
 | Humanizer | GitHub | Plugin catalog | integrated-ready | ✅ | |
+<!-- markdownlint-enable MD013 -->
 
 **All projects accounted for — no project skipped without documented reason.**
 
@@ -135,29 +152,32 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 
 ### 4.1 Mandatory Case Study: Andrej Karpathy Skills
 
-**Upstream:** https://github.com/multica-ai/andrej-karpathy-skills
+**Upstream:** <https://github.com/multica-ai/andrej-karpathy-skills>
 **Upstream Commit:** Not pinned in manifest (gap)
 **AE Integration:** `plugin-catalog/code/karpathy-skills.json` + `SKILL.md`
 
 #### Fidelity Assessment
 
+<!-- markdownlint-disable MD013 -->
 | Check | Result | Evidence |
-|-------|--------|----------|
+| ------- | -------- | ---------- |
 | Upstream content included | ✅ | SKILL.md present with 4 principles |
 | 4 principles preserved | ✅ | All 4 in SKILL.md and consolidated-system-prompt.txt |
 | Principles apply to GENERAL coding | ✅ | SKILL.md states "Behavioral guidance for any coding task" |
 | Agent uses principles automatically | ❌ | **Dispatch only triggers on ML/prototype keywords** |
-| Activation appropriate for general coding | ❌ | Keywords: `prototype|sketch|numpy|torch|first principle` |
+| Activation appropriate for general coding | ❌ | Keywords: `prototype \| sketch \| numpy \| torch \| first principle` |
 | User must mention "Karpathy" explicitly | ❌ | Not required if dispatched, but dispatch doesn't fire |
 | Unnecessary dependencies | ✅ | No numpy/torch required |
 | Works with Superpowers/ECC/Ponytail | ⚠️ | Priority rules documented but not enforced |
 | Duplicate instructions/context overhead | ✅ | Consolidated prompt avoids duplication |
 | Effective on claimed hosts | ✅ | Principles in consolidated prompt work everywhere |
+<!-- markdownlint-enable MD013 -->
 
 #### Behavioral Test Results (Conceptual)
 
+<!-- markdownlint-disable MD013 -->
 | Scenario | Expected | Actual | Gap |
-|----------|----------|--------|-----|
+| ---------- | ---------- | -------- | ----- |
 | Bug fixing | Karpathy principles apply | Only if "prototype" in prompt | False negative |
 | Feature implementation | Karpathy principles apply | Only if ML-related | False negative |
 | Refactoring | Surgical Changes principle | Not triggered | False negative |
@@ -166,17 +186,22 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | Ambiguous requirements | Goal-Driven + ask | Not triggered | False negative |
 | Simple coding task | Simplicity First | Not triggered | False negative |
 | Complex multi-stage | Goal-Driven plan | Not triggered | False negative |
+<!-- markdownlint-enable MD013 -->
 
+<!-- markdownlint-disable MD013 -->
 **Root Cause:** `dispatch.sh` line 47: `if echo "$lc" | grep -qE '(prototype|sketch|numpy|torch|first principle)'; then echo "karpathy-skills"; return; fi`
+<!-- markdownlint-enable MD013 -->
 
-**Upstream Intent:** Principles are for **any coding task** — "writing, fixing, refactoring, reviewing, or debugging code. ML/numerical work is one optional application, not a prerequisite." (SKILL.md lines 21-24)
+**Upstream Intent:** Principles are for **any coding task** — "writing, fixing,
+refactoring, reviewing, or debugging code. ML/numerical work is one optional
+application, not a prerequisite." (SKILL.md lines 21-24)
 
 **AE Implementation:** Routes only ML/prototyping tasks.
 
 ### 4.2 Other Critical Upstream Projects
 
 | Project | Fidelity | Notes |
-|---------|----------|-------|
+| --------- | ---------- | ------- |
 | Superpowers | ✅ High | Core workflow discipline, natively linked by default |
 | ECC | ✅ High | Native agent config generation, comprehensive tests |
 | Ponytail | ✅ High | Plugin catalog integration |
@@ -194,7 +219,7 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 ### Summary Statistics
 
 | Dimension | Value |
-|-----------|-------|
+| ----------- | ------- |
 | Total Capabilities | 3,467 |
 | Skills (aggregated) | 3,378 |
 | Plugins (catalog) | 21 sources |
@@ -206,7 +231,7 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 ### Status Distribution
 
 | Implementation Status | Count |
-|----------------------|-------|
+| ---------------------- | ------- |
 | integrated | 3,378+ |
 | integrated-ready | 21 (plugin catalog) |
 | to-integrate | 0 |
@@ -215,7 +240,7 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | to-install (MCP) | roadmap |
 
 | Runtime Readiness | Count |
-|-------------------|-------|
+| ------------------- | ------- |
 | visible/configured | ~3,400 |
 | not_configured | ~21 (plugin guides only) |
 | missing_credentials | 0 (preflight keys optional) |
@@ -227,19 +252,23 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 
 ### Critical Combinations Evaluated
 
+<!-- markdownlint-disable MD013 -->
 | Combination | Overlap | Complement | Conflicts | Priority Rules | Verdict |
-|-------------|---------|------------|-----------|----------------|---------|
+| ------------- | --------- | ------------ | ----------- | ---------------- | --------- |
 | Karpathy + Superpowers + ECC + Ponytail | Clean-code principles | Workflow + config gen + linting | **Karpathy not triggered for general coding** | Documented in SKILL.md but not enforced | ⚠️ NEEDS FIX |
 | GSD + BMAD + Superpowers | Task decomposition | Planning + execution | None found | Superpowers skills teach GSD/BMAD usage | ✅ OK |
 | Task Observer + Superpowers + Native Hooks | Session bootstrap | Observation + workflow | None (observer ambient) | Observer native-linked by default | ✅ OK |
 | Caveman + GStack + Headroom + Context Mgmt | Token optimization | Compression + shorthand + context | None | Caveman for prompts, Headroom for transcripts | ✅ OK |
 | Claude-mem + ECC Memory + AE Memory | Persistent memory | Different scopes | None (different backends) | AE memory = cross-session, ECC = agent config | ✅ OK |
+<!-- markdownlint-enable MD013 -->
 
 ### Architecture Assessment
 
 - **Single Source of Truth:** ✅ `agent-registry.json`, `all-skills.json`, `catalog.json`
-- **Consistent Composition Rules:** ⚠️ Priority rules documented in Karpathy SKILL.md but not enforced in dispatch/runtime
-- **No Unnecessary Orchestrators:** ✅ Uses existing mechanisms (hooks, dispatch, registry)
+- **Consistent Composition Rules:** ⚠️ Priority rules documented in Karpathy
+  SKILL.md but not enforced in dispatch/runtime
+- **No Unnecessary Orchestrators:** ✅ Uses existing mechanisms (hooks, dispatch,
+  registry)
 
 ---
 
@@ -247,8 +276,9 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 
 ### Test Corpus Results
 
+<!-- markdownlint-disable MD013 -->
 | Test Type | Capabilities Tested | True Positive | False Positive | False Negative | Notes |
-|-----------|---------------------|---------------|----------------|----------------|-------|
+| ----------- | --------------------- | --------------- | ---------------- | ---------------- | ------- |
 | Positive intent | 21 plugins + 7 built-ins | 19/21 | - | 2/21 | Karpathy, replica-skill missed |
 | Negative intent | 21 plugins | - | 1/21 | - | Over-trigger on "prototype" |
 | Ambiguous intent | 21 plugins | 12/21 | 2/21 | 7/21 | |
@@ -258,11 +288,12 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | Missing creds | Preflight Mode 2 | 1/1 | - | 0 | Falls back to Mode 0 |
 | Unsupported host | 8 hosts | 8/8 | - | 0 | Host eligibility filtering works |
 | No capability needed | 10 simple tasks | 10/10 | 0/10 | 0 | Correctly abstains |
+<!-- markdownlint-enable MD013 -->
 
 ### Key Metrics
 
 | Metric | Value | Target |
-|--------|-------|--------|
+| -------- | ------- | -------- |
 | Relevant selection rate | 90% | >95% |
 | False positive rate | 5% | <5% |
 | False negative rate | 10% | <5% |
@@ -277,8 +308,9 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 
 ### 8.1 Architecture
 
+<!-- markdownlint-disable MD013 -->
 | Criterion | Status | Evidence |
-|-----------|--------|----------|
+| ----------- | -------- | ---------- |
 | Architectural correctness | ✅ | Clear separation: registry, runtime, hooks, catalog |
 | Modularity | ✅ | Independent scripts, single responsibility |
 | Separation of concerns | ✅ | Discovery ≠ activation ≠ execution |
@@ -290,11 +322,12 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | Scalability | ✅ | Registry handles 3.3k skills, context budgets |
 | Over-engineering | ❌ | Preflight Mode 1/2 complex but Mode 1 non-functional |
 | Under-engineering | ❌ | Karpathy routing too narrow |
+<!-- markdownlint-enable MD013 -->
 
 ### 8.2 Source Code
 
 | Criterion | Status | Evidence |
-|-----------|--------|----------|
+| ----------- | -------- | ---------- |
 | Functional correctness | ✅ | 802 tests pass (1 version check failure) |
 | Error handling | ✅ | Bounded retries, fallbacks, graceful degradation |
 | Dead code | ✅ | Minimal |
@@ -310,8 +343,9 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 
 ### 8.3 Security
 
+<!-- markdownlint-disable MD013 -->
 | Control | Status | Evidence |
-|---------|--------|----------|
+| --------- | -------- | ---------- |
 | Trust boundaries | ✅ | ui.api.json private, no env var fallback for keys |
 | Authentication/authorization | ✅ | MCP gateway permission checks |
 | Least privilege | ✅ | Read-only registry, write via hooks only |
@@ -331,11 +365,12 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | Secure defaults | ✅ | Mode 0 default, fail-closed |
 | Sensitive data retention | ✅ | TTL-based memory cleanup |
 | Audit log integrity | ✅ | Git commit metadata, task-observer |
+<!-- markdownlint-enable MD013 -->
 
 ### 8.4 Performance
 
 | Metric | Measured | Budget | Status |
-|--------|----------|--------|--------|
+| -------- | ---------- | -------- | -------- |
 | L0 bootstrap map | ~800 tokens | ≤1,000 | ✅ |
 | Cold start total | ~3,200 tokens | ≤4,000 | ✅ |
 | Memory recall | ~400 tokens | ≤600 | ✅ |
@@ -351,7 +386,7 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 ### 8.5 Reliability
 
 | Scenario | Behavior | Verified |
-|----------|----------|----------|
+| ---------- | ---------- | ---------- |
 | Timeout handling | Deadline class, socket timeouts | ✅ |
 | Bounded retries | Preflight: 0 retries; MCP: gateway | ✅ |
 | Fallback | Mode 0 on any failure | ✅ |
@@ -369,7 +404,7 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 ### 8.6 Compatibility
 
 | Host | Support Level | Notes |
-|------|---------------|-------|
+| ------ | --------------- | ------- |
 | Claude Code | ✅ Full | Primary target, hooks, native skills |
 | Codex | ✅ Full | Native config, hooks |
 | OpenCode | ✅ Full | Server plugin, tool observation |
@@ -385,7 +420,7 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 ### 8.7 Installation & Operations
 
 | Operation | Status | Evidence |
-|-----------|--------|----------|
+| ----------- | -------- | ---------- |
 | Clean installation | ✅ | `setup.sh` isolated HOME, no conflicts |
 | Reproducible installation | ✅ | Vendored sources, lockfiles |
 | Upgrade | ✅ | `update-skills.sh`, re-vendor procedure |
@@ -402,8 +437,9 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 
 ### 8.8 DevSecOps & Release
 
+<!-- markdownlint-disable MD013 -->
 | Control | Status | Evidence |
-|---------|--------|----------|
+| --------- | -------- | ---------- |
 | CI/CD | ✅ | 4 workflows: ci, dependency-audit, codeql, registry-regeneration |
 | Dependency pinning | ✅ | npm, pip, cargo lockfiles committed |
 | Vulnerability scanning | ✅ | CodeQL, dependabot, pip-audit, npm audit, cargo audit |
@@ -416,11 +452,13 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | Branch protection | ✅ | Rulesets enforce CI, reviews |
 | Release rollback | ✅ | Tag deletion, previous artifact |
 | Dependency governance | ✅ | Weekly audits, auto-PRs |
+<!-- markdownlint-enable MD013 -->
 
 ### 8.9 Documentation & Governance
 
+<!-- markdownlint-disable MD013 -->
 | Aspect | Status | Evidence |
-|--------|--------|----------|
+| -------- | -------- | ---------- |
 | Documentation correctness | ⚠️ | Mostly accurate; JSONC template files not standard |
 | User experience | ✅ | Clear setup, troubleshooting, router policy |
 | Configuration clarity | ✅ | Single ui.api.json, schema documented |
@@ -431,13 +469,15 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | Supported feature claims | ⚠️ | Karpathy claims general coding but routes ML only |
 | Traceability | ✅ | Git commits with agent metadata |
 | Operational responsibilities | ✅ | CONTRACT.md §4, §9 |
+<!-- markdownlint-enable MD013 -->
 
 ---
 
 ## 9. Industry Standards Mapping
 
+<!-- markdownlint-disable MD013 -->
 | Standard | Applicable Controls | AE Coverage | Evidence |
-|----------|---------------------|-------------|----------|
+| ---------- | --------------------- | ------------- | ---------- |
 | ISO/IEC 25010 | Functional suitability, reliability, security, maintainability | ✅ | Quality gates, tests, contracts |
 | ISO/IEC 27001/27002 | Access control, crypto, ops security | ✅ | Credential isolation, least privilege |
 | NIST SSDF SP 800-218 | Protect software, produce well-secured software | ✅ | Supply chain, CI/CD, provenance |
@@ -453,6 +493,7 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 | Semantic Versioning | Version contracts | ✅ | Catalog versioning, skill versions |
 | MCP Spec | Server/client protocol | ✅ | 11 servers implement spec |
 | Agent Skills Spec | Skill manifest, activation | ✅ | plugin-catalog schema, native linking |
+<!-- markdownlint-enable MD013 -->
 
 ---
 
@@ -461,7 +502,7 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 ### Test Suite Results
 
 | Suite | Tests | Passed | Failed | Skipped | Duration |
-|-------|-------|--------|--------|---------|----------|
+| ------- | ------- | -------- | -------- | --------- | ---------- |
 | unified-integration | 802 | 801 | 1 | 7 | 203s |
 | ECC | ~1,500 | ~1,500 | 0 | 0 | ~45min |
 | Headroom | 3 | 3 | 0 | 0 | 0.08s |
@@ -470,7 +511,7 @@ AgentEnhancements demonstrates a sophisticated, well-architected capability inte
 
 ### Integration Test Failure Details
 
-```
+```text
 FAIL: test_filelock_runtime_includes_published_security_fixes
 AssertionError: (3, 32, 0) not greater than or equal to (4, 2, 1)
 File: unified-integration/tests/test_runtime_dependencies.py:55
@@ -480,14 +521,16 @@ File: unified-integration/tests/test_runtime_dependencies.py:55
 
 ### Behavioral Validation Coverage
 
+<!-- markdownlint-disable MD013 -->
 | Capability Type | Direct Behavioral Test | Automated Validation | Sampling |
-|-----------------|----------------------|---------------------|----------|
+| ----------------- | ---------------------- | --------------------- | ---------- |
 | Upstream projects (7) | ✅ All | ✅ | N/A |
 | Critical skills (Superpowers, ECC, etc.) | ✅ | ✅ | N/A |
 | Plugin catalog (21) | ⚠️ Partial | ✅ Structural | By family |
 | MCP servers (11) | ✅ Health + tools | ✅ | N/A |
 | Built-in capabilities (7) | ✅ | ✅ | N/A |
 | General skills (3,378) | ❌ | ✅ Structural | By category/risk |
+<!-- markdownlint-enable MD013 -->
 
 ---
 
@@ -495,42 +538,51 @@ File: unified-integration/tests/test_runtime_dependencies.py:55
 
 ### Critical Findings
 
+<!-- markdownlint-disable MD013 -->
 | ID | Project | Severity | Finding |
-|----|---------|----------|---------|
+| ---- | --------- | ---------- | --------- |
 | AE-001 | Karpathy Skills | CRITICAL | Semantic drift: dispatch routes only ML/prototype tasks; upstream principles are for ALL coding tasks |
 | AE-002 | Runtime Dependencies | CRITICAL | filelock 3.32.0 < 4.2.1 required (security fixes) |
 | AE-003 | Preflight Mode 1 | CRITICAL | No shipped adapter supplies `ae_native_selection`; every prompt falls back to Mode 0 |
+<!-- markdownlint-enable MD013 -->
 
 ### High Findings
 
+<!-- markdownlint-disable MD013 -->
 | ID | Project | Severity | Finding |
-|----|---------|----------|---------|
+| ---- | --------- | ---------- | --------- |
 | AE-004 | Python Templates | HIGH | `typescript-expert/references/tsconfig-strict.json` uses JSONC (comments) — fails `json.tool` |
 | AE-005 | Python Templates | HIGH | `fastapi-router-py/assets/template.py` uses Jinja2 syntax — fails `py_compile` |
 | AE-006 | Karpathy/Superpowers | HIGH | Priority rules documented but not enforced in dispatch/runtime |
 | AE-007 | Preflight Mode 2 | HIGH | Requires external API key; not configured by default |
+<!-- markdownlint-enable MD013 -->
 
 ### Medium Findings
 
+<!-- markdownlint-disable MD013 -->
 | ID | Project | Severity | Finding |
-|----|---------|----------|---------|
+| ---- | --------- | ---------- | --------- |
 | AE-008 | Documentation | MEDIUM | Some reference files in skills/ use non-standard formats (JSONC, Jinja2) |
 | AE-009 | Discovery | MEDIUM | Karpathy not discoverable for general coding tasks (false negatives) |
 | AE-010 | Activation | MEDIUM | Default native link set minimal (2 skills); curated set not default |
+<!-- markdownlint-enable MD013 -->
 
 ### Low Findings
 
+<!-- markdownlint-disable MD013 -->
 | ID | Project | Severity | Finding |
-|----|---------|----------|---------|
+| --- | --- | --- | --- |
 | AE-011 | ECC Tests | LOW | Test suite takes ~45min; CI timeout 45min (risk of flaky timeout) |
 | AE-012 | Markdownlint | LOW | Cannot run in sandbox (npm registry blocked) |
+<!-- markdownlint-enable MD013 -->
 
 ---
 
 ## 12. Production Readiness Gates
 
+<!-- markdownlint-disable MD013 -->
 | Gate | Requirement | Evidence | Result |
-|------|-------------|----------|--------|
+| ------ | ------------- | ---------- | -------- |
 | 1. Fundamental Concept | AE objectives work | 13/14 objectives met; Karpathy general coding fails | ⚠️ CONDITIONAL |
 | 2. Upstream Fidelity | Mandatory projects integrated | Karpathy semantic drift | ⚠️ CONDITIONAL |
 | 3. Project Inclusion | All required projects included | 28 upstream projects accounted | ✅ PASS |
@@ -551,6 +603,7 @@ File: unified-integration/tests/test_runtime_dependencies.py:55
 | 18. Supply Chain | Pinned, scanned, SBOM | CodeQL, dependabot, lockfiles | ✅ PASS |
 | 19. Documentation | Accurate, complete | Minor format issues in refs | ⚠️ CONDITIONAL |
 | 20. Release | CI/CD green, provenance | All workflows pass | ✅ PASS |
+<!-- markdownlint-enable MD013 -->
 
 ---
 
@@ -558,40 +611,49 @@ File: unified-integration/tests/test_runtime_dependencies.py:55
 
 ### Phase 1: Release Blockers (Must Fix Before Production)
 
+<!-- markdownlint-disable MD013 -->
 | # | Problem | Root Cause | Files Affected | Change | Acceptance Criteria | Verification |
-|---|---------|------------|----------------|--------|---------------------|--------------|
-| 1 | Karpathy routes only ML tasks | dispatch.sh keyword heuristic too narrow | `unified-integration/scripts/dispatch.sh` line 47 | Add general coding keywords: `fix|bug|refactor|review|debug|write code|implement|simplif` | Karpathy triggers on "fix a bug", "refactor this", "review code", "debug issue" | `bash dispatch.sh "fix a bug in auth"` → karpathy-skills |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Karpathy routes only ML tasks | dispatch.sh keyword heuristic too narrow | `unified-integration/scripts/dispatch.sh` line 47 | Add general coding keywords: `fix\|bug\|refactor\|review\|debug\|write code\|implement\|simplif` | Karpathy triggers on "fix a bug", "refactor this", "review code", "debug issue" | `bash dispatch.sh "fix a bug in auth"` → karpathy-skills |
 | 2 | filelock version outdated | Dependency not updated | `unified-integration/scripts/test_runtime_dependencies.py` line 55, runtime deps | Update minimum to (4, 2, 1) or update vendored filelock | Test passes with filelock ≥4.2.1 | `python3 -m pytest unified-integration/tests/test_runtime_dependencies.py::RuntimeDependencyRefreshTests::test_filelock_runtime_includes_published_security_fixes` |
 | 3 | Preflight Mode 1 non-functional | No adapter implements `ae_native_selection` | `adaptive_preflight.py` lines 1144-1154, host adapters | Either implement in Claude Code/Codex adapters or document Mode 1 unavailable | Mode 1 either works or removed from config schema | `preflight_context` with mode=1 returns selection not fallback |
+<!-- markdownlint-enable MD013 -->
 
 ### Phase 2: High Priority (Fix Soon)
 
+<!-- markdownlint-disable MD013 -->
 | # | Problem | Root Cause | Files Affected | Change | Acceptance Criteria | Verification |
-|---|---------|------------|----------------|--------|---------------------|--------------|
+| --- | --------- | ------------ | ---------------- | -------- | --------------------- | -------------- |
 | 4 | JSONC file fails validation | Comments in JSON | `skills/by-category/general/typescript-expert/references/tsconfig-strict.json` | Remove comments or move to `.jsonc` extension with documentation | `python3 -m json.tool` passes | CI JSON check passes |
 | 5 | Jinja2 template fails py_compile | Template syntax in .py file | `skills/by-category/general/fastapi-router-py/assets/template.py` | Rename to `.j2` or `.template`, add to .gitignore for py_compile | `python3 -m py_compile` passes | CI py_compile passes |
 | 6 | Karpathy/Superpowers priority unenforced | Rules only in docs | `plugin-catalog/code/karpathy-skills/SKILL.md` line 88-89, `dispatch.sh`, `consolidated-system-prompt.txt` | Add priority logic in dispatch or runtime | Only one clean-code voice active per task | Behavioral test: "refactor this" uses Karpathy not Superpowers clean-code |
+<!-- markdownlint-enable MD013 -->
 
 ### Phase 3: Medium Priority (Next Sprint)
 
+<!-- markdownlint-disable MD013 -->
 | # | Problem | Root Cause | Files Affected | Change | Acceptance Criteria | Verification |
-|---|---------|------------|----------------|--------|---------------------|--------------|
+| --- | --------- | ------------ | ---------------- | -------- | --------------------- | -------------- |
 | 7 | Reference files non-standard | Mixed formats in skills/ | Multiple files in `skills/by-category/*/references/` | Document allowed formats, add validation exceptions | CI passes with documented exceptions | CI green |
 | 8 | Default native link set too minimal | Context-frugal default | `link-skills.sh` DEFAULT_SOURCES | Consider adding Karpathy to curated set | Karpathy natively discoverable for general coding | `link-skills.sh --set curated` includes karpathy |
 | 9 | Preflight Mode 2 unconfigured | Requires API key | `ui.api.json` preflight section | Document setup or provide default endpoint | Mode 2 configurable and testable | `preflight_context` with mode=2 works with key |
+<!-- markdownlint-enable MD013 -->
 
 ### Phase 4: Optional Improvements
 
+<!-- markdownlint-disable MD013 -->
 | # | Problem | Root Cause | Files Affected | Change | Acceptance Criteria |
-|---|---------|------------|----------------|--------|---------------------|
+| --- | --- | --- | --- | --- | --- |
 | 10 | ECC test timeout risk | 45min suite, 45min CI timeout | `.github/workflows/ci.yml` ecc-tests timeout | Increase timeout to 60min or parallelize more | CI stable |
 | 11 | Markdownlint in CI | npm registry blocked in sandbox | `.github/workflows/ci.yml` markdownlint step | Use cached npx or local install | Markdownlint runs in CI |
+<!-- markdownlint-enable MD013 -->
 
 ---
 
 ## 14. Final Verdict Details
 
 ### What Actually Works
+
 - ✅ Complete ecosystem inventory with 3,467 traceable capabilities
 - ✅ Unified registry, discovery, and activation via `registry.py` and `link-skills.sh`
 - ✅ Native host integration for Claude Code, Codex, OpenCode, Hermes
@@ -606,46 +668,60 @@ File: unified-integration/tests/test_runtime_dependencies.py:55
 - ✅ Task Observer ambient observation and skill improvement loop
 
 ### What Doesn't Work
-- ❌ Karpathy Skills semantic drift — only activates for ML/prototyping, not general coding
+
+- ❌ Karpathy Skills semantic drift — only activates for ML/prototyping, not
+  general coding
 - ❌ Preflight Mode 1 — no adapter supplies native selection
 - ❌ filelock runtime dependency version check fails (3.32.0 < 4.2.1)
 
 ### What's Only Registered (Not Integrated)
-- All 21 plugin catalog entries are `integrated-ready` (guide-only, not vendored runtimes)
+
+- All 21 plugin catalog entries are `integrated-ready` (guide-only, not vendored
+  runtimes)
 - MCP roadmap servers are `to-install` (require user configuration)
 
 ### What's Not Integrated
+
 - No projects in `to-integrate` state — all accounted for
 
 ### What Deviates from Upstream
-- **Karpathy Skills**: Upstream = general coding principles; AE = ML/prototyping only routing
+
+- **Karpathy Skills**: Upstream = general coding principles; AE = ML/prototyping
+  only routing
 - **Preflight Mode 1**: Spec exists but no implementation
 
 ### What Cannot Be Verified
+
 - Windows compatibility (claimed but not tested in CI)
-- Cross-host parity for partial-support hosts (Cursor, Gemini CLI, Copilot, Windsurf, Kiro)
+- Cross-host parity for partial-support hosts (Cursor, Gemini CLI, Copilot,
+  Windsurf, Kiro)
 - Long-running session memory growth (no benchmark)
 - Preflight Mode 2 with real API key (no key configured)
 
 ### Release Blockers
+
 1. AE-001: Karpathy semantic drift
 2. AE-002: filelock version
 3. AE-003: Preflight Mode 1 non-functional
 
 ### Residual Risks
+
 - Karpathy integration gap means general coding tasks miss upstream principles
 - Mode 1 preflight adds complexity without function
 - Reference file format inconsistencies may cause CI noise
 
 ### Mandatory Fixes (Phase 1)
+
 1. Fix Karpathy dispatch keywords in `dispatch.sh`
 2. Update filelock minimum version
 3. Implement or remove Preflight Mode 1
 
 ### Optional Fixes (Phases 2-4)
+
 4-11. As detailed in remediation plan
 
 ### Remediation Order
+
 1. AE-001 → AE-002 → AE-003 (release blockers)
 2. AE-004 → AE-005 → AE-006 (CI blockers)
 3. AE-007 → AE-008 → AE-009 (usability)
@@ -657,6 +733,7 @@ File: unified-integration/tests/test_runtime_dependencies.py:55
 
 After remediation, verify by running:
 
+<!-- markdownlint-disable MD013 -->
 ```bash
 # 1. Full CI suite
 gh workflow run ci.yml
@@ -682,9 +759,13 @@ cd ECC && node tests/run-all.js
 cd headroom && cargo test --locked -p headroom-cli
 bash unified-integration/scripts/setup-mcp.sh --check
 ```
+<!-- markdownlint-enable MD013 -->
 
 ---
 
-**Audit Complete.** This report satisfies CONTRACT.md §21 deliverables. All findings are evidence-based with file paths, line numbers, and reproduction steps. The remediation plan is executable by another agent with specific acceptance criteria and verification procedures.
+**Audit Complete.** This report satisfies CONTRACT.md §21 deliverables. All
+findings are evidence-based with file paths, line numbers, and reproduction
+steps. The remediation plan is executable by another agent with specific
+acceptance criteria and verification procedures.
 
 **Next Review:** After Phase 1 fixes merged and CI green.

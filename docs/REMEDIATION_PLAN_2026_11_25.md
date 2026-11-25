@@ -4,7 +4,9 @@
 **Auditor:** Claude Code
 **Session:** 999e17e6-1be1-4b6e-b2dc-9d427b9ccb3e
 
-This plan is executable by another agent. Each item includes: problem, root cause, files affected, recommended change, dependencies, acceptance criteria, regression tests, and verification procedure.
+This plan is executable by another agent. Each item includes: problem, root
+cause, files affected, recommended change, dependencies, acceptance criteria,
+regression tests, and verification procedure.
 
 ---
 
@@ -12,14 +14,21 @@ This plan is executable by another agent. Each item includes: problem, root caus
 
 ### AE-001: Fix Karpathy Skills Dispatch Routing
 
-**Problem:** Karpathy Skills only activates for ML/prototyping tasks (`prototype|sketch|numpy|torch|first principle`). Upstream principles (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) are for **ALL coding tasks**.
+**Problem:** Karpathy Skills only activates for ML/prototyping tasks
+(`prototype|sketch|numpy|torch|first principle`). Upstream principles (Think
+Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) are
+for **ALL coding tasks**.
 
-**Root Cause:** `dispatch.sh` line 47 heuristic too narrow; upstream intent not fully understood during integration.
+**Root Cause:** `dispatch.sh` line 47 heuristic too narrow; upstream intent not
+fully understood during integration.
 
 **Files Affected:**
+
 - `unified-integration/scripts/dispatch.sh` (line 47)
 
 **Recommended Change:**
+
+<!-- markdownlint-disable MD013 -->
 ```bash
 # Current (line 47):
 if echo "$lc" | grep -qE '(prototype|sketch|numpy|torch|first principle)'; then echo "karpathy-skills"; return; fi
@@ -27,10 +36,12 @@ if echo "$lc" | grep -qE '(prototype|sketch|numpy|torch|first principle)'; then 
 # Replace with:
 if echo "$lc" | grep -qE '(prototype|sketch|numpy|torch|first principle|fix|bug|refactor|review|debug|write code|implement|simplif|clean code|over.?engineer)'; then echo "karpathy-skills"; return; fi
 ```
+<!-- markdownlint-enable MD013 -->
 
 **Dependencies:** None (independent fix)
 
 **Acceptance Criteria:**
+
 - [ ] `bash dispatch.sh "fix a bug in authentication"` → karpathy-skills
 - [ ] `bash dispatch.sh "refactor this function"` → karpathy-skills
 - [ ] `bash dispatch.sh "review this code for simplicity"` → karpathy-skills
@@ -39,11 +50,13 @@ if echo "$lc" | grep -qE '(prototype|sketch|numpy|torch|first principle|fix|bug|
 - [ ] `bash dispatch.sh "prototype ML model"` → karpathy-skills (existing)
 
 **Regression Tests:**
+
 - Run all existing dispatch tests (if any)
 - Test negative cases: `bash dispatch.sh "write a poem"` → none (not coding)
 - Verify no false positives on non-coding tasks
 
 **Verification Procedure:**
+
 ```bash
 cd /root/project/AgentEnhancements
 bash unified-integration/scripts/dispatch.sh "fix a bug in auth"
@@ -59,15 +72,19 @@ bash unified-integration/scripts/dispatch.sh "prototype neural network"
 
 ### AE-002: Update filelock Minimum Version
 
-**Problem:** Runtime dependency test fails: `filelock 3.32.0 < 4.2.1` required for security fixes.
+**Problem:** Runtime dependency test fails: `filelock 3.32.0 < 4.2.1` required
+for security fixes.
 
-**Root Cause:** Minimum version check in `test_runtime_dependencies.py` line 55 expects >=4.2.1 but installed version is 3.32.0.
+**Root Cause:** Minimum version check in `test_runtime_dependencies.py` line 55
+expects >=4.2.1 but installed version is 3.32.0.
 
 **Files Affected:**
+
 - `unified-integration/tests/test_runtime_dependencies.py` (line 55)
 - Runtime dependency manifests (pip requirements, pyproject.toml, etc.)
 
 **Recommended Change:**
+
 1. Update the minimum version check to match actual installed version OR
 2. Update vendored/runtime filelock to >=4.2.1
 
@@ -85,41 +102,55 @@ bash unified-integration/scripts/dispatch.sh "prototype neural network"
 **Dependencies:** None
 
 **Acceptance Criteria:**
+
+<!-- markdownlint-disable MD013 -->
 - [ ] `python3 -c "import filelock; print(filelock.__version__)"` >= 4.2.1
 - [ ] `python3 -m pytest unified-integration/tests/test_runtime_dependencies.py::RuntimeDependencyRefreshTests::test_filelock_runtime_includes_published_security_fixes -v` PASSES
+<!-- markdownlint-enable MD013 -->
 
 **Regression Tests:**
+
 - Run full integration test suite: `python3 unified-integration/tests/run-tests.py`
 - Verify no other version checks break
 
 **Verification Procedure:**
+
+<!-- markdownlint-disable MD013 -->
 ```bash
 cd /root/project/AgentEnhancements
 python3 -c "import filelock; print(filelock.__version__)"
 python3 -m pytest unified-integration/tests/test_runtime_dependencies.py::RuntimeDependencyRefreshTests::test_filelock_runtime_includes_published_security_fixes -v
 python3 unified-integration/tests/run-tests.py 2>&1 | grep -E "(PASS|FAIL|test_filelock)"
 ```
+<!-- markdownlint-enable MD013 -->
 
 ---
 
 ### AE-003: Fix or Remove Preflight Mode 1
 
-**Problem:** Preflight Mode 1 (host-native selector) configured but no adapter supplies `ae_native_selection`. Every Mode 1 prompt falls back to Mode 0.
+**Problem:** Preflight Mode 1 (host-native selector) configured but no adapter
+supplies `ae_native_selection`. Every Mode 1 prompt falls back to Mode 0.
 
-**Root Cause:** Mode 1 specified in CONTRACT 8.5 and implemented in `adaptive_preflight.py` but no host adapter (Claude Code, Codex) implements the pre-inference selection surface.
+**Root Cause:** Mode 1 specified in CONTRACT 8.5 and implemented in
+`adaptive_preflight.py` but no host adapter (Claude Code, Codex) implements the
+pre-inference selection surface.
 
 **Files Affected:**
+
 - `unified-integration/scripts/adaptive_preflight.py` (lines 1143-1154, 1228-1231)
 - Host adapters (if implementing Option A)
 - `unified-integration/config/ui.api.schema.json` (if Option B)
 
 **Recommended Change:** Choose ONE option:
 
-**Option A (Implement):** Add `ae_native_selection` to Claude Code and Codex host adapters
+**Option A (Implement):** Add `ae_native_selection` to Claude Code and Codex
+host adapters
+
 - Requires hook integration that runs pre-inference
 - Complex; may not be feasible for all hosts
 
 **Option B (Remove - RECOMMENDED):** Remove Mode 1 from valid modes
+
 ```python
 # adaptive_preflight.py line 73-76:
 MODE_DISABLED = 0
@@ -135,15 +166,21 @@ VALID_MODES = (MODE_DISABLED, MODE_CUSTOM)  # Remove MODE_NATIVE
 **Dependencies:** None (but Option A requires host adapter changes)
 
 **Acceptance Criteria:**
-- [ ] Option A: Mode 1 works with claude-code and codex (ae_native_selection supplied and validated)
-- [ ] Option B: Mode 1 removed from VALID_MODES, config schema, docs; Mode 0 and 2 only
+
+- [ ] Option A: Mode 1 works with claude-code and codex (ae_native_selection
+      supplied and validated)
+- [ ] Option B: Mode 1 removed from VALID_MODES, config schema, docs; Mode 0 and
+      2 only
 
 **Regression Tests:**
+
 - Test Mode 0: `preflight_context` with mode=0 → skill_context fallback
 - Test Mode 2: `preflight_context` with mode=2 + valid key → selection or fallback
-- Test invalid mode: mode=1 → rejection with diagnosis (Option B) or works (Option A)
+- Test invalid mode: mode=1 → rejection with diagnosis (Option B) or works
+  (Option A)
 
 **Verification Procedure:**
+
 ```bash
 cd /root/project/AgentEnhancements
 # Test current behavior (should show fallback)
@@ -161,27 +198,33 @@ print('Mode 1 config:', config.mode, config.diagnosis)
 
 ### AE-004: Fix JSONC Reference File
 
-**Problem:** `tsconfig-strict.json` contains comments (JSONC), fails `python3 -m json.tool` CI check.
+**Problem:** `tsconfig-strict.json` contains comments (JSONC), fails
+`python3 -m json.tool` CI check.
 
 **Root Cause:** Reference file uses JSONC format but CI validates as strict JSON.
 
 **Files Affected:**
+
 - `unified-integration/skills/by-category/general/typescript-expert/references/tsconfig-strict.json`
 
 **Recommended Change:** Remove comments OR rename to `.jsonc` and add CI exception.
 
+<!-- markdownlint-disable MD013 -->
 ```json
 // Option 1: Remove all // comments from file
 // Option 2: Rename to tsconfig-strict.jsonc and update CI check to skip .jsonc files
 ```
+<!-- markdownlint-enable MD013 -->
 
 **Dependencies:** None
 
 **Acceptance Criteria:**
+
 - [ ] `python3 -m json.tool` passes on all owned .json files
 - [ ] File retains reference value
 
 **Verification Procedure:**
+
 ```bash
 cd /root/project/AgentEnhancements
 python3 -m json.tool unified-integration/skills/by-category/general/typescript-expert/references/tsconfig-strict.json
@@ -192,15 +235,19 @@ python3 -m json.tool unified-integration/skills/by-category/general/typescript-e
 
 ### AE-005: Fix Jinja2 Template File
 
-**Problem:** `template.py` contains Jinja2 syntax (`{{resource_name}}`), fails `python3 -m py_compile`.
+**Problem:** `template.py` contains Jinja2 syntax (`{{resource_name}}`), fails
+`python3 -m py_compile`.
 
 **Root Cause:** Template file named `.py` but contains Jinja2 template syntax.
 
 **Files Affected:**
+
 - `unified-integration/skills/by-category/general/fastapi-router-py/assets/template.py`
 
-**Recommended Change:** Rename to `.j2` or `.template` extension; exclude from py_compile check.
+**Recommended Change:** Rename to `.j2` or `.template` extension; exclude from
+py_compile check.
 
+<!-- markdownlint-disable MD013 -->
 ```bash
 # Rename file
 mv unified-integration/skills/by-category/general/fastapi-router-py/assets/template.py \
@@ -208,14 +255,17 @@ mv unified-integration/skills/by-category/general/fastapi-router-py/assets/templ
 
 # Update CI py_compile check to skip .j2 files (or use find -name '*.py' only)
 ```
+<!-- markdownlint-enable MD013 -->
 
 **Dependencies:** None
 
 **Acceptance Criteria:**
+
 - [ ] `python3 -m py_compile` passes on all owned .py files
 - [ ] Template file retains its purpose
 
 **Verification Procedure:**
+
 ```bash
 cd /root/project/AgentEnhancements
 find unified-integration scripts -name '*.py' -print0 | xargs -0 python3 -m py_compile
@@ -226,16 +276,19 @@ find unified-integration scripts -name '*.py' -print0 | xargs -0 python3 -m py_c
 
 ### AE-006: Enforce Karpathy/Superpowers Priority Rules
 
-**Problem:** Priority rules for overlapping clean-code principles documented but not enforced.
+**Problem:** Priority rules for overlapping clean-code principles documented but
+not enforced.
 
 **Root Cause:** Rules in SKILL.md line 88-89 but no runtime enforcement in dispatch/runtime.
 
 **Files Affected:**
+
 - `unified-integration/scripts/dispatch.sh`
 - `unified-integration/scripts/runtime.py`
 - `plugin-catalog/code/karpathy-skills/SKILL.md` (documentation)
 
 **Recommended Change:** Add priority logic in dispatch.sh:
+
 ```bash
 # In classify() function, after all skill matches, apply priority:
 # 1. Karpathy (general coding principles) - highest for general coding
@@ -249,12 +302,15 @@ find unified-integration scripts -name '*.py' -print0 | xargs -0 python3 -m py_c
 **Dependencies:** AE-001 (Karpathy dispatch fix) should be done first
 
 **Acceptance Criteria:**
-- [ ] General coding task → Karpathy selected, Superpowers/ECC/Ponytail clean-code suppressed
+
+- [ ] General coding task → Karpathy selected, Superpowers/ECC/Ponytail
+      clean-code suppressed
 - [ ] Workflow/task decomposition task → Superpowers selected
 - [ ] Agent config generation → ECC selected
 - [ ] Linting/code quality task → Ponytail selected
 
 **Verification Procedure:**
+
 ```bash
 cd /root/project/AgentEnhancements
 bash unified-integration/scripts/dispatch.sh "fix a bug"          # → karpathy-skills
@@ -267,11 +323,14 @@ bash unified-integration/scripts/dispatch.sh "lint this code"     # → ponytail
 
 ### AE-007: Document/Enable Preflight Mode 2
 
-**Problem:** Mode 2 requires external API key not configured by default; untested in CI.
+**Problem:** Mode 2 requires external API key not configured by default;
+untested in CI.
 
-**Root Cause:** Mode 2 designed for custom endpoints but no default configuration or test setup.
+**Root Cause:** Mode 2 designed for custom endpoints but no default
+configuration or test setup.
 
 **Files Affected:**
+
 - `docs/CONFIGURATION.md`
 - `unified-integration/config/ui.api.example.json`
 
@@ -296,11 +355,13 @@ bash unified-integration/scripts/dispatch.sh "lint this code"     # → ponytail
 **Dependencies:** AE-003 (Mode 1 resolution)
 
 **Acceptance Criteria:**
+
 - [ ] Mode 2 documented with working example in CONFIGURATION.md
 - [ ] Example ui.api.json with Mode 2 config committed
 - [ ] Testable with mock endpoint in CI (optional)
 
 **Verification Procedure:**
+
 ```bash
 cd /root/project/AgentEnhancements
 # Configure ui.api.json with Mode 2 + valid key
@@ -320,11 +381,13 @@ cd /root/project/AgentEnhancements
 
 **Files Affected:** Multiple files in `unified-integration/skills/by-category/*/references/`
 
-**Recommended Change:** Full audit; normalize formats or add CI exceptions with documentation.
+**Recommended Change:** Full audit; normalize formats or add CI exceptions with
+documentation.
 
 **Dependencies:** AE-004, AE-005
 
 **Acceptance Criteria:**
+
 - [ ] All reference files documented with format
 - [ ] CI passes with configured exceptions
 
@@ -343,6 +406,7 @@ cd /root/project/AgentEnhancements
 **Dependencies:** AE-001
 
 **Acceptance Criteria:**
+
 - [ ] `registry.py map "fix a bug"` includes karpathy-skills in top 5
 - [ ] `registry.py map "refactor code"` includes karpathy-skills in top 5
 
@@ -350,7 +414,8 @@ cd /root/project/AgentEnhancements
 
 ### AE-010: Add Karpathy to Curated Native Set
 
-**Problem:** Default native links only task-observer + Superpowers; Karpathy not natively discoverable.
+**Problem:** Default native links only task-observer + Superpowers; Karpathy not
+natively discoverable.
 
 **Root Cause:** Context-frugal default limits to 2 sources.
 
@@ -366,6 +431,7 @@ CURATED_SOURCES="anthropic-skills replica-skill task-observer karpathy-skills"
 **Dependencies:** AE-001, AE-006
 
 **Acceptance Criteria:**
+
 - [ ] `link-skills.sh --set curated` includes karpathy-skills
 - [ ] Context budget still within limits (~3.5k tokens)
 
@@ -411,7 +477,7 @@ ecc-tests:
 ## Execution Order Summary
 
 | Order | Finding | Phase | Estimated Effort |
-|-------|---------|-------|------------------|
+| ------- | --------- | ------- | ------------------ |
 | 1 | AE-001 | 1 | 30 min |
 | 2 | AE-002 | 1 | 30 min |
 | 3 | AE-003 | 1 | 1-2 hrs (Option B) / 1 day (Option A) |
@@ -433,6 +499,7 @@ ecc-tests:
 
 After all fixes applied, run:
 
+<!-- markdownlint-disable MD013 -->
 ```bash
 # 1. Full CI suite
 cd /root/project/AgentEnhancements
@@ -477,9 +544,12 @@ python3 unified-integration/scripts/registry.py map "refactor code"
 bash unified-integration/scripts/link-skills.sh --set curated
 # Verify karpathy-skills linked
 ```
+<!-- markdownlint-enable MD013 -->
 
 ---
 
-**End of Remediation Plan**
+## End of Remediation Plan
 
-This plan is specific enough for another agent to execute. Each item has clear acceptance criteria and verification procedures. Prioritize Phase 1 (release blockers) first, then Phase 2 (CI blockers), then Phase 3/4.
+This plan is specific enough for another agent to execute. Each item has clear
+acceptance criteria and verification procedures. Prioritize Phase 1 (release
+blockers) first, then Phase 2 (CI blockers), then Phase 3/4.

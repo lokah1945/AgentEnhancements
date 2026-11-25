@@ -214,6 +214,7 @@ export default {
       if (!text) return
       const digest = createHash("sha256").update(text).digest("hex")
       if (flushedDigests.get(id) === digest) return
+      flushedDigests.delete(id)  // refresh insertion order like `notes`
       flushedDigests.set(id, digest)
       if (flushedDigests.size > 100) {
         flushedDigests.delete(flushedDigests.keys().next().value)

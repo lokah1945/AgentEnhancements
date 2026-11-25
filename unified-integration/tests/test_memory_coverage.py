@@ -136,6 +136,16 @@ class HookRedactionTests(_MemoryCase):
         text = json.dumps(self.hook.list_memories(project="proj-a"))
         self.assertNotIn(self.secret, text)
 
+    def test_hook_list_reads_config_once_per_call(self):
+        self.hook.init_db()
+        for index in range(3):
+            self.hook.save_memory(f"k{index}", "v", project="proj-a")
+        import api_config
+        original = api_config.read_config
+        with mock.patch.object(api_config, "read_config", side_effect=original) as spy:
+            self.assertEqual(len(self.hook.list_memories(project="proj-a")), 3)
+        self.assertEqual(spy.call_count, 1)
+
 
 class SaveLoadSemanticsTests(_MemoryCase):
     def test_save_same_key_replaces_value_without_duplicates(self):

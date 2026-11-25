@@ -1162,27 +1162,27 @@ DB_PATH = os.path.join(MEMORY_ROOT, "memory.db")
 TTL_DAYS_MAX = 36500
 LIST_LIMIT_MAX = 10000
 
-def _redact(value: str) -> str:
-    """Redact configured and recognizable secrets before display."""
+def _redactor():
+    """Resolve config once per listing call, not once per row and field."""
     try:
         from api_config import read_config, redact
         config, _ = read_config()
-        return redact(value, config)
+        return lambda text: redact(text, config)
     except Exception:
-        return value
+        return lambda text: text
 
 
-def _display(value: str) -> str:
-    text = _redact(value)
+def _display(value: str, redactor) -> str:
+    text = redactor(value)
     return text[:200] + "..." if len(text) > 200 else text
 
 
-def _metadata(value: str) -> dict:
+def _metadata(value: str, redactor) -> dict:
     """Parse metadata after redaction; never leak raw secret text."""
     if not value:
         return {}
     try:
-        return json.loads(_redact(value))
+        return json.loads(redactor(value))
     except (TypeError, ValueError):
         return {"redacted": True}
 
@@ -1264,6 +1264,7 @@ def load_memory(key, memory_type="session_context", project=None):
 def list_memories(memory_type=None, project=None, limit=20):
     if project is None:
         project = os.path.realpath(os.getcwd())
+    redactor = _redactor()
 
     with sqlite3.connect(DB_PATH) as conn:
         if memory_type:
@@ -1286,9 +1287,9 @@ def list_memories(memory_type=None, project=None, limit=20):
         return [
             {
                 "type": row[0],
-                "key": _redact(row[1]),
-                "value": _display(row[2]),
-                "metadata": _metadata(row[3]),
+                "key": redactor(row[1]),
+                "value": _display(row[2], redactor),
+                "metadata": _metadata(row[3], redactor),
                 "updated": row[4]
             }
             for row in cursor.fetchall()

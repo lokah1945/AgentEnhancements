@@ -157,7 +157,7 @@ def search(query: str, max_results: int = 5, sort: str = "relevance") -> dict:
 
 @_tool
 def fetch(arxiv_id: str) -> dict:
-    """Fetch one paper by id (e.g. '2401.00001' or '2401.00001v2')."""
+    """Fetch numeric arXiv ID with optional vN suffix."""
     if not arxiv_id or not re.match(r"^[0-9]{4}\.[0-9]{4,5}(v[0-9]+)?$", arxiv_id):
         return {"error": "arxiv_id must look like 2401.00001 (or 2401.00001v2)"}
     url = f"{API_URL}?id_list={arxiv_id}&max_results=1"

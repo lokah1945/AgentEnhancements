@@ -103,8 +103,7 @@ def health() -> dict:
 
 @_tool
 def score(text: str) -> dict:
-    """Score naturalness 0..100 (higher = fewer AI fingerprints) and list
-    every finding with a concrete fix suggestion."""
+    """Naturalness score 0–100 (higher is better), findings and fixes."""
     if not isinstance(text, str) or not text.strip():
         return {"error": "text must be a non-empty string"}
     if len(text) > MAX_TEXT:
@@ -121,10 +120,7 @@ def score(text: str) -> dict:
 
 @_tool
 def rewrite(text: str) -> dict:
-    """Apply the safe mechanical substitutions (fillers, cliches with a
-    defined replacement). Returns the edited text plus the BEFORE/AFTER
-    scores and remaining findings - anything still flagged needs human
-    judgment, not more regex."""
+    """Replace known fillers/cliches. Return text, before/after scores and findings for human review."""
     if not isinstance(text, str) or not text.strip():
         return {"error": "text must be a non-empty string"}
     if len(text) > MAX_TEXT:
@@ -148,7 +144,7 @@ def rewrite(text: str) -> dict:
 
 @_tool
 def patterns() -> dict:
-    """List every known AI-ism pattern with its weight and suggestion."""
+    """List writing patterns with weights and fixes."""
     return {"patterns": [
         {"pattern": name, "weight": weight, "suggestion": suggestion,
          "auto_rewritable": replacement is not None}

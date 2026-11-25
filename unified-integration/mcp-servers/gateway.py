@@ -65,51 +65,18 @@ def external_launch_current(name: str, fingerprint: str, config: dict) -> bool:
 
 
 def slim_schema(definition: types.Tool) -> types.Tool:
-    """Drop wire-redundant weight from a tool definition.
-
-    Three source-server conventions bloat every cold start without
-    carrying decision-relevant information:
-
-    - seven optional fields serialized as explicit nulls/icons/meta/...;
-    - every parameter name echoed as a "title" string;
-    - descriptions that repeat the inputSchema as an "Args:" prose block
-      (the schema already documents each parameter; constraints that ONLY
-      exist in prose - allowed values, ranges - are preserved by keeping
-      the pre-Args text, which the servers write as the summary line).
-
-    The MCP schema stays valid; every tool, parameter, enum, default and
-    required field is preserved. Calls are validated against the same
-    slimmer schema, so nothing is hidden from execution - the surface is
-    smaller, the contract is not.
-    """
+    """Remove redundant schema annotations without changing validation data."""
     doc = definition.model_dump(mode="json", exclude_none=True)
-
-    def drop_titles(node: Any) -> Any:
-        """Strip "title" annotation strings, but never a parameter NAME:
-        keys of a properties container are parameters (a schema with
-        properties.title, possibly required, must stay satisfiable), so
-        that container is special-cased and its keys kept; every other
-        "title" - on the schema, inside a property value, in items - is
-        an annotation and is dropped."""
-        if isinstance(node, dict):
-            out = {}
-            for k, v in node.items():
-                if k == "properties" and isinstance(v, dict):
-                    out[k] = {
-                        pk: drop_titles(pv) if isinstance(pv, dict) else pv
-                        for pk, pv in v.items()
-                    }
-                elif k == "title":
-                    continue
-                else:
-                    out[k] = drop_titles(v)
-            return out
-        if isinstance(node, list):
-            return [drop_titles(item) for item in node]
-        return node
-
-    if isinstance(doc.get("inputSchema"), dict):
-        doc["inputSchema"] = drop_titles(doc["inputSchema"])
+    schema = doc.get("inputSchema")
+    if isinstance(schema, dict):
+        # FastMCP repeats each parameter name as a title. Nested objects can
+        # contain literal values or named definitions that must stay intact.
+        schema.pop("title", None)
+        properties = schema.get("properties")
+        if isinstance(properties, dict):
+            for parameter in properties.values():
+                if isinstance(parameter, dict):
+                    parameter.pop("title", None)
     description = doc.get("description")
     if isinstance(description, str):
         cut = re.search(r"\n\s*Args:\s*\n", description)
@@ -379,11 +346,11 @@ class Gateway:
                         "enum": choices,
                         "default": "local",
                     }
-                    tool.description = (
-                        "Embed text with a deterministic local vector by default. Available backends: "
-                        + ", ".join(choices)
-                        + "."
-                    )
+                    tool.description = "Embed text. Local vectors are deterministic."
+                    if original.name == "embed_batch":
+                        tool.description = "Embed batch. Local vectors are deterministic."
+                if name == "vision-mcp" and original.name == "describe":
+                    tool.description = "Describe an image via OpenAI vision."
                 if name == "search-mcp" and original.name == "web":
                     # Offer only providers with a usable key right now; the
                     # call path re-validates against this fresh enum.
@@ -412,10 +379,7 @@ class Gateway:
         """One consolidated health tool replacing the per-server copies."""
         return types.Tool(
             name="ae_health",
-            description=(
-                "Health of every active AgentEnhancements backend in one "
-                "call (status, version, degraded reasons)."
-            ),
+            description="Health, version and degraded reasons for active backends.",
             inputSchema={"type": "object", "properties": {}},
             annotations=types.ToolAnnotations(
                 readOnlyHint=True, destructiveHint=False,

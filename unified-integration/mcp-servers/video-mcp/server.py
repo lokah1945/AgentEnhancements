@@ -195,8 +195,7 @@ def edl(name: str) -> dict:
 
 @_tool
 def render(name: str, out: str) -> dict:
-    """Compile a timeline to a single .mp4 via one ffmpeg invocation
-    (trim each clip, concat, apply drawtext overlays)."""
+    """Render one MP4 with FFmpeg trims, joins and text overlays."""
     store = _load_all()
     doc = store.get(name)
     if doc is None:

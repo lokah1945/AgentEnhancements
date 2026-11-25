@@ -10,8 +10,11 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from helpers import UI_DIR, load_module, run
+
+RUNTIME = UI_DIR / "scripts/runtime.py"
 
 
 class RuntimeTests(unittest.TestCase):
@@ -19,12 +22,27 @@ class RuntimeTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.memory = self.root / "memory"
-        skill = self.root / "skills/by-category/security/security-audit"
+        self.observer = self.memory / "task-observer"
+        self.skills = self.root / "skills"
+        self.api_file = self.root / "ui.api.json"
+        home = self.root / "home"
+        home.mkdir()
+        self.env = {
+            "HOME": str(home),
+            "XDG_CONFIG_HOME": str(home / ".config"),
+            "AGENT_MEMORY_ROOT": str(self.memory),
+            "TASK_OBSERVER_WORKSPACE": str(self.observer),
+            "AGENT_ENHANCEMENTS_STATE_DIR": str(self.root / "ae-state"),
+            "AGENT_SKILLS_DIR": str(self.skills),
+            "AGENT_ENHANCEMENTS_API_FILE": str(self.api_file),
+            "AE_MAX_SKILL_CARDS": "8",
+        }
+        skill = self.skills / "by-category/security/security-audit"
         skill.mkdir(parents=True)
         (skill / "SKILL.md").write_text(
             "---\nname: security-audit\ndescription: security audit\n---\nAudit carefully"
         )
-        (self.root / "skills/all-skills.json").write_text(
+        (self.skills / "all-skills.json").write_text(
             json.dumps(
                 {
                     "skills": [
@@ -43,25 +61,25 @@ class RuntimeTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def event(self, name, agent="claude-code", project="a/repo", **data):
+    def runtime(self, raw, agent="claude-code", *, flags=(), env=None):
+        return run(
+            [sys.executable, str(RUNTIME), agent, *flags],
+            env={**self.env, **(env or {})},
+            input_text=raw,
+        )
+
+    def run_event(self, name, agent="claude-code", project="a/repo", *,
+                  flags=(), env=None, **data):
         payload = {
             "hook_event_name": name,
             "session_id": "fixture-session",
             "cwd": str(self.root / project),
             **data,
         }
-        rc, out, err = run(
-            [sys.executable, str(UI_DIR / "scripts/runtime.py"), agent],
-            env={
-                "AGENT_MEMORY_ROOT": str(self.memory),
-                "AGENT_ENHANCEMENTS_STATE_DIR": str(self.root / 'ae-state'),
-                "AGENT_SKILLS_DIR": str(self.root / "skills"),
-                # Keep the Mode 0 baseline deterministic even when the
-                # checkout's ui.api.json enables adaptive preflight.
-                "AGENT_ENHANCEMENTS_API_FILE": str(self.root / "absent-ui.api.json"),
-            },
-            input_text=json.dumps(payload),
-        )
+        return self.runtime(json.dumps(payload), agent, flags=flags, env=env)
+
+    def event(self, *args, **kwargs):
+        rc, out, err = self.run_event(*args, **kwargs)
         self.assertEqual(rc, 0, err)
         self.assertEqual(err, "")
         return json.loads(out) if out.strip() else {}
@@ -71,7 +89,7 @@ class RuntimeTests(unittest.TestCase):
             return conn.execute("SELECT key, value, project FROM memories").fetchall()
 
     def test_all_native_agents_accept_stdin_events_and_restore_sessions(self):
-        for agent in ["claude-code", "codex", "opencode"]:
+        for agent in ["claude-code", "codex", "opencode", "hermes"]:
             with self.subTest(agent=agent):
                 self.event("UserPromptSubmit", agent, prompt="Run a security audit")
                 self.event("Stop", agent, last_assistant_message="Fixed the parser bug")
@@ -91,6 +109,60 @@ class RuntimeTests(unittest.TestCase):
         # catalog search command for full detail (context contract §8.4).
         self.assertIn("security-audit", context)
         self.assertIn("registry.py search", context)
+
+    def test_unmatched_prompt_persists_without_injecting_context(self):
+        prompt = "zzqvxx hjkxqz"
+        self.assertEqual(self.run_event("UserPromptSubmit", prompt=prompt), (0, "", ""))
+        self.assertEqual([value for _, value, _ in self.rows()], [prompt])
+
+    def test_unavailable_preflight_uses_local_cards(self):
+        baseline = self.event("UserPromptSubmit", prompt="security audit")
+        expected = baseline["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("security-audit", expected)
+        with patch.dict(os.environ, self.env), \
+                patch.object(sys, "path", [str(RUNTIME.parent), *sys.path]), \
+                patch.dict(sys.modules, {"adaptive_preflight": None}):
+            runtime = load_module("runtime_preflight_unavailable_test", RUNTIME)
+            context = runtime.prompt_context("claude-code", "security audit", {})
+        self.assertEqual(context, expected)
+
+    def test_opencode_bridge_keeps_mode_zero_cards_for_a_selected_package(self):
+        from test_adaptive_preflight import SelectorFixture
+
+        prompt = "security audit"
+        rc, plain, err = self.run_event(
+            "UserPromptSubmit", "opencode", flags=("--text",), prompt=prompt,
+        )
+        self.assertEqual((rc, err), (0, ""))
+        self.assertIn("security-audit", plain)
+        legacy = plain.removesuffix("\n")
+        self.assertEqual(
+            self.event("UserPromptSubmit", "opencode", flags=("--bridge",), prompt=prompt),
+            {"context": legacy, "fallback": legacy},
+        )
+
+        fixture = SelectorFixture([SelectorFixture.selection("selected", items=[
+            {"id": "capability:memory"},
+        ])])
+        self.addCleanup(shutil.rmtree, fixture.ca.parent)
+        self.addCleanup(fixture.stop)
+        self.api_file.write_text(json.dumps({
+            "version": 2,
+            "api_keys": {"PREFLIGHT_API_KEY": ["local-test-key"]},
+            "connections": {},
+            "mcp": {},
+            "preflight": {"mode": 2, "endpoint": fixture.endpoint,
+                          "sdk": "openai", "model": "fixture/selector"},
+        }))
+        result = self.event(
+            "UserPromptSubmit", "opencode", flags=("--bridge",), prompt=prompt,
+            env={"SSL_CERT_FILE": str(fixture.ca), "AE_PREFLIGHT_DEADLINE_MS": "5000",
+                 "NO_PROXY": "127.0.0.1", "no_proxy": "127.0.0.1"},
+        )
+        self.assertIn("preflight: selected capability package", result["context"])
+        self.assertIn("capability:memory", result["context"])
+        self.assertEqual(result["fallback"], legacy)
+        self.assertEqual(len(fixture.requests), 1)
 
     def test_same_basename_repositories_do_not_share_memory(self):
         self.event(
@@ -123,14 +195,62 @@ class RuntimeTests(unittest.TestCase):
         self.assertNotIn("hidden-password", values)
         self.assertIn("[redacted]", values)
 
-    def test_corrupt_event_does_not_block_cli(self):
-        rc, out, err = run(
-            [sys.executable, str(UI_DIR / "scripts/runtime.py"), "codex"],
-            input_text="bad json",
+    def test_invalid_events_are_advisory_and_produce_no_memory(self):
+        private = "private-fixture-payload"
+        for raw, error in (
+            (f"invalid JSON: {private}", "JSONDecodeError"),
+            (json.dumps([private]), "ValueError"),
+            (json.dumps({"hook_event_name": "UserPromptSubmit", "prompt":
+                         private + "x" * 2_000_000}), "ValueError"),
+        ):
+            with self.subTest(error=error, size=len(raw)):
+                rc, out, err = self.runtime(raw, "codex")
+                self.assertEqual((rc, out), (0, ""))
+                self.assertIn(f"hook skipped: {error}", err)
+                self.assertNotIn(private, err)
+                self.assertFalse(self.memory.joinpath("memory.db").exists())
+
+    def test_unknown_event_produces_no_output_or_notes(self):
+        self.assertEqual(self.run_event("UnknownFixtureEvent"), (0, "", ""))
+        self.assertEqual(self.rows(), [])
+
+    def test_disabled_observer_with_no_notes_produces_no_start_context(self):
+        self.observer.mkdir(parents=True)
+        (self.observer / ".task-observer-disabled").touch()
+        self.assertEqual(self.run_event("SessionStart"), (0, "", ""))
+
+    def test_start_replays_notes_if_observer_is_unavailable(self):
+        self.event("UserPromptSubmit", prompt="Saved project note")
+        private = "relative-fixture-observer-path"
+        rc, out, err = self.run_event(
+            "SessionStart", env={"TASK_OBSERVER_WORKSPACE": private},
         )
         self.assertEqual(rc, 0)
-        self.assertEqual(out, "")
-        self.assertIn("hook skipped", err)
+        self.assertIn("task-observer unavailable: ValueError", err)
+        self.assertNotIn(private, err)
+        self.assertIn("Saved project note", json.loads(out)["hookSpecificOutput"]["additionalContext"])
+
+    def test_stop_persists_summary_if_observer_is_unavailable(self):
+        self.assertEqual(
+            self.run_event("Stop", last_assistant_message="Finished local checks",
+                           env={"TASK_OBSERVER_WORKSPACE": "relative-observer"}),
+            (0, "{}\n", ""),
+        )
+        self.assertEqual([value for _, value, _ in self.rows()], ["Finished local checks"])
+
+    def test_empty_summary_preserves_previous_summary_and_checkpoints(self):
+        self.event("SessionStart")
+        self.event("Stop", last_assistant_message="Finished local checks")
+        log = self.observer / "skill-observations/checkpoints.log"
+        before = log.read_text().splitlines()
+        self.assertEqual(
+            self.run_event("Stop", "claude-code", flags=("--text",), last_assistant_message="  "),
+            (0, "", ""),
+        )
+        self.assertEqual([value for _, value, _ in self.rows()], ["Finished local checks"])
+        after = log.read_text().splitlines()
+        self.assertEqual(after[:-1], before)
+        self.assertIn("stop-flush", after[-1])
 
     def test_expired_notes_are_not_replayed(self):
         self.event("UserPromptSubmit", prompt="expired note")

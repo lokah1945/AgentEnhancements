@@ -110,8 +110,7 @@ def health() -> dict:
 
 @_tool
 def compare(a: str, b: str) -> dict:
-    """Similarity of two images (0..1): histogram intersection blended with
-    a normalized mean pixel difference. Fully offline via PIL."""
+    """Offline image similarity (0–1), combining histogram and pixel differences."""
     try:
         from PIL import Image
     except ImportError:

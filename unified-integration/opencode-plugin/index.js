@@ -201,6 +201,9 @@ export default {
   id: "agentenhancements",
   async setup(ctx) {
     const notes = new Map()
+    // Flush dedupe must outlive the LRU note map: an idle before the first
+    // prompt, or after eviction, must still flush each final answer once.
+    const flushedDigests = new Map()
     const registrations = []
     const cwd = ctx.location.project?.canonical || ctx.location.directory
     const event = (name, id, extra = {}) => ({
@@ -210,9 +213,11 @@ export default {
     const flush = async (id, text) => {
       if (!text) return
       const digest = createHash("sha256").update(text).digest("hex")
-      const note = notes.get(id)
-      if (note?.flushed === digest) return
-      if (note) note.flushed = digest
+      if (flushedDigests.get(id) === digest) return
+      flushedDigests.set(id, digest)
+      if (flushedDigests.size > 100) {
+        flushedDigests.delete(flushedDigests.keys().next().value)
+      }
       await runtime(event("Stop", id, { last_assistant_message: text }))
     }
     registrations.push(await ctx.session.hook("prompt", async (input) => {
@@ -232,7 +237,7 @@ export default {
       const old = notes.get(id)
       notes.delete(id)
       notes.set(id, { previous, skills: prepared.context, fallback: prepared.fallback, inventory, stamp,
-        flushed: old?.flushed, pendingFlush: old !== undefined })
+        pendingFlush: old !== undefined })
       if (notes.size > 100) notes.delete(notes.keys().next().value)
     }))
     registrations.push(await ctx.session.hook("context", async (input) => {
@@ -243,7 +248,7 @@ export default {
             !deliveredTools(context.skills, context.inventory, input))))) {
         // The existing prepared fallback requires no second UserPromptSubmit.
         context.skills = context.fallback
-        console.error("[AgentEnhancements] preflight: mode 2 -> 0 fallback (host_snapshot_changed)")
+        console.error("[AgentEnhancements] preflight: custom -> 0 fallback (host_snapshot_changed)")
       }
       // Deliver the existing L0 map itself before inference. Once its contents
       // are available, repeated owned pointer blocks only duplicate bootstrap

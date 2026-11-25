@@ -120,8 +120,9 @@ def set_disabled(root: Path, disabled: bool) -> str:
     if disabled:
         marker.write_text(
             "Disabled by user; observations and checkpoints are preserved.\n"
-            "Logging, bootstrap and skill staging/promotion are paused; the\n"
-            "existing data and staged candidates are untouched. Remove this\n"
+            "Logging, bootstrap and skill staging/promotion/rollback are\n"
+            "paused; the existing data and staged candidates are untouched.\n"
+            "Remove this\n"
             "file (or run: enable) to re-enable.\n"
         )
         return "disabled"

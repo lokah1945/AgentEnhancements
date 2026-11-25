@@ -398,7 +398,7 @@ def test_edge_cases() -> Dict[str, Any]:
         "details": {
             "note": "ae.py uses O_CREAT|O_EXCL on learning.lock with a 1-hour stale lock sweep",
             "implementation": "ae.py _acquire_learning_lock/_release_learning_lock",
-            "regression": "unified-integration/tests/test_ae_regressions.py::test_corrupt_lock_self_heals",
+            "regression": "unified-integration/tests/test_ae_regressions.py::test_corrupt_lock_self_heals_when_old",
         },
     })
     print("  PASS: concurrent_lock (implemented and regression-tested)")
@@ -459,7 +459,7 @@ def main():
                 "0 6,18 * * *", "0 9 * * 1-5", "30 14 15 * *",
             ],
             "cron_expressions_not_representable_on_windows": [
-                "*/7 * * * * (non-standard intervals)",
+                "*/7 * * * * (outside documented Windows support set)",
                 "0 0 31 * * (day 31 not in all months)",
                 "0 0 L * * (last day of month)",
                 "0 0 * * 1#2 (nth weekday)",

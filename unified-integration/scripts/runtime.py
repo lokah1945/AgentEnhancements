@@ -143,10 +143,11 @@ def native_skill_targets() -> list[Path]:
 def observer_linked_in_host() -> bool | None:
     """True when a registry-owned task-observer symlink exists in a host.
 
-    Returns None when no native target directory is present, so the caller can
-    fall back to the legacy catalog-source check. An unlinked install must
-    bootstrap even while the catalog still records task-observer as a default
-    source (``link-skills.sh --unlink`` does not edit the index).
+    Returns None only when no native target directory is present. That case is
+    NOT proof of a native skill: the catalog marks task-observer as a default
+    source even before ``link-skills.sh`` has created any link, so suppressing
+    the card from the catalog alone would silently remove observer context on a
+    fresh or partial install.
     """
     targets = native_skill_targets()
     if not targets:
@@ -155,7 +156,7 @@ def observer_linked_in_host() -> bool | None:
         os.environ.get("AGENT_SKILLS_DIR")
         or Path(__file__).resolve().parents[1] / "skills"
     ).expanduser().resolve()
-    managed = str(skills_dir)
+    managed = str(skills_dir) + os.sep
     saw_target = False
     for target in targets:
         if not target.is_dir():
@@ -168,25 +169,12 @@ def observer_linked_in_host() -> bool | None:
             current = os.readlink(link)
         except OSError:
             continue
+        if Path(current).name != "task-observer":
+            continue
         if (current.startswith(managed)
                 or "/unified-integration/skills/by-category/" in current):
             return True
     return False if saw_target else None
-
-
-def observer_is_natively_linked(index: dict) -> bool:
-    """Legacy fallback: default-linked observer recorded in the skills index.
-
-    The raw skills index has no ``natively_linked_by_default`` field - that
-    flag is computed on loader candidates only - so detection uses the stable
-    ``source`` of the default-linked observer skill. Prefer
-    :func:`observer_linked_in_host`, which checks the actual host symlink.
-    """
-    return any(
-        skill.get("name") == "task-observer"
-        and skill.get("source") == "task-observer"
-        for skill in index.get("skills", [])
-    )
 
 
 def observer_context(agent: str) -> str:
@@ -199,26 +187,17 @@ def observer_context(agent: str) -> str:
     Failures are advisory - a broken observer must never block the session.
 
     NOTE: Bootstrap always runs (Stop's backstop needs the workspace), but the
-    context card is suppressed when task-observer is natively linked, to avoid
-    double context injection. Detection checks the real host symlink first;
-    the catalog source is a legacy fallback for hosts exposing no target dir.
+    context card is suppressed when task-observer is actually linked into a
+    host skill directory. A catalog `source` is not proof of a link: it is set
+    before ``link-skills.sh`` runs. When no target directory can be inspected,
+    the card is kept (conservative, never silently drops observer context).
     """
-    natively_linked = observer_linked_in_host()
-    if natively_linked is None:
-        # No native target to inspect: fall back to the catalog source. The
-        # loader exposes ``skills_index`` (never ``index``); a failed probe is
-        # advisory and conservatively bootstraps.
+    try:
+        natively_linked = observer_linked_in_host()
+    except (OSError, RuntimeError, ValueError):
         natively_linked = False
-        try:
-            spec = importlib.util.spec_from_file_location(
-                "ae_load_skills", Path(__file__).with_name("load-skills.py")
-            )
-            load_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(load_module)
-            loader = load_module.SkillsLoader(agent)
-            natively_linked = observer_is_natively_linked(loader.skills_index)
-        except (AttributeError, ImportError, KeyError, OSError, TypeError, ValueError):
-            pass
+    if natively_linked is None:
+        natively_linked = False
 
     try:
         spec = importlib.util.spec_from_file_location(

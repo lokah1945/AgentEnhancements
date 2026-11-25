@@ -172,24 +172,28 @@ def _acquire_learning_lock() -> Optional[Path]:
             f.write(f"{os.getpid()}\n{datetime.now(timezone.utc).isoformat()}\n")
         return lock_path
     except FileExistsError:
-        # Lock exists - check if stale (older than 1 hour). A corrupt lock
-        # must self-heal: otherwise one truncated write blocks learning
-        # forever with no operator-visible recovery path.
+        # A lock is only ever removed when it is provably old (mtime > 1h).
+        # Deleting a fresh, partially written lock would break mutual
+        # exclusion between two concurrent learning runs.
         try:
+            age = datetime.now(timezone.utc) - datetime.fromtimestamp(
+                lock_path.stat().st_mtime, timezone.utc)
+            if age <= timedelta(hours=1):
+                return None
+            heal = True
             content = lock_path.read_text().strip().split("\n")
-            stale = True
             if len(content) >= 2:
-                lock_time = datetime.fromisoformat(content[1].replace("Z", "+00:00"))
-                stale = datetime.now(timezone.utc) - lock_time > timedelta(hours=1)
-            if stale:
+                try:
+                    lock_time = datetime.fromisoformat(
+                        content[1].replace("Z", "+00:00"))
+                    heal = datetime.now(timezone.utc) - lock_time > timedelta(hours=1)
+                except ValueError:
+                    heal = True
+            if heal:
                 lock_path.unlink(missing_ok=True)
                 return _acquire_learning_lock()
         except (OSError, ValueError, TypeError):
-            try:
-                lock_path.unlink(missing_ok=True)
-                return _acquire_learning_lock()
-            except OSError:
-                return None
+            return None
         return None
     except Exception:
         return None
@@ -602,11 +606,17 @@ def _cron_to_windows_trigger(cron_expr: str) -> Optional[str]:
             "    </TimeTrigger>"
         )
 
-    # Sunday at any supported time: @weekly (0 0 * * 0) and 0 H * * 0/7.
+    # Sunday at a simple fixed time: @weekly (0 0 * * 0) and 0 H * * 0/7.
     if minute != "*" and hour != "*" and dom == "*" and month == "*" and dow in ("0", "7"):
+        try:
+            hh, mm = int(hour), int(minute)
+            if not (0 <= hh <= 23 and 0 <= mm <= 59):
+                return None
+        except ValueError:
+            return None
         return (
             "    <WeeklyTrigger>\n"
-            f"      <StartBoundary>T{int(hour):02d}:{int(minute):02d}:00</StartBoundary>\n"
+            f"      <StartBoundary>T{hh:02d}:{mm:02d}:00</StartBoundary>\n"
             "      <Enabled>true</Enabled>\n"
             "      <DaysOfWeek>\n        <Sunday/>\n      </DaysOfWeek>\n"
             "      <WeeksInterval>1</WeeksInterval>\n"

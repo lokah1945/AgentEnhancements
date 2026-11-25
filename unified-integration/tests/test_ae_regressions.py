@@ -14,6 +14,7 @@ import sys
 import tempfile
 import types
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -107,14 +108,29 @@ class WindowsTriggerTests(AeCase):
             self.assertIn("T02:15:00", trigger)
             self.assertIn("<Sunday/>", trigger)
 
+    def test_nonsimple_sunday_expression_falls_back(self):
+        for expression in ("0 */2 * * 0", "0,30 2 * * 0", "*/5 2 * * 0"):
+            self.assertIsNone(
+                self.ae._cron_to_windows_trigger(expression), expression)
+
 
 class LearningLockTests(AeCase):
-    def test_corrupt_lock_self_heals(self):
+    def test_corrupt_lock_self_heals_when_old(self):
         lock = self.ae.SCHEDULE_STATE_DIR / "learning.lock"
         lock.parent.mkdir(parents=True, exist_ok=True)
         lock.write_text("12345\n(not-a-date)\n", encoding="utf-8")
+        old = datetime.now(timezone.utc) - timedelta(hours=2)
+        stamp = old.timestamp()
+        os.utime(lock, (stamp, stamp))
         self.assertEqual(self.ae._acquire_learning_lock(), lock)
         self.assertIsNone(self.ae._acquire_learning_lock())
+
+    def test_fresh_partial_lock_is_not_stolen(self):
+        lock = self.ae.SCHEDULE_STATE_DIR / "learning.lock"
+        lock.parent.mkdir(parents=True, exist_ok=True)
+        lock.write_text("12345\n", encoding="utf-8")
+        self.assertIsNone(self.ae._acquire_learning_lock())
+        self.assertIn("12345", lock.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

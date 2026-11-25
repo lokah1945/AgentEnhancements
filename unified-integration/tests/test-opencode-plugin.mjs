@@ -127,6 +127,11 @@ try {
   await hooks.get("prompt")({ sessionID: "session-missed-idle", prompt: { text: "security again" } })
   await hooks.get("context")({ sessionID: "session-missed-idle", system: [], messages: said("final answer of turn one") })
   assert.equal(await stopFlushes(), before + 2)
+  // Idle before the first prompt has no note map entry: dedupe must still hold.
+  const idleOnly = await stopFlushes()
+  await hooks.get("experimental.idle")({ sessionID: "session-idle-only" })
+  await hooks.get("experimental.idle")({ sessionID: "session-idle-only" })
+  assert.equal(await stopFlushes(), idleOnly + 1)
   await cleanup()
   assert.equal(disposed, 3)
   const stalledHooks = new Map()

@@ -330,14 +330,33 @@ class PromptContextTests(_RuntimeCase):
 
 
 class ObserverContextTests(_RuntimeCase):
-    def test_native_link_detection_uses_source_not_derived_field(self):
-        linked = {"name": "task-observer", "source": "task-observer"}
-        self.assertTrue(self.rt.observer_is_natively_linked(
-            {"skills": [linked]}))
-        # The raw index never carries the loader-derived flag; source does.
-        self.assertFalse("natively_linked_by_default" in linked)
-        self.assertFalse(self.rt.observer_is_natively_linked(
-            {"skills": [{"name": "other", "source": "community"}]}))
+    def test_native_link_detection_checks_actual_symlink(self):
+        skills = self.root / "skills"
+        src = skills / "by-category" / "general" / "task-observer"
+        src.mkdir(parents=True)
+        (src / "SKILL.md").write_text("---\nname: task-observer\n---\n")
+        target = self.root / "home" / ".claude" / "skills"
+        target.mkdir(parents=True)
+        os.environ["AGENT_SKILLS_DIR"] = str(skills)
+        os.environ["AGENT_SKILLS_NATIVE_TARGETS"] = str(target)
+        self.assertIs(self.rt.observer_linked_in_host(), False)
+        (target / "task-observer").symlink_to(src)
+        self.assertIs(self.rt.observer_linked_in_host(), True)
+        # A sibling directory with the same prefix is not registry-owned.
+        os.environ["AGENT_SKILLS_DIR"] = str(skills) + "-backup"
+        self.assertIs(self.rt.observer_linked_in_host(), False)
+
+    def test_missing_native_targets_keep_observer_card(self):
+        # A catalog source is not proof of a link: with no target dirs the
+        # card must still be injected.
+        skills = self.root / "skills"
+        (skills / "by-category" / "general" / "task-observer").mkdir(parents=True)
+        (skills / "all-skills.json").write_text(json.dumps({"skills": [
+            {"name": "task-observer", "source": "task-observer"}]}))
+        os.environ["AGENT_SKILLS_DIR"] = str(skills)
+        os.environ["AGENT_SKILLS_NATIVE_TARGETS"] = str(self.root / "no-such-target")
+        self.fake_observer("OBSERVER CARD")
+        self.assertEqual(self.rt.observer_context(self.agent), "OBSERVER CARD")
 
     def test_bootstrap_receives_workspace_root_and_agent(self):
         self.fake_observer("Task Observer ready at /ws")
@@ -406,7 +425,11 @@ class ObserverContextTests(_RuntimeCase):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         loader = module.SkillsLoader(self.agent)
-        self.assertTrue(self.rt.observer_is_natively_linked(loader.skills_index))
+        # The loader exposes ``skills_index``; the old bug was reading
+        # ``loader.index`` inside runtime.py.
+        self.assertTrue(any(
+            item.get("name") == "task-observer"
+            for item in loader.skills_index.get("skills", [])))
 
 
 class HandleSessionStartTests(_RuntimeCase):
@@ -715,7 +738,7 @@ class MainTests(_RuntimeCase):
         self.assertEqual(json.loads(out), {"context": "", "fallback": ""})
 
     def test_bridge_preflight_package_carries_legacy_fallback(self):
-        package = "AgentEnhancements preflight (mode 2): selected"
+        package = "AgentEnhancements preflight (mode 1): selected"
         with mock.patch.object(self.rt, "handle", return_value=package) as handle, \
                 mock.patch.object(self.rt, "skill_context",
                                   return_value="LEGACY") as legacy:

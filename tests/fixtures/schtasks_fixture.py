@@ -19,7 +19,7 @@ SCHTASKS_QUERY_XML_TEMPLATE = '''<?xml version="1.0" encoding="UTF-16"?>
   <RegistrationInfo>
     <Date>{date}</Date>
     <Author>{author}</Author>
-    <Description>AE scheduled learning</Description>
+    <Description>AE cron: 0 0 * * *</Description>
   </RegistrationInfo>
   <Triggers>
     <TimeTrigger>
@@ -390,7 +390,7 @@ CRON_TO_SCHTASKS_TESTS = [
 UNSUPPORTED_CRON_EXPRESSIONS = [
     {
         "expression": "*/7 * * * *",
-        "reason": "7-minute intervals not representable as ISO 8601 duration (PT7M is valid but schtasks has minimum 1 minute)",
+        "reason": "Non-standard interval outside AE's documented Windows support set; validate on a real Windows host before enabling",
         "workaround": "Use */5 or */10 instead",
     },
     {

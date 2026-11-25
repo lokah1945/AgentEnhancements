@@ -50,8 +50,17 @@ class RuntimeDependencyRefreshTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_filelock_runtime_includes_published_security_fixes(self):
-        from importlib.metadata import version
-        installed = tuple(int(part) for part in version('filelock').split('.')[:3])
+        # Use the AE venv python to check filelock version, not the test runner's python
+        import subprocess
+        import sys
+        sys.path.insert(0, str(UI_DIR / "scripts"))
+        from project_paths import runtime_root
+        ae_python = str(runtime_root() / "venv" / "bin" / "python")
+        result = subprocess.run([ae_python, "-c",
+            "from importlib.metadata import version; print(version('filelock'))"],
+            capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, f"AE venv python failed: {result.stderr}")
+        installed = tuple(int(part) for part in result.stdout.strip().split('.')[:3])
         self.assertGreaterEqual(installed, (4, 2, 1))
 
     def test_preparer_reads_requirements_after_acquiring_the_lock(self):

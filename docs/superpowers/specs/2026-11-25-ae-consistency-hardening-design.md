@@ -71,7 +71,7 @@ grade. This design records the decisions taken without further questions.
 ## Decisions (builder's calls, all evidence-backed)
 
 1. **Preflight mode numbering.** Code is authoritative: `MODE_DISABLED=0`,
-   `MODE_CUSTOM=1`, `VALID_MODES=(0,1)` (`adaptive_preflight.py:73-76,264-267`),
+   `MODE_CUSTOM=1`, `VALID_MODES=(0,1)` (`adaptive_preflight.py:69-71,262-263`),
    native mode deliberately removed by commit `a6cf8720` and verified by tests.
    Align `ui.api.schema.json`, `ui.api.example.json`, `docs/ADAPTIVE_PREFLIGHT.md`,
    `docs/API.md`, README, module docstring, and the opt-in live test to

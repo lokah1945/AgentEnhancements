@@ -1,7 +1,7 @@
 ---
 title: Safety and Compliance Guide
-version: 1.1
-last_updated: 2026-11-15
+version: 1.2
+last_updated: 2026-11-25
 audience: all agents and maintainers
 ---
 
@@ -110,7 +110,7 @@ sehingga log privat ini tidak ikut ter-commit.
   dalam allowed roots media (cwd, `/tmp`, `AE_FFMPEG_ALLOWED_ROOTS`); video-mcp
   memakai roots yang sama untuk klip dan output, dan teks overlay dibaca dari
   file privat sehingga tidak pernah menjadi sintaks filtergraph ffmpeg.
-- Redaksi kredensial (memory, observasi, input selector Mode 2) mengenali
+- Redaksi kredensial (memory, observasi, input selector mode 1) mengenali
   kunci yang dikonfigurasi di `ui.api.json` serta bentuk token umum: GitHub,
   `sk-`, AWS `AKIA`, GitLab, Tavily, Firecrawl, Google, Slack, Hugging Face,
   Groq, xAI, npm, Stripe live, JWT, private key PEM, `user:password@` pada

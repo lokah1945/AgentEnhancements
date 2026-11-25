@@ -65,6 +65,27 @@ class IntegrationTreeTests(unittest.TestCase):
                          r"(?m)^aggregate_skills\(\) \{")
 
 
+class PreflightModeTests(unittest.TestCase):
+    """Schema and user docs must match the implemented 0/1 mode contract."""
+
+    def test_schema_enum_matches_implemented_modes(self):
+        schema = json.loads((UI / "config/ui.api.schema.json").read_text())
+        mode = schema["properties"]["preflight"]["properties"]["mode"]
+        self.assertEqual(mode["enum"], [0, 1])
+
+    def test_example_config_has_no_mode_2(self):
+        text = (UI / "config/ui.api.example.json").read_text(encoding="utf-8")
+        self.assertNotIn('"mode": 2', text)
+        self.assertNotIn("host-native selection", text)
+
+    def test_user_docs_do_not_advertise_mode_2(self):
+        self.assertNotIn("mode 2 (custom", read("README.md").lower())
+        self.assertNotIn("optional preflight Mode 2", read("docs/API.md"))
+        adaptive = read("docs/ADAPTIVE_PREFLIGHT.md")
+        self.assertIn("two implemented modes", adaptive)
+        self.assertNotIn('"mode": 2', adaptive)
+
+
 class ClaimTests(unittest.TestCase):
     def test_readme_memory_load_passes_saved_type(self):
         text = read("README.md")
@@ -104,10 +125,12 @@ class ClaimTests(unittest.TestCase):
         for event in events:
             self.assertIn(f"`{event}`", section, event)
 
-    def test_configuration_mode1_and_retired_overrides(self):
+    def test_configuration_mode1_custom_and_retired_overrides(self):
         text = " ".join(read("docs/CONFIGURATION.md").split())
         self.assertNotIn("Claude Code and Codex only", text)
-        self.assertIn("mode1_native_selection_unavailable", text)
+        self.assertNotIn("mode1_native_selection_unavailable", text)
+        self.assertIn("mode_not_0_or_1", text)
+        self.assertIn("former host-native selection mode was removed", text)
         self.assertNotIn("**Variable:** `XDG_DATA_HOME`", text)
         self.assertNotIn("model-file overrides remain", text)
 

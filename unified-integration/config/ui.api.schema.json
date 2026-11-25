@@ -92,17 +92,16 @@
         "mode": {
           "enum": [
             0,
-            1,
-            2
+            1
           ]
         },
         "sdk": {
           "type": "string",
-          "description": "openai or anthropic (Mode 2)"
+          "description": "openai or anthropic (Mode 1; formerly Mode 2)"
         },
         "endpoint": {
           "type": "string",
-          "description": "HTTPS origin/path without credentials (Mode 2)"
+          "description": "HTTPS origin/path without credentials (Mode 1; formerly Mode 2)"
         },
         "model": {
           "type": "string"

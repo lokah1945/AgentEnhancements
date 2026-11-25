@@ -1,7 +1,7 @@
 ---
 title: Adaptive Preflight Capability Selection
-version: 1.2
-last_updated: 2026-11-20
+version: 1.3
+last_updated: 2026-11-25
 audience: users, maintainers
 ---
 
@@ -13,24 +13,36 @@ handler with fixtures). The runtime hook can now delegate capability
 selection to an isolated selector before the main agent's first
 inference, instead of only listing heuristic candidates.
 
+### Implementation status (AE-003, 2026-11-25)
+
+**Deviation from CONTRACT §8.5.** CONTRACT §8.5 still specifies modes 0/1/2
+and has not been amended. Commit `095fc19d6e59ad22a04430108067b60f553a9fa5`
+(pushed to master by the repository account; its body declares `Agent: Claude
+Code`, with no formal §10 approval entry) removed `MODE_NATIVE`, set
+`MODE_CUSTOM = 1`, and reduced `VALID_MODES` to `(0, 1)`; `a6cf8720` recorded
+the same decision. Implemented behavior: **0 = disabled (default), 1 = custom
+HTTPS endpoint; any other integer, including 2, is rejected and runs Mode 0**
+with diagnosis `preflight_invalid:mode_not_0_or_1`. No adapter supplies
+`ae_native_selection`. Historical "Mode 2" labels in the verification data
+below mean today's Mode 1. A maintainer-approved CONTRACT amendment is pending
+under §10 and the End of Contract clause.
+
 ### Model
 
-One selector role, three modes, one validated package:
+One selector role, two implemented modes, one validated package:
 
 - **Mode:** 0 - disabled (default)
   - **Who assigns:** The hook uses the existing loader.
   - **Model used by the selector:** None: the main agent decides from the
     candidate cards.
 
-- **Mode:** 1 - native
-  - **Who assigns:** The host adapter supplies the selection through its own
-    sanctioned inference surface.
-  - **Model used by the selector:** The host's configured model.
-
-- **Mode:** 2 - custom
+- **Mode:** 1 - custom (called Mode 2 in CONTRACT §8.5 and pre-fix docs)
   - **Who assigns:** The AE hook calls the user-configured endpoint.
   - **Model used by the selector:** The endpoint/sdk/model triple in the
     `ui.api.json` `preflight` section.
+
+- **Retired:** host-native selection (previously Mode 1) had no shipped
+  adapter and was removed in AE-003.
 
 The selector never executes anything and never sees history, tool
 payloads, memory, observations or credentials. Its input is the task
@@ -57,12 +69,8 @@ The `preflight` section of the private, ignored `<checkout>/ui.api.json`
 ```
 
 ```json
-"preflight": {"mode": 1}
-```
-
-```json
 "preflight": {
-  "mode": 2,
+  "mode": 1,
   "endpoint": "https://openrouter.ai/api/v1",
   "sdk": "openai",
   "model": "provider/model-id",
@@ -74,15 +82,16 @@ Rules (enforced by `scripts/adaptive_preflight.py` and its tests):
 
 - A missing file or missing `preflight` section is Mode 0 without a
   diagnosis.
-- `mode` must be the exact integer 0, 1 or 2. Booleans, numeric strings,
-  floats and out-of-range values fall back to Mode 0 with a diagnosis code
-  on stderr. Malformed JSON, duplicate fields or a non-object section make
-  the whole `ui.api.json` invalid (`ui_api_json_invalid`), which also hides
-  credentialed MCP tools: fail closed.
-- Mode 2 additionally requires `endpoint` (an HTTPS base URL without
+- `mode` must be the exact integer 0 or 1. Booleans, numeric strings,
+  floats, `2`, `3`, `-1` and other out-of-range values fall back to Mode 0
+  with `preflight_invalid:mode_not_0_or_1` on stderr. Malformed JSON,
+  duplicate fields or a non-object section make the whole `ui.api.json`
+  invalid (`ui_api_json_invalid`), which also hides credentialed MCP tools:
+  fail closed.
+- Mode 1 additionally requires `endpoint` (an HTTPS base URL without
   credentials or fragments), `sdk` (`openai` or `anthropic`), a non-empty
   `model` and an `api_key_ref` naming an `api_keys` reference (default
-  `PREFLIGHT_API_KEY`). On Mode 0/1 these fields are stored but ignored,
+  `PREFLIGHT_API_KEY`). On Mode 0 these fields are stored but ignored,
   so switching modes never loses the custom setup.
 - Each selector invocation uses one validated snapshot for its endpoint,
   key and prompt redaction. Save configuration with an atomic replacement
@@ -90,7 +99,7 @@ Rules (enforced by `scripts/adaptive_preflight.py` and its tests):
 - A legacy `.agentenhancements/config/model.json` is no longer read;
   `api_config.py migrate` imports it once (see below).
 
-#### Protocol details (Mode 2)
+#### Protocol details (Mode 1; historically Mode 2)
 
 - `sdk: "openai"` - Chat Completions at `<endpoint>/chat/completions`
   (OpenAI-compatible; for OpenRouter use `https://openrouter.ai/api/v1`).
@@ -107,7 +116,7 @@ Rules (enforced by `scripts/adaptive_preflight.py` and its tests):
 - Redirects are refused: the validated origin must not silently move.
 - `temperature` is 0 and output is capped at 500 tokens.
 
-#### Credentials (Mode 2)
+#### Credentials (Mode 1; historically Mode 2)
 
 The key is `api_keys[api_key_ref]` in the same `ui.api.json` (an array;
 one key is chosen per prompt, round-robin when several are listed). It is
@@ -123,50 +132,15 @@ copy that key into `api_keys.PREFLIGHT_API_KEY` by hand.
 A missing `api_keys` reference falls back to Mode 0 before any network
 attempt. Status reports `api_key_unavailable` and effective Mode 0.
 
-#### Mode 1 contract
+#### Retired host-native mode (historical)
 
-No shipped adapter supplies a native selection yet (Claude Code and Codex
-offer no pre-inference selection surface; OpenCode and Hermes are
-unsupported), so a configured Mode 1 runs Mode 0 on every prompt.
-`doctor.py` and `status_report()` show it as requested 1, effective 0
-(`mode1_native_selection_unavailable`). Selector IDs resolve only by
-their exact typed registry ID; any other ID is "not found".
-
-An adapter would supply its native selection on the hook event:
-
-```json
-{
-  "hook_event_name": "UserPromptSubmit",
-  "prompt": "...",
-  "ae_native_selection": {
-    "decision": "selected",
-    "items": [{"id": "skill:postgresql-optimization", "required": true}]
-  }
-}
-```
-
-The payload follows the same output contract as the custom selector
-and is validated by the same handler - a typed decision, at most 12
-items, optional `required` flags. A Mode 1 failure never switches to
-Mode 2; the turn falls back to Mode 0 and the model source follows the
-user's explicit choice.
-
-Auto is targeted only at Claude Code and Codex. Neither installed hook
-currently produces a certified native handoff: both use Mode 0 when the
-payload is absent. A handoff must contain the final decision; a native
-`lookup` payload falls back. OpenCode rejects Auto even if supplied a test
-payload, and uses Custom for preflight inference.
-
-Native authentication, a resolvable lightweight model, tool restrictions,
-recursion prevention, an adapter deadline starting before inference, and
-delivery before the first main request remain certification gates. A
-fixture payload does not satisfy them. Claude's documented agent hook is a
-verifier with tools and a verification response schema; no arbitrary
-selection handoff was demonstrated. No headless wrapper or subscription
-inference was attempted in the local-fixture-only implementation scope.
-Installed versions inspected: Claude Code 2.1.327 and Codex CLI 0.167.2.
-See the official [Claude hooks](https://code.claude.com/docs/en/hooks) and
-[Codex hooks](https://developers.openai.com/codex/hooks) references.
+Host-native selection was previously labelled Mode 1. No shipped adapter ever
+supplied `ae_native_selection`; Claude Code and Codex expose no pre-inference
+selection surface, and OpenCode/Hermes were unsupported. Commit `095fc19d`
+removed the mode rather than leave a configuration that always fell back. A
+payload with `ae_native_selection` is now ignored; configure Mode 0 or Mode 1
+(custom endpoint). Selector IDs resolve only by their exact typed registry ID,
+and every failure falls back to Mode 0 for that turn.
 
 ### Output contract
 
@@ -279,12 +253,12 @@ host actions, not semantic relevance, inference quality or provider pricing.
 - `tests/test_adaptive_preflight.py` - regression tests covering: config
   contract, Mode 0 parity (byte-identical renders, single memory
   effect, zero egress), selection parsing, exact-ID resolution,
-  package rendering inside the 400-token slot, and a full Mode 2
+  package rendering inside the 400-token slot, and a full custom-mode
   end-to-end run against a local TLS fixture (structured output,
   lookup round, compatibility re-issue, no-retry, deadline, refusal,
   invalid JSON, required-vs-optional, OpenCode `--text` bridge).
 - Live model check: `AE_PREFLIGHT_LIVE=1` with a real checkout-local
-  ui.api.json preflight Mode 2 and key (mirrors `AE_MCP_NETWORK_TESTS`).
+  ui.api.json preflight mode 1 and key (mirrors `AE_MCP_NETWORK_TESTS`).
 - `scripts/doctor.py` prints an advisory preflight summary (requested
   and effective mode, diagnosis code, key presence - never the key).
 
@@ -300,6 +274,10 @@ including replacements, and establish one task write per prompt.
 
 Columns: requested/effective mode; selector/main-agent requests; main-agent
 catalog searches; detail reads; prompt-slot / AE cold-start tokens.
+
+Historical labels: in the table below, mode `2` is the pre-AE-003 label for
+today's mode 1 (custom selector). These are archived measurements, not a claim
+that `mode: 2` is currently accepted.
 
 | Mode | Scenario | Sel/main req | Searches | Reads | Slot/cold tokens |
 | --- | --- | ---: | ---: | ---: | ---: |
@@ -336,7 +314,7 @@ token measurements. [Release evidence](audit/ENTERPRISE_RELEASE_2026-11-23.md)
 AE_PYTHON=".agentenhancements/runtime/venv/bin/python"
 AE_SMOKE_OUTPUT="$(mktemp -d)"
 "$AE_PYTHON" unified-integration/tests/smoke-adaptive-preflight.py \
-  --output "$AE_SMOKE_OUTPUT/direct" --mode 2 --tool-mode direct
+  --output "$AE_SMOKE_OUTPUT/direct" --mode 1 --tool-mode direct
 "$AE_PYTHON" unified-integration/tests/smoke-adaptive-preflight.py \
   --output "$AE_SMOKE_OUTPUT/code" --mode 0 --tool-mode code
 # Additional independent cases: --scenario abstain|lookup|stale|unavailable|guide

@@ -181,7 +181,7 @@ def preflight_report() -> dict:
 
     No model API is called and no secret is read: the report shows the
     requested/effective mode, the diagnosis code when the ui.api.json
-    "preflight" section was rejected, and - for Mode 2 - whether a key resolved, never the key.
+    "preflight" section was rejected, and - for custom Mode 1 - whether a key resolved, never the key.
     """
     try:
         spec = importlib.util.spec_from_file_location(

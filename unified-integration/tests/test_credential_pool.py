@@ -197,17 +197,17 @@ class MigrationTests(IsolatedConfig):
         self.assertNotIn("legacy-preflight-fixture", json.dumps(result))
         doc = json.loads(self.path.read_text())
         self.assertEqual(doc["preflight"], {
-            "mode": 2, "sdk": "openai", "endpoint": "https://selector.invalid/v1",
+            "mode": 1, "sdk": "openai", "endpoint": "https://selector.invalid/v1",
             "model": "fixture-model", "api_key_ref": "PREFLIGHT_API_KEY"})
         self.assertEqual(doc["api_keys"]["PREFLIGHT_API_KEY"], ["legacy-preflight-fixture"])
         self.assertTrue((legacy / "model.json").exists(), "legacy files are not deleted")
         # Re-run: preflight exists, so nothing is imported or overwritten again.
         (legacy / "model.json").write_text('{"adaptive_preflight_mode": 1}')
         self.assertEqual(api.migrate(legacy_dir=legacy)["status"], "already_current")
-        self.assertEqual(json.loads(self.path.read_text())["preflight"]["mode"], 2)
+        self.assertEqual(json.loads(self.path.read_text())["preflight"]["mode"], 1)
         # Final audit 2026-11-20 (P1): the user disables preflight by removing
         # the section and revokes the key; a later setup must not resurrect
-        # Mode 2 egress with the old legacy key.
+        # custom-selector egress with the old legacy key.
         doc = json.loads(self.path.read_text())
         del doc["preflight"]
         doc["api_keys"]["PREFLIGHT_API_KEY"] = []

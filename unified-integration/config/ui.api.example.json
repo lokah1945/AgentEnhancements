@@ -4,7 +4,7 @@
   "_help": {
     "api_keys": "Credentials for AgentEnhancements MCP services and the adaptive preflight selector. Each reference is an array of keys, e.g. \"TAVILY_API_KEY\": [\"key-a\", \"key-b\"]. [] or blank strings mean not configured and hide dependent cloud tools, even when a host agent has an environment key. First-party adapters (search-mcp) rotate keys per request; external stdio servers receive the first key. Do not copy agent login/provider credentials here. Never commit this file.",
     "connections": "MCP service endpoints, client IDs and model names only. OPENAI_BASE_URL applies to embeddings/vision MCP, not the agent's model provider, and includes /v1.",
-    "preflight": "Adaptive preflight: mode 0 (off, default), 1 (host-native selection, Claude Code/Codex only) or 2 (custom model). Mode 2 needs an HTTPS endpoint, sdk openai|anthropic, a model and a key in api_keys[api_key_ref]. Ignored fields on modes 0/1 are kept but unused.",
+    "preflight": "Adaptive preflight: mode 0 (off, default) or 1 (custom selector model). Mode 1 needs an HTTPS endpoint, sdk openai|anthropic, a model and a key in api_keys[api_key_ref]. Custom fields are ignored on mode 0. The former host-native mode was removed (AE-003); mode 2 is invalid and falls back to mode 0.",
     "mcp": "Shared by any MCP-compatible agent. Built-in local tools start automatically; search-mcp appears when any_of its provider keys is set. External entries stay hidden until their required references and an installed command array are configured. Changes are watched by the MCP gateway."
   },
   "api_keys": {
@@ -47,14 +47,14 @@
     "model": "",
     "api_key_ref": "PREFLIGHT_API_KEY"
   },
-  "_preflight_mode2_example": {
-    "mode": 2,
+  "_preflight_mode1_example": {
+    "mode": 1,
     "sdk": "openai",
     "endpoint": "https://openrouter.ai/api/v1",
     "model": "openai/gpt-4o-mini",
     "api_key_ref": "PREFLIGHT_API_KEY"
   },
-  "_preflight_mode1_note": "Mode 1 (host-native selection) is not available - no shipped adapter supplies ae_native_selection. Configure mode 0 or 2.",
+  "_preflight_mode1_note": "Mode 1 is the custom endpoint selector (previously labelled Mode 2). Host-native selection was removed in AE-003. Configure mode 0 or 1; mode 2 is rejected.",
   "mcp": {
     "serper-mcp": {
       "enabled": true,

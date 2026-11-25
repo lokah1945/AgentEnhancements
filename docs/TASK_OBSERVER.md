@@ -1,7 +1,7 @@
 ---
 title: Task Observer
-version: 1.0
-last_updated: 2026-11-15
+version: 1.1
+last_updated: 2026-11-25
 audience: users, maintainers
 ---
 
@@ -67,10 +67,14 @@ upstream "one user-scope root" rule. The shared session memory
 
 1. **Lifecycle bootstrap (primary).** The shared runtime
    (`scripts/runtime.py`) runs on every `SessionStart` event for Claude
-   Code, Codex and OpenCode. It bootstraps the workspace if missing and
-   injects a bounded context (status, workspace path, up to 5 open
-   observations). This is NOT keyword-matched: a session that never
-   mentions Task Observer still gets it.
+   Code, Codex and OpenCode. It always bootstraps the workspace if missing
+   (the Stop backstop needs it) and, when task-observer is **not** linked
+   into a native skill directory, injects a bounded context (status,
+   workspace path, up to 5 open observations). The card is suppressed when
+   a registry-owned `task-observer` symlink exists, because the native skill
+   already supplies it; a catalog `source` alone is not proof of a link.
+   This is NOT keyword-matched: a session that never mentions Task Observer
+   still gets the bootstrap and, when unlinked, the card.
 2. **Native discovery.** `link-skills.sh` links the bundle into
    `~/.claude/skills/` and `~/.agents/skills/` as part of the default
    curated set, so every Agent Skills compatible harness can load
@@ -186,7 +190,8 @@ bundle does not touch them.
 - The workspace holds user data. It is never committed; test fixtures are
   synthetic.
 - Observer failures are advisory: a broken workspace degrades to a
-  one-line diagnosis in the session context and never blocks the agent's
+  one-line diagnosis in the session context when the card is injected
+  (i.e. when no native link supplies it) and never blocks the agent's
   work (locked by test).
 
 ### Capability matrix (evidence as of 2026-11-15)

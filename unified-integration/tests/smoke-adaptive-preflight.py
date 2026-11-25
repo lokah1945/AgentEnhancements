@@ -347,7 +347,7 @@ def run_case(output: Path, mode: int, scenario: str = "selected", *, code_mode: 
             else:
                 assert probe in tools, "direct MCP tool/schema missing"
                 assert "path" in tools[probe]["parameters"]["required"], "required path schema changed"
-        selected = mode == 2 and scenario in ("selected", "lookup", "guide")
+        selected = mode == 1 and scenario in ("selected", "lookup", "guide")
         if selected:
             assert len(selector.requests) == (2 if scenario == "lookup" else 1)
             assert "AgentEnhancements preflight" in context
@@ -397,7 +397,7 @@ def run_case(output: Path, mode: int, scenario: str = "selected", *, code_mode: 
         if selector.requests:
             assert selector.requests[-1]["completed_at"] < main.requests[0]["received_at"], "selector finished too late"
         ledger = context_ledger(context, tools, discovery_results, native_names)
-        return {"mode": mode, "effective_mode": 2 if selected or scenario == "abstain" else 0,
+        return {"mode": mode, "effective_mode": 1 if selected or scenario == "abstain" else 0,
                 "tool_mode": "code" if code_mode else "direct",
                 "scenario": scenario, "selector_requests": len(selector.requests), "main_requests": len(main.requests),
                 "first_main_seconds": main.requests[0]["received_at"] - started,
@@ -427,16 +427,16 @@ def run_case(output: Path, mode: int, scenario: str = "selected", *, code_mode: 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--mode", type=int, choices=[0, 2], default=2)
+    parser.add_argument("--mode", type=int, choices=[0, 1], default=1)
     parser.add_argument("--tool-mode", choices=["direct", "code"], default="direct")
     parser.add_argument("--exact-tokens", action="store_true",
                         help="use the preinstalled tiktoken o200k_base benchmark encoder")
     parser.add_argument("--scenario", choices=["selected", "abstain", "lookup", "stale", "unavailable", "guide"], default="selected")
     args = parser.parse_args()
-    if args.scenario == "abstain" and args.mode != 2:
+    if args.scenario == "abstain" and args.mode != 1:
         # "abstain" models a selector that ran and declined; no selector exists in
         # Mode 0, so the combination is contradictory rather than a coverage gap.
-        parser.error("the abstain scenario requires --mode 2 (it models a selector that declined)")
+        parser.error("the abstain scenario requires --mode 1 (it models a selector that declined)")
     if args.exact_tokens:
         import tiktoken
 

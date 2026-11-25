@@ -1,8 +1,13 @@
-"""Adaptive preflight (Modes 0/1/2) regression tests - CONTRACT 8.5.
+"""Adaptive preflight (implemented modes 0/1) regression tests.
+
+CONTRACT 8.5 still describes the superseded three-mode design; AE-003
+(commit 095fc19d) removed the host-native mode and renumbered custom to
+mode 1. See docs/ADAPTIVE_PREFLIGHT.md for the evidence-backed deviation.
 
 Covers the architecture review 2026-11-19 implementation gates:
-- model.json contract: strict mode typing, Mode 2 field validation,
-  duplicate-field rejection, reload-per-prompt, diagnosis-on-fallback.
+- ui.api.json preflight contract: strict mode typing (0 or 1 only),
+  Mode 1 custom field validation, duplicate-field rejection,
+  reload-per-prompt, diagnosis-on-fallback.
 - Mode 0 parity: missing file, explicit 0 and every failure path render
   the legacy discovery cards byte-identically; memory effects run
   exactly once; zero egress.
@@ -10,11 +15,9 @@ Covers the architecture review 2026-11-19 implementation gates:
 - Exact-ID resolution: typed ids never bind to a same-named entry
   (audit 12 alias probe), server-level MCP visibility, skill file
   proof, fictitious-id rejection, required-vs-optional distinction.
-- Mode 2 end-to-end against a local TLS fixture: structured output
+- Custom-mode end-to-end against a local TLS fixture: structured output
   request, lookup round, compatibility re-issue, no-retry on HTTP
   errors, deadline enforcement, refusal, invalid JSON.
-- Mode 1: adapter-supplied native selection, validated by the same
-  handler; never auto-switches to Mode 2.
 - Live-model tests are opt-in (AE_PREFLIGHT_LIVE=1), mirroring the
   AE_MCP_NETWORK_TESTS pattern.
 """
@@ -260,11 +263,13 @@ class ModelConfigTests(PreflightTestCase):
                     '"model": "provider/model"}', 1)
 
     def test_mode_must_be_exact_integer(self):
-        for bad in ("true", '"0"', '"2"', "2.0", "3", "-1", "null"):
+        # Integer 2 is accepted by the stale JSON schema and old docs but
+        # rejected by the runtime after AE-003; pin that fail-closed path.
+        for bad in ("true", '"0"', "2", '"2"', "2.0", "3", "-1", "null"):
             self._check(f'{{"mode": {bad}}}', 0,
                         "mode_not_0_or_1")
 
-    def test_mode2_field_validation(self):
+    def test_mode1_custom_field_validation(self):
         cases = [
             '{"mode": 1}',
             '{"mode": 1, "sdk": "openai", "model": "x"}',
@@ -1196,14 +1201,14 @@ class CredentialResolverTests(PreflightTestCase):
 class LiveModelTests(unittest.TestCase):
     @unittest.skipUnless(
         os.environ.get("AE_PREFLIGHT_LIVE") == "1",
-        "set AE_PREFLIGHT_LIVE=1 (and configure ui.api.json preflight Mode 2 + key) "
+        "set AE_PREFLIGHT_LIVE=1 (and configure ui.api.json preflight mode 1 + key) "
         "for live selector calls")
     def test_live_selection_or_abstain(self):
         module = load_module("adaptive_preflight_live",
                              SCRIPTS / "adaptive_preflight.py")
         config = module.load_model_config()
-        self.assertEqual(config.mode, 2,
-                         "live check needs ui.api.json preflight mode 2")
+        self.assertEqual(config.mode, 1,
+                         "live check needs ui.api.json preflight mode 1")
         deadline = module.Deadline(8.0)
         selection = module.run_custom_selection(
             PROMPT, config, deadline,

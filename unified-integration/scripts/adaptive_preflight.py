@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 """Adaptive preflight capability selection (CONTRACT 8.5).
 
-One isolated selector role, two inference sources, one validated
+One isolated selector role, one inference source, one validated
 package (architecture review 2026-11-19, "Adaptive Preflight"):
 
   Mode 0  disabled/missing config - the existing discovery cards
           (runtime.skill_context) run unchanged. No credentials are
           read, no SDK is imported, no network call is made.
-  Mode 1  host-native selector - the host adapter supplies the native
-          selection payload (event key ``ae_native_selection``) that it
-          produced through its own sanctioned inference surface before
-          the agent's first request. The runtime only validates.
-  Mode 2  custom model - this module calls the user-configured
+  Mode 1  custom model - this module calls the user-configured
           endpoint (ui.api.json "preflight") with a bounded, structured
-          request.
+          request. Historically labelled Mode 2 before AE-003 removed
+          the non-functional host-native mode.
 
 The selector never executes anything. It returns typed registry IDs;
 AgentEnhancements resolves each ID to its canonical source, checks
@@ -21,25 +18,24 @@ live readiness, and renders a bounded package for the main agent.
 Every failure path - timeout, invalid JSON, refusal, fictitious ID,
 unavailable capability, missing key - falls back to Mode 0 for that
 turn and reports a local diagnosis on stderr (never on stdout, which
-OpenCode/Hermes use as the context channel). Mode 1 never switches to
-Mode 2 automatically; the model source follows the user's explicit
-choice.
+OpenCode/Hermes use as the context channel). The model source follows
+the user's explicit choice.
 
 Configuration: the "preflight" section of the private ui.api.json
 (the single AE configuration file, api_config.config_path()):
 
     "preflight": {"mode": 0}                            # disabled
-    "preflight": {"mode": 1}                            # native host
-    "preflight": {"mode": 2,                            # custom model
+    "preflight": {"mode": 1,                            # custom model
                   "endpoint": "https://openrouter.ai/api/v1",
                   "sdk": "openai",                      # or anthropic
                   "model": "provider/model-id",
                   "api_key_ref": "PREFLIGHT_API_KEY"}
 
-  The Mode 2 key is api_keys[api_key_ref] of the same file (first usable
+  The Mode 1 key is api_keys[api_key_ref] of the same file (first usable
   key in rotation order). No environment variable, keyring, key file or
   legacy model.json is consulted at runtime; `api_config.py migrate`
-  imports a legacy model.json/preflight.key once.
+  imports a legacy model.json/preflight.key once. Numeric mode 2 is
+  rejected and falls back to Mode 0.
 
 Deadline: the whole preflight phase shares one monotonic deadline
 (2.0s pilot default; AE_PREFLIGHT_DEADLINE_MS overrides) and at most
@@ -763,7 +759,7 @@ def render_package(items: List[ResolvedItem], revision: str,
 
 
 def resolve_api_key(config: ModelConfig, snapshot: Optional[Dict[str, Any]] = None) -> str:
-    """Mode 2 key from ui.api.json ``api_keys[config.api_key_ref]``.
+    """Mode 1 key from ui.api.json ``api_keys[config.api_key_ref]``.
 
     One key per prompt, chosen by the shared credential pool (round-robin
     across the reference's keys). Shell environment variables, keyrings,
@@ -779,7 +775,7 @@ def resolve_api_key(config: ModelConfig, snapshot: Optional[Dict[str, Any]] = No
 
 
 # ---------------------------------------------------------------------------
-# Mode 2 inference clients (stdlib HTTP, no SDK dependency, no retries)
+# Mode 1 custom inference clients (stdlib HTTP, no SDK dependency, no retries)
 # ---------------------------------------------------------------------------
 
 
@@ -993,7 +989,7 @@ def call_model(config: ModelConfig, system: str, user: str,
     if config.sdk == "anthropic":
         return call_anthropic_compatible(
             config.endpoint, api_key, config.model, system, user, deadline)
-    raise PreflightError("mode2_settings_invalid:sdk")
+    raise PreflightError("mode1_settings_invalid:sdk")
 
 
 # ---------------------------------------------------------------------------
@@ -1054,7 +1050,7 @@ def _round_two_user(prompt: str, lookups: List[Dict[str, Any]]) -> str:
 def run_custom_selection(prompt: str, config: ModelConfig,
                          deadline: Deadline, api_key: str, *,
                          snapshot: Optional[Dict[str, Any]] = None) -> Selection:
-    """Mode 2: at most two inference rounds, bounded catalog reads,
+    """Mode 1: at most two inference rounds, bounded catalog reads,
     every failure mapped to a PreflightError code."""
     # The selector gets intent, never credentials embedded in a prompt. Redact
     # before ranking/truncation so a credential cannot survive as a prefix or

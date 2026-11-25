@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
-version: 1.6
-last_updated: 2026-11-23
+version: 1.7
+last_updated: 2026-11-25
 audience: users
 ---
 
@@ -102,11 +102,13 @@ the file is not valid JSON or violates the schema, and it is left untouched.
 To roll back, copy the newest `ui.api.json.backup.<timestamp>` over
 `ui.api.json`.
 
-**Adaptive preflight stopped using my Mode 2 key or `model.json`**
+**Adaptive preflight stopped using my custom selector key or `model.json`**
 Preflight now reads only `ui.api.json` (`preflight` section and
-`api_keys[api_key_ref]`). Run `api_config.py migrate` once to import a legacy
-`model.json`/`preflight.key`; a key that lived only in the shell environment
-or the OS keyring must be copied into `api_keys.PREFLIGHT_API_KEY` by hand.
+`api_keys[api_key_ref]`). Use `"mode": 1` for the custom selector; `2` is
+rejected and falls back to mode 0 with a stderr diagnosis. Run
+`api_config.py migrate` once to import a legacy `model.json`/`preflight.key`;
+a key that lived only in the shell environment or the OS keyring must be
+copied into `api_keys.PREFLIGHT_API_KEY` by hand.
 
 **Existing JSONC comments disappeared**
 Merged JSONC is serialized as JSON to preserve its values safely. The original

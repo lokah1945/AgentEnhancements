@@ -631,15 +631,15 @@ Hooks save with `memory_type="session_context"` — no corrupt entries.
 
 `UserPromptSubmit` can delegate capability selection to an isolated selector
 model before the main agent's first inference. Off by default; configured in
-the `preflight` section of the private `ui.api.json` with modes 0 (default
-discovery cards), 1 (host-native selection supplied by an adapter) and 2
-(custom OpenAI- or Anthropic-compatible endpoint). The selector returns
-typed registry IDs; AE validates identity and readiness locally and renders
-a bounded package (≤400 tokens) that replaces the candidate cards. Every
-failure path — timeout, invalid output, unavailable capability — falls back
-to the default cards for that turn. See
-[docs/ADAPTIVE_PREFLIGHT.md](docs/ADAPTIVE_PREFLIGHT.md)
-and CONTRACT §8.5.
+the `preflight` section of the private `ui.api.json` with mode 0 (off; default
+discovery cards) or mode 1 (custom OpenAI- or Anthropic-compatible endpoint).
+The former host-native mode was removed in AE-003 (2026-11-25); `mode: 2` is
+rejected and falls back to mode 0. The selector returns typed registry IDs;
+AE validates identity and readiness locally and renders a bounded package
+(≤400 tokens) that replaces the candidate cards. Every failure path — timeout,
+invalid output, unavailable capability — falls back to the default cards for
+that turn. See [docs/ADAPTIVE_PREFLIGHT.md](docs/ADAPTIVE_PREFLIGHT.md) for the
+evidence-backed deviation from the superseded three-mode text in CONTRACT §8.5.
 
 All agent configurations are written in each tool's native format — see the
 [Agent Activation Matrix](#agent-activation-matrix) above and

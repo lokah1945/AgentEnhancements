@@ -159,7 +159,7 @@ class PreflightSecurityTests(IsolatedSecurityTest):
 
     def test_late_abstain_result_falls_back_after_deadline(self):
         self.config["preflight"] = {
-            "mode": 2, "endpoint": "https://fixture.invalid/v1", "sdk": "openai", "model": "fixture"}
+            "mode": 1, "endpoint": "https://fixture.invalid/v1", "sdk": "openai", "model": "fixture"}
         self.config["api_keys"]["PREFLIGHT_API_KEY"] = "fixture-only"
         self.write_config()
         os.environ["AE_PREFLIGHT_DEADLINE_MS"] = "100"

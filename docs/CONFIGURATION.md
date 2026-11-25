@@ -1,7 +1,7 @@
 ---
 title: Configuration
-version: 1.9
-last_updated: 2026-11-20
+version: 2.0
+last_updated: 2026-11-25
 audience: users, maintainers
 ---
 
@@ -138,19 +138,16 @@ the `preflight` section of the same private `ui.api.json`:
               "api_key_ref": "PREFLIGHT_API_KEY"}
 ```
 
-`0` (or a missing section) keeps the default discovery cards. `1` is
-reserved for a host-native selection adapter; none ships today (Claude Code
-and Codex offer no pre-inference selection surface; OpenCode and Hermes are
-unsupported), so a configured Mode 1 runs Mode 0 on every prompt and
-`doctor.py`/status report requested 1, effective 0
-(`mode1_native_selection_unavailable`). `2` uses `endpoint` (HTTPS
-base URL), `sdk` (`openai` or `anthropic`), `model` and the key held in
-`api_keys[api_key_ref]` of this file. On modes 0/1 the Mode 2 fields are kept
-but unused. No environment variable, keyring, key file or `model.json` is a
+`0` (or a missing section) keeps the default discovery cards. `1` uses
+`endpoint` (HTTPS base URL), `sdk` (`openai` or `anthropic`), `model` and the
+key held in `api_keys[api_key_ref]` of this file. Custom fields are kept but
+unused on mode 0. The former host-native selection mode was removed in AE-003;
+`2` is rejected with `preflight_invalid:mode_not_0_or_1` and falls back to
+mode 0. No environment variable, keyring, key file or `model.json` is a
 runtime key or settings source. Every failure falls back to the default cards
 for that turn with one stderr diagnosis line.
 See [ADAPTIVE_PREFLIGHT.md](ADAPTIVE_PREFLIGHT.md) for the full contract,
-protocols, deadlines and verification.
+protocols, deadlines, verification and the CONTRACT §8.5 deviation note.
 
 ### Environment variables (immutable interface, CONTRACT §8.2)
 
@@ -387,8 +384,9 @@ recognized authentication fields and configured credentials. Authenticated
 embeddings/vision requests refuse redirects. Public arXiv/news response
 caches also use private storage below `AGENT_MEMORY_ROOT`.
 
-Preflight Mode 2 transmits the bounded, redacted user prompt and public
-capability metadata to the configured endpoint. Redaction protects known
+Preflight Mode 1 (custom selector; historically Mode 2) transmits the bounded,
+redacted user prompt and public capability metadata to the configured endpoint.
+Redaction protects known
 credential values and recognizable authentication patterns; it does not
 classify every possible private source snippet. Mode 0 stays local.
 

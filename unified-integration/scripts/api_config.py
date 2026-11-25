@@ -616,8 +616,14 @@ def migrate(legacy_dir: Path | None = None) -> dict:
                 old = None
                 report["legacy_model_json"] = "invalid_not_imported"
             if isinstance(old, dict):
+                # AE-003 renumbered custom mode 2 -> 1 and removed the old
+                # native mode 1. Never emit a mode the runtime rejects.
+                try:
+                    legacy_mode = int(old.get("adaptive_preflight_mode", 0))
+                except (TypeError, ValueError):
+                    legacy_mode = 0
                 preflight = {
-                    "mode": old.get("adaptive_preflight_mode", 0),
+                    "mode": 1 if legacy_mode == 2 else 0,
                     "sdk": old.get("sdk", ""),
                     "endpoint": old.get("endpoint", ""),
                     "model": old.get("model", ""),

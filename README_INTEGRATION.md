@@ -539,7 +539,7 @@ it merges rather than overwrites user customizations (post-H-1 audit fix).
   inference): dedicated regression tests cover the `ui.api.json` preflight
   contract,
   Mode 0 byte-parity, zero-egress proofs, exact-ID resolution and a full
-  Mode 2 round against a local TLS fixture — see
+  custom-mode round against a local TLS fixture (historically Mode 2) — see
   [docs/ADAPTIVE_PREFLIGHT.md](docs/ADAPTIVE_PREFLIGHT.md).
 - **Static checks**: `bash -n`, `py_compile`, JSON schema validation —
   enforced in CI.

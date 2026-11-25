@@ -271,14 +271,14 @@ def test_windows_gaps() -> Dict[str, Any]:
         "supported_expressions": [],
         "unsupported_expressions": schtasks_fixture.UNSUPPORTED_CRON_EXPRESSIONS,
         "translation_tests": schtasks_fixture.CRON_TO_SCHTASKS_TESTS,
-        "implementation_status": "NOT_IMPLEMENTED",
+        "implementation_status": "IMPLEMENTED (Linux-verified; Windows needs host validation)",
         "notes": [
-            "ae.py only has a comment claiming Windows support via schtasks",
-            "No actual Windows Task Scheduler implementation exists in ae.py",
-            "The headroom project has a full schtasks implementation but it's not used by ae.py",
-            "Cron expression translation to schtasks XML is not implemented",
-            "Timezone/DST handling not implemented",
-            "Path with spaces handling not tested",
+            "ae.py registers tasks through schtasks /Create /XML (Windows only)",
+            "Cron expressions are translated to Task Scheduler trigger XML",
+            "The registered expression is round-tripped in the task Description",
+            "Bare StartBoundary values need validation on a real Windows host",
+            "Exotic cron fields such as 1-5/2 and */60 remain unrepresentable",
+            "Path-with-spaces quoting is unit-tested but not validated on Windows",
         ],
     }
 
@@ -394,13 +394,14 @@ def test_edge_cases() -> Dict[str, Any]:
     print("Edge Case 6: Concurrent run protection")
     results["tests"].append({
         "name": "concurrent_lock",
-        "passed": True,  # Documented in ae.py help
+        "passed": True,
         "details": {
-            "note": "ae.py help mentions: 'Concurrent runs are protected by file-based locking'",
-            "implementation": "Not visible in current code - needs verification",
+            "note": "ae.py uses O_CREAT|O_EXCL on learning.lock with a 1-hour stale lock sweep",
+            "implementation": "ae.py _acquire_learning_lock/_release_learning_lock",
+            "regression": "unified-integration/tests/test_ae_regressions.py::test_corrupt_lock_self_heals",
         },
     })
-    print("  PASS: concurrent_lock (documented)")
+    print("  PASS: concurrent_lock (implemented and regression-tested)")
 
     passed = sum(1 for t in results["tests"] if t["passed"])
     total = len(results["tests"])
@@ -438,23 +439,22 @@ def main():
         "edge_cases": edge_results,
         "schtasks_fixture": str(Path(__file__).parent / "fixtures" / "schtasks_fixture.py"),
         "recommendation": {
-            "implement": [
-                "Windows Task Scheduler integration in ae.py (currently only a comment)",
-                "Cron expression to schtasks XML translation",
-                "Timezone-aware scheduling (store times in UTC)",
-                "Path with spaces handling for Windows paths",
-                "Concurrent run locking implementation verification",
+            "validate_on_windows": [
+                "schtasks /Create /XML with the generated task XML",
+                "Bare StartBoundary values in Daily/Weekly/Monthly triggers",
+                "Timezone and DST behavior of the registered trigger",
+                "schtasks error codes and recovery paths",
+                "Service account vs interactive token behavior",
             ],
-            "document_as_not_tested": [
-                "Windows schtasks integration (no implementation exists)",
-                "DST behavior on Windows Task Scheduler",
-                "Windows-specific cron expressions (MonthlyDOWTrigger, etc.)",
-                "schtasks error codes and recovery",
-                "Windows service account vs interactive token behavior",
+            "documented_limitations": [
+                "Exotic cron fields (1-5/2, */2,3, L, W, #) are rejected or unrepresentable",
+                "*/60 and other intervals above 59 are not representable",
+                "@reboot and 6-field cron are explicitly rejected by AE",
+                "StartBoundary values are unit-tested only on Linux",
             ],
             "cron_expressions_to_support_on_windows": [
                 "@hourly", "@daily", "@weekly", "@monthly", "@yearly",
-                "0 * * * *", "0 0 * * *", "0 0 * * 0", "0 0 1 * *", "0 0 1 1 *",
+                "0 * * * *", "0 0 * * *", "0 0 * * 0", "0 H * * 0", "0 0 1 * *",
                 "*/15 * * * *", "*/30 * * * *",
                 "0 6,18 * * *", "0 9 * * 1-5", "30 14 15 * *",
             ],

@@ -19,6 +19,7 @@ import sys
 import subprocess
 import tempfile
 import re
+import shlex
 import xml.etree.ElementTree as ElementTree
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -171,17 +172,24 @@ def _acquire_learning_lock() -> Optional[Path]:
             f.write(f"{os.getpid()}\n{datetime.now(timezone.utc).isoformat()}\n")
         return lock_path
     except FileExistsError:
-        # Lock exists - check if stale (older than 1 hour)
+        # Lock exists - check if stale (older than 1 hour). A corrupt lock
+        # must self-heal: otherwise one truncated write blocks learning
+        # forever with no operator-visible recovery path.
         try:
             content = lock_path.read_text().strip().split("\n")
+            stale = True
             if len(content) >= 2:
                 lock_time = datetime.fromisoformat(content[1].replace("Z", "+00:00"))
-                if datetime.now(timezone.utc) - lock_time > timedelta(hours=1):
-                    # Stale lock - remove and retry once
-                    lock_path.unlink(missing_ok=True)
-                    return _acquire_learning_lock()
-        except Exception:
-            pass
+                stale = datetime.now(timezone.utc) - lock_time > timedelta(hours=1)
+            if stale:
+                lock_path.unlink(missing_ok=True)
+                return _acquire_learning_lock()
+        except (OSError, ValueError, TypeError):
+            try:
+                lock_path.unlink(missing_ok=True)
+                return _acquire_learning_lock()
+            except OSError:
+                return None
         return None
     except Exception:
         return None
@@ -472,9 +480,12 @@ def find_ae_job(crontab_lines: List[str]) -> Optional[int]:
 # ==================== Windows Task Scheduler implementation ====================
 
 def _xml_escape(text: str) -> str:
-    text = text.replace("&", "&")
-    text = text.replace("&", "&")
-    return text
+    """Escape all five XML entities (ampersand first, never un-escape)."""
+    return (text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace('"', "&quot;")
+                .replace("'", "&apos;"))
 
 def _windows_current_user() -> str:
     """Get current Windows user as DOMAIN\\USER or USER."""
@@ -482,16 +493,52 @@ def _windows_current_user() -> str:
     domain = os.environ.get("USERDOMAIN")
     return f"{domain}\\{user}" if domain else user
 
-def _windows_task_xml(command: str, trigger_xml: str) -> str:
-    """Render Task Scheduler XML for command and trigger."""
+
+def _windows_quote(path: str) -> str:
+    """Quote a Windows path only when it needs it."""
+    return path if '"' in path or " " not in path else f'"{path}"'
+
+
+def _split_windows_command(command: str) -> tuple[str, str]:
+    """Separate executable from arguments without mangling backslashes.
+
+    shlex.split() would consume Windows path separators as escapes, so only
+    the first whitespace-delimited token is treated as the executable; an
+    explicitly quoted executable is honored.
+    """
+    command = command.strip()
+    if command.startswith('"'):
+        end = command.find('"', 1)
+        if end != -1:
+            return command[1:end], command[end + 1:].strip()
+    exe, _, args = command.partition(" ")
+    return exe, args.strip()
+
+
+def _ae_command() -> str:
+    """Build the scheduled-learning command with platform-correct quoting."""
+    python = str(Path(sys.executable))
+    script = str(SCRIPT_DIR / "ae.py")
+    if is_windows():
+        return f"{_windows_quote(python)} {_windows_quote(script)} --learning"
+    return f"{shlex.quote(python)} {shlex.quote(script)} --learning"
+
+
+def _windows_task_xml(command: str, trigger_xml: str, cron_expr: str = "") -> str:
+    """Render well-formed Task Scheduler XML for a command and trigger."""
     principal = (
         f"    <UserId>{_xml_escape(_windows_current_user())}</UserId>\n"
         "    <LogonType>S4U</LogonType>\n"
         "    <RunLevel>LeastPrivilege</RunLevel>"
     )
+    description = f"AE cron: {cron_expr}" if cron_expr else "AE scheduled learning"
+    executable, arguments = _split_windows_command(command)
     return (
         '<?xml version="1.0" encoding="UTF-16"?>\n'
         '<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">\n'
+        "  <RegistrationInfo>\n"
+        f"    <Description>{_xml_escape(description)}</Description>\n"
+        "  </RegistrationInfo>\n"
         "  <Triggers>\n"
         f"{trigger_xml}\n"
         "  </Triggers>\n"
@@ -507,7 +554,9 @@ def _windows_task_xml(command: str, trigger_xml: str) -> str:
         "    <StartWhenAvailable>true</StartWhenAvailable>\n"
         "  </Settings>\n"
         '  <Actions Context="Author">\n'
-        f"    <Exec>\n      <Command>{_xml_escape(command)}</Command>\n    </Exec>\n"
+        f"    <Exec>\n      <Command>{_xml_escape(executable)}</Command>\n"
+        f"      <Arguments>{_xml_escape(arguments)}</Arguments>\n"
+        "    </Exec>\n"
         "  </Actions>\n"
         "</Task>\n"
     )
@@ -553,11 +602,11 @@ def _cron_to_windows_trigger(cron_expr: str) -> Optional[str]:
             "    </TimeTrigger>"
         )
 
-    # @weekly / 0 0 * * 0 (Sunday)
-    if minute == "0" and hour == "0" and dom == "*" and month == "*" and dow in ("0", "7"):
+    # Sunday at any supported time: @weekly (0 0 * * 0) and 0 H * * 0/7.
+    if minute != "*" and hour != "*" and dom == "*" and month == "*" and dow in ("0", "7"):
         return (
             "    <WeeklyTrigger>\n"
-            f"      <StartBoundary>T00:00:00</StartBoundary>\n"
+            f"      <StartBoundary>T{int(hour):02d}:{int(minute):02d}:00</StartBoundary>\n"
             "      <Enabled>true</Enabled>\n"
             "      <DaysOfWeek>\n        <Sunday/>\n      </DaysOfWeek>\n"
             "      <WeeksInterval>1</WeeksInterval>\n"
@@ -626,16 +675,15 @@ def _cron_to_windows_trigger(cron_expr: str) -> Optional[str]:
         except ValueError:
             pass
 
-    # @yearly / 0 0 1 1 *
+    # @yearly / 0 0 1 1 *: January 1, not the first Sunday of January.
     if minute == "0" and hour == "0" and dom == "1" and month == "1" and dow == "*":
         return (
-            "    <MonthlyDOWTrigger>\n"
+            "    <MonthlyTrigger>\n"
             "      <StartBoundary>T00:00:00</StartBoundary>\n"
             "      <Enabled>true</Enabled>\n"
-            "      <DaysOfWeek>\n        <Sunday/>\n      </DaysOfWeek>\n"
-            "      <WhichWeek>First</WhichWeek>\n"
+            "      <DaysOfMonth>\n        <Day>1</Day>\n      </DaysOfMonth>\n"
             "      <Months>\n        <January/>\n      </Months>\n"
-            "    </MonthlyDOWTrigger>"
+            "    </MonthlyTrigger>"
         )
 
     # Every N minutes: */N * * * *
@@ -722,12 +770,11 @@ def _get_windows_task_status() -> Dict[str, Any]:
         )
         task = ElementTree.fromstring(normalized)
 
-        # Extract trigger info
-        triggers = task.findall(".//{*}Trigger")
-        cron_expr = "unknown"
-        for trigger in triggers:
-            # Try to reconstruct cron from trigger
-            pass
+        # The registered expression is stored in the task description, which
+        # is the only lossless round-trip across Task Scheduler trigger types.
+        description = task.findtext(".//{*}Description") or ""
+        match = re.search(r"AE cron:\s*(\S+(?:\s+\S+){4})", description)
+        cron_expr = match.group(1) if match else "unknown"
 
         return {
             "supported": True,
@@ -819,7 +866,7 @@ def cmd_schedule(args: argparse.Namespace) -> None:
     if any(c in expr for c in [";", "&", "|", "$", "`", "&&", "||"]):
         die("Shell commands in cron expression are not allowed")
 
-    ae_cmd = f"{sys.executable} {SCRIPT_DIR / 'ae.py'} --learning"
+    ae_cmd = _ae_command()
 
     if is_windows():
         trigger_xml = _cron_to_windows_trigger(parsed["normalized"])
@@ -828,7 +875,7 @@ def cmd_schedule(args: argparse.Namespace) -> None:
                 f"Supported: @hourly, @daily, @weekly, @monthly, @yearly, "
                 f"*/N * * * *, 0 H * * 1-5, 0 H * * DOW, 0 0 1-28 * *")
 
-        xml = _windows_task_xml(ae_cmd, trigger_xml)
+        xml = _windows_task_xml(ae_cmd, trigger_xml, parsed["normalized"])
         _register_windows_task(xml)
 
         emit({

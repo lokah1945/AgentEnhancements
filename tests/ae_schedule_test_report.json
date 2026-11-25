@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-11-24T21:50:09.539907",
+  "generated_at": "2026-11-25T15:59:40.239385",
   "platform": "linux",
   "python_version": "3.11.2 (main, Oct  7 2026, 12:35:07) [GCC 12.2.0]",
   "linux_tests": {
     "test_suite": "linux_schedule",
-    "timestamp": "2026-11-24T21:50:09.321750",
+    "timestamp": "2026-11-25T15:59:39.983104",
     "tests": [
       {
         "name": "schedule_status_empty",
@@ -202,7 +202,7 @@
         "name": "command_formation",
         "passed": true,
         "details": {
-          "command": "/usr/bin/python3 /root/project/AgentEnhancements/unified-integration/scripts/ae.py --learning"
+          "command": "/root/project/AgentEnhancements/.agentenhancements/runtime/venv/bin/python /root/project/AgentEnhancements/unified-integration/scripts/ae.py --learning"
         }
       }
     ],
@@ -214,7 +214,7 @@
   },
   "windows_gaps": {
     "test_suite": "windows_gaps",
-    "timestamp": "2026-11-24T21:50:09.539716",
+    "timestamp": "2026-11-25T15:59:40.239206",
     "supported_expressions": [
       {
         "cron": "@hourly",
@@ -265,14 +265,13 @@
         "normalized": "0 0 1 1 *",
         "description": "Run yearly on January 1st at midnight",
         "schtasks_trigger": {
-          "type": "MonthlyDOWTrigger",
+          "type": "MonthlyTrigger",
           "months": [
             "January"
           ],
-          "days_of_week": [
-            "Sunday"
+          "days_of_month": [
+            1
           ],
-          "which_week": "first",
           "start_boundary": "T00:00:00"
         }
       },
@@ -353,11 +352,6 @@
         "expression": "0 0 31 * *",
         "reason": "Day 31 doesn't exist in all months; Windows MonthlyTrigger requires valid days for all months",
         "workaround": "Use '0 0 28 * *' or last day of month logic"
-      },
-      {
-        "expression": "0 0 * * 7",
-        "reason": "Day-of-week 7 (Sunday) is same as 0 in cron, but Windows uses 1-7 (Sunday=1 or 7)",
-        "workaround": "Use 0 for Sunday consistently"
       },
       {
         "expression": "0 0 L * *",
@@ -444,14 +438,13 @@
         "cron": "@yearly",
         "cron_normalized": "0 0 1 1 *",
         "expected_trigger": {
-          "type": "MonthlyDOWTrigger",
+          "type": "MonthlyTrigger",
           "months": [
             "January"
           ],
-          "days_of_week": [
-            "Sunday"
+          "days_of_month": [
+            1
           ],
-          "which_week": "first",
           "start_boundary": "T00:00:00"
         },
         "description": "Run yearly on January 1st at midnight"
@@ -528,19 +521,19 @@
         "description": "Run on the 15th of every month at 2:30 PM"
       }
     ],
-    "implementation_status": "NOT_IMPLEMENTED",
+    "implementation_status": "IMPLEMENTED (Linux-verified; Windows needs host validation)",
     "notes": [
-      "ae.py only has a comment claiming Windows support via schtasks",
-      "No actual Windows Task Scheduler implementation exists in ae.py",
-      "The headroom project has a full schtasks implementation but it's not used by ae.py",
-      "Cron expression translation to schtasks XML is not implemented",
-      "Timezone/DST handling not implemented",
-      "Path with spaces handling not tested"
+      "ae.py registers tasks through schtasks /Create /XML (Windows only)",
+      "Cron expressions are translated to Task Scheduler trigger XML",
+      "The registered expression is round-tripped in the task Description",
+      "Bare StartBoundary values need validation on a real Windows host",
+      "Exotic cron fields such as 1-5/2 and */60 remain unrepresentable",
+      "Path-with-spaces quoting is unit-tested but not validated on Windows"
     ]
   },
   "edge_cases": {
     "test_suite": "edge_cases",
-    "timestamp": "2026-11-24T21:50:09.539758",
+    "timestamp": "2026-11-25T15:59:40.239241",
     "tests": [
       {
         "name": "validate_cron_field",
@@ -596,8 +589,9 @@
         "name": "concurrent_lock",
         "passed": true,
         "details": {
-          "note": "ae.py help mentions: 'Concurrent runs are protected by file-based locking'",
-          "implementation": "Not visible in current code - needs verification"
+          "note": "ae.py uses O_CREAT|O_EXCL on learning.lock with a 1-hour stale lock sweep",
+          "implementation": "ae.py _acquire_learning_lock/_release_learning_lock",
+          "regression": "unified-integration/tests/test_ae_regressions.py::test_corrupt_lock_self_heals"
         }
       }
     ],
@@ -609,19 +603,18 @@
   },
   "schtasks_fixture": "/root/project/AgentEnhancements/tests/fixtures/schtasks_fixture.py",
   "recommendation": {
-    "implement": [
-      "Windows Task Scheduler integration in ae.py (currently only a comment)",
-      "Cron expression to schtasks XML translation",
-      "Timezone-aware scheduling (store times in UTC)",
-      "Path with spaces handling for Windows paths",
-      "Concurrent run locking implementation verification"
+    "validate_on_windows": [
+      "schtasks /Create /XML with the generated task XML",
+      "Bare StartBoundary values in Daily/Weekly/Monthly triggers",
+      "Timezone and DST behavior of the registered trigger",
+      "schtasks error codes and recovery paths",
+      "Service account vs interactive token behavior"
     ],
-    "document_as_not_tested": [
-      "Windows schtasks integration (no implementation exists)",
-      "DST behavior on Windows Task Scheduler",
-      "Windows-specific cron expressions (MonthlyDOWTrigger, etc.)",
-      "schtasks error codes and recovery",
-      "Windows service account vs interactive token behavior"
+    "documented_limitations": [
+      "Exotic cron fields (1-5/2, */2,3, L, W, #) are rejected or unrepresentable",
+      "*/60 and other intervals above 59 are not representable",
+      "@reboot and 6-field cron are explicitly rejected by AE",
+      "StartBoundary values are unit-tested only on Linux"
     ],
     "cron_expressions_to_support_on_windows": [
       "@hourly",
@@ -632,8 +625,8 @@
       "0 * * * *",
       "0 0 * * *",
       "0 0 * * 0",
+      "0 H * * 0",
       "0 0 1 * *",
-      "0 0 1 1 *",
       "*/15 * * * *",
       "*/30 * * * *",
       "0 6,18 * * *",

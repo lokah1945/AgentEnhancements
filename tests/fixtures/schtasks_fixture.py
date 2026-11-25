@@ -319,10 +319,9 @@ CRON_TO_SCHTASKS_TESTS = [
         "cron": "@yearly",
         "cron_normalized": "0 0 1 1 *",
         "expected_trigger": {
-            "type": "MonthlyDOWTrigger",
+            "type": "MonthlyTrigger",
             "months": ["January"],
-            "days_of_week": ["Sunday"],
-            "which_week": "first",
+            "days_of_month": [1],
             "start_boundary": "T00:00:00",
         },
         "description": "Run yearly on January 1st at midnight"
@@ -398,11 +397,6 @@ UNSUPPORTED_CRON_EXPRESSIONS = [
         "expression": "0 0 31 * *",
         "reason": "Day 31 doesn't exist in all months; Windows MonthlyTrigger requires valid days for all months",
         "workaround": "Use '0 0 28 * *' or last day of month logic",
-    },
-    {
-        "expression": "0 0 * * 7",
-        "reason": "Day-of-week 7 (Sunday) is same as 0 in cron, but Windows uses 1-7 (Sunday=1 or 7)",
-        "workaround": "Use 0 for Sunday consistently",
     },
     {
         "expression": "0 0 L * *",

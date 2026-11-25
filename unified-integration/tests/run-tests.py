@@ -63,6 +63,7 @@ for mod in [
     "test_gateway_regressions",
     "test_plugin_cache_regressions",
     "test_ops_scripts_regressions",
+    "test_ae_regressions",
 ]:
     suite.addTests(loader.loadTestsFromName(mod))
 

@@ -70,6 +70,14 @@ class HookCliTests(unittest.TestCase):
         self.assertEqual(rc, status, out + err)
         return out, err
 
+    def save_expired(self, agent, key, value, memory_type, project):
+        # Hook CLIs reject non-positive TTLs; the Python API accepts them.
+        module = load_module(
+            f"expired_hook_{agent}_{id(self)}",
+            HOOKS / f"{agent}-memory-hook.py", env=self.env)
+        module.init_db()
+        module.save_memory(key, value, memory_type, project, ttl_days=-1)
+
     def test_wrappers_isolate_the_same_default_key_by_agent(self):
         for agent in AGENTS:
             with self.subTest(agent=agent):
@@ -109,7 +117,7 @@ class HookCliTests(unittest.TestCase):
                 out, _ = self.hook(agent, "list", "fact", "proj", "1")
                 self.assertIn(f"[fact] report: {'x' * 200}... (updated:", out)
                 self.assertEqual(len(out.splitlines()), 1)
-                self.assertEqual(self.hook(agent, "list", "fact", "proj", "0"), ("", ""))
+                self.assertEqual(self.hook(agent, "list", "absent", "proj"), ("", ""))
 
                 self.hook(agent, "delete", "report", "fact", "proj")
                 self.hook(agent, "delete", "report", "fact", "proj", status=1)
@@ -125,7 +133,7 @@ class HookCliTests(unittest.TestCase):
     def test_cleanup_removes_expired_memory_and_retains_live_memory(self):
         for agent in AGENTS:
             with self.subTest(agent=agent):
-                self.hook(agent, "save", "old", "expired value", "note", "proj", "-1")
+                self.save_expired(agent, "old", "expired value", "note", "proj")
                 self.hook(agent, "save", "new", "live value", "note", "proj", "7")
                 self.hook(agent, "load", "old", "note", "proj", status=1)
                 out, _ = self.hook(agent, "list", "note", "proj")

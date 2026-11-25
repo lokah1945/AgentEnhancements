@@ -151,8 +151,9 @@ class RuntimeTests(unittest.TestCase):
             "api_keys": {"PREFLIGHT_API_KEY": ["local-test-key"]},
             "connections": {},
             "mcp": {},
-            "preflight": {"mode": 2, "endpoint": fixture.endpoint,
-                          "sdk": "openai", "model": "fixture/selector"},
+            "preflight": {"mode": 1, "endpoint": fixture.endpoint,
+                          "sdk": "openai", "model": "fixture/selector",
+                          "api_key_ref": "PREFLIGHT_API_KEY"},
         }))
         result = self.event(
             "UserPromptSubmit", "opencode", flags=("--bridge",), prompt=prompt,

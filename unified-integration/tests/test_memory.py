@@ -126,7 +126,13 @@ class MemoryCliTests(unittest.TestCase):
         self.assertIn("Not found: note", stdout)
 
     def test_cleanup_removes_expired_memories_and_keeps_active_ones(self):
-        self.run_cli("claude-code", "save", "expired", "stale", "project_context", "-1")
+        # The CLI intentionally rejects non-positive TTLs; create the expired
+        # row through the Python API, which stores an already-expired row.
+        mod = load_module(
+            "memory_expired_fixture", UI_DIR / "scripts" / "memory.py",
+            env={"AGENT_MEMORY_ROOT": str(self.memory_root)})
+        mod.AgentMemory("claude-code", project=str(self.root.resolve())).save(
+            "expired", "stale", "project_context", ttl_days=-1)
         self.run_cli("claude-code", "save", "active", "current", "project_context", "1")
         self.run_cli("claude-code", "load", "expired", "project_context", expected_status=1)
 

@@ -214,7 +214,7 @@ def probe(path: str) -> dict:
 
 @_tool
 def cut(path: str, start: float, end: float, out: str) -> dict:
-    """Cut a segment [start, end) seconds. Idempotent: re-runs overwrite out."""
+    """Cut [start, end) in seconds. Reruns overwrite out."""
     target, err = _validate_path(path, must_exist=True)
     if err:
         return {"error": err}
@@ -315,7 +315,7 @@ def extract_audio(path: str, out: str) -> dict:
 
 @_tool
 def thumbnail(path: str, t: float = 0.0, out: str | None = None) -> dict:
-    """Grab a single frame at time t (seconds) as a .jpg."""
+    """Extract a JPEG frame at t in seconds."""
     target, err = _validate_path(path, must_exist=True)
     if err:
         return {"error": err}

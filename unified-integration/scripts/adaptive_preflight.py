@@ -52,7 +52,9 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import math
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -299,6 +301,8 @@ def deadline_seconds() -> float:
     try:
         value = float(raw) / 1000.0 if raw else DEFAULT_DEADLINE_SECONDS
     except ValueError:
+        value = DEFAULT_DEADLINE_SECONDS
+    if not math.isfinite(value):
         value = DEFAULT_DEADLINE_SECONDS
     return min(max(value, MIN_DEADLINE_SECONDS), MAX_DEADLINE_SECONDS)
 
@@ -787,39 +791,9 @@ class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def _post_json(url: str, headers: Dict[str, str], payload: Dict[str, Any],
-               timeout: float) -> Dict[str, Any]:
-    """POST bounded by ``timeout`` of wall-clock time for the whole call.
-
-    Socket timeouts do not cover getaddrinfo or a trickled status line and
-    headers, so the request runs on a daemon worker. A worker still blocked
-    at the deadline is abandoned (it cannot delay interpreter exit) and the
-    caller gets the same ``timeout`` code, keeping the Mode 0 fallback
-    inside the shared deadline.
-    """
-    box: Dict[str, Any] = {}
-
-    def _run() -> None:
-        try:
-            box["value"] = _post_json_unbounded(url, headers, payload, timeout)
-        except BaseException as exc:  # re-raised on the caller's thread
-            box["error"] = exc
-
-    worker = threading.Thread(target=_run, name="ae-preflight-http",
-                              daemon=True)
-    worker.start()
-    worker.join(timeout)
-    if worker.is_alive():
-        raise PreflightError("timeout")
-    if "error" in box:
-        raise box["error"]
-    return box["value"]
-
-
-def _post_json_unbounded(url: str, headers: Dict[str, str],
-                         payload: Dict[str, Any],
-                         timeout: float) -> Dict[str, Any]:
-    expires = time.monotonic() + timeout
+def _request_json(url: str, headers: Dict[str, str], payload: Dict[str, Any],
+                  timeout: float) -> Any:
+    """Perform one bounded HTTP request in the selector transport process."""
     request = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
@@ -831,27 +805,10 @@ def _post_json_unbounded(url: str, headers: Dict[str, str],
     opener = urllib.request.build_opener(_NoRedirectHandler())
     try:
         with opener.open(request, timeout=timeout) as response:
-            # Socket timeouts are otherwise inactivity limits: a provider can
-            # keep read(size) alive indefinitely by slowly streaming bytes.
-            # read1 returns available chunks, letting the shared remaining
-            # budget cap every subsequent socket read.
-            chunks = []
-            size = 0
-            while True:
-                remaining = expires - time.monotonic()
-                if remaining <= 0:
-                    raise PreflightError("timeout")
-                transport = getattr(getattr(response.fp, "raw", None), "_sock", None)
-                if transport is not None:
-                    transport.settimeout(remaining)
-                chunk = response.read1(min(65_536, 1_048_577 - size))
-                if not chunk:
-                    break
-                chunks.append(chunk)
-                size += len(chunk)
-                if size > 1_048_576:
-                    raise PreflightError("response_too_large")
-            body = b"".join(chunks)
+            limit = 1024 * 1024
+            body = response.read(limit + 1)
+            if len(body) > limit:
+                raise PreflightError("response_too_large")
             return json.loads(body.decode("utf-8"))
     except urllib.error.HTTPError as exc:
         # A refused redirect surfaces here as a 30x code.
@@ -867,6 +824,47 @@ def _post_json_unbounded(url: str, headers: Dict[str, str],
     except (ValueError, UnicodeError) as exc:
         raise PreflightError("invalid_response_json",
                              type(exc).__name__) from None
+
+
+def _serve_http_request() -> None:
+    """Exchange one private request over stdio and return only coded errors."""
+    try:
+        request = json.load(sys.stdin.buffer)
+        result = {"response": _request_json(**request)}
+    except PreflightError as exc:
+        result = {"error": exc.code}
+    except (OSError, ValueError, TypeError, RecursionError):
+        result = {"error": "network_error"}
+    sys.stdout.buffer.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+
+
+def _post_json(url: str, headers: Dict[str, str], payload: Dict[str, Any],
+               timeout: float) -> Any:
+    """Bound worker lifetime by the remaining deadline, including DNS and TLS."""
+    request = json.dumps({"url": url, "headers": headers, "payload": payload,
+                          "timeout": timeout}).encode("utf-8")
+    try:
+        # Authentication material travels through the private pipe. A timed-out
+        # worker is killed and reaped by subprocess.run before fallback.
+        worker = subprocess.run(
+            [sys.executable, "-I", str(Path(__file__).resolve()), "--http-worker"],
+            input=request, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            timeout=timeout, check=False,
+        )
+    except subprocess.TimeoutExpired:
+        raise PreflightError("timeout") from None
+    except OSError:
+        raise PreflightError("network_error") from None
+    if worker.returncode:
+        raise PreflightError("network_error")
+    try:
+        result = json.loads(worker.stdout)
+    except (ValueError, UnicodeError, RecursionError):
+        raise PreflightError("network_error") from None
+    if isinstance(result, dict) and "response" in result:
+        return result["response"]
+    error = result.get("error") if isinstance(result, dict) else None
+    raise PreflightError(error if isinstance(error, str) else "network_error")
 
 
 def _extract_json_text(payload: Dict[str, Any]) -> str:
@@ -1059,6 +1057,7 @@ def run_custom_selection(prompt: str, config: ModelConfig,
     prompt = redact(prompt, snapshot)
     if api_key:
         prompt = prompt.replace(api_key, "[redacted]")
+    prompt = prompt[:MAX_INTENT_CHARS]
     registry = _registry()
     candidates = registry.paged_search(prompt, limit=MAX_SEARCH_HINTS)
     user = _round_one_user(prompt, candidates)
@@ -1074,10 +1073,11 @@ def run_custom_selection(prompt: str, config: ModelConfig,
         if round_no == MAX_INFERENCE_ROUNDS - 1:
             # A second lookup request cannot be served: unresolved.
             raise PreflightError("lookup_round_exceeded")
-        lookups = [
-            registry.paged_search(query, limit=5)
-            for query in selection.queries
-        ]
+        lookups = []
+        for query in selection.queries:
+            if deadline.expired:
+                raise PreflightError("timeout")
+            lookups.append(registry.paged_search(query, limit=5))
         user = _round_two_user(prompt, lookups)
     raise PreflightError("lookup_round_exceeded")  # unreachable guard
 
@@ -1219,7 +1219,11 @@ def status_report() -> Dict[str, Any]:
     return report
 
 
-if __name__ == "__main__":  # pragma: no cover - manual inspection
+if __name__ == "__main__":  # pragma: no cover - subprocess and manual inspection
+    if sys.argv[1:] == ["--http-worker"]:
+        _serve_http_request()
+        raise SystemExit(0)
+
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)

@@ -218,8 +218,7 @@ def health() -> dict:
 @_tool
 def dispatch(kind: str, command: str | None = None, code: str | None = None,
              timeout: int | None = None) -> dict:
-    """Dispatch a task. Exactly one of command (bash) / code (python) is
-    required, matched against kind ("bash" | "python").
+    """Dispatch exactly one bash command or Python snippet, matching kind.
 
     Args:
         kind: "bash" or "python".
@@ -268,7 +267,7 @@ def dispatch(kind: str, command: str | None = None, code: str | None = None,
 
 @_tool
 def track(task_id: str) -> dict:
-    """Track one task: status, exit code, stdout/stderr tails, duration."""
+    """Task status, exit code, output tails and duration."""
     entry = _TASKS.get(task_id)
     if entry is None:
         return {"error": f"unknown task_id {task_id!r}",

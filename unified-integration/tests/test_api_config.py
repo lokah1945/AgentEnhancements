@@ -46,6 +46,37 @@ def edit(path, change):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_gateway_compaction_preserves_titles_used_as_schema_data(self):
+        from jsonschema import Draft202012Validator
+        from mcp import types
+
+        gateway = load_module("gateway_title_annotations", UI_DIR / "mcp-servers/gateway.py")
+        schema = {
+            "type": "object",
+            "title": "Library input",
+            "properties": {
+                "book": {
+                    "title": "Book",
+                    "const": {"title": "Starter"},
+                    "default": {"title": "Starter"},
+                },
+                "next": {"$ref": "#/$defs/title"},
+            },
+            "$defs": {"title": {"type": "string"}},
+            "required": ["book", "next"],
+        }
+        tool = types.Tool(name="library", inputSchema=schema)
+        compact = gateway.slim_schema(tool).inputSchema
+
+        self.assertNotIn("title", compact)
+        self.assertNotIn("title", compact["properties"]["book"])
+        self.assertEqual(compact["properties"]["book"]["default"], {"title": "Starter"})
+        self.assertEqual(compact["$defs"], schema["$defs"])
+        self.assertTrue(Draft202012Validator(compact).is_valid({
+            "book": {"title": "Starter"}, "next": "Index",
+        }))
+        self.assertEqual(tool.inputSchema, schema)
+
     def test_builtin_required_reference_is_checked_live(self):
         with configuration() as path:
             server = "embeddings-mcp"

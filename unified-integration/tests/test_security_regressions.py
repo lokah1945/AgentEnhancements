@@ -278,6 +278,44 @@ class PreflightSecurityTests(IsolatedSecurityTest):
             self.preflight._post_json(f"http://127.0.0.1:{server.server_port}/", {}, {}, 0.1)
         self.assertLess(time.monotonic() - start, 0.45)
 
+    def test_slow_response_headers_respect_the_total_preflight_deadline(self):
+        observed = threading.Event()
+        finished = threading.Event()
+
+        class SlowHeaders(BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+
+            def do_POST(self):
+                self.rfile.read(int(self.headers["Content-Length"]))
+                observed.set()
+                try:
+                    self.wfile.write(b'HTTP/1.1 200 OK\r\n')
+                    for index in range(25):
+                        self.wfile.write(f"X-Fixture-{index}: ready\r\n".encode())
+                        time.sleep(0.045)
+                    self.wfile.write(b'Content-Length: 2\r\n\r\n{}')
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+                finally:
+                    finished.set()
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), SlowHeaders)
+        thread = threading.Thread(
+            target=server.serve_forever, kwargs={"poll_interval": 0.03}, daemon=True,
+        )
+        thread.start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+
+        start = time.monotonic()
+        with self.assertRaises(self.preflight.PreflightError) as exc:
+            self.preflight._post_json(f"http://127.0.0.1:{server.server_port}/", {}, {}, 0.4)
+        self.assertEqual(exc.exception.code, "timeout")
+        self.assertLess(time.monotonic() - start, 0.85)
+        self.assertTrue(observed.is_set(), "the fixture never received a request")
+        self.assertTrue(finished.wait(1), "the expired request did not close")
+
 
 class FfmpegSecurityTests(IsolatedSecurityTest):
     def setUp(self):
